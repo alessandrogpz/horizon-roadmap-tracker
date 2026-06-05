@@ -35,7 +35,7 @@
       "detailedInfo": {
         "focus": [
           {
-            "item": "Math for Game Engine Development",
+            "item": "Foundations of game engine development: Mathematics",
             "desc": "Study vector spaces, matrix multiplication, and baseline linear algebra."
           },
           {
@@ -86,6 +86,11 @@
           "completed": false
         },
         {
+          "id": "t2_lengyel2",
+          "title": "Foundations of game engine development: Rendering",
+          "completed": false
+        },
+        {
           "id": "t2_imgui",
           "title": "Integrate Dear ImGui control panel",
           "completed": false
@@ -114,6 +119,10 @@
           {
             "item": "Stewart's Calculus 1",
             "desc": "Go over differentiation rules and differentiation applications."
+          },
+          {
+            "item": "Foundations of game engine development: Rendering",
+            "desc": "Study lighting models, shading math, shadow algorithms, and environment maps."
           },
           {
             "item": "Dear ImGui Integration",
@@ -269,7 +278,7 @@
   "materials": [
     {
       "id": "m1",
-      "title": "Math for Game Engine Development",
+      "title": "Foundations of game engine development: Mathematics",
       "category": "Mathematics",
       "type": "Book",
       "status": "In Progress",
@@ -325,6 +334,17 @@
       "totalPages": 24,
       "currentSubject": "",
       "link": "https://www.youtube.com/playlist?list=PL9_jI1bdZmz2dy17USgL26wI5_I2n873T"
+    },
+    {
+      "id": "m7",
+      "title": "Foundations of game engine development: Rendering",
+      "category": "Computer Graphics",
+      "type": "Book",
+      "status": "Not Started",
+      "currentPage": 0,
+      "totalPages": 380,
+      "currentSubject": "",
+      "link": "/mnt/Storage4TB/Bookshelf/Game Engine/Foundations of Game Engine Development Volume 2 Rendering by Eric Lengyel.pdf"
     }
   ]
 }

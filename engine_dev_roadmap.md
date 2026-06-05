@@ -8,8 +8,8 @@ This document serves as our shared reference roadmap for all four study phases. 
 
 | Phase | Duration | Core Goal | Primary Resources | Key Deliverable |
 | :--- | :--- | :--- | :--- | :--- |
-| **Phase 1** | Months 1-3 | Language & Software Rendering | C++ Book (PPP), Lengyel Vol 1, LearnOpenGL | CPU Ray Tracer |
-| **Phase 2** | Months 4-7 | Hardware Rasterization | LearnOpenGL, CMU 15-462, Calculus 1 | OpenGL Scene Viewer |
+| **Phase 1** | Months 1-3 | Language & Software Rendering | C++ Book (PPP), Lengyel Vol 1 (Mathematics), LearnOpenGL | CPU Ray Tracer |
+| **Phase 2** | Months 4-7 | Hardware Rasterization | LearnOpenGL, Lengyel Vol 2 (Rendering), CMU 15-462, Calculus 1 | OpenGL Scene Viewer |
 | **Phase 3** | Months 8-10 | Optimization & Architectures | CMU 15-462 (Advanced), Calculus 2 | Optimized Scene Graph Engine |
 | **Phase 4** | Months 11-12| Modern GPU APIs | Vulkan Tutorial, Vector Calculus | Vulkan Mesh Renderer |
 
@@ -28,7 +28,7 @@ This document serves as our shared reference roadmap for all four study phases. 
   - Chapter 20-21: STL algorithms, lambdas, and iterator models
 
 #### 2. Mathematics (Linear Algebra)
-- **Resource**: *Foundations of Game Engine Development, Vol 1: Mathematics (Lengyel)*
+- **Resource**: *Foundations of game engine development: Mathematics (Lengyel)*
 - **Topics**:
   - Vectors: Vector spaces, dot product, cross product, projection
   - Matrices: Matrix multiplication, determinants, inverse, Cramer's rule
@@ -66,13 +66,14 @@ This document serves as our shared reference roadmap for all four study phases. 
   - Applications: Finding normal vectors for complex implicit mathematical surface curves
 
 #### 3. Rendering (Hardware API)
-- **Resource**: *LearnOpenGL (de Vries)* & *CMU 15-462 Lectures*
+- **Resource**: *LearnOpenGL (de Vries)*, *Foundations of game engine development: Rendering (Lengyel)*, & *CMU 15-462 Lectures*
 - **Topics**:
   - Window setup (GLFW/GLAD), VBO, VAO, EBO draw calls
   - Shader writing (GLSL syntax, vertex/fragment pipelines)
   - Textures, coordinate transformations, projection matrices
   - Lighting models: Ambient, Diffuse, Specular (Phong vs. Blinn-Phong)
   - Advanced OpenGL: Framebuffers, Stencil testing, Cubemaps, Instanced drawing
+  - Shading equations, light sources, shadow mapping, and environment mapping (Lengyel Vol 2)
 
 #### 4. Diagnostic & Tool Integrations
 - **Dear ImGui**: Integrate ImGui panel to control:
