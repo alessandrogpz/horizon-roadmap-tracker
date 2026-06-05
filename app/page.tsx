@@ -90,6 +90,20 @@ export default function Home() {
     return Math.max(0, diffDays) + 1;
   };
 
+  const getDaysInCurrentPhase = () => {
+    if (!data) return 0;
+    const phaseStartStr = data.currentPhaseStartDate || data.startDate;
+    if (!phaseStartStr) return 0;
+    const parts = phaseStartStr.split("-");
+    const start = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    const today = new Date();
+    start.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    const diffTime = today.getTime() - start.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(0, diffDays) + 1;
+  };
+
   const handleRoutineToggle = async () => {
     if (!data) return;
 
@@ -245,7 +259,17 @@ export default function Home() {
   const handlePhaseChange = async (newPhaseId: number) => {
     if (!data) return;
 
-    const newData = { ...data, currentPhase: newPhaseId };
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${year}-${month}-${day}`;
+
+    const newData = { 
+      ...data, 
+      currentPhase: newPhaseId,
+      currentPhaseStartDate: todayStr
+    };
     setData(newData);
 
     try {
@@ -370,6 +394,30 @@ export default function Home() {
               {syncStatus === "idle" && "Sync Workspace"}
             </button>
 
+            {/* Days in current Phase badge */}
+            <div 
+              className="glass-panel" 
+              style={{ 
+                padding: "0 1rem", 
+                display: "flex", 
+                alignItems: "center", 
+                height: "38px",
+                margin: 0,
+                borderRadius: "6px",
+                boxShadow: "none",
+                whiteSpace: "nowrap",
+                flexShrink: 0
+              }}
+            >
+              <span style={{ fontSize: "0.6rem", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "monospace", marginRight: "0.4rem" }}>
+                Phase Day
+              </span>
+              <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--accent)", fontFamily: "monospace" }}>
+                {getDaysInCurrentPhase()}
+              </span>
+            </div>
+
+            {/* Overall Plan Progress */}
             <div 
               className="glass-panel" 
               style={{ 
@@ -377,7 +425,7 @@ export default function Home() {
                 display: "flex", 
                 alignItems: "center", 
                 gap: "1rem", 
-                minWidth: "220px", 
+                minWidth: "200px", 
                 height: "38px",
                 margin: 0,
                 borderRadius: "6px",
