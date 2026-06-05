@@ -262,7 +262,7 @@
       "id": "p1",
       "title": "CPU Ray Tracer",
       "completed": false,
-      "localPath": "/home/aper/Documents/ray-tracer"
+      "localPath": "~/Documents/ray-tracer"
     },
     {
       "id": "p2",
@@ -286,7 +286,7 @@
       "totalPages": 183,
       "currentSubject": "2.5 Skews",
       "link": "/mnt/Storage4TB/Bookshelf/Game Engine/Foundations of Game Engine Development, Volume 1 Mathematics by Eric Lengyel.pdf",
-      "localPath": "/home/aper/Documents/LinearAlgebra"
+      "localPath": "~/Documents/LinearAlgebra"
     },
     {
       "id": "m2",
@@ -298,7 +298,7 @@
       "totalPages": 639,
       "currentSubject": "Objects, Types & Values: Drill",
       "link": "",
-      "localPath": "/home/aper/Documents/PPPC++"
+      "localPath": "~/Documents/PPPC++"
     },
     {
       "id": "m4",
@@ -310,7 +310,7 @@
       "totalPages": 300,
       "currentSubject": "Ray Casting",
       "link": "/mnt/Storage4TB/Bookshelf/Graphics Programming/Ray Tracer Challenge _ A Test-driven Guide to Your First 3d Renderer (9781680506792).pdf",
-      "localPath": "/home/aper/Documents/ray-tracer"
+      "localPath": "~/Documents/ray-tracer"
     },
     {
       "id": "m5",
@@ -322,7 +322,7 @@
       "totalPages": 50,
       "currentSubject": "Creating a window",
       "link": "https://learnopengl.com",
-      "localPath": "/home/aper/Documents/LearnOpenGL"
+      "localPath": "~/Documents/LearnOpenGL"
     },
     {
       "id": "m6",

@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { execSync } from "child_process";
 import fs from "fs";
+import os from "os";
+import path from "path";
 
 export const dynamic = "force-dynamic";
+
+// Resolve paths beginning with ~ to the system user's home directory
+function resolveHomePath(inputPath: string): string {
+  if (inputPath.startsWith("~/")) {
+    return path.join(os.homedir(), inputPath.slice(2));
+  }
+  return inputPath;
+}
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -12,15 +22,18 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Path parameter is required" }, { status: 400 });
   }
 
+  const expandedPath = resolveHomePath(targetPath);
+
   // Check if directory exists first
-  if (!fs.existsSync(targetPath)) {
+  if (!fs.existsSync(expandedPath)) {
     return NextResponse.json({ error: "Directory does not exist" }, { status: 404 });
   }
 
-  // Security check: restrict paths to subdirectories of /home/aper/Documents
-  const resolvedPath = fs.realpathSync(targetPath);
-  if (!resolvedPath.startsWith("/home/aper/Documents")) {
-    return NextResponse.json({ error: "Access denied: Path must be within /home/aper/Documents" }, { status: 403 });
+  // Security check: restrict paths to subdirectories of ~/Documents
+  const homeDocumentsDir = path.join(os.homedir(), "Documents");
+  const resolvedPath = fs.realpathSync(expandedPath);
+  if (!resolvedPath.startsWith(homeDocumentsDir)) {
+    return NextResponse.json({ error: `Access denied: Path must be within ${homeDocumentsDir}` }, { status: 403 });
   }
 
   try {
