@@ -1,65 +1,524 @@
-import Image from "next/image";
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { fetchAppState, updateAppState, openLinkOnSystem, syncWorkspace } from "@/lib/api";
+import StreakGraph from "@/components/StreakGraph";
+import PhaseTracker from "@/components/PhaseTracker";
+import PortfolioTracker from "@/components/PortfolioTracker";
+import MaterialsTracker from "@/components/MaterialsTracker";
+import PhaseDetailModal from "@/components/PhaseDetailModal";
 
 export default function Home() {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [todayStr, setTodayStr] = useState("");
+  const [dayOfWeek, setDayOfWeek] = useState(0);
+  const [selectedPhase, setSelectedPhase] = useState<any>(null);
+  const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle");
+  const [syncError, setSyncError] = useState("");
+
+  const handleSyncWorkspace = async () => {
+    setSyncStatus("syncing");
+    setSyncError("");
+    try {
+      const res = await syncWorkspace();
+      if (res.success) {
+        setSyncStatus("success");
+        setTimeout(() => setSyncStatus("idle"), 3000);
+      } else {
+        throw new Error(res.error || "Unknown sync error");
+      }
+    } catch (err: any) {
+      console.error("Workspace sync failed:", err);
+      setSyncStatus("error");
+      setSyncError(err.message || "Failed to sync workspace");
+      setTimeout(() => setSyncStatus("idle"), 5000);
+    }
+  };
+
+  useEffect(() => {
+    // Client-only initialization
+    const today = new Date();
+    setTodayStr(today.toISOString().split("T")[0]);
+    setDayOfWeek(today.getDay());
+
+    fetchAppState()
+      .then(setData)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Determine dynamic daily routine task based on day of week
+  const getDailyRoutineTask = () => {
+    switch (dayOfWeek) {
+      case 1: // Monday
+      case 3: // Wednesday
+      case 5: // Friday
+        return {
+          title: "Revision of the day: Linear Algebra",
+          type: "math",
+        };
+      case 2: // Tuesday
+      case 4: // Thursday
+      case 0: // Sunday
+        return {
+          title: "Revision of the day: Algorithms & Data Structures",
+          type: "dsa",
+        };
+      case 6: // Saturday
+      default:
+        return {
+          title: "Revision of the day: Weekly Review",
+          type: "review",
+        };
+    }
+  };
+
+  const getDaysPassed = () => {
+    if (!data || !data.startDate) return 0;
+    const start = new Date(data.startDate);
+    const today = new Date();
+    start.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    const diffTime = today.getTime() - start.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(0, diffDays);
+  };
+
+  const handleRoutineToggle = async () => {
+    if (!data) return;
+
+    const isCurrentlyChecked = data.lastDailyRoutineCheck === todayStr;
+    const nextCheckState = isCurrentlyChecked ? "" : todayStr;
+
+    let newStreakHistory = [...(data.streakHistory || [])];
+    if (!isCurrentlyChecked) {
+      newStreakHistory.push(todayStr);
+    } else {
+      const index = newStreakHistory.indexOf(todayStr);
+      if (index > -1) {
+        newStreakHistory.splice(index, 1);
+      }
+    }
+
+    const newData = {
+      ...data,
+      lastDailyRoutineCheck: nextCheckState,
+      streakHistory: newStreakHistory,
+    };
+    setData(newData);
+
+    try {
+      await updateAppState(newData);
+    } catch (err) {
+      console.error("Failed to sync routine toggle", err);
+    }
+  };
+
+  const handleMaterialChange = async (materialId: string, newStatus: string) => {
+    if (!data) return;
+
+    const updatedMaterials = data.materials.map((m: any) => {
+      if (m.id !== materialId) return m;
+      return { ...m, status: newStatus };
+    });
+
+    let newStreakHistory = [...(data.streakHistory || [])];
+    if (newStatus === "Completed" && !newStreakHistory.includes(todayStr)) {
+      newStreakHistory.push(todayStr);
+    }
+
+    const newData = { ...data, materials: updatedMaterials, streakHistory: newStreakHistory };
+    setData(newData);
+
+    try {
+      await updateAppState(newData);
+    } catch (err) {
+      console.error("Failed to sync material status", err);
+    }
+  };
+
+  const handleMaterialProgressChange = async (materialId: string, fields: any) => {
+    if (!data) return;
+
+    const updatedMaterials = data.materials.map((m: any) => {
+      if (m.id !== materialId) return m;
+      return { ...m, ...fields };
+    });
+
+    const newData = { ...data, materials: updatedMaterials };
+    setData(newData);
+
+    try {
+      await updateAppState(newData);
+    } catch (err) {
+      console.error("Failed to sync material progress", err);
+    }
+  };
+
+  const handleAddMaterial = async (newMaterial: any) => {
+    if (!data) return;
+
+    const id = `m_${Date.now()}`;
+    const materialWithId = { id, ...newMaterial };
+    const newData = {
+      ...data,
+      materials: [...(data.materials || []), materialWithId],
+    };
+    setData(newData);
+
+    try {
+      await updateAppState(newData);
+    } catch (err) {
+      console.error("Failed to add material", err);
+    }
+  };
+
+  const handleDeleteMaterial = async (materialId: string) => {
+    if (!data) return;
+
+    const newData = {
+      ...data,
+      materials: data.materials.filter((m: any) => m.id !== materialId),
+    };
+    setData(newData);
+
+    try {
+      await updateAppState(newData);
+    } catch (err) {
+      console.error("Failed to delete material", err);
+    }
+  };
+
+  const handleOpenLink = async (link: string) => {
+    if (!link) return;
+    if (link.startsWith("http://") || link.startsWith("https://")) {
+      window.open(link, "_blank", "noopener,noreferrer");
+    } else {
+      try {
+        await openLinkOnSystem(link);
+      } catch (err) {
+        console.error("Failed to open local link", err);
+      }
+    }
+  };
+
+  const handlePortfolioToggle = async (projectId: string) => {
+    if (!data) return;
+
+    let isNowCompleted = false;
+    const updatedPortfolio = data.portfolio.map((p: any) => {
+      if (p.id !== projectId) return p;
+      isNowCompleted = !p.completed;
+      return { ...p, completed: !p.completed };
+    });
+
+    let newStreakHistory = [...(data.streakHistory || [])];
+    if (isNowCompleted) {
+      newStreakHistory.push(todayStr);
+    } else {
+      const index = newStreakHistory.indexOf(todayStr);
+      if (index > -1) {
+        newStreakHistory.splice(index, 1);
+      }
+    }
+
+    const newData = {
+      ...data,
+      portfolio: updatedPortfolio,
+      streakHistory: newStreakHistory,
+    };
+    setData(newData);
+
+    try {
+      await updateAppState(newData);
+    } catch (err) {
+      console.error("Failed to sync portfolio toggle", err);
+    }
+  };
+
+  const handlePhaseChange = async (newPhaseId: number) => {
+    if (!data) return;
+
+    const newData = { ...data, currentPhase: newPhaseId };
+    setData(newData);
+
+    try {
+      await updateAppState(newData);
+    } catch (err) {
+      console.error("Failed to update phase", err);
+    }
+  };
+
+  const handleTaskToggle = async (phaseId: number, taskId: string) => {
+    if (!data) return;
+
+    let taskCompletedState = false;
+    const updatedPhases = data.phases.map((phase: any) => {
+      if (phase.id !== phaseId) return phase;
+      return {
+        ...phase,
+        tasks: phase.tasks.map((t: any) => {
+          if (t.id !== taskId) return t;
+          taskCompletedState = !t.completed;
+          return { ...t, completed: !t.completed };
+        }),
+      };
+    });
+
+    let newStreakHistory = [...(data.streakHistory || [])];
+    if (taskCompletedState) {
+      newStreakHistory.push(todayStr);
+    } else {
+      const index = newStreakHistory.indexOf(todayStr);
+      if (index > -1) {
+        newStreakHistory.splice(index, 1);
+      }
+    }
+
+    const newData = {
+      ...data,
+      phases: updatedPhases,
+      streakHistory: newStreakHistory,
+    };
+    setData(newData);
+
+    try {
+      await updateAppState(newData);
+    } catch (err) {
+      console.error("Failed to sync task toggle", err);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div style={{ display: "flex", height: "100vh", alignItems: "center", justifyContent: "center" }}>
+        <p>Loading your engine dev workspace...</p>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return <div>Failed to load data.</div>;
+  }
+
+  const currentPhaseData = data.phases.find((p: any) => p.id === data.currentPhase);
+  const routineTask = getDailyRoutineTask();
+  const isRoutineChecked = data.lastDailyRoutineCheck === todayStr;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <main className="container">
+      <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+        {/* Main Header */}
+        <header 
+          className="main-header"
+          style={{ 
+            width: "100%",
+            display: "flex", 
+            justifyContent: "space-between", 
+            alignItems: "center", 
+            flexWrap: "wrap", 
+            gap: "1.5rem", 
+            borderBottom: "1px solid var(--card-border)", 
+            paddingBottom: "1.5rem" 
+          }}
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+            <h1 style={{ fontSize: "1.75rem", fontWeight: 700, color: "#fff", margin: 0, display: "flex", alignItems: "center", gap: "0.5rem", letterSpacing: "-0.01em" }}>
+              <span style={{ color: "var(--accent)" }}>&gt;_</span> Engine Developer Hub
+            </h1>
+            <p style={{ color: "#a1a1aa", fontSize: "0.85rem", margin: 0 }}>12-Month Graphics Programming Tracker</p>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "nowrap", flex: "0 1 auto" }}>
+            <button
+              onClick={handleSyncWorkspace}
+              disabled={syncStatus === "syncing"}
+              className="btn"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                borderColor: syncStatus === "success" ? "var(--success)" : syncStatus === "error" ? "var(--warning)" : "var(--accent)",
+                color: syncStatus === "success" ? "var(--success)" : syncStatus === "error" ? "var(--warning)" : "#fff",
+                background: syncStatus === "success" ? "rgba(16, 185, 129, 0.05)" : syncStatus === "error" ? "rgba(245, 158, 11, 0.05)" : "transparent",
+                fontSize: "0.8rem",
+                padding: "0 1rem",
+                height: "38px",
+                borderRadius: "6px",
+                whiteSpace: "nowrap",
+                fontWeight: 600,
+                letterSpacing: "0.02em"
+              }}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              {syncStatus === "syncing" && (
+                <>
+                  <span className="animate-spin">↻</span>
+                  <span>Syncing...</span>
+                </>
+              )}
+              {syncStatus === "success" && "Synced ✓"}
+              {syncStatus === "error" && (
+                <span title={syncError} style={{ cursor: "help" }}>
+                  Sync Error ⚠
+                </span>
+              )}
+              {syncStatus === "idle" && "Sync Workspace"}
+            </button>
+
+            <div 
+              className="glass-panel" 
+              style={{ 
+                padding: "0 1rem", 
+                display: "flex", 
+                alignItems: "center", 
+                gap: "1rem", 
+                minWidth: "220px", 
+                height: "38px",
+                margin: 0,
+                borderRadius: "6px",
+                boxShadow: "none"
+              }}
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+              <div style={{ flexShrink: 0, display: "flex", alignItems: "baseline", gap: "0.4rem" }}>
+                <span style={{ fontSize: "0.6rem", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "monospace" }}>Progress</span>
+                <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#fff", fontFamily: "monospace" }}>
+                  {getDaysPassed()}/365
+                </span>
+              </div>
+              <div style={{ flex: 1, height: "4px", backgroundColor: "rgba(255,255,255,0.08)", borderRadius: "2px", overflow: "hidden" }}>
+                <div 
+                  style={{ 
+                    width: `${Math.min(100, (getDaysPassed() / 365) * 100)}%`, 
+                    height: "100%", 
+                    backgroundColor: "var(--accent)",
+                    transition: "width 0.3s ease" 
+                  }} 
+                />
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Phase recommendation alert */}
+        {(() => {
+          const days = getDaysPassed();
+          const recPhase = days <= 90 ? 1 : days <= 210 ? 2 : days <= 300 ? 3 : 4;
+          if (data.currentPhase !== recPhase) {
+            return (
+              <div className="glass-panel" style={{ borderLeft: "4px solid #f59e0b", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem 1.5rem" }}>
+                <span style={{ fontSize: "0.9rem", color: "#f3f4f6" }}>
+                  Schedule suggestion: Time to transition to Phase {recPhase} (Day {days})
+                </span>
+                <button 
+                  onClick={() => handlePhaseChange(recPhase)} 
+                  className="btn" 
+                  style={{ padding: "0.25rem 0.75rem", fontSize: "0.85rem", background: "#d97706" }}
+                >
+                  Switch Now
+                </button>
+              </div>
+            );
+          }
+          return null;
+        })()}
+
+        {/* Daily Revision Panel */}
+        <div className="glass-panel" style={{ borderLeft: "4px solid var(--accent)", padding: "1.25rem 1.5rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem", width: "100%" }}>
+            <input
+              type="checkbox"
+              className="checkbox-custom"
+              checked={isRoutineChecked}
+              onChange={handleRoutineToggle}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <span style={{ 
+              fontWeight: 600, 
+              fontSize: "1.05rem", 
+              color: isRoutineChecked ? "#71717a" : "#fff",
+              textDecoration: isRoutineChecked ? "line-through" : "none",
+              flex: 1,
+              transition: "all 0.2s ease"
+            }}>
+              {routineTask.title}
+            </span>
+            <span style={{ fontSize: "0.75rem", background: "rgba(14,165,233,0.15)", color: "var(--accent)", padding: "0.1rem 0.4rem", borderRadius: "4px" }}>
+              Daily
+            </span>
+          </div>
         </div>
-      </main>
-    </div>
+
+        {/* Today's Focus Panel */}
+        <div className="glass-panel">
+          <h2 className="section-title">Today's Focus</h2>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {currentPhaseData && currentPhaseData.tasks.length > 0 ? (
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                {currentPhaseData.tasks.map((task: any, idx: number) => (
+                  <div 
+                    key={task.id} 
+                    style={{ 
+                      display: "flex", 
+                      alignItems: "center", 
+                      gap: "1rem", 
+                      padding: "0.75rem 0",
+                      borderBottom: idx === currentPhaseData.tasks.length - 1 ? "none" : "1px solid var(--card-border)"
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      className="checkbox-custom"
+                      checked={task.completed}
+                      onChange={() => handleTaskToggle(data.currentPhase, task.id)}
+                    />
+                    <span 
+                      style={{ 
+                        flex: 1, 
+                        fontSize: "0.9rem", 
+                        color: task.completed ? "#71717a" : "var(--foreground)", 
+                        textDecoration: task.completed ? "line-through" : "none",
+                        transition: "color 0.2s ease" 
+                      }}
+                    >
+                      {task.title}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ color: "#a1a1aa", fontSize: "0.9rem", padding: "0.5rem 0" }}>No phase tasks today.</p>
+            )}
+          </div>
+        </div>
+
+        {/* Phase Tracker */}
+        <PhaseTracker phases={data.phases} currentPhase={data.currentPhase} onPhaseClick={setSelectedPhase} />
+
+        {/* Streak Graph */}
+        <StreakGraph streakHistory={data.streakHistory} />
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+        {/* Portfolio Tracker sidebar */}
+        <PortfolioTracker portfolio={data.portfolio} onToggle={handlePortfolioToggle} />
+
+        {/* Materials Tracker */}
+        <MaterialsTracker
+          materials={data.materials || []}
+          onStatusChange={handleMaterialChange}
+          onProgressChange={handleMaterialProgressChange}
+          onAddMaterial={handleAddMaterial}
+          onDeleteMaterial={handleDeleteMaterial}
+          onOpenLink={handleOpenLink}
+        />
+      </div>
+      {selectedPhase && (
+        <PhaseDetailModal 
+          phase={selectedPhase} 
+          currentPhaseId={data.currentPhase}
+          onClose={() => setSelectedPhase(null)} 
+          onActivatePhase={handlePhaseChange}
+        />
+      )}
+    </main>
   );
 }
