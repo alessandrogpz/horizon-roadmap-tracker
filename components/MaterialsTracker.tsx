@@ -38,8 +38,11 @@ function renderMarkdownToHtml(markdown: string): string {
   let codeBlockContent: string[] = [];
 
   for (let line of lines) {
+    const rawLine = line;
+    const trimmedRaw = rawLine.trim();
+
     // Code blocks
-    if (line.trim().startsWith("```")) {
+    if (trimmedRaw.startsWith("```")) {
       if (inCodeBlock) {
         inCodeBlock = false;
         processedLines.push(`<pre><code>${codeBlockContent.join("\n")}</code></pre>`);
@@ -51,8 +54,7 @@ function renderMarkdownToHtml(markdown: string): string {
     }
 
     if (inCodeBlock) {
-      // Escape HTML inside code blocks
-      const escapedLine = line
+      const escapedLine = rawLine
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;");
@@ -60,53 +62,74 @@ function renderMarkdownToHtml(markdown: string): string {
       continue;
     }
 
-    // Normal line processing
-    let processedLine = line
+    // Check blockquotes before HTML escaping
+    let isBlockquote = false;
+    let contentLine = rawLine;
+    if (trimmedRaw.startsWith(">")) {
+      isBlockquote = true;
+      contentLine = trimmedRaw.slice(1);
+      if (contentLine.startsWith(" ")) {
+        contentLine = contentLine.slice(1);
+      }
+    }
+
+    let processedLine = contentLine
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
 
-    // Inline formatting: Bold, Italic, Inline Code
+    // Inline formatting: Bold, Italic, Code
     processedLine = processedLine.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
     processedLine = processedLine.replace(/\*([^*]+)\*/g, "<em>$1</em>");
     processedLine = processedLine.replace(/__([^_]+)__/g, "<strong>$1</strong>");
     processedLine = processedLine.replace(/_([^_]+)_/g, "<em>$1</em>");
     processedLine = processedLine.replace(/`([^`]+)`/g, "<code>$1</code>");
 
-    // Headers & Blockquotes
-    if (processedLine.startsWith("### ")) {
-      processedLines.push(`<h3>${processedLine.slice(4)}</h3>`);
-    } else if (processedLine.startsWith("## ")) {
-      processedLines.push(`<h2>${processedLine.slice(3)}</h2>`);
-    } else if (processedLine.startsWith("# ")) {
-      processedLines.push(`<h1>${processedLine.slice(2)}</h1>`);
-    } else if (processedLine.startsWith("> ")) {
-      processedLines.push(`<blockquote>${processedLine.slice(2)}</blockquote>`);
-    } else if (processedLine.startsWith("- ") || processedLine.startsWith("* ")) {
-      if (!inList) {
-        processedLines.push("<ul>");
-        inList = true;
-      }
-      processedLines.push(`<li>${processedLine.slice(2)}</li>`);
-    } else {
+    const trimmed = processedLine.trim();
+
+    // Headers (h1 - h6)
+    const headingMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
+    if (headingMatch) {
       if (inList) {
         processedLines.push("</ul>");
         inList = false;
       }
-      if (processedLine.trim() === "") {
-        processedLines.push("<br />");
+      const level = headingMatch[1].length;
+      const text = headingMatch[2];
+      processedLines.push(`<h${level}>${text}</h${level}>`);
+      continue;
+    }
+
+    // Lists (handles leading space nesting flatly)
+    const listMatch = trimmed.match(/^([-\*])\s+(.*)$/);
+    if (listMatch) {
+      if (!inList) {
+        processedLines.push("<ul>");
+        inList = true;
+      }
+      processedLines.push(`<li>${listMatch[2]}</li>`);
+      continue;
+    }
+
+    // Normal text / blockquotes
+    if (inList) {
+      processedLines.push("</ul>");
+      inList = false;
+    }
+
+    if (trimmed === "") {
+      processedLines.push("<br />");
+    } else {
+      if (isBlockquote) {
+        processedLines.push(`<blockquote>${processedLine}</blockquote>`);
       } else {
         processedLines.push(`<p>${processedLine}</p>`);
       }
     }
   }
 
-  if (inList) {
-    processedLines.push("</ul>");
-  }
-  if (inCodeBlock) {
-    processedLines.push(`<pre><code>${codeBlockContent.join("\n")}</code></pre>`);
-  }
+  // Close open structures
+  if (inList) processedLines.push("</ul>");
 
   return processedLines.join("\n");
 }
