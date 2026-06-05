@@ -1,8 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 
 export default function StreakGraph({ streakHistory = [] }: { streakHistory?: string[] }) {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth;
+    }
+  }, [streakHistory]);
   // Count occurrences of each date
   const dateCounts: { [key: string]: number } = {};
   streakHistory.forEach((date) => {
@@ -59,7 +66,11 @@ export default function StreakGraph({ streakHistory = [] }: { streakHistory?: st
   };
 
   return (
-    <div className="glass-panel" style={{ overflowX: 'auto' }}>
+    <div 
+      ref={scrollContainerRef}
+      className="glass-panel" 
+      style={{ overflowX: 'auto' }}
+    >
       <h2 className="section-title">Consistency Streak</h2>
       <div style={{ display: 'flex', gap: '4px', minWidth: '700px', padding: '10px 0' }}>
         {weeks.map((week, wIdx) => (
