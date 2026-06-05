@@ -11,6 +11,7 @@ import PhaseDetailModal from "@/components/PhaseDetailModal";
 export default function Home() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [initError, setInitError] = useState("");
   const [todayStr, setTodayStr] = useState("");
   const [dayOfWeek, setDayOfWeek] = useState(0);
   const [selectedPhase, setSelectedPhase] = useState<any>(null);
@@ -47,7 +48,10 @@ export default function Home() {
 
     fetchAppState()
       .then(setData)
-      .catch(console.error)
+      .catch((err: any) => {
+        console.error("Initialization fetch error:", err);
+        setInitError(err.message || String(err));
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -321,14 +325,26 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", height: "100vh", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ display: "flex", height: "100vh", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "1rem", backgroundColor: "#09090b", color: "#e4e4e7" }}>
+        <span className="animate-spin" style={{ fontSize: "2rem" }}>↻</span>
         <p>Loading your engine dev workspace...</p>
       </div>
     );
   }
 
-  if (!data) {
-    return <div>Failed to load data.</div>;
+  if (initError || !data) {
+    return (
+      <div style={{ display: "flex", height: "100vh", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem", backgroundColor: "#09090b", color: "#e4e4e7", fontFamily: "monospace", textAlign: "center" }}>
+        <h2 style={{ color: "#f59e0b", marginBottom: "1rem", textTransform: 'uppercase', letterSpacing: '0.05em' }}>Initialization Failed</h2>
+        <p style={{ color: "#a1a1aa", fontSize: "0.9rem", marginBottom: "1.5rem" }}>
+          The app failed to connect to the backend server.
+        </p>
+        <div style={{ padding: "1rem", backgroundColor: "#121214", borderRadius: "6px", border: "1px solid var(--card-border)", color: "#f87171", marginBottom: "1.5rem", maxWidth: "500px", wordBreak: "break-all" }}>
+          {initError || "No data was returned by the server."}
+        </div>
+        <button className="btn" onClick={() => window.location.reload()}>Retry Connection</button>
+      </div>
+    );
   }
 
   const currentPhaseData = data.phases.find((p: any) => p.id === data.currentPhase);
