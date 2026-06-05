@@ -356,7 +356,27 @@ export default function Home() {
             <h1 style={{ fontSize: "1.75rem", fontWeight: 700, color: "#fff", margin: 0, display: "flex", alignItems: "center", gap: "0.5rem", letterSpacing: "-0.01em" }}>
               <span style={{ color: "var(--accent)" }}>&gt;_</span> Engine Developer Hub
             </h1>
-            <p style={{ color: "#a1a1aa", fontSize: "0.85rem", margin: 0 }}>12-Month Graphics Programming Tracker</p>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
+              <p style={{ color: "#a1a1aa", fontSize: "0.85rem", margin: 0 }}>12-Month Graphics Programming Tracker</p>
+              <span style={{ color: "var(--card-border)", fontSize: "0.8rem" }}>|</span>
+              <a 
+                href="/roadmap" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{ 
+                  color: "var(--accent)", 
+                  fontSize: "0.85rem", 
+                  textDecoration: "none", 
+                  fontWeight: 600,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.25rem"
+                }}
+                className="link-title"
+              >
+                Full Roadmap ↗
+              </a>
+            </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "nowrap", flex: "0 1 auto" }}>
             <button

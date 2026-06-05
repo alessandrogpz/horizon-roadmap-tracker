@@ -114,6 +114,18 @@
           {
             "item": "Stewart's Calculus 1",
             "desc": "Go over differentiation rules and differentiation applications."
+          },
+          {
+            "item": "Dear ImGui Integration",
+            "desc": "Build real-time interactive parameters, light controllers, and camera toggles."
+          },
+          {
+            "item": "RenderDoc Frame Capture",
+            "desc": "Analyze bound pipelines, uniform states, and step through shader variables."
+          },
+          {
+            "item": "3D Debug Line Drawing",
+            "desc": "Draw line arrays, coordinate axes, and bounding boxes in 3D world space."
           }
         ],
         "deliverable": [
@@ -160,6 +172,10 @@
           {
             "item": "Stewart's Calculus 2",
             "desc": "Review integrations and partial derivatives chapters."
+          },
+          {
+            "item": "Performance Profiling (Tracy)",
+            "desc": "Integrate Tracy Profiler to identify CPU/GPU frame boundary bottlenecks."
           }
         ],
         "deliverable": [
@@ -211,6 +227,10 @@
           {
             "item": "Multivariable & Vector Calculus",
             "desc": "Complete Stewart's vector calculus and numerical methods chapters."
+          },
+          {
+            "item": "Vulkan RenderDoc Diagnostics",
+            "desc": "Verify device queues, descriptor layouts, and memory barriers under Vulkan."
           }
         ],
         "deliverable": [
