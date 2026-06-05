@@ -21,8 +21,21 @@ npm run dev:lan
 * **PC URL:** [http://localhost:3000](http://localhost:3000)
 * **Mobile URL:** `http://<YOUR_PC_IP>:3000` (e.g. `http://192.168.0.253:3000`)
 
-> [!NOTE]
-> If the page does not load on your mobile browser under Option B, make sure to allow port `3000` through your system's firewall by running `sudo ufw allow 3000/tcp` (and `sudo ufw delete allow 3000/tcp` when done).
+#### Firewall Configuration (UFW on Linux)
+If the page hangs or fails to load on your phone under Option B, your system's firewall (`ufw`) is likely blocking port `3000`. You can open and close the port with the following commands:
+
+* **To Open the Port (Restricted to Home Wi-Fi - Recommended):**
+  ```bash
+  sudo ufw allow proto tcp from 192.168.0.0/24 to any port 3000
+  ```
+* **To Check Active Rules (Verify):**
+  ```bash
+  sudo ufw status numbered
+  ```
+* **To Close the Port (Delete Rule when finished):**
+  ```bash
+  sudo ufw delete allow proto tcp from 192.168.0.0/24 to any port 3000
+  ```
 
 ---
 
