@@ -41,6 +41,16 @@ function renderMarkdownToHtml(markdown: string): string {
     const rawLine = line;
     const trimmedRaw = rawLine.trim();
 
+    // Horizontal rules (---)
+    if (trimmedRaw === "---" || trimmedRaw === "***" || trimmedRaw === "___") {
+      if (inList) {
+        processedLines.push("</ul>");
+        inList = false;
+      }
+      processedLines.push(`<hr style="border: 0; border-top: 1px solid var(--card-border); margin: 2.5rem 0;" />`);
+      continue;
+    }
+
     // Code blocks
     if (trimmedRaw.startsWith("```")) {
       if (inCodeBlock) {
