@@ -416,7 +416,7 @@ export default function MaterialsTracker({
                 type="text"
                 value={newLocalPath}
                 onChange={(e) => setNewLocalPath(e.target.value)}
-                placeholder="/home/aper/Documents/..."
+                placeholder="~/Documents/..."
                 style={{ width: "100%", padding: "0.3rem", borderRadius: "4px", background: "rgba(0,0,0,0.3)", border: "1px solid var(--card-border)", color: "#fff", outline: "none", fontFamily: "inherit", fontSize: "0.85rem" }}
               />
             </div>
