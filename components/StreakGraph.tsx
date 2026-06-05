@@ -25,7 +25,10 @@ export default function StreakGraph({ streakHistory = [] }: { streakHistory?: st
   const tempDate = new Date(startDate);
   // Render up to today
   while (tempDate <= today) {
-    const dateStr = tempDate.toISOString().split('T')[0];
+    const year = tempDate.getFullYear();
+    const month = String(tempDate.getMonth() + 1).padStart(2, '0');
+    const day = String(tempDate.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
     const count = dateCounts[dateStr] || 0;
 
     currentWeek.push({ dateStr, count });

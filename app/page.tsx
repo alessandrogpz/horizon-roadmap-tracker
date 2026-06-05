@@ -39,7 +39,10 @@ export default function Home() {
   useEffect(() => {
     // Client-only initialization
     const today = new Date();
-    setTodayStr(today.toISOString().split("T")[0]);
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    setTodayStr(`${year}-${month}-${day}`);
     setDayOfWeek(today.getDay());
 
     fetchAppState()
@@ -76,13 +79,15 @@ export default function Home() {
 
   const getDaysPassed = () => {
     if (!data || !data.startDate) return 0;
-    const start = new Date(data.startDate);
+    // Parse YYYY-MM-DD local parameters to avoid timezone offset conversion shifts
+    const parts = data.startDate.split("-");
+    const start = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
     const today = new Date();
     start.setHours(0, 0, 0, 0);
     today.setHours(0, 0, 0, 0);
     const diffTime = today.getTime() - start.getTime();
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    return Math.max(0, diffDays);
+    return Math.max(0, diffDays) + 1;
   };
 
   const handleRoutineToggle = async () => {
