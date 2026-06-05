@@ -84,6 +84,21 @@
           "id": "t2_3",
           "title": "OpenGL Mini-Engine",
           "completed": false
+        },
+        {
+          "id": "t2_imgui",
+          "title": "Integrate Dear ImGui control panel",
+          "completed": false
+        },
+        {
+          "id": "t2_rdoc",
+          "title": "Learn basic RenderDoc shader & texture frame debugging",
+          "completed": false
+        },
+        {
+          "id": "t2_draw",
+          "title": "Implement debug line/wireframe drawer",
+          "completed": false
         }
       ],
       "detailedInfo": {
@@ -128,6 +143,11 @@
         {
           "id": "t3_2",
           "title": "Calculus 2 (Stewart)",
+          "completed": false
+        },
+        {
+          "id": "t3_prof",
+          "title": "Integrate real-time frame/CPU profiling",
           "completed": false
         }
       ],
@@ -174,6 +194,11 @@
         {
           "id": "t4_3",
           "title": "Vulkan Renderer",
+          "completed": false
+        },
+        {
+          "id": "t4_rdoc",
+          "title": "Diagnose Vulkan device queues & pipeline states with RenderDoc",
           "completed": false
         }
       ],
