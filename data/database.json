@@ -6,9 +6,10 @@
   ],
   "lastDailyRoutineCheck": "2026-06-05",
   "dailyFocus": {
-    "math": "Eric Lengyel Chapter 2.5 (Skews)",
-    "dsa": "",
-    "review": "Weekly Git sync & study notes review"
+    "math": "",
+    "leetcode": "",
+    "implementation": "",
+    "review": ""
   },
   "phases": [
     {
@@ -66,6 +67,16 @@
           {
             "item": "Linear Algebra Foundations",
             "desc": "Vector/matrix math and coordinate spaces (local, world, view, projection)."
+          }
+        ],
+        "algoDS": [
+          {
+            "item": "Cache Locality & Memory Layout (Months 1–2)",
+            "desc": "Array of Structures (AoS) vs. Structure of Arrays (SoA), Memory Alignment & Padding (alignas), and Fixed-size pools to avoid heap overhead."
+          },
+          {
+            "item": "LeetCode Focus",
+            "desc": "Array and Two-Pointer problems with a focus on space complexity and minimal allocations."
           }
         ]
       }
@@ -153,6 +164,20 @@
             "item": "Calculus 1 (Limits & Derivatives)",
             "desc": "Calculate change over time, surface normals of complex geometry, and ray differentials for texture filtering."
           }
+        ],
+        "algoDS": [
+          {
+            "item": "Hierarchies & Scene Management (Months 3–5)",
+            "desc": "Scene Graphs using trees or Directed Acyclic Graphs (DAGs) to propagate spatial transformations parent-to-child."
+          },
+          {
+            "item": "Traversal Loops",
+            "desc": "Iterative Depth-First Search (DFS) and Breadth-First Search (BFS) using custom Stacks to traverse scene graphs."
+          },
+          {
+            "item": "LeetCode Focus",
+            "desc": "Binary Trees, N-ary Trees, and Graph Traversal (DFS/BFS) Medium problems."
+          }
         ]
       }
     },
@@ -202,6 +227,20 @@
           {
             "item": "Calculus 2 (Integration & Partial Derivatives)",
             "desc": "Numerical integration for physics physics loops. Partial derivatives for texture coordinate (u, v) gradients across triangles."
+          }
+        ],
+        "algoDS": [
+          {
+            "item": "Spatial Partitioning (Months 6–9)",
+            "desc": "Bounding Volume Hierarchies (BVH) nesting shapes in Axis-Aligned Bounding Boxes (AABBs), Quadtrees (2D) & Octrees (3D) for frustum culling, and kD-Trees."
+          },
+          {
+            "item": "Algorithms",
+            "desc": "Ray-AABB intersection testing and hierarchical tree traversal."
+          },
+          {
+            "item": "LeetCode Focus",
+            "desc": "Implement a custom Bounding Volume Hierarchy (BVH) from scratch in your Ray Tracer or Engine repository."
           }
         ]
       }
@@ -257,6 +296,20 @@
           {
             "item": "Vector & Multivariable Calculus",
             "desc": "Gradients for Signed Distance Fields (SDFs). Double and line integrals to solve the PBR Rendering Equation. Monte Carlo numerical integrations."
+          }
+        ],
+        "algoDS": [
+          {
+            "item": "Mesh Representation & Sorting (Months 10–12)",
+            "desc": "Half-Edge data structure for mesh representations (polygon mesh adjacencies lookup for geometry processing)."
+          },
+          {
+            "item": "Sorting Pipelines",
+            "desc": "Radix Sort or Merge Sort for depth-sorting transparent geometry from back-to-front every frame."
+          },
+          {
+            "item": "LeetCode Focus",
+            "desc": "Standard sorting algorithm mechanics and advanced Graph problems (Adjacency Lists)."
           }
         ]
       }
@@ -353,6 +406,9 @@
     }
   ],
   "dailyStudyPoints": {
-    "dsa": ""
+    "math": "",
+    "leetcode": "",
+    "implementation": "",
+    "review": ""
   }
 }

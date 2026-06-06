@@ -11,6 +11,7 @@ interface DetailedInfo {
   focus: DetailItem[];
   deliverable: DetailItem[];
   math: DetailItem[];
+  algoDS?: DetailItem[];
 }
 
 interface Phase {
@@ -134,6 +135,23 @@ export default function PhaseDetailModal({
               ))}
             </div>
           </div>
+
+          {/* Algorithms & Data Structures Block */}
+          {detailedInfo.algoDS && detailedInfo.algoDS.length > 0 && (
+            <div>
+              <h4 style={{ fontSize: "0.8rem", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.5rem", borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: "0.25rem" }}>
+                Algorithms & Data Structures
+              </h4>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                {detailedInfo.algoDS.map((a, idx) => (
+                  <div key={idx} style={{ fontSize: "0.85rem", lineHeight: 1.5 }}>
+                    <div style={{ color: "#fff", fontWeight: 600 }}>• {a.item}</div>
+                    <div style={{ color: "#a1a1aa", paddingLeft: "1rem" }}>{a.desc}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Expected Deliverable Block (Highlighted) */}
           <div>

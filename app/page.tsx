@@ -77,15 +77,19 @@ export default function Home() {
       case 3: // Wednesday
       case 5: // Friday
         return {
-          title: "Revision of the day: Linear Algebra",
+          title: "Revision of the day: Mathematics",
           type: "math",
         };
       case 2: // Tuesday
-      case 4: // Thursday
       case 6: // Saturday
         return {
-          title: "Revision of the day: Algorithms & Data Structures",
-          type: "dsa",
+          title: "Revision of the day: LeetCode (DSA)",
+          type: "leetcode",
+        };
+      case 4: // Thursday
+        return {
+          title: "Revision of the day: Custom Data Structure Implementation",
+          type: "implementation",
         };
       case 0: // Sunday
       default:
@@ -96,18 +100,7 @@ export default function Home() {
     }
   };
 
-  const getDefaultStudyPoints = (type: string) => {
-    if (type === "math") {
-      return "- Study Eric Lengyel Chapter 2.5 (Skews)\n- Review vector spaces, matrices, dot & cross products\n- Practice coordinate transforms (local ⇄ world ⇄ view)\n- Review skew-symmetric matrices";
-    }
-    if (type === "dsa") {
-      return "- Review spatial partitioning (Octrees, BVH, BSP trees)\n- Practice custom memory allocations (Arena, Stack, Pool)\n- Study CPU cache locality (AoS vs. SoA)\n- Implement dynamic containers under memory limits";
-    }
-    if (type === "review") {
-      return "- Read through study notes written in data/notes/\n- Check local workspace Git repository status statistics\n- Verify Consistency Streak graph and upcoming items\n- Click Sync Workspace in the top header to push to GitHub";
-    }
-    return "";
-  };
+
 
   const getDaysPassed = () => {
     if (!data || !data.startDate) return 0;
@@ -667,12 +660,16 @@ export default function Home() {
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginTop: "0.5rem" }}>
                   <strong style={{ color: "var(--accent)", fontSize: "0.75rem", fontFamily: "monospace", letterSpacing: "0.05em" }}>
-                    {routineTask.type === "math" ? "MATH STUDY POINTS:" : routineTask.type === "dsa" ? "DSA STUDY POINTS:" : "WEEKLY REVIEW POINTS:"}
+                    {routineTask.type === "math" 
+                      ? "MATH STUDY POINTS:" 
+                      : routineTask.type === "leetcode" 
+                      ? "LEETCODE STUDY POINTS:" 
+                      : routineTask.type === "implementation" 
+                      ? "IMPLEMENTATION STUDY POINTS:" 
+                      : "WEEKLY REVIEW POINTS:"}
                   </strong>
                   <textarea
-                    value={data.dailyStudyPoints?.[routineTask.type] !== undefined 
-                      ? data.dailyStudyPoints[routineTask.type] 
-                      : getDefaultStudyPoints(routineTask.type)}
+                    value={data.dailyStudyPoints?.[routineTask.type] || ""}
                     onChange={(e) => {
                       const updatedPoints = {
                         ...(data.dailyStudyPoints || {}),
