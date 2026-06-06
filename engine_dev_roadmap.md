@@ -51,7 +51,7 @@ This document serves as our shared reference roadmap for all four study phases. 
 
 #### 4. Algorithms & Data Structures
 **Topics**:
-- Cache Locality & Memory Layout (Months 1–2): Array of Structures (AoS) vs. Structure of Arrays (SoA) layout efficiency, Memory Alignment & Padding (matching compiler alignment to hardware bounds), Fixed-size pools (avoiding runtime allocation overhead).
+- Cache Locality & Memory Layout (Months 1–3): Array of Structures (AoS) vs. Structure of Arrays (SoA) layout efficiency, Memory Alignment & Padding (matching compiler alignment to hardware bounds), Fixed-size pools (avoiding runtime allocation overhead).
 - LeetCode Focus: Array/Two-Pointer problems (optimizing for space and minimal allocations).
 
 #### 5. Diagnostic & Git Milestones
@@ -94,7 +94,7 @@ This document serves as our shared reference roadmap for all four study phases. 
 
 #### 4. Algorithms & Data Structures
 **Topics**:
-- Hierarchies & Scene Management (Months 3–5): Scene Graphs using trees or Directed Acyclic Graphs (DAGs) to propagate transformations (parent-to-child matrix multiplications).
+- Hierarchies & Scene Management (Months 4–7): Scene Graphs using trees or Directed Acyclic Graphs (DAGs) to propagate transformations (parent-to-child matrix multiplications).
 - Traversal Loops: Iterative Depth-First Search (DFS) and Breadth-First Search (BFS) with custom Stacks to traverse the scene graph for rendering.
 - LeetCode Focus: Binary Trees, N-ary Trees, and Graph Traversal (DFS/BFS) Medium problems.
 
@@ -135,7 +135,7 @@ This document serves as our shared reference roadmap for all four study phases. 
 
 #### 4. Algorithms & Data Structures
 **Topics**:
-- Spatial Partitioning (Months 6–9): Bounding Volume Hierarchies (BVH) nesting primitives inside Axis-Aligned Bounding Boxes (AABBs). Quadtrees (2D) & Octrees (3D) space subdivision for view culling.
+- Spatial Partitioning (Months 8–10): Bounding Volume Hierarchies (BVH) nesting primitives inside Axis-Aligned Bounding Boxes (AABBs). Quadtrees (2D) & Octrees (3D) space subdivision for view culling.
 - Advanced Partitioning: kD-Trees for spatial nearest-neighbor searches (photon mapping/global illumination).
 - Algorithms: Ray-AABB intersection testing, hierarchical tree traversal.
 - LeetCode Focus: Implement a BVH from scratch in your Ray Tracer or Engine repository.
@@ -175,7 +175,7 @@ This document serves as our shared reference roadmap for all four study phases. 
 
 #### 4. Algorithms & Data Structures
 **Topics**:
-- Mesh Representation & Sorting (Months 10–12): Half-Edge data structure for mesh representations (polygon mesh adjacencies lookup for geometry processing).
+- Mesh Representation & Sorting (Months 11–12): Half-Edge data structure for mesh representations (polygon mesh adjacencies lookup for geometry processing).
 - Sorting Pipelines: Radix Sort or Merge Sort for depth-sorting transparent geometry from back-to-front every frame.
 - LeetCode Focus: Standard sorting algorithm mechanics and advanced Graph problems (Adjacency Lists).
 

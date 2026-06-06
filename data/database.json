@@ -71,7 +71,7 @@
         ],
         "algoDS": [
           {
-            "item": "Cache Locality & Memory Layout (Months 1–2)",
+            "item": "Cache Locality & Memory Layout",
             "desc": "Array of Structures (AoS) vs. Structure of Arrays (SoA), Memory Alignment & Padding (alignas), and Fixed-size pools to avoid heap overhead."
           },
           {
@@ -167,7 +167,7 @@
         ],
         "algoDS": [
           {
-            "item": "Hierarchies & Scene Management (Months 3–5)",
+            "item": "Hierarchies & Scene Management",
             "desc": "Scene Graphs using trees or Directed Acyclic Graphs (DAGs) to propagate spatial transformations parent-to-child."
           },
           {
@@ -231,7 +231,7 @@
         ],
         "algoDS": [
           {
-            "item": "Spatial Partitioning (Months 6–9)",
+            "item": "Spatial Partitioning",
             "desc": "Bounding Volume Hierarchies (BVH) nesting shapes in Axis-Aligned Bounding Boxes (AABBs), Quadtrees (2D) & Octrees (3D) for frustum culling, and kD-Trees."
           },
           {
@@ -300,7 +300,7 @@
         ],
         "algoDS": [
           {
-            "item": "Mesh Representation & Sorting (Months 10–12)",
+            "item": "Mesh Representation & Sorting",
             "desc": "Half-Edge data structure for mesh representations (polygon mesh adjacencies lookup for geometry processing)."
           },
           {
