@@ -398,8 +398,6 @@ export default function Home() {
               <span style={{ color: "var(--card-border)", fontSize: "0.8rem" }}>|</span>
               <a 
                 href="/roadmap" 
-                target="_blank" 
-                rel="noopener noreferrer"
                 style={{ 
                   color: "var(--accent)", 
                   fontSize: "0.85rem", 
@@ -411,7 +409,7 @@ export default function Home() {
                 }}
                 className="link-title"
               >
-                Full Roadmap ↗
+                Full Roadmap
               </a>
             </div>
           </div>
