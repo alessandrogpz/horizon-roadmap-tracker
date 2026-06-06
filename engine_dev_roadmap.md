@@ -49,7 +49,12 @@ This document serves as our shared reference roadmap for all four study phases. 
 - Shadows, camera transformations, and world rendering
 - Reflection, refraction, and rendering visual patterns
 
-#### 4. Diagnostic & Git Milestones
+#### 4. Algorithms & Data Structures
+**Topics**:
+- Cache Locality & Memory Layout (Months 1–2): Array of Structures (AoS) vs. Structure of Arrays (SoA) layout efficiency, Memory Alignment & Padding (matching compiler alignment to hardware bounds), Fixed-size pools (avoiding runtime allocation overhead).
+- LeetCode Focus: Array/Two-Pointer problems (optimizing for space and minimal allocations).
+
+#### 5. Diagnostic & Git Milestones
 - **GitHub Launch**: Create the public repository for `ray-tracer`.
 - **Visual README**: Embed progressive renders in the README (e.g., flat circle -> shaded sphere -> fully rendered scene with reflections).
 
@@ -87,7 +92,13 @@ This document serves as our shared reference roadmap for all four study phases. 
 - Advanced OpenGL: Framebuffers, Stencil testing, Cubemaps, Instanced drawing
 - Shading equations, light sources, shadow mapping, and environment mapping (Lengyel Vol 2)
 
-#### 4. Diagnostic & Tool Integrations
+#### 4. Algorithms & Data Structures
+**Topics**:
+- Hierarchies & Scene Management (Months 3–5): Scene Graphs using trees or Directed Acyclic Graphs (DAGs) to propagate transformations (parent-to-child matrix multiplications).
+- Traversal Loops: Iterative Depth-First Search (DFS) and Breadth-First Search (BFS) with custom Stacks to traverse the scene graph for rendering.
+- LeetCode Focus: Binary Trees, N-ary Trees, and Graph Traversal (DFS/BFS) Medium problems.
+
+#### 5. Diagnostic & Tool Integrations
 - **Dear ImGui**: Integrate ImGui panel to control:
   - Light positions, ambient/diffuse/specular colors
   - Shaders, texture switches, camera field of view (FOV)
@@ -122,7 +133,14 @@ This document serves as our shared reference roadmap for all four study phases. 
 - Shadow Mapping (orthogonal shadows, perspective shadow maps)
 - Screen Space Effects (SSAO, bloom, HDR tone mapping)
 
-#### 4. Diagnostic & Tool Integrations
+#### 4. Algorithms & Data Structures
+**Topics**:
+- Spatial Partitioning (Months 6–9): Bounding Volume Hierarchies (BVH) nesting primitives inside Axis-Aligned Bounding Boxes (AABBs). Quadtrees (2D) & Octrees (3D) space subdivision for view culling.
+- Advanced Partitioning: kD-Trees for spatial nearest-neighbor searches (photon mapping/global illumination).
+- Algorithms: Ray-AABB intersection testing, hierarchical tree traversal.
+- LeetCode Focus: Implement a BVH from scratch in your Ray Tracer or Engine repository.
+
+#### 5. Diagnostic & Tool Integrations
 - **Profiler Integration**: Integrate Tracy Profiler (or custom timer scopes in ImGui) to track CPU/GPU frame boundaries and detect CPU-side bottleneck loops.
 - **Culling Controls**: Toggle BVH/frustum culling visual overlays via ImGui to inspect culled geometry counts.
 
@@ -155,5 +173,11 @@ This document serves as our shared reference roadmap for all four study phases. 
 - Image-Based Lighting (IBL) calculations
 - Multi-threaded command buffer recording
 
-#### 4. Diagnostic & Tool Integrations
+#### 4. Algorithms & Data Structures
+**Topics**:
+- Mesh Representation & Sorting (Months 10–12): Half-Edge data structure for mesh representations (polygon mesh adjacencies lookup for geometry processing).
+- Sorting Pipelines: Radix Sort or Merge Sort for depth-sorting transparent geometry from back-to-front every frame.
+- LeetCode Focus: Standard sorting algorithm mechanics and advanced Graph problems (Adjacency Lists).
+
+#### 5. Diagnostic & Tool Integrations
 - **RenderDoc Vulkan Validation**: Analyze memory allocations, verify descriptor layouts, debug layout transitions, and inspect device queues to resolve Vulkan pipeline layout bugs.
