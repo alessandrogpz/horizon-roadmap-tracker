@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { fetchAppState, updateAppState, openLinkOnSystem, syncWorkspace } from "@/lib/api";
 import StreakGraph from "@/components/StreakGraph";
 import PhaseTracker from "@/components/PhaseTracker";
@@ -12,7 +12,22 @@ export default function Home() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [initError, setInitError] = useState("");
+  const [dailyExpanded, setDailyExpanded] = useState(false);
   const [todayStr, setTodayStr] = useState("");
+  const dailySaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const saveDailyChanges = (newData: any) => {
+    if (dailySaveTimeoutRef.current) {
+      clearTimeout(dailySaveTimeoutRef.current);
+    }
+    dailySaveTimeoutRef.current = setTimeout(async () => {
+      try {
+        await updateAppState(newData);
+      } catch (err) {
+        console.error("Failed to auto-save daily changes", err);
+      }
+    }, 1000);
+  };
   const [dayOfWeek, setDayOfWeek] = useState(0);
   const [selectedPhase, setSelectedPhase] = useState<any>(null);
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle");
@@ -79,6 +94,19 @@ export default function Home() {
           type: "review",
         };
     }
+  };
+
+  const getDefaultStudyPoints = (type: string) => {
+    if (type === "math") {
+      return "- Study Eric Lengyel Chapter 2.5 (Skews)\n- Review vector spaces, matrices, dot & cross products\n- Practice coordinate transforms (local ⇄ world ⇄ view)\n- Review skew-symmetric matrices";
+    }
+    if (type === "dsa") {
+      return "- Review spatial partitioning (Octrees, BVH, BSP trees)\n- Practice custom memory allocations (Arena, Stack, Pool)\n- Study CPU cache locality (AoS vs. SoA)\n- Implement dynamic containers under memory limits";
+    }
+    if (type === "review") {
+      return "- Read through study notes written in data/notes/\n- Check local workspace Git repository status statistics\n- Verify Consistency Streak graph and upcoming items\n- Click Sync Workspace in the top header to push to GitHub";
+    }
+    return "";
   };
 
   const getDaysPassed = () => {
@@ -513,26 +541,178 @@ export default function Home() {
 
         {/* Daily Revision Panel */}
         <div className="glass-panel" style={{ borderLeft: "4px solid var(--accent)", padding: "1.25rem 1.5rem" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem", width: "100%" }}>
-            <input
-              type="checkbox"
-              className="checkbox-custom"
-              checked={isRoutineChecked}
-              onChange={handleRoutineToggle}
-            />
-            <span style={{ 
-              fontWeight: 600, 
-              fontSize: "1.05rem", 
-              color: isRoutineChecked ? "#71717a" : "#fff",
-              textDecoration: isRoutineChecked ? "line-through" : "none",
-              flex: 1,
-              transition: "all 0.2s ease"
-            }}>
-              {routineTask.title}
-            </span>
-            <span style={{ fontSize: "0.75rem", background: "rgba(14,165,233,0.15)", color: "var(--accent)", padding: "0.1rem 0.4rem", borderRadius: "4px" }}>
-              Daily
-            </span>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "1rem", width: "100%" }}>
+              <input
+                type="checkbox"
+                className="checkbox-custom"
+                checked={isRoutineChecked}
+                onChange={handleRoutineToggle}
+              />
+              <div 
+                onClick={() => setDailyExpanded(!dailyExpanded)}
+                style={{ 
+                  flex: 1, 
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "space-between", 
+                  cursor: "pointer",
+                  userSelect: "none"
+                }}
+              >
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem", flex: 1 }}>
+                  <span style={{ 
+                    fontWeight: 600, 
+                    fontSize: "1.05rem", 
+                    color: isRoutineChecked ? "#71717a" : "#fff",
+                    textDecoration: isRoutineChecked ? "line-through" : "none",
+                    transition: "all 0.2s ease"
+                  }}>
+                    {routineTask.title}
+                  </span>
+                  {data && data.dailyFocus?.[routineTask.type] && (
+                    <span style={{ 
+                      fontSize: "0.8rem", 
+                      color: isRoutineChecked ? "#52525b" : "#a1a1aa",
+                      fontStyle: "italic",
+                      transition: "all 0.2s ease"
+                    }}>
+                      ↳ Target: {data.dailyFocus[routineTask.type]}
+                    </span>
+                  )}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <span style={{ fontSize: "0.75rem", background: "rgba(14,165,233,0.15)", color: "var(--accent)", padding: "0.1rem 0.4rem", borderRadius: "4px" }}>
+                    Daily
+                  </span>
+                  <span style={{ 
+                    fontSize: "0.8rem", 
+                    color: "#71717a", 
+                    transform: dailyExpanded ? "rotate(180deg)" : "rotate(0deg)", 
+                    transition: "transform 0.2s ease" 
+                  }}>
+                    ▼
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            {dailyExpanded && (
+              <div style={{ 
+                marginTop: "0.5rem", 
+                padding: "1rem", 
+                background: "rgba(0, 0, 0, 0.2)", 
+                borderRadius: "6px", 
+                border: "1px solid var(--card-border)",
+                fontSize: "0.85rem",
+                lineHeight: "1.5",
+                color: "#a1a1aa"
+              }}>
+                {/* Custom focus/target input */}
+                <div style={{ 
+                  display: "flex", 
+                  alignItems: "center", 
+                  gap: "0.5rem", 
+                  marginBottom: "0.75rem", 
+                  paddingBottom: "0.75rem", 
+                  borderBottom: "1px solid var(--card-border)" 
+                }}>
+                  <span style={{ fontSize: "0.7rem", color: "var(--accent)", fontWeight: "bold", fontFamily: "monospace", letterSpacing: "0.05em" }}>TARGET:</span>
+                  <input
+                    type="text"
+                    value={data.dailyFocus?.[routineTask.type] || ""}
+                    onChange={(e) => {
+                      const updatedFocus = {
+                        ...(data.dailyFocus || {}),
+                        [routineTask.type]: e.target.value
+                      };
+                      const newData = { ...data, dailyFocus: updatedFocus };
+                      setData(newData);
+                      saveDailyChanges(newData);
+                    }}
+                    onBlur={async () => {
+                      if (dailySaveTimeoutRef.current) {
+                        clearTimeout(dailySaveTimeoutRef.current);
+                      }
+                      try {
+                        await updateAppState(data);
+                      } catch (err) {
+                        console.error("Failed to save daily focus", err);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.currentTarget.blur();
+                      }
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    placeholder={`Specify what you are currently revising...`}
+                    style={{ 
+                      flex: 1, 
+                      background: "transparent", 
+                      border: "none", 
+                      borderBottom: "1px dashed var(--card-border)", 
+                      color: "#fff", 
+                      fontFamily: "inherit", 
+                      fontSize: "0.85rem", 
+                      outline: "none",
+                      padding: "0.1rem 0",
+                      cursor: "text",
+                      position: "relative",
+                      zIndex: 10
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginTop: "0.5rem" }}>
+                  <strong style={{ color: "var(--accent)", fontSize: "0.75rem", fontFamily: "monospace", letterSpacing: "0.05em" }}>
+                    {routineTask.type === "math" ? "MATH STUDY POINTS:" : routineTask.type === "dsa" ? "DSA STUDY POINTS:" : "WEEKLY REVIEW POINTS:"}
+                  </strong>
+                  <textarea
+                    value={data.dailyStudyPoints?.[routineTask.type] !== undefined 
+                      ? data.dailyStudyPoints[routineTask.type] 
+                      : getDefaultStudyPoints(routineTask.type)}
+                    onChange={(e) => {
+                      const updatedPoints = {
+                        ...(data.dailyStudyPoints || {}),
+                        [routineTask.type]: e.target.value
+                      };
+                      const newData = { ...data, dailyStudyPoints: updatedPoints };
+                      setData(newData);
+                      saveDailyChanges(newData);
+                    }}
+                    onBlur={async () => {
+                      if (dailySaveTimeoutRef.current) {
+                        clearTimeout(dailySaveTimeoutRef.current);
+                      }
+                      try {
+                        await updateAppState(data);
+                      } catch (err) {
+                        console.error("Failed to save daily study points", err);
+                      }
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    placeholder="Type your custom study points here (one item per line)..."
+                    rows={6}
+                    style={{
+                      width: "100%",
+                      background: "rgba(0, 0, 0, 0.25)",
+                      border: "1px solid var(--card-border)",
+                      borderRadius: "6px",
+                      padding: "0.75rem",
+                      color: "#e4e4e7",
+                      fontFamily: "inherit",
+                      fontSize: "0.85rem",
+                      lineHeight: "1.6",
+                      resize: "vertical",
+                      outline: "none"
+                    }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

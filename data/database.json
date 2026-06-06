@@ -5,6 +5,11 @@
     "2026-06-05"
   ],
   "lastDailyRoutineCheck": "2026-06-05",
+  "dailyFocus": {
+    "math": "Eric Lengyel Chapter 2.5 (Skews)",
+    "dsa": "",
+    "review": "Weekly Git sync & study notes review"
+  },
   "phases": [
     {
       "id": 1,
@@ -346,5 +351,8 @@
       "currentSubject": "",
       "link": "/mnt/Storage4TB/Bookshelf/Game Engine/Foundations of Game Engine Development Volume 2 Rendering by Eric Lengyel.pdf"
     }
-  ]
+  ],
+  "dailyStudyPoints": {
+    "dsa": ""
+  }
 }
