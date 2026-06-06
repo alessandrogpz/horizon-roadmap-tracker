@@ -67,12 +67,12 @@ export default function Home() {
         };
       case 2: // Tuesday
       case 4: // Thursday
-      case 0: // Sunday
+      case 6: // Saturday
         return {
           title: "Revision of the day: Algorithms & Data Structures",
           type: "dsa",
         };
-      case 6: // Saturday
+      case 0: // Sunday
       default:
         return {
           title: "Revision of the day: Weekly Review",
