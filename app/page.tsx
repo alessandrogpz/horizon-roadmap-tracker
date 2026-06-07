@@ -15,8 +15,10 @@ export default function Home() {
   const [dailyExpanded, setDailyExpanded] = useState(false);
   const [todayStr, setTodayStr] = useState("");
   const [reflectionText, setReflectionText] = useState("");
+  const [dailyReflectionText, setDailyReflectionText] = useState("");
   const dailySaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reflectionSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const dailyReflectionSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const saveDailyChanges = (newData: any) => {
     if (dailySaveTimeoutRef.current) {
@@ -51,9 +53,38 @@ export default function Home() {
     const weekNum = Math.ceil((Math.max(0, diffDays) + 1) / 7);
 
     try {
-      await saveReflection(weekNum, todayStr, text);
+      await saveReflection(weekNum, todayStr, text, 'Weekly');
     } catch (err) {
       console.error("Failed to save weekly reflection:", err);
+    }
+  };
+
+  const saveDailyReflectionChanges = (text: string) => {
+    if (dailyReflectionSaveTimeoutRef.current) {
+      clearTimeout(dailyReflectionSaveTimeoutRef.current);
+    }
+    dailyReflectionSaveTimeoutRef.current = setTimeout(() => {
+      handleSaveDailyReflection(text);
+    }, 1000);
+  };
+
+  const handleSaveDailyReflection = async (text: string) => {
+    if (!data) return;
+    const parts = data.startDate.split("-");
+    const start = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    const today = new Date();
+    start.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    const diffDays = Math.floor((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    const weekNum = Math.ceil((Math.max(0, diffDays) + 1) / 7);
+
+    const DAYS_MAP = ["Weekly", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const currentDayName = DAYS_MAP[today.getDay()];
+
+    try {
+      await saveReflection(weekNum, todayStr, text, currentDayName);
+    } catch (err) {
+      console.error("Failed to save daily reflection:", err);
     }
   };
 
@@ -118,8 +149,8 @@ export default function Home() {
           setData(loadedData);
         }
 
-        // Load reflection if today is Sunday
-        if (today.getDay() === 0 && finalData.startDate) {
+        // Load reflections for the current week (both weekly and daily)
+        if (finalData.startDate) {
           const parts = finalData.startDate.split("-");
           const start = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
           start.setHours(0, 0, 0, 0);
@@ -129,9 +160,15 @@ export default function Home() {
           
           try {
             const refData = await fetchReflection(wNum);
-            setReflectionText(refData.content || "");
+            setReflectionText(refData.weekly || "");
+            
+            const DAYS_MAP = ["Weekly", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            const currentDayName = DAYS_MAP[today.getDay()];
+            if (currentDayName !== "Weekly") {
+              setDailyReflectionText(refData.days?.[currentDayName] || "");
+            }
           } catch (err) {
-            console.error("Failed to load weekly reflection:", err);
+            console.error("Failed to load reflections:", err);
           }
         }
       })
@@ -838,6 +875,43 @@ export default function Home() {
                         onTouchStart={(e) => e.stopPropagation()}
                         placeholder="Type your custom study points here (one item per line)..."
                         rows={6}
+                        style={{
+                          width: "100%",
+                          background: "rgba(0, 0, 0, 0.25)",
+                          border: "1px solid var(--card-border)",
+                          borderRadius: "6px",
+                          padding: "0.75rem",
+                          color: "#e4e4e7",
+                          fontFamily: "inherit",
+                          fontSize: "0.85rem",
+                          lineHeight: "1.6",
+                          resize: "vertical",
+                          outline: "none"
+                        }}
+                      />
+                    </div>
+
+                    {/* Daily Reflection Section */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginTop: "1rem", borderTop: "1px solid var(--card-border)", paddingTop: "1rem" }}>
+                      <strong style={{ color: "var(--accent)", fontSize: "0.75rem", fontFamily: "monospace", letterSpacing: "0.05em" }}>
+                        DAILY REFLECTION (OPTIONAL):
+                      </strong>
+                      <textarea
+                        value={dailyReflectionText}
+                        onChange={(e) => {
+                          setDailyReflectionText(e.target.value);
+                          saveDailyReflectionChanges(e.target.value);
+                        }}
+                        onBlur={() => {
+                          if (dailyReflectionSaveTimeoutRef.current) {
+                            clearTimeout(dailyReflectionSaveTimeoutRef.current);
+                          }
+                          handleSaveDailyReflection(dailyReflectionText);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        onTouchStart={(e) => e.stopPropagation()}
+                        placeholder="Reflect on today's progress, focus, or achievements (optional)..."
+                        rows={4}
                         style={{
                           width: "100%",
                           background: "rgba(0, 0, 0, 0.25)",

@@ -57,11 +57,11 @@ export const fetchReflection = async (week: number) => {
   return res.json();
 };
 
-export const saveReflection = async (week: number, date: string, content: string) => {
+export const saveReflection = async (week: number, date: string, content: string, day: string = 'Weekly') => {
   const res = await fetch('/api/reflection', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ week, date, content }),
+    body: JSON.stringify({ week, date, content, day }),
   });
   if (!res.ok) throw new Error('Failed to save reflection');
   return res.json();
