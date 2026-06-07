@@ -2,9 +2,11 @@
   "currentPhase": 1,
   "startDate": "2026-06-05",
   "streakHistory": [
-    "2026-06-05"
+    "2026-06-05",
+    "2026-06-06"
   ],
   "lastDailyRoutineCheck": "2026-06-05",
+  "lastTasksResetDate": "2026-06-07",
   "dailyFocus": {
     "math": "",
     "leetcode": "",
