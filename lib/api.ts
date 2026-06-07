@@ -50,3 +50,20 @@ export const syncWorkspace = async () => {
   if (!res.ok) throw new Error('Failed to sync workspace');
   return res.json();
 };
+
+export const fetchReflection = async (week: number) => {
+  const res = await fetch(`/api/reflection?week=${week}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error('Failed to fetch reflection');
+  return res.json();
+};
+
+export const saveReflection = async (week: number, date: string, content: string) => {
+  const res = await fetch('/api/reflection', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ week, date, content }),
+  });
+  if (!res.ok) throw new Error('Failed to save reflection');
+  return res.json();
+};
+
