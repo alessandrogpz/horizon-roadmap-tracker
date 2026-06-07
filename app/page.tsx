@@ -58,11 +58,35 @@ export default function Home() {
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
-    setTodayStr(`${year}-${month}-${day}`);
+    const currentTodayStr = `${year}-${month}-${day}`;
+    
+    setTodayStr(currentTodayStr);
     setDayOfWeek(today.getDay());
 
     fetchAppState()
-      .then(setData)
+      .then(async (loadedData) => {
+        if (loadedData && loadedData.lastTasksResetDate !== currentTodayStr) {
+          // Reset all tasks in all phases to completed: false
+          const resetPhases = loadedData.phases.map((phase: any) => ({
+            ...phase,
+            tasks: phase.tasks.map((t: any) => ({ ...t, completed: false }))
+          }));
+          const updatedData = {
+            ...loadedData,
+            phases: resetPhases,
+            lastTasksResetDate: currentTodayStr
+          };
+          setData(updatedData);
+          
+          try {
+            await updateAppState({ ...updatedData, isReset: true });
+          } catch (err) {
+            console.error("Failed to auto-reset daily tasks on date change:", err);
+          }
+        } else {
+          setData(loadedData);
+        }
+      })
       .catch((err: any) => {
         console.error("Initialization fetch error:", err);
         setInitError(err.message || String(err));
