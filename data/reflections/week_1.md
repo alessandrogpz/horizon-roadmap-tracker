@@ -1,8 +1,5 @@
 # Week 1 Reflection (2026-06-07)
 
-## Monday (2026-06-08)
-Monday reflection test content.
-
 ## Weekly Reflection (2026-06-07)
 This week I built this project (Engine Developer Hub) to better keep track and motivate myself for learning graphics programming and creating a portfolio as I go. Not only but I managed to keep a good initial streak on math. 
 
