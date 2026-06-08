@@ -8,6 +8,32 @@ import PortfolioTracker from "@/components/PortfolioTracker";
 import MaterialsTracker from "@/components/MaterialsTracker";
 import PhaseDetailModal from "@/components/PhaseDetailModal";
 
+function getMondayOfDateWeek(date: Date): Date {
+  const day = date.getDay();
+  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(date);
+  monday.setDate(diff);
+  monday.setHours(0, 0, 0, 0);
+  return monday;
+}
+
+function getWeekNum(startDateStr: string, targetDate: Date = new Date()): number {
+  if (!startDateStr) return 1;
+  const parts = startDateStr.split("-");
+  const start = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  start.setHours(0, 0, 0, 0);
+  
+  const startMonday = getMondayOfDateWeek(start);
+  
+  const target = new Date(targetDate);
+  target.setHours(0, 0, 0, 0);
+  
+  const diffTime = target.getTime() - startMonday.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  return Math.floor(diffDays / 7) + 1;
+}
+
 export default function Home() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -44,13 +70,7 @@ export default function Home() {
 
   const handleSaveReflection = async (text: string) => {
     if (!data) return;
-    const parts = data.startDate.split("-");
-    const start = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-    const today = new Date();
-    start.setHours(0, 0, 0, 0);
-    today.setHours(0, 0, 0, 0);
-    const diffDays = Math.floor((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    const weekNum = Math.ceil((Math.max(0, diffDays) + 1) / 7);
+    const weekNum = getWeekNum(data.startDate);
 
     try {
       await saveReflection(weekNum, todayStr, text, 'Weekly');
@@ -70,13 +90,8 @@ export default function Home() {
 
   const handleSaveDailyReflection = async (text: string) => {
     if (!data) return;
-    const parts = data.startDate.split("-");
-    const start = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    const weekNum = getWeekNum(data.startDate);
     const today = new Date();
-    start.setHours(0, 0, 0, 0);
-    today.setHours(0, 0, 0, 0);
-    const diffDays = Math.floor((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    const weekNum = Math.ceil((Math.max(0, diffDays) + 1) / 7);
 
     const DAYS_MAP = ["Weekly", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     const currentDayName = DAYS_MAP[today.getDay()];
@@ -152,12 +167,7 @@ export default function Home() {
 
         // Load reflections for the current week (both weekly and daily)
         if (finalData.startDate) {
-          const parts = finalData.startDate.split("-");
-          const start = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-          start.setHours(0, 0, 0, 0);
-          today.setHours(0, 0, 0, 0);
-          const diffDays = Math.floor((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-          const wNum = Math.ceil((Math.max(0, diffDays) + 1) / 7);
+          const wNum = getWeekNum(finalData.startDate, today);
           
           try {
             const refData = await fetchReflection(wNum);
@@ -658,7 +668,7 @@ export default function Home() {
               >
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem", flex: 1 }}>
                   <h3 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#fff", margin: 0 }}>
-                    Weekly Reflection (Week {Math.ceil(getDaysPassed() / 7)})
+                    Weekly Reflection (Week {getWeekNum(data.startDate)})
                   </h3>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>

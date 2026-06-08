@@ -146,6 +146,11 @@ export async function POST(request: Request) {
 
     const filePath = path.join(reflectionsDir, `week_${week}.md`);
     
+    // Do not create the file or record a save log if the file doesn't exist and the saved content is empty
+    if (!fs.existsSync(filePath) && content.trim() === '') {
+      return NextResponse.json({ success: true });
+    }
+    
     let mainHeaderDate = date;
     let sections: Record<string, SectionData> = {
       Monday: { date: '', content: '' },
