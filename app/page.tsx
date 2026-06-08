@@ -777,7 +777,7 @@ export default function Home() {
                           fontStyle: "italic",
                           transition: "all 0.2s ease"
                         }}>
-                          ↳ Target: {data.dailyFocus[routineTask.type]}
+                          ↳ Next Focus: {data.dailyFocus[routineTask.type]}
                         </span>
                       )}
                     </div>
@@ -818,7 +818,7 @@ export default function Home() {
                         paddingBottom: "0.75rem", 
                         borderBottom: "1px solid var(--card-border)" 
                       }}>
-                        <span style={{ fontSize: "0.7rem", color: "var(--accent)", fontWeight: "bold", fontFamily: "monospace", letterSpacing: "0.05em" }}>TARGET:</span>
+                        <span style={{ fontSize: "0.7rem", color: "var(--accent)", fontWeight: "bold", fontFamily: "monospace", letterSpacing: "0.05em" }}>TARGET / NEXT FOCUS:</span>
                         <input
                           type="text"
                           value={data.dailyFocus?.[routineTask.type] || ""}
@@ -848,7 +848,7 @@ export default function Home() {
                           }}
                           onClick={(e) => e.stopPropagation()}
                           onTouchStart={(e) => e.stopPropagation()}
-                          placeholder={`Specify what you are currently revising...`}
+                          placeholder={`Specify what to focus on or improve in the next session...`}
                           style={{ 
                             flex: 1, 
                             background: "transparent", 
@@ -869,11 +869,11 @@ export default function Home() {
                       <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginTop: "0.5rem" }}>
                         <strong style={{ color: "var(--accent)", fontSize: "0.75rem", fontFamily: "monospace", letterSpacing: "0.05em" }}>
                           {routineTask.type === "math" 
-                            ? "MATH STUDY POINTS:" 
+                            ? "MATH STUDY POINTS & REMINDERS:" 
                             : routineTask.type === "leetcode" 
-                            ? "LEETCODE STUDY POINTS:" 
+                            ? "LEETCODE STUDY POINTS & REMINDERS:" 
                             : routineTask.type === "implementation" 
-                            ? "IMPLEMENTATION STUDY POINTS:" 
+                            ? "IMPLEMENTATION STUDY POINTS & REMINDERS:" 
                             : "WEEKLY REVIEW POINTS:"}
                         </strong>
                         <textarea
@@ -899,7 +899,7 @@ export default function Home() {
                           }}
                           onClick={(e) => e.stopPropagation()}
                           onTouchStart={(e) => e.stopPropagation()}
-                          placeholder="Type your custom study points here (one item per line)..."
+                          placeholder="List things to improve, study, or review in the next session (one per line)..."
                           rows={6}
                           style={{
                             width: "100%",
