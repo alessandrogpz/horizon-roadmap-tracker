@@ -4,10 +4,12 @@
   "streakHistory": [
     "2026-06-05",
     "2026-06-06",
+    "2026-06-08",
+    "2026-06-08",
     "2026-06-08"
   ],
   "lastDailyRoutineCheck": "2026-06-08",
-  "lastTasksResetDate": "2026-06-08",
+  "lastTasksResetDate": "2026-06-09",
   "dailyFocus": {
     "math": "",
     "leetcode": "",
@@ -355,9 +357,9 @@
       "category": "Programming Languages",
       "type": "Book",
       "status": "In Progress",
-      "currentPage": 47,
+      "currentPage": 48,
       "totalPages": 639,
-      "currentSubject": "Objects, Types & Values: Drill",
+      "currentSubject": "Objects, Types & Values: Review",
       "link": "",
       "localPath": "~/Documents/PPPC++"
     },
@@ -381,7 +383,7 @@
       "status": "In Progress",
       "currentPage": 0,
       "totalPages": 50,
-      "currentSubject": "Creating a window",
+      "currentSubject": "Getting Started -> Shaders -> Our own shader class",
       "link": "https://learnopengl.com",
       "localPath": "~/Documents/LearnOpenGL"
     },
@@ -409,7 +411,7 @@
     }
   ],
   "dailyStudyPoints": {
-    "math": "\n ",
+    "math": "",
     "leetcode": "",
     "implementation": "",
     "reflection": ""
