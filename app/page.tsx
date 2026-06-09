@@ -34,6 +34,16 @@ function getWeekNum(startDateStr: string, targetDate: Date = new Date()): number
   return Math.floor(diffDays / 7) + 1;
 }
 
+const WEEK_SCHEDULE = [
+  { name: "Mon", type: "math", label: "Math" },
+  { name: "Tue", type: "leetcode", label: "DSA" },
+  { name: "Wed", type: "math", label: "Math" },
+  { name: "Thu", type: "implementation", label: "Impl" },
+  { name: "Fri", type: "math", label: "Math" },
+  { name: "Sat", type: "leetcode", label: "DSA" },
+  { name: "Sun", type: "reflection", label: "Ref" }
+];
+
 export default function Home() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -655,6 +665,68 @@ export default function Home() {
           /* Sunday Weekly Reflection Panel */
           <div className="glass-panel" style={{ borderLeft: "4px solid var(--accent)", padding: "1.25rem 1.5rem" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              {/* Weekly Schedule Overview */}
+              <div style={{ 
+                display: "grid", 
+                gridTemplateColumns: "repeat(7, minmax(0, 1fr))", 
+                gap: "0.4rem", 
+                width: "100%", 
+                marginBottom: "0.5rem", 
+                paddingBottom: "0.75rem", 
+                borderBottom: "1px solid var(--card-border)" 
+              }}>
+                {WEEK_SCHEDULE.map((dayItem, idx) => {
+                  const isToday = idx === (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
+                  const typeColors: Record<string, string> = {
+                    math: "var(--accent)",
+                    leetcode: "#f59e0b",
+                    implementation: "#d946ef",
+                    reflection: "#10b981"
+                  };
+                  const color = typeColors[dayItem.type] || "#fff";
+                  
+                  return (
+                    <div 
+                      key={dayItem.name} 
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        padding: "0.4rem 0.2rem",
+                        borderRadius: "6px",
+                        background: isToday ? "rgba(255, 255, 255, 0.04)" : "rgba(0, 0, 0, 0.15)",
+                        border: isToday ? `1px solid ${color}` : "1px solid rgba(255, 255, 255, 0.05)",
+                        boxShadow: isToday ? `0 0 8px ${color}33` : "none",
+                        transition: "all 0.2s ease"
+                      }}
+                    >
+                      <span style={{ 
+                        fontSize: "0.7rem", 
+                        fontWeight: isToday ? 700 : 500, 
+                        color: isToday ? "#fff" : "#71717a",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.02em"
+                      }}>
+                        {dayItem.name}
+                      </span>
+                      <span style={{ 
+                        fontSize: "0.55rem", 
+                        fontWeight: 600, 
+                        color: isToday ? color : "#52525b",
+                        marginTop: "0.15rem",
+                        textAlign: "center",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        width: "100%"
+                      }}>
+                        {dayItem.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
               <div 
                 onClick={() => setDailyExpanded(!dailyExpanded)}
                 style={{ 
@@ -742,6 +814,68 @@ export default function Home() {
             {/* Daily Revision Panel */}
             <div className="glass-panel" style={{ borderLeft: "4px solid var(--accent)", padding: "1.25rem 1.5rem" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                {/* Weekly Schedule Overview */}
+                <div style={{ 
+                  display: "grid", 
+                  gridTemplateColumns: "repeat(7, minmax(0, 1fr))", 
+                  gap: "0.4rem", 
+                  width: "100%", 
+                  marginBottom: "0.5rem", 
+                  paddingBottom: "0.75rem", 
+                  borderBottom: "1px solid var(--card-border)" 
+                }}>
+                  {WEEK_SCHEDULE.map((dayItem, idx) => {
+                    const isToday = idx === (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
+                    const typeColors: Record<string, string> = {
+                      math: "var(--accent)",
+                      leetcode: "#f59e0b",
+                      implementation: "#d946ef",
+                      reflection: "#10b981"
+                    };
+                    const color = typeColors[dayItem.type] || "#fff";
+                    
+                    return (
+                      <div 
+                        key={dayItem.name} 
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          padding: "0.4rem 0.2rem",
+                          borderRadius: "6px",
+                          background: isToday ? "rgba(255, 255, 255, 0.04)" : "rgba(0, 0, 0, 0.15)",
+                          border: isToday ? `1px solid ${color}` : "1px solid rgba(255, 255, 255, 0.05)",
+                          boxShadow: isToday ? `0 0 8px ${color}33` : "none",
+                          transition: "all 0.2s ease"
+                        }}
+                      >
+                        <span style={{ 
+                          fontSize: "0.7rem", 
+                          fontWeight: isToday ? 700 : 500, 
+                          color: isToday ? "#fff" : "#71717a",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.02em"
+                        }}>
+                          {dayItem.name}
+                        </span>
+                        <span style={{ 
+                          fontSize: "0.55rem", 
+                          fontWeight: 600, 
+                          color: isToday ? color : "#52525b",
+                          marginTop: "0.15rem",
+                          textAlign: "center",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          width: "100%"
+                        }}>
+                          {dayItem.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+
                 <div style={{ display: "flex", alignItems: "center", gap: "1rem", width: "100%" }}>
                   <input
                     type="checkbox"
