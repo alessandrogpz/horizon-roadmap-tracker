@@ -171,6 +171,7 @@ export default function ScheduleDayModal({
                             const DAYS_SHORT_MAP = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
                             const todayKey = DAYS_SHORT_MAP[today.getDay()];
                             let newStreakHistory = [...(data.streakHistory || [])];
+                            let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
 
                             if (day.name === todayKey) {
                               const year = today.getFullYear();
@@ -178,13 +179,19 @@ export default function ScheduleDayModal({
                               const dateVal = String(today.getDate()).padStart(2, '0');
                               const todayStr = `${year}-${month}-${dateVal}`;
 
-                              const hasCompletedAny = updatedItems.some((it: any) => it.completed) || (data.dailyTasks?.[todayKey] || []).some((t: any) => t.completed);
-                              if (hasCompletedAny) {
-                                if (!newStreakHistory.includes(todayStr)) {
-                                  newStreakHistory.push(todayStr);
+                              const todayItems = newCompletedItemsHistory[todayStr] || [];
+                              if (e.target.checked) {
+                                newStreakHistory.push(todayStr);
+                                const alreadyExists = todayItems.some((it: any) => (typeof it === 'string' ? it === item.title : it.title === item.title));
+                                if (!alreadyExists) {
+                                  newCompletedItemsHistory[todayStr] = [...todayItems, { title: item.title, description: item.description || "" }];
                                 }
                               } else {
-                                newStreakHistory = newStreakHistory.filter((d: string) => d !== todayStr);
+                                const index = newStreakHistory.indexOf(todayStr);
+                                if (index > -1) {
+                                  newStreakHistory.splice(index, 1);
+                                }
+                                newCompletedItemsHistory[todayStr] = todayItems.filter((it: any) => (typeof it === 'string' ? it !== item.title : it.title !== item.title));
                               }
                             }
 
@@ -194,7 +201,8 @@ export default function ScheduleDayModal({
                                 ...(data.dailyRevisionItems || {}),
                                 [day.name]: updatedItems
                               },
-                              streakHistory: newStreakHistory
+                              streakHistory: newStreakHistory,
+                              completedItemsHistory: newCompletedItemsHistory
                             };
                             setData(newData);
                             saveDailyChanges(newData);
@@ -248,6 +256,7 @@ export default function ScheduleDayModal({
                             const DAYS_SHORT_MAP = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
                             const todayKey = DAYS_SHORT_MAP[today.getDay()];
                             let newStreakHistory = [...(data.streakHistory || [])];
+                            let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
 
                             if (day.name === todayKey) {
                               const year = today.getFullYear();
@@ -255,13 +264,13 @@ export default function ScheduleDayModal({
                               const dateVal = String(today.getDate()).padStart(2, '0');
                               const todayStr = `${year}-${month}-${dateVal}`;
 
-                              const hasCompletedAny = updatedItems.some((it: any) => it.completed) || (data.dailyTasks?.[todayKey] || []).some((t: any) => t.completed);
-                              if (hasCompletedAny) {
-                                if (!newStreakHistory.includes(todayStr)) {
-                                  newStreakHistory.push(todayStr);
+                              if (item.completed) {
+                                const index = newStreakHistory.indexOf(todayStr);
+                                if (index > -1) {
+                                  newStreakHistory.splice(index, 1);
                                 }
-                              } else {
-                                newStreakHistory = newStreakHistory.filter((d: string) => d !== todayStr);
+                                const todayItems = newCompletedItemsHistory[todayStr] || [];
+                                newCompletedItemsHistory[todayStr] = todayItems.filter((it: any) => (typeof it === 'string' ? it !== item.title : it.title !== item.title));
                               }
                             }
 
@@ -271,7 +280,8 @@ export default function ScheduleDayModal({
                                 ...(data.dailyRevisionItems || {}),
                                 [day.name]: updatedItems
                               },
-                              streakHistory: newStreakHistory
+                              streakHistory: newStreakHistory,
+                              completedItemsHistory: newCompletedItemsHistory
                             };
                             setData(newData);
                             saveDailyChanges(newData);
@@ -439,6 +449,7 @@ export default function ScheduleDayModal({
                           const DAYS_SHORT_MAP = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
                           const todayKey = DAYS_SHORT_MAP[today.getDay()];
                           let newStreakHistory = [...(data.streakHistory || [])];
+                          let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
                           
                           if (day.name === todayKey) {
                             const year = today.getFullYear();
@@ -446,13 +457,19 @@ export default function ScheduleDayModal({
                             const dateVal = String(today.getDate()).padStart(2, '0');
                             const todayStr = `${year}-${month}-${dateVal}`;
                             
-                            const hasCompletedAny = updatedTasks.some((t: any) => t.completed) || (data.dailyRevisionItems?.[todayKey] || []).some((it: any) => it.completed);
-                            if (hasCompletedAny) {
-                              if (!newStreakHistory.includes(todayStr)) {
-                                  newStreakHistory.push(todayStr);
+                            const todayItems = newCompletedItemsHistory[todayStr] || [];
+                            if (e.target.checked) {
+                              newStreakHistory.push(todayStr);
+                              const alreadyExists = todayItems.some((it: any) => (typeof it === 'string' ? it === task.title : it.title === task.title));
+                              if (!alreadyExists) {
+                                newCompletedItemsHistory[todayStr] = [...todayItems, { title: task.title }];
                               }
                             } else {
-                              newStreakHistory = newStreakHistory.filter((d: string) => d !== todayStr);
+                              const index = newStreakHistory.indexOf(todayStr);
+                              if (index > -1) {
+                                newStreakHistory.splice(index, 1);
+                              }
+                              newCompletedItemsHistory[todayStr] = todayItems.filter((it: any) => (typeof it === 'string' ? it !== task.title : it.title !== task.title));
                             }
                           }
                           
@@ -462,7 +479,8 @@ export default function ScheduleDayModal({
                               ...(data.dailyTasks || {}),
                               [day.name]: updatedTasks
                             },
-                            streakHistory: newStreakHistory
+                            streakHistory: newStreakHistory,
+                            completedItemsHistory: newCompletedItemsHistory
                           };
                           setData(newData);
                           saveDailyChanges(newData);
@@ -515,6 +533,7 @@ export default function ScheduleDayModal({
                           const DAYS_SHORT_MAP = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
                           const todayKey = DAYS_SHORT_MAP[today.getDay()];
                           let newStreakHistory = [...(data.streakHistory || [])];
+                          let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
                           
                           if (day.name === todayKey) {
                             const year = today.getFullYear();
@@ -522,13 +541,13 @@ export default function ScheduleDayModal({
                             const dateVal = String(today.getDate()).padStart(2, '0');
                             const todayStr = `${year}-${month}-${dateVal}`;
                             
-                            const hasCompletedAny = updatedTasks.some((t: any) => t.completed) || (data.dailyRevisionItems?.[todayKey] || []).some((it: any) => it.completed);
-                            if (hasCompletedAny) {
-                              if (!newStreakHistory.includes(todayStr)) {
-                                newStreakHistory.push(todayStr);
+                            if (task.completed) {
+                              const index = newStreakHistory.indexOf(todayStr);
+                              if (index > -1) {
+                                newStreakHistory.splice(index, 1);
                               }
-                            } else {
-                              newStreakHistory = newStreakHistory.filter((d: string) => d !== todayStr);
+                              const todayItems = newCompletedItemsHistory[todayStr] || [];
+                              newCompletedItemsHistory[todayStr] = todayItems.filter((it: any) => (typeof it === 'string' ? it !== task.title : it.title !== task.title));
                             }
                           }
                           
@@ -538,7 +557,8 @@ export default function ScheduleDayModal({
                               ...(data.dailyTasks || {}),
                               [day.name]: updatedTasks
                             },
-                            streakHistory: newStreakHistory
+                            streakHistory: newStreakHistory,
+                            completedItemsHistory: newCompletedItemsHistory
                           };
                           setData(newData);
                           saveDailyChanges(newData);
