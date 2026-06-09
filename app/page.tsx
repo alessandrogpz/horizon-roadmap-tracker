@@ -290,19 +290,27 @@ export default function Home() {
     const nextCheckState = isCurrentlyChecked ? "" : todayStr;
 
     let newStreakHistory = [...(data.streakHistory || [])];
+    let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
+    const todayItems = newCompletedItemsHistory[todayStr] || [];
+
     if (!isCurrentlyChecked) {
       newStreakHistory.push(todayStr);
+      if (!todayItems.includes(routineTask.title)) {
+        newCompletedItemsHistory[todayStr] = [...todayItems, routineTask.title];
+      }
     } else {
       const index = newStreakHistory.indexOf(todayStr);
       if (index > -1) {
         newStreakHistory.splice(index, 1);
       }
+      newCompletedItemsHistory[todayStr] = todayItems.filter((item: string) => item !== routineTask.title);
     }
 
     const newData = {
       ...data,
       lastDailyRoutineCheck: nextCheckState,
       streakHistory: newStreakHistory,
+      completedItemsHistory: newCompletedItemsHistory
     };
     setData(newData);
 
@@ -322,11 +330,30 @@ export default function Home() {
     });
 
     let newStreakHistory = [...(data.streakHistory || [])];
-    if (newStatus === "Completed" && !newStreakHistory.includes(todayStr)) {
+    let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
+    const todayItems = newCompletedItemsHistory[todayStr] || [];
+    const matTitle = data.materials.find((m: any) => m.id === materialId)?.title || "Study Material";
+    const oldStatus = data.materials.find((m: any) => m.id === materialId)?.status;
+
+    if (newStatus === "Completed" && oldStatus !== "Completed") {
       newStreakHistory.push(todayStr);
+      if (!todayItems.includes(matTitle)) {
+        newCompletedItemsHistory[todayStr] = [...todayItems, matTitle];
+      }
+    } else if (newStatus !== "Completed" && oldStatus === "Completed") {
+      const index = newStreakHistory.indexOf(todayStr);
+      if (index > -1) {
+        newStreakHistory.splice(index, 1);
+      }
+      newCompletedItemsHistory[todayStr] = todayItems.filter((item: string) => item !== matTitle);
     }
 
-    const newData = { ...data, materials: updatedMaterials, streakHistory: newStreakHistory };
+    const newData = { 
+      ...data, 
+      materials: updatedMaterials, 
+      streakHistory: newStreakHistory,
+      completedItemsHistory: newCompletedItemsHistory
+    };
     setData(newData);
 
     try {
@@ -412,19 +439,28 @@ export default function Home() {
     });
 
     let newStreakHistory = [...(data.streakHistory || [])];
+    let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
+    const todayItems = newCompletedItemsHistory[todayStr] || [];
+    const projTitle = data.portfolio.find((p: any) => p.id === projectId)?.title || "Portfolio Project";
+
     if (isNowCompleted) {
       newStreakHistory.push(todayStr);
+      if (!todayItems.includes(projTitle)) {
+        newCompletedItemsHistory[todayStr] = [...todayItems, projTitle];
+      }
     } else {
       const index = newStreakHistory.indexOf(todayStr);
       if (index > -1) {
         newStreakHistory.splice(index, 1);
       }
+      newCompletedItemsHistory[todayStr] = todayItems.filter((item: string) => item !== projTitle);
     }
 
     const newData = {
       ...data,
       portfolio: updatedPortfolio,
       streakHistory: newStreakHistory,
+      completedItemsHistory: newCompletedItemsHistory
     };
     setData(newData);
 
@@ -475,19 +511,32 @@ export default function Home() {
     });
 
     let newStreakHistory = [...(data.streakHistory || [])];
+    let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
+    const todayItems = newCompletedItemsHistory[todayStr] || [];
+    let taskTitle = "Task";
+    data.phases.forEach((phase: any) => {
+      const t = phase.tasks.find((task: any) => task.id === taskId);
+      if (t) taskTitle = t.title;
+    });
+
     if (taskCompletedState) {
       newStreakHistory.push(todayStr);
+      if (!todayItems.includes(taskTitle)) {
+        newCompletedItemsHistory[todayStr] = [...todayItems, taskTitle];
+      }
     } else {
       const index = newStreakHistory.indexOf(todayStr);
       if (index > -1) {
         newStreakHistory.splice(index, 1);
       }
+      newCompletedItemsHistory[todayStr] = todayItems.filter((item: string) => item !== taskTitle);
     }
 
     const newData = {
       ...data,
       phases: updatedPhases,
       streakHistory: newStreakHistory,
+      completedItemsHistory: newCompletedItemsHistory
     };
     setData(newData);
 
@@ -882,15 +931,23 @@ export default function Home() {
                                 return it;
                               });
                               
-                              // Sync streak history
+                              // Sync streak history & completed items details
                               let newStreakHistory = [...(data.streakHistory || [])];
-                              const hasCompletedAny = updatedItems.some((it: any) => it.completed) || (data.dailyTasks?.[todayKey] || []).some((t: any) => t.completed);
-                              if (hasCompletedAny) {
-                                if (!newStreakHistory.includes(todayStr)) {
-                                  newStreakHistory.push(todayStr);
+                              let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
+                              const todayItems = newCompletedItemsHistory[todayStr] || [];
+
+                              if (e.target.checked) {
+                                newStreakHistory.push(todayStr);
+                                const alreadyExists = todayItems.some((it: any) => (typeof it === 'string' ? it === item.title : it.title === item.title));
+                                if (!alreadyExists) {
+                                  newCompletedItemsHistory[todayStr] = [...todayItems, { title: item.title, description: item.description || "" }];
                                 }
                               } else {
-                                newStreakHistory = newStreakHistory.filter((d: string) => d !== todayStr);
+                                const index = newStreakHistory.indexOf(todayStr);
+                                if (index > -1) {
+                                  newStreakHistory.splice(index, 1);
+                                }
+                                newCompletedItemsHistory[todayStr] = todayItems.filter((it: any) => (typeof it === 'string' ? it !== item.title : it.title !== item.title));
                               }
                               
                               const newData = {
@@ -899,7 +956,8 @@ export default function Home() {
                                   ...(data.dailyRevisionItems || {}),
                                   [todayKey]: updatedItems
                                 },
-                                streakHistory: newStreakHistory
+                                streakHistory: newStreakHistory,
+                                completedItemsHistory: newCompletedItemsHistory
                               };
                               setData(newData);
                               saveDailyChanges(newData);
@@ -976,15 +1034,23 @@ export default function Home() {
                                 return t;
                               });
                               
-                              // Sync streak history
+                              // Sync streak history & completed items details
                               let newStreakHistory = [...(data.streakHistory || [])];
-                              const hasCompletedAny = updatedTasks.some((t: any) => t.completed) || (data.dailyRevisionItems?.[todayKey] || []).some((it: any) => it.completed);
-                              if (hasCompletedAny) {
-                                if (!newStreakHistory.includes(todayStr)) {
-                                  newStreakHistory.push(todayStr);
+                              let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
+                              const todayItems = newCompletedItemsHistory[todayStr] || [];
+
+                              if (e.target.checked) {
+                                newStreakHistory.push(todayStr);
+                                const alreadyExists = todayItems.some((it: any) => (typeof it === 'string' ? it === task.title : it.title === task.title));
+                                if (!alreadyExists) {
+                                  newCompletedItemsHistory[todayStr] = [...todayItems, { title: task.title }];
                                 }
                               } else {
-                                newStreakHistory = newStreakHistory.filter((d: string) => d !== todayStr);
+                                const index = newStreakHistory.indexOf(todayStr);
+                                if (index > -1) {
+                                  newStreakHistory.splice(index, 1);
+                                }
+                                newCompletedItemsHistory[todayStr] = todayItems.filter((it: any) => (typeof it === 'string' ? it !== task.title : it.title !== task.title));
                               }
                               
                               const newData = {
@@ -993,7 +1059,8 @@ export default function Home() {
                                   ...(data.dailyTasks || {}),
                                   [todayKey]: updatedTasks
                                 },
-                                streakHistory: newStreakHistory
+                                streakHistory: newStreakHistory,
+                                completedItemsHistory: newCompletedItemsHistory
                               };
                               setData(newData);
                               saveDailyChanges(newData);
@@ -1103,7 +1170,7 @@ export default function Home() {
         <PhaseTracker phases={data.phases} currentPhase={data.currentPhase} onPhaseClick={setSelectedPhase} />
 
         {/* Streak Graph */}
-        <StreakGraph streakHistory={data.streakHistory} />
+        <StreakGraph streakHistory={data.streakHistory} completedItemsHistory={data.completedItemsHistory || {}} />
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
