@@ -20,72 +20,92 @@
     "Mon": [
       {
         "id": "mon_1",
-        "title": "C++ Book (PPP)",
+        "title": "Mathematics (Linear Algebra)",
         "completed": false
       },
       {
         "id": "mon_2",
-        "title": "Linear Algebra",
+        "title": "C++ Book",
         "completed": false
       }
     ],
     "Tue": [
       {
         "id": "tue_1",
-        "title": "Ray Tracer Challenge",
+        "title": "Mathematics (Linear Algebra)",
         "completed": false
       },
       {
         "id": "tue_2",
-        "title": "LearnOpenGL",
+        "title": "Data Oriented Design",
+        "completed": false
+      },
+      {
+        "id": "tue_3",
+        "title": "Ray Tracer Challenge",
         "completed": false
       }
     ],
     "Wed": [
       {
         "id": "wed_1",
-        "title": "C++ Book (PPP)",
+        "title": "Mathematics (Linear Algebra)",
         "completed": false
       },
       {
         "id": "wed_2",
-        "title": "Linear Algebra",
+        "title": "LearnOpenGL",
         "completed": false
       }
     ],
     "Thu": [
       {
         "id": "thu_1",
-        "title": "Custom Data Structure Implementation",
+        "title": "Mathematics (Linear Algebra)",
         "completed": false
       },
       {
         "id": "thu_2",
-        "title": "LearnOpenGL",
+        "title": "C++ Book",
+        "completed": false
+      },
+      {
+        "id": "thu_3",
+        "title": "Ray Tracer Challenge",
         "completed": false
       }
     ],
     "Fri": [
       {
         "id": "fri_1",
-        "title": "C++ Book (PPP)",
+        "title": "Mathematics (Linear Algebra)",
         "completed": false
       },
       {
         "id": "fri_2",
-        "title": "Linear Algebra",
+        "title": "Data Oriented Design",
+        "completed": false
+      },
+      {
+        "id": "fri_3",
+        "title": "LearnOpenGL",
         "completed": false
       }
     ],
     "Sat": [
       {
         "id": "sat_1",
-        "title": "Ray Tracer Challenge",
+        "title": "Mathematics (Linear Algebra)",
         "completed": false
       },
       {
         "id": "sat_2",
-        "title": "LearnOpenGL",
+        "title": "Data Oriented Design",
+        "completed": false
+      },
+      {
+        "id": "sat_3",
+        "title": "Ray Tracer Challenge",
         "completed": false
       }
     ],
@@ -96,21 +116,15 @@
       {
         "id": "rev_mon_1",
         "title": "Linear Algebra",
-        "description": "",
+        "description": "Vector/matrix math and coordinate spaces",
         "completed": false
       }
     ],
     "Tue": [
       {
         "id": "rev_tue_1",
-        "title": "LeetCode Focus",
-        "description": "Array and Two-Pointer problems with a focus on space complexity",
-        "completed": false
-      },
-      {
-        "id": "rev_tue_2",
-        "title": "Data Oriented Design Basics",
-        "description": "Memory layouts, cache efficiency, and Struct of Arrays vs Array of Structs",
+        "title": "LeetCode Exercises",
+        "description": "Practice algorithms and data structures problems",
         "completed": false
       }
     ],
@@ -118,36 +132,31 @@
       {
         "id": "rev_wed_1",
         "title": "Linear Algebra",
-        "description": "",
+        "description": "Vector/matrix math and coordinate spaces",
         "completed": false
       }
     ],
-    "Thu": [],
+    "Thu": [
+      {
+        "id": "rev_thu_1",
+        "title": "Implementation of a Data Structure",
+        "description": "Code a data structure (e.g. vector, list, pool allocator) from scratch in C++",
+        "completed": false
+      }
+    ],
     "Fri": [
       {
         "id": "rev_fri_1",
-        "title": "LeetCode Focus",
-        "description": "Array and Two-Pointer problems with a focus on space complexity",
-        "completed": false
-      },
-      {
-        "id": "rev_fri_2",
-        "title": "Data Oriented Design Basics",
-        "description": "Memory layouts, cache efficiency, and Struct of Arrays vs Array of Structs",
+        "title": "Linear Algebra",
+        "description": "Vector/matrix math and coordinate spaces",
         "completed": false
       }
     ],
     "Sat": [
       {
         "id": "rev_sat_1",
-        "title": "LeetCode Focus",
-        "description": "Array and Two-Pointer problems with a focus on space complexity",
-        "completed": false
-      },
-      {
-        "id": "rev_sat_2",
-        "title": "Data Oriented Design Basics",
-        "description": "Memory layouts, cache efficiency, and Struct of Arrays vs Array of Structs",
+        "title": "LeetCode Exercises",
+        "description": "Practice algorithms and data structures problems",
         "completed": false
       }
     ],
