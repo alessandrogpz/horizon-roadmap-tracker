@@ -6,7 +6,8 @@
     "2026-06-06",
     "2026-06-08",
     "2026-06-08",
-    "2026-06-08"
+    "2026-06-08",
+    "2026-06-09"
   ],
   "lastDailyRoutineCheck": "2026-06-08",
   "lastTasksResetDate": "2026-06-09",
@@ -27,6 +28,21 @@
         "id": "mon_2",
         "title": "C++ Book",
         "completed": false
+      },
+      {
+        "id": "mon_3",
+        "title": "LearnOpenGL",
+        "completed": false
+      },
+      {
+        "id": "mon_4",
+        "title": "Ray Tracer Challenge",
+        "completed": false
+      },
+      {
+        "id": "mon_5",
+        "title": "Data Oriented Design",
+        "completed": false
       }
     ],
     "Tue": [
@@ -37,12 +53,22 @@
       },
       {
         "id": "tue_2",
-        "title": "Data Oriented Design",
+        "title": "C++ Book",
         "completed": false
       },
       {
         "id": "tue_3",
+        "title": "LearnOpenGL",
+        "completed": false
+      },
+      {
+        "id": "tue_4",
         "title": "Ray Tracer Challenge",
+        "completed": false
+      },
+      {
+        "id": "tue_5",
+        "title": "Data Oriented Design",
         "completed": false
       }
     ],
@@ -54,7 +80,22 @@
       },
       {
         "id": "wed_2",
+        "title": "C++ Book",
+        "completed": false
+      },
+      {
+        "id": "wed_3",
         "title": "LearnOpenGL",
+        "completed": false
+      },
+      {
+        "id": "wed_4",
+        "title": "Ray Tracer Challenge",
+        "completed": false
+      },
+      {
+        "id": "wed_5",
+        "title": "Data Oriented Design",
         "completed": false
       }
     ],
@@ -71,7 +112,17 @@
       },
       {
         "id": "thu_3",
+        "title": "LearnOpenGL",
+        "completed": false
+      },
+      {
+        "id": "thu_4",
         "title": "Ray Tracer Challenge",
+        "completed": false
+      },
+      {
+        "id": "thu_5",
+        "title": "Data Oriented Design",
         "completed": false
       }
     ],
@@ -83,12 +134,22 @@
       },
       {
         "id": "fri_2",
-        "title": "Data Oriented Design",
+        "title": "C++ Book",
         "completed": false
       },
       {
         "id": "fri_3",
         "title": "LearnOpenGL",
+        "completed": false
+      },
+      {
+        "id": "fri_4",
+        "title": "Ray Tracer Challenge",
+        "completed": false
+      },
+      {
+        "id": "fri_5",
+        "title": "Data Oriented Design",
         "completed": false
       }
     ],
@@ -100,12 +161,22 @@
       },
       {
         "id": "sat_2",
-        "title": "Data Oriented Design",
+        "title": "C++ Book",
         "completed": false
       },
       {
         "id": "sat_3",
+        "title": "LearnOpenGL",
+        "completed": false
+      },
+      {
+        "id": "sat_4",
         "title": "Ray Tracer Challenge",
+        "completed": false
+      },
+      {
+        "id": "sat_5",
+        "title": "Data Oriented Design",
         "completed": false
       }
     ],
@@ -116,7 +187,7 @@
       {
         "id": "rev_mon_1",
         "title": "Linear Algebra",
-        "description": "Vector/matrix math and coordinate spaces",
+        "description": "",
         "completed": false
       }
     ],
@@ -124,7 +195,7 @@
       {
         "id": "rev_tue_1",
         "title": "LeetCode Exercises",
-        "description": "Practice algorithms and data structures problems",
+        "description": "",
         "completed": false
       }
     ],
@@ -132,7 +203,7 @@
       {
         "id": "rev_wed_1",
         "title": "Linear Algebra",
-        "description": "Vector/matrix math and coordinate spaces",
+        "description": "",
         "completed": false
       }
     ],
@@ -140,7 +211,7 @@
       {
         "id": "rev_thu_1",
         "title": "Implementation of a Data Structure",
-        "description": "Code a data structure (e.g. vector, list, pool allocator) from scratch in C++",
+        "description": "",
         "completed": false
       }
     ],
@@ -148,7 +219,7 @@
       {
         "id": "rev_fri_1",
         "title": "Linear Algebra",
-        "description": "Vector/matrix math and coordinate spaces",
+        "description": "",
         "completed": false
       }
     ],
@@ -156,7 +227,7 @@
       {
         "id": "rev_sat_1",
         "title": "LeetCode Exercises",
-        "description": "Practice algorithms and data structures problems",
+        "description": "",
         "completed": false
       }
     ],
@@ -563,6 +634,10 @@
     "reflection": ""
   },
   "completedItemsHistory": {
-    "2026-06-09": []
+    "2026-06-09": [
+      {
+        "title": "Data Oriented Design"
+      }
+    ]
   }
 }
