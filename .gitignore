@@ -49,3 +49,8 @@ next-env.d.ts
 *.sln
 *.sw?
 
+# local user data (reflections & notes)
+data/reflections/
+data/notes/
+
+
