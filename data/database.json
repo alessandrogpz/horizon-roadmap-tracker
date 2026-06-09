@@ -16,6 +16,143 @@
     "implementation": "",
     "reflection": ""
   },
+  "dailyTasks": {
+    "Mon": [
+      {
+        "id": "mon_1",
+        "title": "C++ Book (PPP)",
+        "completed": false
+      },
+      {
+        "id": "mon_2",
+        "title": "Linear Algebra",
+        "completed": false
+      }
+    ],
+    "Tue": [
+      {
+        "id": "tue_1",
+        "title": "Ray Tracer Challenge",
+        "completed": false
+      },
+      {
+        "id": "tue_2",
+        "title": "LearnOpenGL",
+        "completed": false
+      }
+    ],
+    "Wed": [
+      {
+        "id": "wed_1",
+        "title": "C++ Book (PPP)",
+        "completed": false
+      },
+      {
+        "id": "wed_2",
+        "title": "Linear Algebra",
+        "completed": false
+      }
+    ],
+    "Thu": [
+      {
+        "id": "thu_1",
+        "title": "Custom Data Structure Implementation",
+        "completed": false
+      },
+      {
+        "id": "thu_2",
+        "title": "LearnOpenGL",
+        "completed": false
+      }
+    ],
+    "Fri": [
+      {
+        "id": "fri_1",
+        "title": "C++ Book (PPP)",
+        "completed": false
+      },
+      {
+        "id": "fri_2",
+        "title": "Linear Algebra",
+        "completed": false
+      }
+    ],
+    "Sat": [
+      {
+        "id": "sat_1",
+        "title": "Ray Tracer Challenge",
+        "completed": false
+      },
+      {
+        "id": "sat_2",
+        "title": "LearnOpenGL",
+        "completed": false
+      }
+    ],
+    "Sun": []
+  },
+  "dailyRevisionItems": {
+    "Mon": [
+      {
+        "id": "rev_mon_1",
+        "title": "Linear Algebra",
+        "description": "",
+        "completed": false
+      }
+    ],
+    "Tue": [
+      {
+        "id": "rev_tue_1",
+        "title": "LeetCode Focus",
+        "description": "Array and Two-Pointer problems with a focus on space complexity",
+        "completed": false
+      },
+      {
+        "id": "rev_tue_2",
+        "title": "Data Oriented Design Basics",
+        "description": "Memory layouts, cache efficiency, and Struct of Arrays vs Array of Structs",
+        "completed": false
+      }
+    ],
+    "Wed": [
+      {
+        "id": "rev_wed_1",
+        "title": "Linear Algebra",
+        "description": "",
+        "completed": false
+      }
+    ],
+    "Thu": [],
+    "Fri": [
+      {
+        "id": "rev_fri_1",
+        "title": "LeetCode Focus",
+        "description": "Array and Two-Pointer problems with a focus on space complexity",
+        "completed": false
+      },
+      {
+        "id": "rev_fri_2",
+        "title": "Data Oriented Design Basics",
+        "description": "Memory layouts, cache efficiency, and Struct of Arrays vs Array of Structs",
+        "completed": false
+      }
+    ],
+    "Sat": [
+      {
+        "id": "rev_sat_1",
+        "title": "LeetCode Focus",
+        "description": "Array and Two-Pointer problems with a focus on space complexity",
+        "completed": false
+      },
+      {
+        "id": "rev_sat_2",
+        "title": "Data Oriented Design Basics",
+        "description": "Memory layouts, cache efficiency, and Struct of Arrays vs Array of Structs",
+        "completed": false
+      }
+    ],
+    "Sun": []
+  },
   "phases": [
     {
       "id": 1,

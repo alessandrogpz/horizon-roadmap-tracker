@@ -68,6 +68,38 @@ export async function POST(request: Request) {
         });
       }
 
+      // Diff daily tasks
+      if (oldData.dailyTasks && body.dailyTasks) {
+        Object.keys(body.dailyTasks).forEach((dayKey) => {
+          const oldDayTasks = oldData.dailyTasks[dayKey] || [];
+          const newDayTasks = body.dailyTasks[dayKey] || [];
+          
+          newDayTasks.forEach((newTask: any) => {
+            const oldTask = oldDayTasks.find((t: any) => t.id === newTask.id);
+            if (oldTask && oldTask.completed !== newTask.completed) {
+              const action = newTask.completed ? "COMPLETED" : "UNCOMPLETED";
+              logs.push(`[${timestamp}] DAILY_TASK_${action}: "${newTask.title}" (${dayKey})`);
+            }
+          });
+        });
+      }
+
+      // Diff daily revision items
+      if (oldData.dailyRevisionItems && body.dailyRevisionItems) {
+        Object.keys(body.dailyRevisionItems).forEach((dayKey) => {
+          const oldDayItems = oldData.dailyRevisionItems[dayKey] || [];
+          const newDayItems = body.dailyRevisionItems[dayKey] || [];
+          
+          newDayItems.forEach((newItem: any) => {
+            const oldItem = oldDayItems.find((it: any) => it.id === newItem.id);
+            if (oldItem && oldItem.completed !== newItem.completed) {
+              const action = newItem.completed ? "COMPLETED" : "UNCOMPLETED";
+              logs.push(`[${timestamp}] REVISION_ITEM_${action}: "${newItem.title}" (${dayKey})`);
+            }
+          });
+        });
+      }
+
       // 4. Diff portfolio deliverables
       if (oldData.portfolio && body.portfolio) {
         body.portfolio.forEach((newProj: any) => {

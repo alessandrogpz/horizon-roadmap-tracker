@@ -7,6 +7,7 @@ import PhaseTracker from "@/components/PhaseTracker";
 import PortfolioTracker from "@/components/PortfolioTracker";
 import MaterialsTracker from "@/components/MaterialsTracker";
 import PhaseDetailModal from "@/components/PhaseDetailModal";
+import ScheduleDayModal from "@/components/ScheduleDayModal";
 
 function getMondayOfDateWeek(date: Date): Date {
   const day = date.getDay();
@@ -36,11 +37,11 @@ function getWeekNum(startDateStr: string, targetDate: Date = new Date()): number
 
 const WEEK_SCHEDULE = [
   { name: "Mon", type: "math", label: "Math" },
-  { name: "Tue", type: "leetcode", label: "DSA" },
+  { name: "Tue", type: "leetcode", label: "DSA/DOD" },
   { name: "Wed", type: "math", label: "Math" },
   { name: "Thu", type: "implementation", label: "Impl" },
-  { name: "Fri", type: "math", label: "Math" },
-  { name: "Sat", type: "leetcode", label: "DSA" },
+  { name: "Fri", type: "leetcode", label: "DSA/DOD" },
+  { name: "Sat", type: "leetcode", label: "DSA/DOD" },
   { name: "Sun", type: "reflection", label: "Ref" }
 ];
 
@@ -115,6 +116,7 @@ export default function Home() {
 
   const [dayOfWeek, setDayOfWeek] = useState(0);
   const [reflectionExpanded, setReflectionExpanded] = useState(false);
+  const [selectedScheduleDay, setSelectedScheduleDay] = useState<any>(null);
   const [selectedPhase, setSelectedPhase] = useState<any>(null);
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle");
   const [syncError, setSyncError] = useState("");
@@ -158,9 +160,31 @@ export default function Home() {
             ...phase,
             tasks: phase.tasks.map((t: any) => ({ ...t, completed: false }))
           }));
+          // Reset daily tasks
+          const resetDailyTasks: any = {};
+          if (loadedData.dailyTasks) {
+            Object.keys(loadedData.dailyTasks).forEach((key) => {
+              resetDailyTasks[key] = loadedData.dailyTasks[key].map((t: any) => ({ ...t, completed: false }));
+            });
+          }
+          // Reset daily revision items
+          const resetDailyRevisionItems: any = {};
+          if (loadedData.dailyRevisionItems) {
+            Object.keys(loadedData.dailyRevisionItems).forEach((key) => {
+              resetDailyRevisionItems[key] = loadedData.dailyRevisionItems[key].map((it: any) => ({ ...it, completed: false }));
+            });
+          }
           const updatedData = {
             ...loadedData,
             phases: resetPhases,
+            dailyTasks: {
+              ...(loadedData.dailyTasks || {}),
+              ...resetDailyTasks
+            },
+            dailyRevisionItems: {
+              ...(loadedData.dailyRevisionItems || {}),
+              ...resetDailyRevisionItems
+            },
             lastTasksResetDate: currentTodayStr
           };
           finalData = updatedData;
@@ -205,20 +229,20 @@ export default function Home() {
     switch (dayOfWeek) {
       case 1: // Monday
       case 3: // Wednesday
-      case 5: // Friday
         return {
-          title: "Revision of the day: Mathematics",
+          title: "Today's Focus: Mathematics",
           type: "math",
         };
       case 2: // Tuesday
+      case 5: // Friday
       case 6: // Saturday
         return {
-          title: "Revision of the day: LeetCode (DSA)",
+          title: "Today's Focus: LeetCode & DOD (Data Oriented Design)",
           type: "leetcode",
         };
       case 4: // Thursday
         return {
-          title: "Revision of the day: Custom Data Structure Implementation",
+          title: "Today's Focus: Custom Data Structure Implementation",
           type: "implementation",
         };
       case 0: // Sunday
@@ -544,41 +568,6 @@ export default function Home() {
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "nowrap", flex: "0 1 auto" }}>
-            <button
-              onClick={handleSyncWorkspace}
-              disabled={syncStatus === "syncing"}
-              className="btn"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                borderColor: syncStatus === "success" ? "var(--success)" : syncStatus === "error" ? "var(--warning)" : "var(--accent)",
-                color: syncStatus === "success" ? "var(--success)" : syncStatus === "error" ? "var(--warning)" : "#fff",
-                background: syncStatus === "success" ? "rgba(16, 185, 129, 0.05)" : syncStatus === "error" ? "rgba(245, 158, 11, 0.05)" : "transparent",
-                fontSize: "0.8rem",
-                padding: "0 1rem",
-                height: "38px",
-                borderRadius: "6px",
-                whiteSpace: "nowrap",
-                fontWeight: 600,
-                letterSpacing: "0.02em"
-              }}
-            >
-              {syncStatus === "syncing" && (
-                <>
-                  <span className="animate-spin">↻</span>
-                  <span>Syncing...</span>
-                </>
-              )}
-              {syncStatus === "success" && "Synced ✓"}
-              {syncStatus === "error" && (
-                <span title={syncError} style={{ cursor: "help" }}>
-                  Sync Error ⚠
-                </span>
-              )}
-              {syncStatus === "idle" && "Sync Workspace"}
-            </button>
-
             {/* Days in current Phase badge */}
             <div 
               className="glass-panel" 
@@ -677,17 +666,12 @@ export default function Home() {
               }}>
                 {WEEK_SCHEDULE.map((dayItem, idx) => {
                   const isToday = idx === (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
-                  const typeColors: Record<string, string> = {
-                    math: "var(--accent)",
-                    leetcode: "#f59e0b",
-                    implementation: "#d946ef",
-                    reflection: "#10b981"
-                  };
-                  const color = typeColors[dayItem.type] || "#fff";
+                  const color = "var(--accent)";
                   
                   return (
                     <div 
                       key={dayItem.name} 
+                      onClick={() => setSelectedScheduleDay(dayItem)}
                       style={{
                         display: "flex",
                         flexDirection: "column",
@@ -697,7 +681,8 @@ export default function Home() {
                         background: isToday ? "rgba(255, 255, 255, 0.04)" : "rgba(0, 0, 0, 0.15)",
                         border: isToday ? `1px solid ${color}` : "1px solid rgba(255, 255, 255, 0.05)",
                         boxShadow: isToday ? `0 0 8px ${color}33` : "none",
-                        transition: "all 0.2s ease"
+                        transition: "all 0.2s ease",
+                        cursor: "pointer"
                       }}
                     >
                       <span style={{ 
@@ -708,19 +693,6 @@ export default function Home() {
                         letterSpacing: "0.02em"
                       }}>
                         {dayItem.name}
-                      </span>
-                      <span style={{ 
-                        fontSize: "0.55rem", 
-                        fontWeight: 600, 
-                        color: isToday ? color : "#52525b",
-                        marginTop: "0.15rem",
-                        textAlign: "center",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        width: "100%"
-                      }}>
-                        {dayItem.label}
                       </span>
                     </div>
                   );
@@ -811,6 +783,10 @@ export default function Home() {
         ) : (
           /* Weekdays Daily Revision and Daily Reflection Panels */
           <>
+
+
+
+
             {/* Daily Revision Panel */}
             <div className="glass-panel" style={{ borderLeft: "4px solid var(--accent)", padding: "1.25rem 1.5rem" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
@@ -819,24 +795,19 @@ export default function Home() {
                   display: "grid", 
                   gridTemplateColumns: "repeat(7, minmax(0, 1fr))", 
                   gap: "0.4rem", 
-                  width: "100%", 
-                  marginBottom: "0.5rem", 
-                  paddingBottom: "0.75rem", 
-                  borderBottom: "1px solid var(--card-border)" 
+                  width: "100%",
+                  marginBottom: "0.5rem",
+                  paddingBottom: "0.75rem",
+                  borderBottom: "1px solid var(--card-border)"
                 }}>
                   {WEEK_SCHEDULE.map((dayItem, idx) => {
                     const isToday = idx === (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
-                    const typeColors: Record<string, string> = {
-                      math: "var(--accent)",
-                      leetcode: "#f59e0b",
-                      implementation: "#d946ef",
-                      reflection: "#10b981"
-                    };
-                    const color = typeColors[dayItem.type] || "#fff";
+                    const color = "var(--accent)";
                     
                     return (
                       <div 
                         key={dayItem.name} 
+                        onClick={() => setSelectedScheduleDay(dayItem)}
                         style={{
                           display: "flex",
                           flexDirection: "column",
@@ -846,7 +817,8 @@ export default function Home() {
                           background: isToday ? "rgba(255, 255, 255, 0.04)" : "rgba(0, 0, 0, 0.15)",
                           border: isToday ? `1px solid ${color}` : "1px solid rgba(255, 255, 255, 0.05)",
                           boxShadow: isToday ? `0 0 8px ${color}33` : "none",
-                          transition: "all 0.2s ease"
+                          transition: "all 0.2s ease",
+                          cursor: "pointer"
                         }}
                       >
                         <span style={{ 
@@ -858,201 +830,191 @@ export default function Home() {
                         }}>
                           {dayItem.name}
                         </span>
-                        <span style={{ 
-                          fontSize: "0.55rem", 
-                          fontWeight: 600, 
-                          color: isToday ? color : "#52525b",
-                          marginTop: "0.15rem",
-                          textAlign: "center",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          width: "100%"
-                        }}>
-                          {dayItem.label}
-                        </span>
                       </div>
                     );
                   })}
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", gap: "1rem", width: "100%" }}>
-                  <input
-                    type="checkbox"
-                    className="checkbox-custom"
-                    checked={isRoutineChecked}
-                    onChange={handleRoutineToggle}
-                  />
-                  <div 
-                    onClick={() => setDailyExpanded(!dailyExpanded)}
-                    style={{ 
-                      flex: 1, 
-                      display: "flex", 
-                      alignItems: "center", 
-                      justifyContent: "space-between", 
-                      cursor: "pointer",
-                      userSelect: "none"
-                    }}
-                  >
-                    <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem", flex: 1 }}>
-                      <span style={{ 
-                        fontWeight: 600, 
-                        fontSize: "1.05rem", 
-                        color: isRoutineChecked ? "#71717a" : "#fff",
-                        textDecoration: isRoutineChecked ? "line-through" : "none",
-                        transition: "all 0.2s ease"
-                      }}>
-                        {routineTask.title}
-                      </span>
-                      {data && data.dailyFocus?.[routineTask.type] && (
-                        <span style={{ 
-                          fontSize: "0.8rem", 
-                          color: isRoutineChecked ? "#52525b" : "#a1a1aa",
-                          fontStyle: "italic",
-                          transition: "all 0.2s ease"
-                        }}>
-                          ↳ Next Focus: {data.dailyFocus[routineTask.type]}
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      <span style={{ fontSize: "0.75rem", background: "rgba(14,165,233,0.15)", color: "var(--accent)", padding: "0.1rem 0.4rem", borderRadius: "4px" }}>
-                        Daily
-                      </span>
-                      <span style={{ 
-                        fontSize: "0.8rem", 
-                        color: "#71717a", 
-                        transform: dailyExpanded ? "rotate(180deg)" : "rotate(0deg)", 
-                        transition: "transform 0.2s ease" 
-                      }}>
-                        ▼
-                      </span>
-                    </div>
+                {/* Card Main Header */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", userSelect: "none", marginTop: "0.5rem", paddingBottom: "0.5rem", borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                  <h3 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#fff", margin: 0 }}>
+                    Today's Study (Week {getWeekNum(data.startDate)})
+                  </h3>
+                </div>
+
+                {/* Revision Section */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem", marginTop: "0.75rem" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", userSelect: "none" }}>
+                    <span style={{ fontSize: "0.7rem", color: "var(--accent)", fontWeight: "bold", fontFamily: "monospace", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                      Revision
+                    </span>
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+                    {(() => {
+                      const DAYS_SHORT_MAP = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+                      const todayKey = DAYS_SHORT_MAP[dayOfWeek];
+                      const revisionItems = data?.dailyRevisionItems?.[todayKey] || [];
+                      
+                      if (revisionItems.length === 0) {
+                        return <p style={{ color: "#71717a", fontSize: "0.85rem", fontStyle: "italic", margin: 0 }}>No revision items defined for today. Click a day to plan!</p>;
+                      }
+                      
+                      return revisionItems.map((item: any, index: number) => (
+                        <div 
+                          key={item.id || index}
+                          style={{ 
+                            display: "flex", 
+                            alignItems: "flex-start", 
+                            gap: "1rem",
+                            padding: "0.2rem 0"
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            className="checkbox-custom"
+                            checked={item.completed}
+                            onChange={(e) => {
+                              const updatedItems = revisionItems.map((it: any) => {
+                                if (it.id === item.id) {
+                                  return { ...it, completed: e.target.checked };
+                                }
+                                return it;
+                              });
+                              
+                              // Sync streak history
+                              let newStreakHistory = [...(data.streakHistory || [])];
+                              const hasCompletedAny = updatedItems.some((it: any) => it.completed) || (data.dailyTasks?.[todayKey] || []).some((t: any) => t.completed);
+                              if (hasCompletedAny) {
+                                if (!newStreakHistory.includes(todayStr)) {
+                                  newStreakHistory.push(todayStr);
+                                }
+                              } else {
+                                newStreakHistory = newStreakHistory.filter((d: string) => d !== todayStr);
+                              }
+                              
+                              const newData = {
+                                ...data,
+                                dailyRevisionItems: {
+                                  ...(data.dailyRevisionItems || {}),
+                                  [todayKey]: updatedItems
+                                },
+                                streakHistory: newStreakHistory
+                              };
+                              setData(newData);
+                              saveDailyChanges(newData);
+                            }}
+                            style={{ marginTop: "0.15rem" }}
+                          />
+                          <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem", flex: 1 }}>
+                            <span 
+                              style={{ 
+                                fontSize: "0.9rem", 
+                                fontWeight: 600,
+                                color: item.completed ? "#71717a" : "var(--foreground)", 
+                                textDecoration: item.completed ? "line-through" : "none",
+                                transition: "color 0.2s ease" 
+                              }}
+                            >
+                              {item.title}
+                            </span>
+                            {item.description && (
+                              <span 
+                                style={{ 
+                                  fontSize: "0.8rem", 
+                                  color: "#71717a",
+                                  textDecoration: item.completed ? "line-through" : "none"
+                                }}
+                              >
+                                {item.description}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ));
+                    })()}
                   </div>
                 </div>
-                
-                {dailyExpanded && (
-                  <div style={{ 
-                    marginTop: "0.5rem", 
-                    padding: "1rem", 
-                    background: "rgba(0, 0, 0, 0.2)", 
-                    borderRadius: "6px", 
-                    border: "1px solid var(--card-border)",
-                    fontSize: "0.85rem",
-                    lineHeight: "1.5",
-                    color: "#a1a1aa"
-                  }}>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                      {/* Custom focus/target input */}
-                      <div style={{ 
-                        display: "flex", 
-                        alignItems: "center", 
-                        gap: "0.5rem", 
-                        marginBottom: "0.75rem", 
-                        paddingBottom: "0.75rem", 
-                        borderBottom: "1px solid var(--card-border)" 
-                      }}>
-                        <span style={{ fontSize: "0.7rem", color: "var(--accent)", fontWeight: "bold", fontFamily: "monospace", letterSpacing: "0.05em" }}>TARGET / NEXT FOCUS:</span>
-                        <input
-                          type="text"
-                          value={data.dailyFocus?.[routineTask.type] || ""}
-                          onChange={(e) => {
-                            const updatedFocus = {
-                              ...(data.dailyFocus || {}),
-                              [routineTask.type]: e.target.value
-                            };
-                            const newData = { ...data, dailyFocus: updatedFocus };
-                            setData(newData);
-                            saveDailyChanges(newData);
-                          }}
-                          onBlur={async () => {
-                            if (dailySaveTimeoutRef.current) {
-                              clearTimeout(dailySaveTimeoutRef.current);
-                            }
-                            try {
-                              await updateAppState(data);
-                            } catch (err) {
-                              console.error("Failed to save daily focus", err);
-                            }
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.currentTarget.blur();
-                            }
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                          onTouchStart={(e) => e.stopPropagation()}
-                          placeholder={`Specify what to focus on or improve in the next session...`}
-                          style={{ 
-                            flex: 1, 
-                            background: "transparent", 
-                            border: "none", 
-                            borderBottom: "1px dashed var(--card-border)", 
-                            color: "#fff", 
-                            fontFamily: "inherit", 
-                            fontSize: "0.85rem", 
-                            outline: "none",
-                            padding: "0.1rem 0",
-                            cursor: "text",
-                            position: "relative",
-                            zIndex: 10
-                          }}
-                        />
-                      </div>
 
-                      <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginTop: "0.5rem" }}>
-                        <strong style={{ color: "var(--accent)", fontSize: "0.75rem", fontFamily: "monospace", letterSpacing: "0.05em" }}>
-                          {routineTask.type === "math" 
-                            ? "MATH STUDY POINTS & REMINDERS:" 
-                            : routineTask.type === "leetcode" 
-                            ? "LEETCODE STUDY POINTS & REMINDERS:" 
-                            : routineTask.type === "implementation" 
-                            ? "IMPLEMENTATION STUDY POINTS & REMINDERS:" 
-                            : "WEEKLY REVIEW POINTS:"}
-                        </strong>
-                        <textarea
-                          value={data.dailyStudyPoints?.[routineTask.type] || ""}
-                          onChange={(e) => {
-                            const updatedPoints = {
-                              ...(data.dailyStudyPoints || {}),
-                              [routineTask.type]: e.target.value
-                            };
-                            const newData = { ...data, dailyStudyPoints: updatedPoints };
-                            setData(newData);
-                            saveDailyChanges(newData);
-                          }}
-                          onBlur={async () => {
-                            if (dailySaveTimeoutRef.current) {
-                              clearTimeout(dailySaveTimeoutRef.current);
-                            }
-                            try {
-                              await updateAppState(data);
-                            } catch (err) {
-                              console.error("Failed to save daily study points", err);
-                            }
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                          onTouchStart={(e) => e.stopPropagation()}
-                          placeholder="List things to improve, study, or review in the next session (one per line)..."
-                          rows={6}
-                          style={{
-                            width: "100%",
-                            background: "rgba(0, 0, 0, 0.25)",
-                            border: "1px solid var(--card-border)",
-                            borderRadius: "6px",
-                            padding: "0.75rem",
-                            color: "#e4e4e7",
-                            fontFamily: "inherit",
-                            fontSize: "0.85rem",
-                            lineHeight: "1.6",
-                            resize: "vertical",
-                            outline: "none"
-                          }}
-                        />
-                      </div>
-                    </div>
+                {/* Focus Section */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem", marginTop: "1rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", userSelect: "none" }}>
+                    <span style={{ fontSize: "0.7rem", color: "var(--accent)", fontWeight: "bold", fontFamily: "monospace", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                      Focus
+                    </span>
                   </div>
-                )}
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+                    {(() => {
+                      const DAYS_SHORT_MAP = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+                      const todayKey = DAYS_SHORT_MAP[dayOfWeek];
+                      const tasks = data?.dailyTasks?.[todayKey] || [];
+                      
+                      if (tasks.length === 0) {
+                        return <p style={{ color: "#71717a", fontSize: "0.85rem", fontStyle: "italic", margin: 0 }}>No focus items defined for today. Click a day to plan!</p>;
+                      }
+                      
+                      return tasks.map((task: any, index: number) => (
+                        <div 
+                          key={task.id || index}
+                          style={{ 
+                            display: "flex", 
+                            alignItems: "center", 
+                            gap: "1rem",
+                            padding: "0.2rem 0"
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            className="checkbox-custom"
+                            checked={task.completed}
+                            onChange={(e) => {
+                              const updatedTasks = tasks.map((t: any) => {
+                                if (t.id === task.id) {
+                                  return { ...t, completed: e.target.checked };
+                                }
+                                return t;
+                              });
+                              
+                              // Sync streak history
+                              let newStreakHistory = [...(data.streakHistory || [])];
+                              const hasCompletedAny = updatedTasks.some((t: any) => t.completed) || (data.dailyRevisionItems?.[todayKey] || []).some((it: any) => it.completed);
+                              if (hasCompletedAny) {
+                                if (!newStreakHistory.includes(todayStr)) {
+                                  newStreakHistory.push(todayStr);
+                                }
+                              } else {
+                                newStreakHistory = newStreakHistory.filter((d: string) => d !== todayStr);
+                              }
+                              
+                              const newData = {
+                                ...data,
+                                dailyTasks: {
+                                  ...(data.dailyTasks || {}),
+                                  [todayKey]: updatedTasks
+                                },
+                                streakHistory: newStreakHistory
+                              };
+                              setData(newData);
+                              saveDailyChanges(newData);
+                            }}
+                          />
+                          <span 
+                            style={{ 
+                              flex: 1, 
+                              fontSize: "0.9rem", 
+                              color: task.completed ? "#71717a" : "var(--foreground)", 
+                              textDecoration: task.completed ? "line-through" : "none",
+                              transition: "color 0.2s ease" 
+                            }}
+                          >
+                            {task.title}
+                          </span>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1135,48 +1097,7 @@ export default function Home() {
           </>
         )}
 
-        {/* Today's Focus Panel */}
-        <div className="glass-panel">
-          <h2 className="section-title">Today's Focus</h2>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            {currentPhaseData && currentPhaseData.tasks.length > 0 ? (
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                {currentPhaseData.tasks.map((task: any, idx: number) => (
-                  <div 
-                    key={task.id} 
-                    style={{ 
-                      display: "flex", 
-                      alignItems: "center", 
-                      gap: "1rem", 
-                      padding: "0.75rem 0",
-                      borderBottom: idx === currentPhaseData.tasks.length - 1 ? "none" : "1px solid var(--card-border)"
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      className="checkbox-custom"
-                      checked={task.completed}
-                      onChange={() => handleTaskToggle(data.currentPhase, task.id)}
-                    />
-                    <span 
-                      style={{ 
-                        flex: 1, 
-                        fontSize: "0.9rem", 
-                        color: task.completed ? "#71717a" : "var(--foreground)", 
-                        textDecoration: task.completed ? "line-through" : "none",
-                        transition: "color 0.2s ease" 
-                      }}
-                    >
-                      {task.title}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p style={{ color: "#a1a1aa", fontSize: "0.9rem", padding: "0.5rem 0" }}>No phase tasks today.</p>
-            )}
-          </div>
-        </div>
+
 
         {/* Phase Tracker */}
         <PhaseTracker phases={data.phases} currentPhase={data.currentPhase} onPhaseClick={setSelectedPhase} />
@@ -1205,6 +1126,19 @@ export default function Home() {
           currentPhaseId={data.currentPhase}
           onClose={() => setSelectedPhase(null)} 
           onActivatePhase={handlePhaseChange}
+        />
+      )}
+      {selectedScheduleDay && (
+        <ScheduleDayModal
+          day={selectedScheduleDay}
+          data={data}
+          setData={setData}
+          saveDailyChanges={saveDailyChanges}
+          reflectionText={reflectionText}
+          setReflectionText={setReflectionText}
+          saveReflectionChanges={saveReflectionChanges}
+          onClose={() => setSelectedScheduleDay(null)}
+          updateAppState={updateAppState}
         />
       )}
     </main>
