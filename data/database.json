@@ -7,10 +7,36 @@
     "2026-06-08",
     "2026-06-08",
     "2026-06-08",
-    "2026-06-09"
+    "2026-06-09",
+    "2026-06-10",
+    "2026-06-10",
+    "2026-06-11",
+    "2026-06-11",
+    "2026-06-11",
+    "2026-06-11",
+    "2026-06-12",
+    "2026-06-12",
+    "2026-06-12",
+    "2026-06-13",
+    "2026-06-13",
+    "2026-06-15",
+    "2026-06-15",
+    "2026-06-15",
+    "2026-06-15",
+    "2026-06-15",
+    "2026-06-16",
+    "2026-06-17",
+    "2026-06-17",
+    "2026-06-18",
+    "2026-06-19",
+    "2026-06-19",
+    "2026-06-19",
+    "2026-06-20",
+    "2026-06-20",
+    "2026-06-21"
   ],
   "lastDailyRoutineCheck": "2026-06-08",
-  "lastTasksResetDate": "2026-06-09",
+  "lastTasksResetDate": "2026-06-21",
   "dailyFocus": {
     "math": "",
     "leetcode": "",
@@ -36,7 +62,7 @@
       },
       {
         "id": "mon_4",
-        "title": "Ray Tracer Challenge",
+        "title": "Ray Tracer",
         "completed": false
       },
       {
@@ -63,13 +89,13 @@
       },
       {
         "id": "tue_4",
-        "title": "Ray Tracer Challenge",
+        "title": "Ray Tracer",
         "completed": false
       },
       {
         "id": "tue_5",
         "title": "Data Oriented Design",
-        "completed": true
+        "completed": false
       }
     ],
     "Wed": [
@@ -90,7 +116,7 @@
       },
       {
         "id": "wed_4",
-        "title": "Ray Tracer Challenge",
+        "title": "Ray Tracer",
         "completed": false
       },
       {
@@ -117,7 +143,7 @@
       },
       {
         "id": "thu_4",
-        "title": "Ray Tracer Challenge",
+        "title": "Ray Tracer",
         "completed": false
       },
       {
@@ -144,7 +170,7 @@
       },
       {
         "id": "fri_4",
-        "title": "Ray Tracer Challenge",
+        "title": "Ray Tracer",
         "completed": false
       },
       {
@@ -180,7 +206,13 @@
         "completed": false
       }
     ],
-    "Sun": []
+    "Sun": [
+      {
+        "id": "task_1782052685603",
+        "title": "Data Oriented Design (Concurrency)",
+        "completed": true
+      }
+    ]
   },
   "dailyRevisionItems": {
     "Mon": [
@@ -211,7 +243,7 @@
       {
         "id": "rev_thu_1",
         "title": "Implementation of a Data Structure",
-        "description": "",
+        "description": "swapBackArray (practice)",
         "completed": false
       }
     ],
@@ -562,9 +594,9 @@
       "category": "Mathematics",
       "type": "Book",
       "status": "In Progress",
-      "currentPage": 71,
+      "currentPage": 74,
       "totalPages": 183,
-      "currentSubject": "2.5 Skews",
+      "currentSubject": "2.6 Homogeneous Coordinates",
       "link": "/mnt/Storage4TB/Bookshelf/Game Engine/Foundations of Game Engine Development, Volume 1 Mathematics by Eric Lengyel.pdf",
       "localPath": "~/Documents/LinearAlgebra"
     },
@@ -574,9 +606,9 @@
       "category": "Programming Languages",
       "type": "Book",
       "status": "In Progress",
-      "currentPage": 48,
+      "currentPage": 57,
       "totalPages": 639,
-      "currentSubject": "Objects, Types & Values: Review",
+      "currentSubject": "Computation: 3.3.2 Operators",
       "link": "",
       "localPath": "~/Documents/PPPC++"
     },
@@ -586,9 +618,9 @@
       "category": "Computer Graphics",
       "type": "Book",
       "status": "In Progress",
-      "currentPage": 0,
-      "totalPages": 300,
-      "currentSubject": "Ray Casting",
+      "currentPage": 82,
+      "totalPages": 264,
+      "currentSubject": "Light & Shading: Reflecting Vectors",
       "link": "/mnt/Storage4TB/Bookshelf/Graphics Programming/Ray Tracer Challenge _ A Test-driven Guide to Your First 3d Renderer (9781680506792).pdf",
       "localPath": "~/Documents/ray-tracer"
     },
@@ -600,7 +632,7 @@
       "status": "In Progress",
       "currentPage": 0,
       "totalPages": 50,
-      "currentSubject": "Getting Started -> Shaders -> Our own shader class",
+      "currentSubject": "Understand \"Hello Triangle\" deeply",
       "link": "https://learnopengl.com",
       "localPath": "~/Documents/LearnOpenGL"
     },
@@ -637,6 +669,112 @@
     "2026-06-09": [
       {
         "title": "Data Oriented Design"
+      }
+    ],
+    "2026-06-10": [
+      {
+        "title": "Linear Algebra",
+        "description": ""
+      },
+      {
+        "title": "Mathematics (Linear Algebra)"
+      }
+    ],
+    "2026-06-11": [
+      {
+        "title": "Implementation of a Data Structure",
+        "description": ""
+      },
+      {
+        "title": "C++ Book"
+      },
+      {
+        "title": "LearnOpenGL"
+      },
+      {
+        "title": "Data Oriented Design"
+      }
+    ],
+    "2026-06-12": [
+      {
+        "title": "C++ Book"
+      },
+      {
+        "title": "Linear Algebra",
+        "description": ""
+      },
+      {
+        "title": "Mathematics (Linear Algebra)"
+      }
+    ],
+    "2026-06-13": [
+      {
+        "title": "Mathematics (Linear Algebra)"
+      },
+      {
+        "title": "C++ Book"
+      }
+    ],
+    "2026-06-15": [
+      {
+        "title": "Linear Algebra",
+        "description": ""
+      },
+      {
+        "title": "Mathematics (Linear Algebra)"
+      },
+      {
+        "title": "Ray Tracer"
+      },
+      {
+        "title": "C++ Book"
+      },
+      {
+        "title": "Data Oriented Design"
+      }
+    ],
+    "2026-06-16": [
+      {
+        "title": "Mathematics (Linear Algebra)"
+      }
+    ],
+    "2026-06-17": [
+      {
+        "title": "Linear Algebra",
+        "description": ""
+      },
+      {
+        "title": "Mathematics (Linear Algebra)"
+      }
+    ],
+    "2026-06-18": [
+      {
+        "title": "Mathematics (Linear Algebra)"
+      }
+    ],
+    "2026-06-19": [
+      {
+        "title": "Linear Algebra",
+        "description": ""
+      },
+      {
+        "title": "C++ Book"
+      },
+      {
+        "title": "Mathematics (Linear Algebra)"
+      }
+    ],
+    "2026-06-20": [
+      {
+        "title": "C++ Book"
+      },
+      {
+        "title": "Data Oriented Design"
+      }
+    ],
+    "2026-06-21": [
+      {
+        "title": "Data Oriented Design (Concurrency)"
       }
     ]
   }
