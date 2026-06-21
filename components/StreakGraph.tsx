@@ -4,10 +4,12 @@ import React, { useEffect, useRef, useState } from "react";
 
 export default function StreakGraph({ 
   streakHistory = [], 
-  completedItemsHistory = {} 
+  completedItemsHistory = {},
+  startDate
 }: { 
   streakHistory?: string[]; 
-  completedItemsHistory?: { [date: string]: string[] } 
+  completedItemsHistory?: { [date: string]: any[] };
+  startDate?: string;
 }) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [selectedDateDetails, setSelectedDateDetails] = useState<string | null>(null);
@@ -24,20 +26,27 @@ export default function StreakGraph({
     dateCounts[date] = (dateCounts[date] || 0) + 1;
   });
 
-  // Calculate back 53 weeks (371 days) to fill the grid, aligned to Sunday
   const today = new Date();
-  const daysToRender = 371;
-  const startDate = new Date(today);
-  startDate.setDate(today.getDate() - daysToRender + 1);
+  let startDateObj: Date;
 
-  // Align start date to Sunday
-  const startDayOfWeek = startDate.getDay();
-  startDate.setDate(startDate.getDate() - startDayOfWeek);
+  if (startDate) {
+    const parts = startDate.split("-");
+    startDateObj = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  } else {
+    // Fallback: 53 weeks ago if startDate not provided
+    startDateObj = new Date(today);
+    startDateObj.setDate(today.getDate() - 370);
+  }
+  startDateObj.setHours(0, 0, 0, 0);
+
+  // Align start date to Sunday (so weeks represent Sun-Sat rows)
+  const startDayOfWeek = startDateObj.getDay();
+  startDateObj.setDate(startDateObj.getDate() - startDayOfWeek);
 
   const weeks: { dateStr: string; count: number }[][] = [];
   let currentWeek: { dateStr: string; count: number }[] = [];
 
-  const tempDate = new Date(startDate);
+  const tempDate = new Date(startDateObj);
   // Render up to today
   while (tempDate <= today) {
     const year = tempDate.getFullYear();
@@ -80,7 +89,7 @@ export default function StreakGraph({
       style={{ overflowX: 'auto' }}
     >
       <h2 className="section-title">Consistency Streak</h2>
-      <div style={{ display: 'flex', gap: '4px', minWidth: '700px', padding: '10px 0' }}>
+      <div style={{ display: 'flex', gap: '4px', padding: '10px 0' }}>
         {weeks.map((week, wIdx) => (
           <div key={wIdx} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {week.map((day, dIdx) => (

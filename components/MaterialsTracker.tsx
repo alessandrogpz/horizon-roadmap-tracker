@@ -341,7 +341,7 @@ export default function MaterialsTracker({
   };
 
   return (
-    <div className="glass-panel" style={{ flex: 1, display: "flex", flexDirection: "column", gap: "1rem" }}>
+    <div className="glass-panel" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--card-border)", paddingBottom: "0.75rem" }}>
         <h2 className="section-title" style={{ marginBottom: 0 }}>Materials</h2>
         <button
