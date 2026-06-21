@@ -109,30 +109,15 @@ export default function ScheduleDayModal({
           }}>
             {day.name} Schedule
           </span>
-          {day.type !== "reflection" && (
-            <h2 style={{ fontSize: "1.3rem", fontWeight: 700, color: "#fff", marginTop: "0.5rem" }}>
-              {getFullLabel(day.type)}
-            </h2>
-          )}
+          <h2 style={{ fontSize: "1.3rem", fontWeight: 700, color: "#fff", marginTop: "0.5rem" }}>
+            {getFullLabel(day.type)}
+          </h2>
         </div>
 
         {/* Modal Content */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          {day.type === "reflection" ? (
-            <div style={{ 
-              padding: "1.5rem 1rem", 
-              background: "rgba(0, 0, 0, 0.15)", 
-              borderRadius: "6px", 
-              border: "1px solid rgba(255, 255, 255, 0.05)",
-              color: "#a1a1aa",
-              fontSize: "0.95rem",
-              textAlign: "center"
-            }}>
-              Weekly reflection
-            </div>
-          ) : (
-            /* Daily Revision and Focus Checklist Editors inside Modal */
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem", maxHeight: "550px", overflowY: "auto", paddingRight: "0.25rem" }}>
+          {/* Daily Revision and Focus Checklist Editors inside Modal */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem", maxHeight: "550px", overflowY: "auto", paddingRight: "0.25rem" }}>
               
               {/* Today's Revision Section */}
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
@@ -651,7 +636,6 @@ export default function ScheduleDayModal({
                 </div>
               </div>
             </div>
-          )}
         </div>
 
         {/* Modal Footer */}

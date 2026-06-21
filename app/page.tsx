@@ -698,9 +698,8 @@ export default function Home() {
           return null;
         })()}
 
-        {/* Daily Revision & Reflection Panels */}
-        {routineTask.type === "reflection" ? (
-          /* Sunday Weekly Reflection Panel */
+        {/* Weekly Reflection Panel (Only on Sunday) */}
+        {routineTask.type === "reflection" && (
           <div className="glass-panel" style={{ borderLeft: "4px solid var(--accent)", padding: "1.25rem 1.5rem" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
               {/* Weekly Schedule Overview */}
@@ -829,339 +828,336 @@ export default function Home() {
               )}
             </div>
           </div>
-        ) : (
-          /* Weekdays Daily Revision and Daily Reflection Panels */
-          <>
+        )}
 
+        {/* Daily Study Panel (Everyday: Mon-Sat and Sun) */}
+        <div className="glass-panel" style={{ borderLeft: "4px solid var(--accent)", padding: "1.25rem 1.5rem" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            {/* Weekly Schedule Overview (Only on weekdays, since on Sunday it's in the Weekly Reflection card) */}
+            {routineTask.type !== "reflection" && (
+              <div style={{ 
+                display: "grid", 
+                gridTemplateColumns: "repeat(7, minmax(0, 1fr))", 
+                gap: "0.4rem", 
+                width: "100%",
+                marginBottom: "0.5rem",
+                paddingBottom: "0.75rem",
+                borderBottom: "1px solid var(--card-border)"
+              }}>
+                {WEEK_SCHEDULE.map((dayItem, idx) => {
+                  const isToday = idx === (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
+                  const color = "var(--accent)";
+                  
+                  return (
+                    <div 
+                      key={dayItem.name} 
+                      onClick={() => setSelectedScheduleDay(dayItem)}
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        padding: "0.4rem 0.2rem",
+                        borderRadius: "6px",
+                        background: isToday ? "rgba(255, 255, 255, 0.04)" : "rgba(0, 0, 0, 0.15)",
+                        border: isToday ? `1px solid ${color}` : "1px solid rgba(255, 255, 255, 0.05)",
+                        boxShadow: isToday ? `0 0 8px ${color}33` : "none",
+                        transition: "all 0.2s ease",
+                        cursor: "pointer"
+                      }}
+                    >
+                      <span style={{ 
+                        fontSize: "0.7rem", 
+                        fontWeight: isToday ? 700 : 500, 
+                        color: isToday ? "#fff" : "#71717a",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.02em"
+                      }}>
+                        {dayItem.name}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
+            {/* Card Main Header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", userSelect: "none", marginTop: "0.5rem", paddingBottom: "0.5rem", borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#fff", margin: 0 }}>
+                Today's Study (Week {getWeekNum(data.startDate)})
+              </h3>
+            </div>
 
+            {/* Revision Section */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem", marginTop: "0.75rem" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", userSelect: "none" }}>
+                <span style={{ fontSize: "0.7rem", color: "var(--accent)", fontWeight: "bold", fontFamily: "monospace", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                  Revision
+                </span>
+              </div>
 
-            {/* Daily Revision Panel */}
-            <div className="glass-panel" style={{ borderLeft: "4px solid var(--accent)", padding: "1.25rem 1.5rem" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                {/* Weekly Schedule Overview */}
-                <div style={{ 
-                  display: "grid", 
-                  gridTemplateColumns: "repeat(7, minmax(0, 1fr))", 
-                  gap: "0.4rem", 
-                  width: "100%",
-                  marginBottom: "0.5rem",
-                  paddingBottom: "0.75rem",
-                  borderBottom: "1px solid var(--card-border)"
-                }}>
-                  {WEEK_SCHEDULE.map((dayItem, idx) => {
-                    const isToday = idx === (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
-                    const color = "var(--accent)";
-                    
-                    return (
-                      <div 
-                        key={dayItem.name} 
-                        onClick={() => setSelectedScheduleDay(dayItem)}
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          padding: "0.4rem 0.2rem",
-                          borderRadius: "6px",
-                          background: isToday ? "rgba(255, 255, 255, 0.04)" : "rgba(0, 0, 0, 0.15)",
-                          border: isToday ? `1px solid ${color}` : "1px solid rgba(255, 255, 255, 0.05)",
-                          boxShadow: isToday ? `0 0 8px ${color}33` : "none",
-                          transition: "all 0.2s ease",
-                          cursor: "pointer"
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+                {(() => {
+                  const DAYS_SHORT_MAP = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+                  const todayKey = DAYS_SHORT_MAP[dayOfWeek];
+                  const revisionItems = data?.dailyRevisionItems?.[todayKey] || [];
+                  
+                  if (revisionItems.length === 0) {
+                    return <p style={{ color: "#71717a", fontSize: "0.85rem", fontStyle: "italic", margin: 0 }}>No revision items defined for today. Click a day to plan!</p>;
+                  }
+                  
+                  return revisionItems.map((item: any, index: number) => (
+                    <div 
+                      key={item.id || index}
+                      style={{ 
+                        display: "flex", 
+                        alignItems: "flex-start", 
+                        gap: "1rem",
+                        padding: "0.2rem 0"
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        className="checkbox-custom"
+                        checked={item.completed}
+                        onChange={(e) => {
+                          const updatedItems = revisionItems.map((it: any) => {
+                            if (it.id === item.id) {
+                              return { ...it, completed: e.target.checked };
+                            }
+                            return it;
+                          });
+                          
+                          // Sync streak history & completed items details
+                          let newStreakHistory = [...(data.streakHistory || [])];
+                          let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
+                          const todayItems = newCompletedItemsHistory[todayStr] || [];
+
+                          if (e.target.checked) {
+                            newStreakHistory.push(todayStr);
+                            const alreadyExists = todayItems.some((it: any) => (typeof it === 'string' ? it === item.title : it.title === item.title));
+                            if (!alreadyExists) {
+                              newCompletedItemsHistory[todayStr] = [...todayItems, { title: item.title, description: item.description || "" }];
+                            }
+                          } else {
+                            const index = newStreakHistory.indexOf(todayStr);
+                            if (index > -1) {
+                              newStreakHistory.splice(index, 1);
+                            }
+                            newCompletedItemsHistory[todayStr] = todayItems.filter((it: any) => (typeof it === 'string' ? it !== item.title : it.title !== item.title));
+                          }
+                          
+                          const newData = {
+                            ...data,
+                            dailyRevisionItems: {
+                              ...(data.dailyRevisionItems || {}),
+                              [todayKey]: updatedItems
+                            },
+                            streakHistory: newStreakHistory,
+                            completedItemsHistory: newCompletedItemsHistory
+                          };
+                          setData(newData);
+                          saveDailyChanges(newData);
                         }}
-                      >
-                        <span style={{ 
-                          fontSize: "0.7rem", 
-                          fontWeight: isToday ? 700 : 500, 
-                          color: isToday ? "#fff" : "#71717a",
-                          textTransform: "uppercase",
-                          letterSpacing: "0.02em"
-                        }}>
-                          {dayItem.name}
+                        style={{ marginTop: "0.15rem" }}
+                      />
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem", flex: 1 }}>
+                        <span 
+                          style={{ 
+                            fontSize: "0.9rem", 
+                            fontWeight: 600,
+                            color: item.completed ? "#71717a" : "var(--foreground)", 
+                            textDecoration: item.completed ? "line-through" : "none",
+                            transition: "color 0.2s ease" 
+                          }}
+                        >
+                          {item.title}
                         </span>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Card Main Header */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", userSelect: "none", marginTop: "0.5rem", paddingBottom: "0.5rem", borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
-                  <h3 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#fff", margin: 0 }}>
-                    Today's Study (Week {getWeekNum(data.startDate)})
-                  </h3>
-                </div>
-
-                {/* Revision Section */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem", marginTop: "0.75rem" }}>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", userSelect: "none" }}>
-                    <span style={{ fontSize: "0.7rem", color: "var(--accent)", fontWeight: "bold", fontFamily: "monospace", letterSpacing: "0.05em", textTransform: "uppercase" }}>
-                      Revision
-                    </span>
-                  </div>
-
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-                    {(() => {
-                      const DAYS_SHORT_MAP = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-                      const todayKey = DAYS_SHORT_MAP[dayOfWeek];
-                      const revisionItems = data?.dailyRevisionItems?.[todayKey] || [];
-                      
-                      if (revisionItems.length === 0) {
-                        return <p style={{ color: "#71717a", fontSize: "0.85rem", fontStyle: "italic", margin: 0 }}>No revision items defined for today. Click a day to plan!</p>;
-                      }
-                      
-                      return revisionItems.map((item: any, index: number) => (
-                        <div 
-                          key={item.id || index}
-                          style={{ 
-                            display: "flex", 
-                            alignItems: "flex-start", 
-                            gap: "1rem",
-                            padding: "0.2rem 0"
-                          }}
-                        >
-                          <input
-                            type="checkbox"
-                            className="checkbox-custom"
-                            checked={item.completed}
-                            onChange={(e) => {
-                              const updatedItems = revisionItems.map((it: any) => {
-                                if (it.id === item.id) {
-                                  return { ...it, completed: e.target.checked };
-                                }
-                                return it;
-                              });
-                              
-                              // Sync streak history & completed items details
-                              let newStreakHistory = [...(data.streakHistory || [])];
-                              let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
-                              const todayItems = newCompletedItemsHistory[todayStr] || [];
-
-                              if (e.target.checked) {
-                                newStreakHistory.push(todayStr);
-                                const alreadyExists = todayItems.some((it: any) => (typeof it === 'string' ? it === item.title : it.title === item.title));
-                                if (!alreadyExists) {
-                                  newCompletedItemsHistory[todayStr] = [...todayItems, { title: item.title, description: item.description || "" }];
-                                }
-                              } else {
-                                const index = newStreakHistory.indexOf(todayStr);
-                                if (index > -1) {
-                                  newStreakHistory.splice(index, 1);
-                                }
-                                newCompletedItemsHistory[todayStr] = todayItems.filter((it: any) => (typeof it === 'string' ? it !== item.title : it.title !== item.title));
-                              }
-                              
-                              const newData = {
-                                ...data,
-                                dailyRevisionItems: {
-                                  ...(data.dailyRevisionItems || {}),
-                                  [todayKey]: updatedItems
-                                },
-                                streakHistory: newStreakHistory,
-                                completedItemsHistory: newCompletedItemsHistory
-                              };
-                              setData(newData);
-                              saveDailyChanges(newData);
-                            }}
-                            style={{ marginTop: "0.15rem" }}
-                          />
-                          <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem", flex: 1 }}>
-                            <span 
-                              style={{ 
-                                fontSize: "0.9rem", 
-                                fontWeight: 600,
-                                color: item.completed ? "#71717a" : "var(--foreground)", 
-                                textDecoration: item.completed ? "line-through" : "none",
-                                transition: "color 0.2s ease" 
-                              }}
-                            >
-                              {item.title}
-                            </span>
-                            {item.description && (
-                              <span 
-                                style={{ 
-                                  fontSize: "0.8rem", 
-                                  color: "#71717a",
-                                  textDecoration: item.completed ? "line-through" : "none"
-                                }}
-                              >
-                                {item.description}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      ));
-                    })()}
-                  </div>
-                </div>
-
-                {/* Focus Section */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem", marginTop: "1rem" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", userSelect: "none" }}>
-                    <span style={{ fontSize: "0.7rem", color: "var(--accent)", fontWeight: "bold", fontFamily: "monospace", letterSpacing: "0.05em", textTransform: "uppercase" }}>
-                      Focus
-                    </span>
-                  </div>
-
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-                    {(() => {
-                      const DAYS_SHORT_MAP = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-                      const todayKey = DAYS_SHORT_MAP[dayOfWeek];
-                      const tasks = data?.dailyTasks?.[todayKey] || [];
-                      
-                      if (tasks.length === 0) {
-                        return <p style={{ color: "#71717a", fontSize: "0.85rem", fontStyle: "italic", margin: 0 }}>No focus items defined for today. Click a day to plan!</p>;
-                      }
-                      
-                      return tasks.map((task: any, index: number) => (
-                        <div 
-                          key={task.id || index}
-                          style={{ 
-                            display: "flex", 
-                            alignItems: "center", 
-                            gap: "1rem",
-                            padding: "0.2rem 0"
-                          }}
-                        >
-                          <input
-                            type="checkbox"
-                            className="checkbox-custom"
-                            checked={task.completed}
-                            onChange={(e) => {
-                              const updatedTasks = tasks.map((t: any) => {
-                                if (t.id === task.id) {
-                                  return { ...t, completed: e.target.checked };
-                                }
-                                return t;
-                              });
-                              
-                              // Sync streak history & completed items details
-                              let newStreakHistory = [...(data.streakHistory || [])];
-                              let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
-                              const todayItems = newCompletedItemsHistory[todayStr] || [];
-
-                              if (e.target.checked) {
-                                newStreakHistory.push(todayStr);
-                                const alreadyExists = todayItems.some((it: any) => (typeof it === 'string' ? it === task.title : it.title === task.title));
-                                if (!alreadyExists) {
-                                  newCompletedItemsHistory[todayStr] = [...todayItems, { title: task.title }];
-                                }
-                              } else {
-                                const index = newStreakHistory.indexOf(todayStr);
-                                if (index > -1) {
-                                  newStreakHistory.splice(index, 1);
-                                }
-                                newCompletedItemsHistory[todayStr] = todayItems.filter((it: any) => (typeof it === 'string' ? it !== task.title : it.title !== task.title));
-                              }
-                              
-                              const newData = {
-                                ...data,
-                                dailyTasks: {
-                                  ...(data.dailyTasks || {}),
-                                  [todayKey]: updatedTasks
-                                },
-                                streakHistory: newStreakHistory,
-                                completedItemsHistory: newCompletedItemsHistory
-                              };
-                              setData(newData);
-                              saveDailyChanges(newData);
-                            }}
-                          />
+                        {item.description && (
                           <span 
                             style={{ 
-                              flex: 1, 
-                              fontSize: "0.9rem", 
-                              color: task.completed ? "#71717a" : "var(--foreground)", 
-                              textDecoration: task.completed ? "line-through" : "none",
-                              transition: "color 0.2s ease" 
+                              fontSize: "0.8rem", 
+                              color: "#71717a",
+                              textDecoration: item.completed ? "line-through" : "none"
                             }}
                           >
-                            {task.title}
+                            {item.description}
                           </span>
-                        </div>
-                      ));
-                    })()}
-                  </div>
-                </div>
+                        )}
+                      </div>
+                    </div>
+                  ));
+                })()}
               </div>
             </div>
 
-            {/* Daily Reflection Panel */}
-            <div className="glass-panel" style={{ borderLeft: "4px solid var(--accent)", padding: "1.25rem 1.5rem" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                <div 
-                  onClick={() => setReflectionExpanded(!reflectionExpanded)}
-                  style={{ 
-                    display: "flex", 
-                    alignItems: "center", 
-                    justifyContent: "space-between", 
-                    cursor: "pointer",
-                    userSelect: "none",
-                    width: "100%"
-                  }}
-                >
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem", flex: 1 }}>
-                    <h3 style={{ fontSize: "1.05rem", fontWeight: 600, color: "#fff", margin: 0 }}>
-                      Daily Reflection (Optional)
-                    </h3>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                    <span style={{ 
-                      fontSize: "0.8rem", 
-                      color: "#71717a", 
-                      transform: reflectionExpanded ? "rotate(180deg)" : "rotate(0deg)", 
-                      transition: "transform 0.2s ease" 
-                    }}>
-                      ▼
-                    </span>
-                  </div>
-                </div>
+            {/* Focus Section */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem", marginTop: "1rem" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", userSelect: "none" }}>
+                <span style={{ fontSize: "0.7rem", color: "var(--accent)", fontWeight: "bold", fontFamily: "monospace", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                  Focus
+                </span>
+              </div>
 
-                {reflectionExpanded && (
-                  <div style={{ 
-                    marginTop: "0.5rem", 
-                    padding: "1rem", 
-                    background: "rgba(0, 0, 0, 0.2)", 
-                    borderRadius: "6px", 
-                    border: "1px solid var(--card-border)",
-                    fontSize: "0.85rem",
-                    lineHeight: "1.5",
-                    color: "#a1a1aa"
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+                {(() => {
+                  const DAYS_SHORT_MAP = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+                  const todayKey = DAYS_SHORT_MAP[dayOfWeek];
+                  const tasks = data?.dailyTasks?.[todayKey] || [];
+                  
+                  if (tasks.length === 0) {
+                    return <p style={{ color: "#71717a", fontSize: "0.85rem", fontStyle: "italic", margin: 0 }}>No focus items defined for today. Click a day to plan!</p>;
+                  }
+                  
+                  return tasks.map((task: any, index: number) => (
+                    <div 
+                      key={task.id || index}
+                      style={{ 
+                        display: "flex", 
+                        alignItems: "center", 
+                        gap: "1rem",
+                        padding: "0.2rem 0"
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        className="checkbox-custom"
+                        checked={task.completed}
+                        onChange={(e) => {
+                          const updatedTasks = tasks.map((t: any) => {
+                            if (t.id === task.id) {
+                              return { ...t, completed: e.target.checked };
+                            }
+                            return t;
+                          });
+                          
+                          // Sync streak history & completed items details
+                          let newStreakHistory = [...(data.streakHistory || [])];
+                          let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
+                          const todayItems = newCompletedItemsHistory[todayStr] || [];
+
+                          if (e.target.checked) {
+                            newStreakHistory.push(todayStr);
+                            const alreadyExists = todayItems.some((it: any) => (typeof it === 'string' ? it === task.title : it.title === task.title));
+                            if (!alreadyExists) {
+                              newCompletedItemsHistory[todayStr] = [...todayItems, { title: task.title }];
+                            }
+                          } else {
+                            const index = newStreakHistory.indexOf(todayStr);
+                            if (index > -1) {
+                              newStreakHistory.splice(index, 1);
+                            }
+                            newCompletedItemsHistory[todayStr] = todayItems.filter((it: any) => (typeof it === 'string' ? it !== task.title : it.title !== task.title));
+                          }
+                          
+                          const newData = {
+                            ...data,
+                            dailyTasks: {
+                              ...(data.dailyTasks || {}),
+                              [todayKey]: updatedTasks
+                            },
+                            streakHistory: newStreakHistory,
+                            completedItemsHistory: newCompletedItemsHistory
+                          };
+                          setData(newData);
+                          saveDailyChanges(newData);
+                        }}
+                      />
+                      <span 
+                        style={{ 
+                          flex: 1, 
+                          fontSize: "0.9rem", 
+                          color: task.completed ? "#71717a" : "var(--foreground)", 
+                          textDecoration: task.completed ? "line-through" : "none",
+                          transition: "color 0.2s ease" 
+                        }}
+                      >
+                        {task.title}
+                      </span>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Daily Reflection Panel (Only on Weekdays: Mon-Sat) */}
+        {routineTask.type !== "reflection" && (
+          <div className="glass-panel" style={{ borderLeft: "4px solid var(--accent)", padding: "1.25rem 1.5rem" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              <div 
+                onClick={() => setReflectionExpanded(!reflectionExpanded)}
+                style={{ 
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "space-between", 
+                  cursor: "pointer",
+                  userSelect: "none",
+                  width: "100%"
+                }}
+              >
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem", flex: 1 }}>
+                  <h3 style={{ fontSize: "1.05rem", fontWeight: 600, color: "#fff", margin: 0 }}>
+                    Daily Reflection (Optional)
+                  </h3>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <span style={{ 
+                    fontSize: "0.8rem", 
+                    color: "#71717a", 
+                    transform: reflectionExpanded ? "rotate(180deg)" : "rotate(0deg)", 
+                    transition: "transform 0.2s ease" 
                   }}>
-                    <textarea
-                      value={dailyReflectionText}
-                      onChange={(e) => {
-                        setDailyReflectionText(e.target.value);
-                        saveDailyReflectionChanges(e.target.value);
-                      }}
-                      onBlur={() => {
-                        if (dailyReflectionSaveTimeoutRef.current) {
-                          clearTimeout(dailyReflectionSaveTimeoutRef.current);
-                        }
-                        handleSaveDailyReflection(dailyReflectionText);
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                      onTouchStart={(e) => e.stopPropagation()}
-                      placeholder="Reflect on today's progress, focus, or achievements (optional)..."
-                      rows={4}
-                      style={{
-                        width: "100%",
-                        background: "rgba(0, 0, 0, 0.25)",
-                        border: "1px solid var(--card-border)",
-                        borderRadius: "6px",
-                        padding: "0.75rem",
-                        color: "#e4e4e7",
-                        fontFamily: "inherit",
-                        fontSize: "0.85rem",
-                        lineHeight: "1.6",
-                        resize: "vertical",
-                        outline: "none"
-                      }}
-                    />
-                  </div>
-                )}
+                    ▼
+                  </span>
+                </div>
               </div>
+
+              {reflectionExpanded && (
+                <div style={{ 
+                  marginTop: "0.5rem", 
+                  padding: "1rem", 
+                  background: "rgba(0, 0, 0, 0.2)", 
+                  borderRadius: "6px", 
+                  border: "1px solid var(--card-border)",
+                  fontSize: "0.85rem",
+                  lineHeight: "1.5",
+                  color: "#a1a1aa"
+                }}>
+                  <textarea
+                    value={dailyReflectionText}
+                    onChange={(e) => {
+                      setDailyReflectionText(e.target.value);
+                      saveDailyReflectionChanges(e.target.value);
+                    }}
+                    onBlur={() => {
+                      if (dailyReflectionSaveTimeoutRef.current) {
+                        clearTimeout(dailyReflectionSaveTimeoutRef.current);
+                      }
+                      handleSaveDailyReflection(dailyReflectionText);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    placeholder="Reflect on today's progress, focus, or achievements (optional)..."
+                    rows={4}
+                    style={{
+                      width: "100%",
+                      background: "rgba(0, 0, 0, 0.25)",
+                      border: "1px solid var(--card-border)",
+                      borderRadius: "6px",
+                      padding: "0.75rem",
+                      color: "#e4e4e7",
+                      fontFamily: "inherit",
+                      fontSize: "0.85rem",
+                      lineHeight: "1.6",
+                      resize: "vertical",
+                      outline: "none"
+                    }}
+                  />
+                </div>
+              )}
             </div>
-          </>
+          </div>
         )}
 
 
