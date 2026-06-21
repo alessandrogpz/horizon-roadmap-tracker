@@ -31,7 +31,7 @@ export default function PortfolioTracker({ portfolio, onToggle }: PortfolioTrack
   }, [portfolio]);
 
   return (
-    <div className="glass-panel" style={{ flex: 1, display: "flex", flexDirection: "column", gap: "1rem" }}>
+    <div className="glass-panel" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <h2 className="section-title">Portfolio Deliverables</h2>
       <div style={{ display: "flex", flexDirection: "column", marginTop: "0.5rem" }}>
         {portfolio.map((proj, idx) => (

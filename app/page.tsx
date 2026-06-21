@@ -8,6 +8,7 @@ import PortfolioTracker from "@/components/PortfolioTracker";
 import MaterialsTracker from "@/components/MaterialsTracker";
 import PhaseDetailModal from "@/components/PhaseDetailModal";
 import ScheduleDayModal from "@/components/ScheduleDayModal";
+import PomodoroTimer from "@/components/PomodoroTimer";
 
 function getMondayOfDateWeek(date: Date): Date {
   const day = date.getDay();
@@ -1166,7 +1167,14 @@ export default function Home() {
         <PhaseTracker phases={data.phases} currentPhase={data.currentPhase} onPhaseClick={setSelectedPhase} />
 
         {/* Streak Graph */}
-        <StreakGraph streakHistory={data.streakHistory} completedItemsHistory={data.completedItemsHistory || {}} />
+        <StreakGraph 
+          streakHistory={data.streakHistory} 
+          completedItemsHistory={data.completedItemsHistory || {}} 
+          startDate={data.startDate}
+        />
+
+        {/* Pomodoro Timer */}
+        <PomodoroTimer />
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
