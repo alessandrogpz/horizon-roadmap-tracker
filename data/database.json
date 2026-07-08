@@ -33,10 +33,37 @@
     "2026-06-19",
     "2026-06-20",
     "2026-06-20",
-    "2026-06-21"
+    "2026-06-21",
+    "2026-06-22",
+    "2026-06-22",
+    "2026-06-22",
+    "2026-06-22",
+    "2026-06-23",
+    "2026-06-24",
+    "2026-06-24",
+    "2026-06-24",
+    "2026-06-25",
+    "2026-06-25",
+    "2026-06-26",
+    "2026-06-27",
+    "2026-06-27",
+    "2026-06-28",
+    "2026-06-29",
+    "2026-06-29",
+    "2026-06-29",
+    "2026-06-30",
+    "2026-07-01",
+    "2026-07-02",
+    "2026-07-03",
+    "2026-07-03",
+    "2026-07-04",
+    "2026-07-05",
+    "2026-07-06",
+    "2026-07-07",
+    "2026-07-08"
   ],
   "lastDailyRoutineCheck": "2026-06-08",
-  "lastTasksResetDate": "2026-06-21",
+  "lastTasksResetDate": "2026-07-08",
   "dailyFocus": {
     "math": "",
     "leetcode": "",
@@ -47,7 +74,7 @@
     "Mon": [
       {
         "id": "mon_1",
-        "title": "Mathematics (Linear Algebra)",
+        "title": "Mathematics",
         "completed": false
       },
       {
@@ -56,40 +83,20 @@
         "completed": false
       },
       {
-        "id": "mon_3",
-        "title": "LearnOpenGL",
-        "completed": false
-      },
-      {
         "id": "mon_4",
         "title": "Ray Tracer",
-        "completed": false
-      },
-      {
-        "id": "mon_5",
-        "title": "Data Oriented Design",
         "completed": false
       }
     ],
     "Tue": [
       {
         "id": "tue_1",
-        "title": "Mathematics (Linear Algebra)",
+        "title": "DSA Pattern Study",
         "completed": false
       },
       {
         "id": "tue_2",
         "title": "C++ Book",
-        "completed": false
-      },
-      {
-        "id": "tue_3",
-        "title": "LearnOpenGL",
-        "completed": false
-      },
-      {
-        "id": "tue_4",
-        "title": "Ray Tracer",
         "completed": false
       },
       {
@@ -101,49 +108,29 @@
     "Wed": [
       {
         "id": "wed_1",
-        "title": "Mathematics (Linear Algebra)",
+        "title": "Mathematics",
         "completed": false
       },
       {
         "id": "wed_2",
         "title": "C++ Book",
-        "completed": false
-      },
-      {
-        "id": "wed_3",
-        "title": "LearnOpenGL",
-        "completed": false
+        "completed": true
       },
       {
         "id": "wed_4",
         "title": "Ray Tracer",
-        "completed": false
-      },
-      {
-        "id": "wed_5",
-        "title": "Data Oriented Design",
         "completed": false
       }
     ],
     "Thu": [
       {
         "id": "thu_1",
-        "title": "Mathematics (Linear Algebra)",
+        "title": "DSA Pattern Study",
         "completed": false
       },
       {
         "id": "thu_2",
         "title": "C++ Book",
-        "completed": false
-      },
-      {
-        "id": "thu_3",
-        "title": "LearnOpenGL",
-        "completed": false
-      },
-      {
-        "id": "thu_4",
-        "title": "Ray Tracer",
         "completed": false
       },
       {
@@ -155,7 +142,7 @@
     "Fri": [
       {
         "id": "fri_1",
-        "title": "Mathematics (Linear Algebra)",
+        "title": "DSA Practice",
         "completed": false
       },
       {
@@ -167,22 +154,12 @@
         "id": "fri_3",
         "title": "LearnOpenGL",
         "completed": false
-      },
-      {
-        "id": "fri_4",
-        "title": "Ray Tracer",
-        "completed": false
-      },
-      {
-        "id": "fri_5",
-        "title": "Data Oriented Design",
-        "completed": false
       }
     ],
     "Sat": [
       {
         "id": "sat_1",
-        "title": "Mathematics (Linear Algebra)",
+        "title": "Data Structure Implementation",
         "completed": false
       },
       {
@@ -191,26 +168,21 @@
         "completed": false
       },
       {
-        "id": "sat_3",
-        "title": "LearnOpenGL",
-        "completed": false
-      },
-      {
         "id": "sat_4",
         "title": "Ray Tracer Challenge",
-        "completed": false
-      },
-      {
-        "id": "sat_5",
-        "title": "Data Oriented Design",
         "completed": false
       }
     ],
     "Sun": [
       {
-        "id": "task_1782052685603",
-        "title": "Data Oriented Design (Concurrency)",
-        "completed": true
+        "id": "sun_1",
+        "title": "Review week's problems",
+        "completed": false
+      },
+      {
+        "id": "sun_2",
+        "title": "Catch up on readings",
+        "completed": false
       }
     ]
   },
@@ -226,8 +198,8 @@
     "Tue": [
       {
         "id": "rev_tue_1",
-        "title": "LeetCode Exercises",
-        "description": "",
+        "title": "Two Pointers",
+        "description": "Week 1 Pattern - solve 2 problems",
         "completed": false
       }
     ],
@@ -242,8 +214,8 @@
     "Thu": [
       {
         "id": "rev_thu_1",
-        "title": "Implementation of a Data Structure",
-        "description": "swapBackArray (practice)",
+        "title": "Two Pointers",
+        "description": "Week 1 Pattern - solve 2 problems",
         "completed": false
       }
     ],
@@ -258,8 +230,8 @@
     "Sat": [
       {
         "id": "rev_sat_1",
-        "title": "LeetCode Exercises",
-        "description": "",
+        "title": "Two Pointers",
+        "description": "Week 1 Pattern - solve 2 problems",
         "completed": false
       }
     ],
@@ -330,7 +302,7 @@
           },
           {
             "item": "LeetCode Focus",
-            "desc": "Array and Two-Pointer problems with a focus on space complexity and minimal allocations."
+            "desc": "Master the core problem-solving pattern templates: Two Pointers, Sliding Window, Hash Maps, Stack/Monotonic Stack, and Advanced Binary Search."
           }
         ]
       }
@@ -430,7 +402,7 @@
           },
           {
             "item": "LeetCode Focus",
-            "desc": "Binary Trees, N-ary Trees, and Graph Traversal (DFS/BFS) Medium problems."
+            "desc": "Master the core problem-solving pattern templates: BFS/DFS & Backtracking, Linked List Patterns, Trees & BST, Heaps & Intervals, DP Fundamentals."
           }
         ]
       }
@@ -594,9 +566,9 @@
       "category": "Mathematics",
       "type": "Book",
       "status": "In Progress",
-      "currentPage": 74,
+      "currentPage": 87,
       "totalPages": 183,
-      "currentSubject": "2.6 Homogeneous Coordinates",
+      "currentSubject": "2.7.2 Rotation With Quaternions",
       "link": "/mnt/Storage4TB/Bookshelf/Game Engine/Foundations of Game Engine Development, Volume 1 Mathematics by Eric Lengyel.pdf",
       "localPath": "~/Documents/LinearAlgebra"
     },
@@ -618,9 +590,9 @@
       "category": "Computer Graphics",
       "type": "Book",
       "status": "In Progress",
-      "currentPage": 82,
+      "currentPage": 109,
       "totalPages": 264,
-      "currentSubject": "Light & Shading: Reflecting Vectors",
+      "currentSubject": "Chapter 8: Shadows",
       "link": "/mnt/Storage4TB/Bookshelf/Graphics Programming/Ray Tracer Challenge _ A Test-driven Guide to Your First 3d Renderer (9781680506792).pdf",
       "localPath": "~/Documents/ray-tracer"
     },
@@ -775,6 +747,126 @@
     "2026-06-21": [
       {
         "title": "Data Oriented Design (Concurrency)"
+      }
+    ],
+    "2026-06-22": [
+      {
+        "title": "Linear Algebra",
+        "description": "Translation"
+      },
+      {
+        "title": "Mathematics (Linear Algebra)"
+      },
+      {
+        "title": "C++ Book"
+      },
+      {
+        "title": "Ray Tracer"
+      }
+    ],
+    "2026-06-23": [
+      {
+        "title": "Mathematics (Linear Algebra)"
+      }
+    ],
+    "2026-06-24": [
+      {
+        "title": "Linear Algebra",
+        "description": ""
+      },
+      {
+        "title": "Mathematics (Linear Algebra)"
+      },
+      {
+        "title": "C++ Book"
+      }
+    ],
+    "2026-06-25": [
+      {
+        "title": "C++ Book"
+      },
+      {
+        "title": "Ray Tracer"
+      }
+    ],
+    "2026-06-26": [
+      {
+        "title": "Ray Tracer"
+      }
+    ],
+    "2026-06-27": [
+      {
+        "title": "Ray Tracer Challenge"
+      },
+      {
+        "title": "Data Oriented Design"
+      }
+    ],
+    "2026-06-28": [
+      {
+        "title": "Ray Tracer"
+      }
+    ],
+    "2026-06-29": [
+      {
+        "title": "Linear Algebra",
+        "description": ""
+      },
+      {
+        "title": "C++ Book"
+      },
+      {
+        "title": "Ray Tracer"
+      }
+    ],
+    "2026-06-30": [
+      {
+        "title": "Mathematics"
+      }
+    ],
+    "2026-07-01": [
+      {
+        "title": "Linear Algebra",
+        "description": ""
+      }
+    ],
+    "2026-07-02": [
+      {
+        "title": "Mathematics"
+      }
+    ],
+    "2026-07-03": [
+      {
+        "title": "Linear Algebra",
+        "description": ""
+      },
+      {
+        "title": "Mathematics"
+      }
+    ],
+    "2026-07-04": [
+      {
+        "title": "Mathematics"
+      }
+    ],
+    "2026-07-05": [
+      {
+        "title": "C++ Book"
+      }
+    ],
+    "2026-07-06": [
+      {
+        "title": "C++ Book"
+      }
+    ],
+    "2026-07-07": [
+      {
+        "title": "C++ Book"
+      }
+    ],
+    "2026-07-08": [
+      {
+        "title": "C++ Book"
       }
     ]
   }
