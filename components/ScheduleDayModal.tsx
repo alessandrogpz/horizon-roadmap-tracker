@@ -7,9 +7,6 @@ interface ScheduleDayModalProps {
   data: any;
   setData: (data: any) => void;
   saveDailyChanges: (data: any) => void;
-  reflectionText: string;
-  setReflectionText: (text: string) => void;
-  saveReflectionChanges: (text: string) => void;
   onClose: () => void;
   updateAppState: (state: any) => Promise<any>;
 }
@@ -19,9 +16,6 @@ export default function ScheduleDayModal({
   data,
   setData,
   saveDailyChanges,
-  reflectionText,
-  setReflectionText,
-  saveReflectionChanges,
   onClose,
   updateAppState
 }: ScheduleDayModalProps) {

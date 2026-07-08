@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import { fetchAppState, updateAppState, openLinkOnSystem, syncWorkspace, fetchReflection, saveReflection } from "@/lib/api";
+import { fetchAppState, updateAppState, openLinkOnSystem, syncWorkspace } from "@/lib/api";
 import StreakGraph from "@/components/StreakGraph";
 import PhaseTracker from "@/components/PhaseTracker";
 import PortfolioTracker from "@/components/PortfolioTracker";
@@ -38,12 +38,12 @@ function getWeekNum(startDateStr: string, targetDate: Date = new Date()): number
 
 const WEEK_SCHEDULE = [
   { name: "Mon", type: "math", label: "Math" },
-  { name: "Tue", type: "leetcode", label: "DSA/DOD" },
+  { name: "Tue", type: "dsapattern", label: "DSA Pattern" },
   { name: "Wed", type: "math", label: "Math" },
-  { name: "Thu", type: "implementation", label: "Impl" },
-  { name: "Fri", type: "leetcode", label: "DSA/DOD" },
-  { name: "Sat", type: "leetcode", label: "DSA/DOD" },
-  { name: "Sun", type: "reflection", label: "Ref" }
+  { name: "Thu", type: "dsapattern", label: "DSA Pattern" },
+  { name: "Fri", type: "dsapractice", label: "DSA Practice" },
+  { name: "Sat", type: "implementation", label: "Impl + Practice" },
+  { name: "Sun", type: "free", label: "Free" }
 ];
 
 export default function Home() {
@@ -52,11 +52,7 @@ export default function Home() {
   const [initError, setInitError] = useState("");
   const [dailyExpanded, setDailyExpanded] = useState(false);
   const [todayStr, setTodayStr] = useState("");
-  const [reflectionText, setReflectionText] = useState("");
-  const [dailyReflectionText, setDailyReflectionText] = useState("");
   const dailySaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const reflectionSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const dailyReflectionSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const saveDailyChanges = (newData: any) => {
     if (dailySaveTimeoutRef.current) {
@@ -71,52 +67,7 @@ export default function Home() {
     }, 1000);
   };
 
-  const saveReflectionChanges = (text: string) => {
-    if (reflectionSaveTimeoutRef.current) {
-      clearTimeout(reflectionSaveTimeoutRef.current);
-    }
-    reflectionSaveTimeoutRef.current = setTimeout(() => {
-      handleSaveReflection(text);
-    }, 1000);
-  };
-
-  const handleSaveReflection = async (text: string) => {
-    if (!data) return;
-    const weekNum = getWeekNum(data.startDate);
-
-    try {
-      await saveReflection(weekNum, todayStr, text, 'Weekly');
-    } catch (err) {
-      console.error("Failed to save weekly reflection:", err);
-    }
-  };
-
-  const saveDailyReflectionChanges = (text: string) => {
-    if (dailyReflectionSaveTimeoutRef.current) {
-      clearTimeout(dailyReflectionSaveTimeoutRef.current);
-    }
-    dailyReflectionSaveTimeoutRef.current = setTimeout(() => {
-      handleSaveDailyReflection(text);
-    }, 1000);
-  };
-
-  const handleSaveDailyReflection = async (text: string) => {
-    if (!data) return;
-    const weekNum = getWeekNum(data.startDate);
-    const today = new Date();
-
-    const DAYS_MAP = ["Weekly", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    const currentDayName = DAYS_MAP[today.getDay()];
-
-    try {
-      await saveReflection(weekNum, todayStr, text, currentDayName);
-    } catch (err) {
-      console.error("Failed to save daily reflection:", err);
-    }
-  };
-
   const [dayOfWeek, setDayOfWeek] = useState(0);
-  const [reflectionExpanded, setReflectionExpanded] = useState(false);
   const [selectedScheduleDay, setSelectedScheduleDay] = useState<any>(null);
   const [selectedPhase, setSelectedPhase] = useState<any>(null);
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle");
@@ -200,23 +151,7 @@ export default function Home() {
           setData(loadedData);
         }
 
-        // Load reflections for the current week (both weekly and daily)
-        if (finalData.startDate) {
-          const wNum = getWeekNum(finalData.startDate, today);
-          
-          try {
-            const refData = await fetchReflection(wNum);
-            setReflectionText(refData.weekly || "");
-            
-            const DAYS_MAP = ["Weekly", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-            const currentDayName = DAYS_MAP[today.getDay()];
-            if (currentDayName !== "Weekly") {
-              setDailyReflectionText(refData.days?.[currentDayName] || "");
-            }
-          } catch (err) {
-            console.error("Failed to load reflections:", err);
-          }
-        }
+
       })
       .catch((err: any) => {
         console.error("Initialization fetch error:", err);
@@ -235,13 +170,17 @@ export default function Home() {
           type: "math",
         };
       case 2: // Tuesday
-      case 5: // Friday
-      case 6: // Saturday
-        return {
-          title: "Today's Focus: LeetCode & DOD (Data Oriented Design)",
-          type: "leetcode",
-        };
       case 4: // Thursday
+        return {
+          title: "Today's Focus: DSA Pattern Study",
+          type: "dsapattern",
+        };
+      case 5: // Friday
+        return {
+          title: "Today's Focus: DSA Practice",
+          type: "dsapractice",
+        };
+      case 6: // Saturday
         return {
           title: "Today's Focus: Custom Data Structure Implementation",
           type: "implementation",
@@ -249,8 +188,8 @@ export default function Home() {
       case 0: // Sunday
       default:
         return {
-          title: "Weekly Reflection",
-          type: "reflection",
+          title: "Today's Focus: Free / Catch-up",
+          type: "free",
         };
     }
   };
@@ -699,155 +638,22 @@ export default function Home() {
           return null;
         })()}
 
-        {/* Weekly Reflection Panel (Only on Sunday) */}
-        {routineTask.type === "reflection" && (
-          <div className="glass-panel" style={{ borderLeft: "4px solid var(--accent)", padding: "1.25rem 1.5rem" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              {/* Weekly Schedule Overview */}
-              <div style={{ 
-                display: "grid", 
-                gridTemplateColumns: "repeat(7, minmax(0, 1fr))", 
-                gap: "0.4rem", 
-                width: "100%", 
-                marginBottom: "0.5rem", 
-                paddingBottom: "0.75rem", 
-                borderBottom: "1px solid var(--card-border)" 
-              }}>
-                {WEEK_SCHEDULE.map((dayItem, idx) => {
-                  const isToday = idx === (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
-                  const color = "var(--accent)";
-                  
-                  return (
-                    <div 
-                      key={dayItem.name} 
-                      onClick={() => setSelectedScheduleDay(dayItem)}
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        padding: "0.4rem 0.2rem",
-                        borderRadius: "6px",
-                        background: isToday ? "rgba(255, 255, 255, 0.04)" : "rgba(0, 0, 0, 0.15)",
-                        border: isToday ? `1px solid ${color}` : "1px solid rgba(255, 255, 255, 0.05)",
-                        boxShadow: isToday ? `0 0 8px ${color}33` : "none",
-                        transition: "all 0.2s ease",
-                        cursor: "pointer"
-                      }}
-                    >
-                      <span style={{ 
-                        fontSize: "0.7rem", 
-                        fontWeight: isToday ? 700 : 500, 
-                        color: isToday ? "#fff" : "#71717a",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.02em"
-                      }}>
-                        {dayItem.name}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div 
-                onClick={() => setDailyExpanded(!dailyExpanded)}
-                style={{ 
-                  display: "flex", 
-                  alignItems: "center", 
-                  justifyContent: "space-between", 
-                  cursor: "pointer",
-                  userSelect: "none",
-                  width: "100%"
-                }}
-              >
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem", flex: 1 }}>
-                  <h3 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#fff", margin: 0 }}>
-                    Weekly Reflection (Week {getWeekNum(data.startDate)})
-                  </h3>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <span style={{ fontSize: "0.75rem", background: "rgba(14,165,233,0.15)", color: "var(--accent)", padding: "0.1rem 0.4rem", borderRadius: "4px" }}>
-                    Weekly
-                  </span>
-                  <span style={{ 
-                    fontSize: "0.8rem", 
-                    color: "#71717a", 
-                    transform: dailyExpanded ? "rotate(180deg)" : "rotate(0deg)", 
-                    transition: "transform 0.2s ease" 
-                  }}>
-                    ▼
-                  </span>
-                </div>
-              </div>
-              
-              {dailyExpanded && (
-                <div style={{ 
-                  marginTop: "0.5rem", 
-                  padding: "1rem", 
-                  background: "rgba(0, 0, 0, 0.2)", 
-                  borderRadius: "6px", 
-                  border: "1px solid var(--card-border)",
-                  fontSize: "0.85rem",
-                  lineHeight: "1.5",
-                  color: "#a1a1aa"
-                }}>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                    <strong style={{ color: "var(--accent)", fontSize: "0.75rem", fontFamily: "monospace", letterSpacing: "0.05em" }}>
-                      WEEKLY REFLECTION:
-                    </strong>
-                    <textarea
-                      value={reflectionText}
-                      onChange={(e) => {
-                        setReflectionText(e.target.value);
-                        saveReflectionChanges(e.target.value);
-                      }}
-                      onBlur={() => {
-                        if (reflectionSaveTimeoutRef.current) {
-                          clearTimeout(reflectionSaveTimeoutRef.current);
-                        }
-                        handleSaveReflection(reflectionText);
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                      onTouchStart={(e) => e.stopPropagation()}
-                      placeholder="Reflect on the week that has passed and outline the plans/goals for the upcoming week..."
-                      rows={10}
-                      style={{
-                        width: "100%",
-                        background: "rgba(0, 0, 0, 0.25)",
-                        border: "1px solid var(--card-border)",
-                        borderRadius: "6px",
-                        padding: "0.75rem",
-                        color: "#e4e4e7",
-                        fontFamily: "inherit",
-                        fontSize: "0.85rem",
-                        lineHeight: "1.6",
-                        resize: "vertical",
-                        outline: "none"
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Daily Study Panel (Everyday: Mon-Sat and Sun) */}
+        {/* Daily Study Panel (Everyday: Mon-Sun) */}
         <div className="glass-panel" style={{ borderLeft: "4px solid var(--accent)", padding: "1.25rem 1.5rem" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-            {/* Weekly Schedule Overview (Only on weekdays, since on Sunday it's in the Weekly Reflection card) */}
-            {routineTask.type !== "reflection" && (
-              <div style={{ 
-                display: "grid", 
-                gridTemplateColumns: "repeat(7, minmax(0, 1fr))", 
-                gap: "0.4rem", 
-                width: "100%",
-                marginBottom: "0.5rem",
-                paddingBottom: "0.75rem",
-                borderBottom: "1px solid var(--card-border)"
-              }}>
-                {WEEK_SCHEDULE.map((dayItem, idx) => {
-                  const isToday = idx === (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
-                  const color = "var(--accent)";
+            {/* Weekly Schedule Overview */}
+            <div style={{ 
+              display: "grid", 
+              gridTemplateColumns: "repeat(7, minmax(0, 1fr))", 
+              gap: "0.4rem", 
+              width: "100%",
+              marginBottom: "0.5rem",
+              paddingBottom: "0.75rem",
+              borderBottom: "1px solid var(--card-border)"
+            }}>
+              {WEEK_SCHEDULE.map((dayItem, idx) => {
+                const isToday = idx === (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
+                const color = "var(--accent)";
                   
                   return (
                     <div 
@@ -879,7 +685,6 @@ export default function Home() {
                   );
                 })}
               </div>
-            )}
 
             {/* Card Main Header */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", userSelect: "none", marginTop: "0.5rem", paddingBottom: "0.5rem", borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
@@ -1082,87 +887,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Daily Reflection Panel (Only on Weekdays: Mon-Sat) */}
-        {routineTask.type !== "reflection" && (
-          <div className="glass-panel" style={{ borderLeft: "4px solid var(--accent)", padding: "1.25rem 1.5rem" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              <div 
-                onClick={() => setReflectionExpanded(!reflectionExpanded)}
-                style={{ 
-                  display: "flex", 
-                  alignItems: "center", 
-                  justifyContent: "space-between", 
-                  cursor: "pointer",
-                  userSelect: "none",
-                  width: "100%"
-                }}
-              >
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem", flex: 1 }}>
-                  <h3 style={{ fontSize: "1.05rem", fontWeight: 600, color: "#fff", margin: 0 }}>
-                    Daily Reflection (Optional)
-                  </h3>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <span style={{ 
-                    fontSize: "0.8rem", 
-                    color: "#71717a", 
-                    transform: reflectionExpanded ? "rotate(180deg)" : "rotate(0deg)", 
-                    transition: "transform 0.2s ease" 
-                  }}>
-                    ▼
-                  </span>
-                </div>
-              </div>
-
-              {reflectionExpanded && (
-                <div style={{ 
-                  marginTop: "0.5rem", 
-                  padding: "1rem", 
-                  background: "rgba(0, 0, 0, 0.2)", 
-                  borderRadius: "6px", 
-                  border: "1px solid var(--card-border)",
-                  fontSize: "0.85rem",
-                  lineHeight: "1.5",
-                  color: "#a1a1aa"
-                }}>
-                  <textarea
-                    value={dailyReflectionText}
-                    onChange={(e) => {
-                      setDailyReflectionText(e.target.value);
-                      saveDailyReflectionChanges(e.target.value);
-                    }}
-                    onBlur={() => {
-                      if (dailyReflectionSaveTimeoutRef.current) {
-                        clearTimeout(dailyReflectionSaveTimeoutRef.current);
-                      }
-                      handleSaveDailyReflection(dailyReflectionText);
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    onTouchStart={(e) => e.stopPropagation()}
-                    placeholder="Reflect on today's progress, focus, or achievements (optional)..."
-                    rows={4}
-                    style={{
-                      width: "100%",
-                      background: "rgba(0, 0, 0, 0.25)",
-                      border: "1px solid var(--card-border)",
-                      borderRadius: "6px",
-                      padding: "0.75rem",
-                      color: "#e4e4e7",
-                      fontFamily: "inherit",
-                      fontSize: "0.85rem",
-                      lineHeight: "1.6",
-                      resize: "vertical",
-                      outline: "none"
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-
-
         {/* Phase Tracker */}
         <PhaseTracker phases={data.phases} currentPhase={data.currentPhase} onPhaseClick={setSelectedPhase} />
 
@@ -1205,9 +929,6 @@ export default function Home() {
           data={data}
           setData={setData}
           saveDailyChanges={saveDailyChanges}
-          reflectionText={reflectionText}
-          setReflectionText={setReflectionText}
-          saveReflectionChanges={saveReflectionChanges}
           onClose={() => setSelectedScheduleDay(null)}
           updateAppState={updateAppState}
         />
