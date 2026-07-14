@@ -64,12 +64,13 @@ function renderMarkdownToHtml(markdown: string): string {
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
 
-    // Inline formatting: Bold, Italic, Code
+    // Inline formatting: Bold, Italic, Code, Links
     processedLine = processedLine.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
     processedLine = processedLine.replace(/\*([^*]+)\*/g, "<em>$1</em>");
     processedLine = processedLine.replace(/__([^_]+)__/g, "<strong>$1</strong>");
     processedLine = processedLine.replace(/_([^_]+)_/g, "<em>$1</em>");
     processedLine = processedLine.replace(/`([^`]+)`/g, "<code>$1</code>");
+    processedLine = processedLine.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color: var(--accent); text-decoration: underline;">$1</a>');
 
     const trimmed = processedLine.trim();
 

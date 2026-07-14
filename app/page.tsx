@@ -36,14 +36,37 @@ function getWeekNum(startDateStr: string, targetDate: Date = new Date()): number
   return Math.floor(diffDays / 7) + 1;
 }
 
-const WEEK_SCHEDULE = [
+const DEFAULT_WEEK_SCHEDULE = [
   { name: "Mon", type: "math", label: "Math" },
   { name: "Tue", type: "dsapattern", label: "DSA Pattern" },
   { name: "Wed", type: "math", label: "Math" },
   { name: "Thu", type: "dsapattern", label: "DSA Pattern" },
-  { name: "Fri", type: "dsapractice", label: "DSA Practice" },
-  { name: "Sat", type: "implementation", label: "Impl + Practice" },
+  { name: "Fri", type: "math", label: "Math" },
+  { name: "Sat", type: "implementation", label: "DS Implementation" },
   { name: "Sun", type: "free", label: "Free" }
+];
+
+// Default focus type color palette
+const DEFAULT_FOCUS_TYPES: Record<string, { label: string; color: string }> = {
+  math: { label: "Math", color: "#a78bfa" },
+  dsapattern: { label: "DSA Pattern", color: "#34d399" },
+  dsapractice: { label: "DSA Practice", color: "#22d3ee" },
+  implementation: { label: "DS Implementation", color: "#fbbf24" },
+  free: { label: "Free", color: "#a1a1aa" },
+};
+
+// 10-week DSA pattern rotation (matches DSA_Study_Guide.md ordering)
+const DSA_PATTERN_WEEKS = [
+  { pattern: "Hash Map Patterns", problems: "Two Sum, Group Anagrams, Top K Frequent Elements, Longest Consecutive Sequence" },
+  { pattern: "Two Pointers", problems: "Valid Palindrome, Two Sum II, 3Sum, Container With Most Water, Trapping Rain Water" },
+  { pattern: "Sliding Window", problems: "Best Time to Buy/Sell Stock, Longest Substring Without Repeating, Longest Repeating Character Replacement, Minimum Window Substring" },
+  { pattern: "Binary Search (Advanced)", problems: "Search a 2D Matrix, Find Min in Rotated Array, Search in Rotated Array, Koko Eating Bananas" },
+  { pattern: "Stack & Monotonic Stack", problems: "Valid Parentheses, Min Stack, Daily Temperatures, Largest Rectangle in Histogram" },
+  { pattern: "Heap / Priority Queue", problems: "Kth Largest Element, K Closest Points, Find Median from Data Stream, Merge k Sorted Lists" },
+  { pattern: "Trees / DFS / BFS", problems: "Invert Binary Tree, Max Depth, Validate BST, Level Order Traversal, Lowest Common Ancestor" },
+  { pattern: "Interval Problems", problems: "Merge Intervals, Insert Interval, Non-overlapping Intervals, Meeting Rooms" },
+  { pattern: "DP Basics", problems: "Climbing Stairs, House Robber, Coin Change, Longest Increasing Subsequence, Unique Paths" },
+  { pattern: "Graphs & Union-Find", problems: "Number of Islands, Clone Graph, Course Schedule, Redundant Connection" },
 ];
 
 export default function Home() {
@@ -69,6 +92,7 @@ export default function Home() {
 
   const [dayOfWeek, setDayOfWeek] = useState(0);
   const [selectedScheduleDay, setSelectedScheduleDay] = useState<any>(null);
+  const [showRotationModal, setShowRotationModal] = useState(false);
   const [selectedPhase, setSelectedPhase] = useState<any>(null);
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle");
   const [syncError, setSyncError] = useState("");
@@ -126,6 +150,60 @@ export default function Home() {
               resetDailyRevisionItems[key] = loadedData.dailyRevisionItems[key].map((it: any) => ({ ...it, completed: false }));
             });
           }
+
+          // DSA Pattern Auto-Rotation: update revision items based on interleaving schedule
+          const dsaStartWeek = loadedData.dsaStartWeek || 1;
+          const currentWeekNum = getWeekNum(loadedData.startDate, today);
+          const dsaWeekIndex = ((currentWeekNum - dsaStartWeek) % DSA_PATTERN_WEEKS.length + DSA_PATTERN_WEEKS.length) % DSA_PATTERN_WEEKS.length;
+          const currentPattern = DSA_PATTERN_WEEKS[dsaWeekIndex];
+
+          // Compute revision days dynamically from schedule
+          const schedule = loadedData.weekSchedule || DEFAULT_WEEK_SCHEDULE;
+          const mathDayNames = schedule.filter((d: any) => d.type === "math").map((d: any) => d.name);
+          const nonMathDayNames = schedule.filter((d: any) => d.type !== "math" && d.type !== "free").map((d: any) => d.name);
+
+          const ALL_WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+          ALL_WEEKDAYS.forEach((dayKey) => {
+            const items = resetDailyRevisionItems[dayKey] || [];
+            if (mathDayNames.includes(dayKey)) {
+              // DSA revision day (Math study day): populate with auto-rotated DSA pattern
+              const autoIdx = items.findIndex((it: any) => it.id === "dsa_auto");
+              const autoItem = {
+                id: "dsa_auto",
+                title: currentPattern.pattern,
+                description: currentPattern.problems,
+                completed: false
+              };
+              if (autoIdx >= 0) {
+                items[autoIdx] = autoItem;
+              } else {
+                if (items.length > 0 && (items[0].id?.startsWith("rev_") || items[0].id?.startsWith("dsa_") || items[0].id === "math_revision")) {
+                  items[0] = autoItem;
+                } else {
+                  items.unshift(autoItem);
+                }
+              }
+            } else {
+              // Math revision day (DSA study day): populate with Linear Algebra revision item
+              const mathIdx = items.findIndex((it: any) => it.id === "math_revision" || it.id === "dsa_auto");
+              const mathItem = {
+                id: "math_revision",
+                title: "Linear Algebra",
+                description: "Practice vector spaces, transforms, and equations",
+                completed: false
+              };
+              if (mathIdx >= 0) {
+                items[mathIdx] = mathItem;
+              } else {
+                if (items.length > 0 && (items[0].id?.startsWith("rev_") || items[0].id?.startsWith("dsa_") || items[0].id === "math_revision")) {
+                  items[0] = mathItem;
+                } else {
+                  items.unshift(mathItem);
+                }
+              }
+            }
+            resetDailyRevisionItems[dayKey] = items;
+          });
           const updatedData = {
             ...loadedData,
             phases: resetPhases,
@@ -638,251 +716,243 @@ export default function Home() {
           return null;
         })()}
 
-        {/* Daily Study Panel (Everyday: Mon-Sun) */}
+        {/* Weekly Study Plan */}
         <div className="glass-panel" style={{ borderLeft: "4px solid var(--accent)", padding: "1.25rem 1.5rem" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-            {/* Weekly Schedule Overview */}
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: "0.5rem", borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#fff", margin: 0 }}>
+                Weekly Study Plan <span style={{ color: "#71717a", fontWeight: 400, fontSize: "0.9rem" }}>(Week {getWeekNum(data.startDate)})</span>
+              </h3>
+              <span 
+                onClick={() => setShowRotationModal(true)}
+                style={{ 
+                  fontSize: "0.75rem", 
+                  color: "var(--accent)", 
+                  fontFamily: "monospace",
+                  cursor: "pointer",
+                  textDecoration: "underline",
+                  transition: "opacity 0.2s",
+                }}
+                onMouseOver={(e) => e.currentTarget.style.opacity = "0.8"}
+                onMouseOut={(e) => e.currentTarget.style.opacity = "1"}
+              >
+                {(() => {
+                  const idx = ((getWeekNum(data.startDate) - (data.dsaStartWeek || 1)) % DSA_PATTERN_WEEKS.length + DSA_PATTERN_WEEKS.length) % DSA_PATTERN_WEEKS.length;
+                  return `DSA Pattern: ${DSA_PATTERN_WEEKS[idx].pattern}`;
+                })()}
+              </span>
+            </div>
+
+            {/* 7-column grid */}
             <div style={{ 
               display: "grid", 
-              gridTemplateColumns: "repeat(7, minmax(0, 1fr))", 
-              gap: "0.4rem", 
-              width: "100%",
-              marginBottom: "0.5rem",
-              paddingBottom: "0.75rem",
-              borderBottom: "1px solid var(--card-border)"
+              gridTemplateColumns: "repeat(7, 1fr)", 
+              gap: "0.4rem",
             }}>
-              {WEEK_SCHEDULE.map((dayItem, idx) => {
+              {(data.weekSchedule || DEFAULT_WEEK_SCHEDULE).map((dayItem: any, idx: number) => {
                 const isToday = idx === (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
-                const color = "var(--accent)";
-                  
-                  return (
-                    <div 
-                      key={dayItem.name} 
-                      onClick={() => setSelectedScheduleDay(dayItem)}
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        padding: "0.4rem 0.2rem",
-                        borderRadius: "6px",
-                        background: isToday ? "rgba(255, 255, 255, 0.04)" : "rgba(0, 0, 0, 0.15)",
-                        border: isToday ? `1px solid ${color}` : "1px solid rgba(255, 255, 255, 0.05)",
-                        boxShadow: isToday ? `0 0 8px ${color}33` : "none",
-                        transition: "all 0.2s ease",
-                        cursor: "pointer"
-                      }}
-                    >
-                      <span style={{ 
-                        fontSize: "0.7rem", 
-                        fontWeight: isToday ? 700 : 500, 
+                const dayKey = dayItem.name;
+                const revisionItems = data?.dailyRevisionItems?.[dayKey] || [];
+                const focusTasks = data?.dailyTasks?.[dayKey] || [];
+
+                const tagColors: Record<string, { bg: string; text: string }> = {};
+                const focusTypes = data.focusTypes || DEFAULT_FOCUS_TYPES;
+                Object.entries(focusTypes).forEach(([key, val]: [string, any]) => {
+                  const c = val.color || "#a1a1aa";
+                  const r = parseInt(c.slice(1, 3), 16);
+                  const g = parseInt(c.slice(3, 5), 16);
+                  const b = parseInt(c.slice(5, 7), 16);
+                  tagColors[key] = { bg: `rgba(${r}, ${g}, ${b}, 0.2)`, text: c };
+                });
+                const tag = tagColors[dayItem.type] || { bg: "rgba(113, 113, 122, 0.2)", text: "#a1a1aa" };
+
+                return (
+                  <div
+                    key={dayItem.name}
+                    onClick={() => setSelectedScheduleDay(dayItem)}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "0.35rem",
+                      padding: "0.6rem 0.5rem",
+                      borderRadius: "8px",
+                      background: isToday ? "rgba(14, 165, 233, 0.06)" : "rgba(0, 0, 0, 0.15)",
+                      border: isToday ? "1px solid var(--accent)" : "1px solid rgba(255, 255, 255, 0.05)",
+                      boxShadow: isToday ? "0 0 12px rgba(14, 165, 233, 0.15)" : "none",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      minHeight: "160px",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {/* Day name */}
+                    <div style={{ textAlign: "center", paddingBottom: "0.25rem", borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                      <span style={{
+                        fontSize: "0.7rem",
+                        fontWeight: isToday ? 700 : 600,
                         color: isToday ? "#fff" : "#71717a",
                         textTransform: "uppercase",
-                        letterSpacing: "0.02em"
+                        letterSpacing: "0.05em",
                       }}>
                         {dayItem.name}
                       </span>
                     </div>
-                  );
-                })}
-              </div>
 
-            {/* Card Main Header */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", userSelect: "none", marginTop: "0.5rem", paddingBottom: "0.5rem", borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
-              <h3 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#fff", margin: 0 }}>
-                Today's Study (Week {getWeekNum(data.startDate)})
-              </h3>
-            </div>
-
-            {/* Revision Section */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem", marginTop: "0.75rem" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", userSelect: "none" }}>
-                <span style={{ fontSize: "0.7rem", color: "var(--accent)", fontWeight: "bold", fontFamily: "monospace", letterSpacing: "0.05em", textTransform: "uppercase" }}>
-                  Revision
-                </span>
-              </div>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-                {(() => {
-                  const DAYS_SHORT_MAP = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-                  const todayKey = DAYS_SHORT_MAP[dayOfWeek];
-                  const revisionItems = data?.dailyRevisionItems?.[todayKey] || [];
-                  
-                  if (revisionItems.length === 0) {
-                    return <p style={{ color: "#71717a", fontSize: "0.85rem", fontStyle: "italic", margin: 0 }}>No revision items defined for today. Click a day to plan!</p>;
-                  }
-                  
-                  return revisionItems.map((item: any, index: number) => (
-                    <div 
-                      key={item.id || index}
-                      style={{ 
-                        display: "flex", 
-                        alignItems: "flex-start", 
-                        gap: "1rem",
-                        padding: "0.2rem 0"
-                      }}
-                    >
-                      <input
-                        type="checkbox"
-                        className="checkbox-custom"
-                        checked={item.completed}
-                        onChange={(e) => {
-                          const updatedItems = revisionItems.map((it: any) => {
-                            if (it.id === item.id) {
-                              return { ...it, completed: e.target.checked };
-                            }
-                            return it;
-                          });
-                          
-                          // Sync streak history & completed items details
-                          let newStreakHistory = [...(data.streakHistory || [])];
-                          let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
-                          const todayItems = newCompletedItemsHistory[todayStr] || [];
-
-                          if (e.target.checked) {
-                            newStreakHistory.push(todayStr);
-                            const alreadyExists = todayItems.some((it: any) => (typeof it === 'string' ? it === item.title : it.title === item.title));
-                            if (!alreadyExists) {
-                              newCompletedItemsHistory[todayStr] = [...todayItems, { title: item.title, description: item.description || "" }];
-                            }
-                          } else {
-                            const index = newStreakHistory.indexOf(todayStr);
-                            if (index > -1) {
-                              newStreakHistory.splice(index, 1);
-                            }
-                            newCompletedItemsHistory[todayStr] = todayItems.filter((it: any) => (typeof it === 'string' ? it !== item.title : it.title !== item.title));
-                          }
-                          
-                          const newData = {
-                            ...data,
-                            dailyRevisionItems: {
-                              ...(data.dailyRevisionItems || {}),
-                              [todayKey]: updatedItems
-                            },
-                            streakHistory: newStreakHistory,
-                            completedItemsHistory: newCompletedItemsHistory
-                          };
-                          setData(newData);
-                          saveDailyChanges(newData);
-                        }}
-                        style={{ marginTop: "0.15rem" }}
-                      />
-                      <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem", flex: 1 }}>
-                        <span 
-                          style={{ 
-                            fontSize: "0.9rem", 
-                            fontWeight: 600,
-                            color: item.completed ? "#71717a" : "var(--foreground)", 
-                            textDecoration: item.completed ? "line-through" : "none",
-                            transition: "color 0.2s ease" 
-                          }}
-                        >
-                          {item.title}
-                        </span>
-                        {item.description && (
-                          <span 
-                            style={{ 
-                              fontSize: "0.8rem", 
-                              color: "#71717a",
-                              textDecoration: item.completed ? "line-through" : "none"
-                            }}
-                          >
-                            {item.description}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ));
-                })()}
-              </div>
-            </div>
-
-            {/* Focus Section */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem", marginTop: "1rem" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", userSelect: "none" }}>
-                <span style={{ fontSize: "0.7rem", color: "var(--accent)", fontWeight: "bold", fontFamily: "monospace", letterSpacing: "0.05em", textTransform: "uppercase" }}>
-                  Focus
-                </span>
-              </div>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-                {(() => {
-                  const DAYS_SHORT_MAP = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-                  const todayKey = DAYS_SHORT_MAP[dayOfWeek];
-                  const tasks = data?.dailyTasks?.[todayKey] || [];
-                  
-                  if (tasks.length === 0) {
-                    return <p style={{ color: "#71717a", fontSize: "0.85rem", fontStyle: "italic", margin: 0 }}>No focus items defined for today. Click a day to plan!</p>;
-                  }
-                  
-                  return tasks.map((task: any, index: number) => (
-                    <div 
-                      key={task.id || index}
-                      style={{ 
-                        display: "flex", 
-                        alignItems: "center", 
-                        gap: "1rem",
-                        padding: "0.2rem 0"
-                      }}
-                    >
-                      <input
-                        type="checkbox"
-                        className="checkbox-custom"
-                        checked={task.completed}
-                        onChange={(e) => {
-                          const updatedTasks = tasks.map((t: any) => {
-                            if (t.id === task.id) {
-                              return { ...t, completed: e.target.checked };
-                            }
-                            return t;
-                          });
-                          
-                          // Sync streak history & completed items details
-                          let newStreakHistory = [...(data.streakHistory || [])];
-                          let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
-                          const todayItems = newCompletedItemsHistory[todayStr] || [];
-
-                          if (e.target.checked) {
-                            newStreakHistory.push(todayStr);
-                            const alreadyExists = todayItems.some((it: any) => (typeof it === 'string' ? it === task.title : it.title === task.title));
-                            if (!alreadyExists) {
-                              newCompletedItemsHistory[todayStr] = [...todayItems, { title: task.title }];
-                            }
-                          } else {
-                            const index = newStreakHistory.indexOf(todayStr);
-                            if (index > -1) {
-                              newStreakHistory.splice(index, 1);
-                            }
-                            newCompletedItemsHistory[todayStr] = todayItems.filter((it: any) => (typeof it === 'string' ? it !== task.title : it.title !== task.title));
-                          }
-                          
-                          const newData = {
-                            ...data,
-                            dailyTasks: {
-                              ...(data.dailyTasks || {}),
-                              [todayKey]: updatedTasks
-                            },
-                            streakHistory: newStreakHistory,
-                            completedItemsHistory: newCompletedItemsHistory
-                          };
-                          setData(newData);
-                          saveDailyChanges(newData);
-                        }}
-                      />
-                      <span 
-                        style={{ 
-                          flex: 1, 
-                          fontSize: "0.9rem", 
-                          color: task.completed ? "#71717a" : "var(--foreground)", 
-                          textDecoration: task.completed ? "line-through" : "none",
-                          transition: "color 0.2s ease" 
-                        }}
-                      >
-                        {task.title}
+                    {/* Focus type tag */}
+                    <div style={{ display: "flex", justifyContent: "center", marginBottom: "0.15rem" }}>
+                      <span style={{
+                        fontSize: "0.55rem",
+                        fontWeight: 600,
+                        color: tag.text,
+                        background: tag.bg,
+                        padding: "0.1rem 0.4rem",
+                        borderRadius: "3px",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.03em",
+                        whiteSpace: "nowrap",
+                      }}>
+                        {dayItem.label}
                       </span>
                     </div>
-                  ));
-                })()}
-              </div>
+
+                    {/* Revision section */}
+                    {revisionItems.length > 0 && (
+                      <div>
+                        <span style={{ fontSize: "0.55rem", color: "var(--accent)", fontWeight: "bold", fontFamily: "monospace", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                          Revision
+                        </span>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem", marginTop: "0.15rem" }}>
+                          {revisionItems.map((item: any, i: number) => (
+                            <div key={item.id || i} style={{ display: "flex", alignItems: "flex-start", gap: "0.3rem" }}>
+                              {isToday ? (
+                                <input
+                                  type="checkbox"
+                                  className="checkbox-custom"
+                                  checked={item.completed}
+                                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                    const updatedItems = revisionItems.map((it: any) => {
+                                      if (it.id === item.id) return { ...it, completed: e.target.checked };
+                                      return it;
+                                    });
+                                    let newStreakHistory = [...(data.streakHistory || [])];
+                                    let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
+                                    const todayItems = newCompletedItemsHistory[todayStr] || [];
+                                    if (e.target.checked) {
+                                      newStreakHistory.push(todayStr);
+                                      const alreadyExists = todayItems.some((it: any) => (typeof it === 'string' ? it === item.title : it.title === item.title));
+                                      if (!alreadyExists) {
+                                        newCompletedItemsHistory[todayStr] = [...todayItems, { title: item.title, description: item.description || "" }];
+                                      }
+                                    } else {
+                                      const idx2 = newStreakHistory.indexOf(todayStr);
+                                      if (idx2 > -1) newStreakHistory.splice(idx2, 1);
+                                      newCompletedItemsHistory[todayStr] = todayItems.filter((it: any) => (typeof it === 'string' ? it !== item.title : it.title !== item.title));
+                                    }
+                                    const newData = {
+                                      ...data,
+                                      dailyRevisionItems: { ...(data.dailyRevisionItems || {}), [dayKey]: updatedItems },
+                                      streakHistory: newStreakHistory,
+                                      completedItemsHistory: newCompletedItemsHistory,
+                                    };
+                                    setData(newData);
+                                    saveDailyChanges(newData);
+                                  }}
+                                  style={{ marginTop: "0.1rem", transform: "scale(0.8)" }}
+                                />
+                              ) : (
+                                <span style={{ fontSize: "0.6rem", color: item.completed ? "var(--success)" : "#52525b", marginTop: "0.1rem", flexShrink: 0 }}>
+                                  {item.completed ? "✓" : "○"}
+                                </span>
+                              )}
+                              <span style={{
+                                fontSize: "0.72rem",
+                                color: item.completed ? "#52525b" : (isToday ? "var(--foreground)" : "#a1a1aa"),
+                                textDecoration: item.completed ? "line-through" : "none",
+                                lineHeight: 1.3,
+                              }}>
+                                {item.title}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Focus tasks section */}
+                    {focusTasks.length > 0 && (
+                      <div style={{ marginTop: "0.1rem" }}>
+                        <span style={{ fontSize: "0.55rem", color: "var(--accent)", fontWeight: "bold", fontFamily: "monospace", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                          Focus
+                        </span>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem", marginTop: "0.15rem" }}>
+                          {focusTasks.map((task: any, i: number) => (
+                            <div key={task.id || i} style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                              {isToday ? (
+                                <input
+                                  type="checkbox"
+                                  className="checkbox-custom"
+                                  checked={task.completed}
+                                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                    const updatedTasks = focusTasks.map((t: any) => {
+                                      if (t.id === task.id) return { ...t, completed: e.target.checked };
+                                      return t;
+                                    });
+                                    let newStreakHistory = [...(data.streakHistory || [])];
+                                    let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
+                                    const todayItems = newCompletedItemsHistory[todayStr] || [];
+                                    if (e.target.checked) {
+                                      newStreakHistory.push(todayStr);
+                                      const alreadyExists = todayItems.some((it: any) => (typeof it === 'string' ? it === task.title : it.title === task.title));
+                                      if (!alreadyExists) {
+                                        newCompletedItemsHistory[todayStr] = [...todayItems, { title: task.title }];
+                                      }
+                                    } else {
+                                      const idx2 = newStreakHistory.indexOf(todayStr);
+                                      if (idx2 > -1) newStreakHistory.splice(idx2, 1);
+                                      newCompletedItemsHistory[todayStr] = todayItems.filter((it: any) => (typeof it === 'string' ? it !== task.title : it.title !== task.title));
+                                    }
+                                    const newData = {
+                                      ...data,
+                                      dailyTasks: { ...(data.dailyTasks || {}), [dayKey]: updatedTasks },
+                                      streakHistory: newStreakHistory,
+                                      completedItemsHistory: newCompletedItemsHistory,
+                                    };
+                                    setData(newData);
+                                    saveDailyChanges(newData);
+                                  }}
+                                  style={{ transform: "scale(0.8)" }}
+                                />
+                              ) : (
+                                <span style={{ fontSize: "0.6rem", color: task.completed ? "var(--success)" : "#52525b", flexShrink: 0 }}>
+                                  {task.completed ? "✓" : "○"}
+                                </span>
+                              )}
+                              <span style={{
+                                fontSize: "0.72rem",
+                                color: task.completed ? "#52525b" : (isToday ? "var(--foreground)" : "#a1a1aa"),
+                                textDecoration: task.completed ? "line-through" : "none",
+                                lineHeight: 1.3,
+                              }}>
+                                {task.title}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Empty state */}
+                    {revisionItems.length === 0 && focusTasks.length === 0 && (
+                      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <span style={{ fontSize: "0.7rem", color: "#3f3f46", fontStyle: "italic" }}>No tasks</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -932,6 +1002,223 @@ export default function Home() {
           onClose={() => setSelectedScheduleDay(null)}
           updateAppState={updateAppState}
         />
+      )}
+      {showRotationModal && (
+        <div 
+          onClick={() => setShowRotationModal(false)}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.85)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: "1rem"
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="glass-panel"
+            style={{
+              maxWidth: "600px",
+              width: "100%",
+              display: "flex",
+              flexDirection: "column",
+              gap: "1.5rem",
+              padding: "2rem",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5)",
+              border: "1px solid var(--accent)",
+              position: "relative",
+              borderRadius: "8px"
+            }}
+          >
+            {/* Close Button */}
+            <button 
+              onClick={() => setShowRotationModal(false)}
+              style={{
+                position: "absolute",
+                top: "1.5rem",
+                right: "1.5rem",
+                background: "transparent",
+                border: "none",
+                color: "#a1a1aa",
+                fontSize: "1.2rem",
+                cursor: "pointer",
+              }}
+            >
+              ✕
+            </button>
+
+            {/* Modal Header */}
+            <div>
+              <span style={{ 
+                fontSize: "0.75rem", 
+                background: "rgba(14, 165, 233, 0.1)", 
+                color: "var(--accent)", 
+                padding: "0.15rem 0.5rem", 
+                borderRadius: "4px", 
+                fontWeight: 600,
+                textTransform: "uppercase",
+                fontFamily: "monospace",
+                letterSpacing: "0.05em"
+              }}>
+                10-Week Rotation Cycle
+              </span>
+              <h2 style={{ fontSize: "1.4rem", fontWeight: 700, color: "#fff", marginTop: "0.5rem", marginBottom: "0.25rem" }}>
+                DSA Pattern Rotation
+              </h2>
+              <p style={{ fontSize: "0.85rem", color: "#a1a1aa", margin: 0 }}>
+                Currently on Week {getWeekNum(data.startDate)} of curriculum.
+              </p>
+            </div>
+
+            {/* Rotation list */}
+            <div style={{ 
+              display: "flex", 
+              flexDirection: "column", 
+              gap: "0.6rem", 
+              maxHeight: "350px", 
+              overflowY: "auto",
+              paddingRight: "0.5rem"
+            }}>
+              {(() => {
+                const currentWeekNum = getWeekNum(data.startDate);
+                const dsaStartWeek = data.dsaStartWeek || 1;
+                const activeIndex = ((currentWeekNum - dsaStartWeek) % DSA_PATTERN_WEEKS.length + DSA_PATTERN_WEEKS.length) % DSA_PATTERN_WEEKS.length;
+
+                return DSA_PATTERN_WEEKS.map((patternItem, idx) => {
+                  const isActive = idx === activeIndex;
+
+                  return (
+                    <div 
+                      key={patternItem.pattern}
+                      onClick={() => {
+                        const newDsaStartWeek = currentWeekNum - idx;
+                        const currentPattern = DSA_PATTERN_WEEKS[idx];
+                        
+                        // Update existing auto-revision items to match the newly selected pattern immediately
+                        const updatedRevisionItems = { ...(data.dailyRevisionItems || {}) };
+                        Object.keys(updatedRevisionItems).forEach((dayKey) => {
+                          updatedRevisionItems[dayKey] = (updatedRevisionItems[dayKey] || []).map((item: any) => {
+                            if (item.id === "dsa_auto") {
+                              return {
+                                ...item,
+                                title: currentPattern.pattern,
+                                description: currentPattern.problems
+                              };
+                            }
+                            return item;
+                          });
+                        });
+
+                        const newData = {
+                          ...data,
+                          dsaStartWeek: newDsaStartWeek,
+                          dailyRevisionItems: updatedRevisionItems
+                        };
+                        setData(newData);
+                        saveDailyChanges(newData);
+                      }}
+                      onMouseOver={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.background = "rgba(255, 255, 255, 0.06)";
+                          e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.15)";
+                        }
+                      }}
+                      onMouseOut={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.background = "rgba(255, 255, 255, 0.02)";
+                          e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.05)";
+                        }
+                      }}
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "0.25rem",
+                        padding: "0.75rem 1rem",
+                        borderRadius: "6px",
+                        background: isActive ? "rgba(14, 165, 233, 0.08)" : "rgba(255, 255, 255, 0.02)",
+                        border: isActive ? "1px solid var(--accent)" : "1px solid rgba(255, 255, 255, 0.05)",
+                        boxShadow: isActive ? "0 0 10px rgba(14, 165, 233, 0.1)" : "none",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease"
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ 
+                          fontSize: "0.8rem", 
+                          fontWeight: 700, 
+                          color: isActive ? "#fff" : "#a1a1aa" 
+                        }}>
+                          Week {idx + 1}: {patternItem.pattern}
+                        </span>
+                        {isActive && (
+                          <span style={{ 
+                            fontSize: "0.65rem", 
+                            background: "var(--accent)", 
+                            color: "#000", 
+                            padding: "0.05rem 0.35rem", 
+                            borderRadius: "3px",
+                            fontWeight: 700,
+                            textTransform: "uppercase"
+                          }}>
+                            Active Week
+                          </span>
+                        )}
+                      </div>
+                      <span style={{ fontSize: "0.75rem", color: isActive ? "#e4e4e7" : "#71717a", lineHeight: 1.4 }}>
+                        Problems: {patternItem.problems}
+                      </span>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+
+            {/* Links and Actions */}
+            <div style={{ 
+              display: "flex", 
+              justifyContent: "space-between", 
+              alignItems: "center",
+              borderTop: "1px solid rgba(255, 255, 255, 0.05)",
+              paddingTop: "1rem",
+              marginTop: "0.5rem"
+            }}>
+              <a 
+                href="/dsa" 
+                onClick={() => setShowRotationModal(false)}
+                className="btn"
+                style={{ 
+                  padding: "0.5rem 1rem", 
+                  fontSize: "0.8rem",
+                  textDecoration: "none",
+                  display: "inline-block"
+                }}
+              >
+                Go to DSA Page
+              </a>
+              <button 
+                onClick={() => setShowRotationModal(false)} 
+                className="btn" 
+                style={{ 
+                  padding: "0.5rem 1rem", 
+                  fontSize: "0.8rem",
+                  background: "transparent",
+                  color: "#a1a1aa",
+                  border: "1px solid rgba(255, 255, 255, 0.1)"
+                }}
+              >
+                Close
+              </button>
+            </div>
+
+          </div>
+        </div>
       )}
     </main>
   );

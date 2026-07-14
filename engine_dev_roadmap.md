@@ -52,7 +52,7 @@ This document serves as our shared reference roadmap for all four study phases. 
 #### 4. Algorithms & Data Structures
 **Topics**:
 - Cache Locality & Memory Layout (Months 1–3): Array of Structures (AoS) vs. Structure of Arrays (SoA) layout efficiency, Memory Alignment & Padding (matching compiler alignment to hardware bounds), Fixed-size pools (avoiding runtime allocation overhead).
-- LeetCode Focus: Array/Two-Pointer problems (optimizing for space and minimal allocations).
+- LeetCode Focus: **Problem-Solving Patterns**. Master the reusable templates for: Two Pointers, Sliding Window, Hash Maps, Stack/Monotonic Stack, and Advanced Binary Search. Study by technique, not by category. See the [DSA Patterns Guide](/dsa) for specific problems.
 
 #### 5. Diagnostic & Git Milestones
 - **GitHub Launch**: Create the public repository for `ray-tracer`.
@@ -96,7 +96,7 @@ This document serves as our shared reference roadmap for all four study phases. 
 **Topics**:
 - Hierarchies & Scene Management (Months 4–7): Scene Graphs using trees or Directed Acyclic Graphs (DAGs) to propagate transformations (parent-to-child matrix multiplications).
 - Traversal Loops: Iterative Depth-First Search (DFS) and Breadth-First Search (BFS) with custom Stacks to traverse the scene graph for rendering.
-- LeetCode Focus: Binary Trees, N-ary Trees, and Graph Traversal (DFS/BFS) Medium problems.
+- LeetCode Focus: **Problem-Solving Patterns**. Master the reusable templates for: Heap/Priority Queue, Trees/DFS/BFS, Interval Problems, and DP Basics. See the [DSA Patterns Guide](/dsa) for specific problems.
 
 #### 5. Diagnostic & Tool Integrations
 - **Dear ImGui**: Integrate ImGui panel to control:
@@ -139,6 +139,7 @@ This document serves as our shared reference roadmap for all four study phases. 
 - Advanced Partitioning: kD-Trees for spatial nearest-neighbor searches (photon mapping/global illumination).
 - Algorithms: Ray-AABB intersection testing, hierarchical tree traversal.
 - LeetCode Focus: Implement a BVH from scratch in your Ray Tracer or Engine repository.
+- Interview Patterns: **Graphs & Advanced DP**. Topological Sort, Union-Find, 2D DP (grids/strings). Continue practicing medium/hard problems across all previous patterns.
 
 #### 5. Diagnostic & Tool Integrations
 - **Profiler Integration**: Integrate Tracy Profiler (or custom timer scopes in ImGui) to track CPU/GPU frame boundaries and detect CPU-side bottleneck loops.
@@ -178,6 +179,17 @@ This document serves as our shared reference roadmap for all four study phases. 
 - Mesh Representation & Sorting (Months 11–12): Half-Edge data structure for mesh representations (polygon mesh adjacencies lookup for geometry processing).
 - Sorting Pipelines: Radix Sort or Merge Sort for depth-sorting transparent geometry from back-to-front every frame.
 - LeetCode Focus: Standard sorting algorithm mechanics and advanced Graph problems (Adjacency Lists).
+- Interview Patterns: **Trie, Backtracking, Advanced Graphs**. Word Search II, Design Add/Search Words, advanced graph traversal. Full pattern review at hard difficulty.
 
 #### 5. Diagnostic & Tool Integrations
 - **RenderDoc Vulkan Validation**: Analyze memory allocations, verify descriptor layouts, debug layout transitions, and inspect device queues to resolve Vulkan pipeline layout bugs.
+
+---
+
+## Interview Prep: DSA Patterns
+
+The complete DSA problem-solving patterns guide with specific LeetCode problems is maintained separately.
+
+**See the full guide here: [DSA Patterns Guide](/dsa)**
+
+The app automatically rotates through these patterns on a 10-week cycle via the daily revision items on DSA days (Tue/Thu/Fri/Sat). Each week focuses on one pattern with 4-5 recommended problems.

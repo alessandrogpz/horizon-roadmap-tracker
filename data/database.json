@@ -1,6 +1,7 @@
 {
   "currentPhase": 1,
   "startDate": "2026-06-05",
+  "dsaStartWeek": 6,
   "streakHistory": [
     "2026-06-05",
     "2026-06-06",
@@ -60,10 +61,19 @@
     "2026-07-05",
     "2026-07-06",
     "2026-07-07",
-    "2026-07-08"
+    "2026-07-08",
+    "2026-07-09",
+    "2026-07-09",
+    "2026-07-10",
+    "2026-07-10",
+    "2026-07-10",
+    "2026-07-13",
+    "2026-07-14",
+    "2026-07-14",
+    "2026-07-14"
   ],
   "lastDailyRoutineCheck": "2026-06-08",
-  "lastTasksResetDate": "2026-07-08",
+  "lastTasksResetDate": "2026-07-14",
   "dailyFocus": {
     "math": "",
     "leetcode": "",
@@ -92,16 +102,16 @@
       {
         "id": "tue_1",
         "title": "DSA Pattern Study",
-        "completed": false
+        "completed": true
       },
       {
         "id": "tue_2",
         "title": "C++ Book",
-        "completed": false
+        "completed": true
       },
       {
         "id": "tue_5",
-        "title": "Data Oriented Design",
+        "title": "LearnOpenGL",
         "completed": false
       }
     ],
@@ -114,7 +124,7 @@
       {
         "id": "wed_2",
         "title": "C++ Book",
-        "completed": true
+        "completed": false
       },
       {
         "id": "wed_4",
@@ -135,14 +145,14 @@
       },
       {
         "id": "thu_5",
-        "title": "Data Oriented Design",
+        "title": "LearnOpenGL",
         "completed": false
       }
     ],
     "Fri": [
       {
         "id": "fri_1",
-        "title": "DSA Practice",
+        "title": "Mathematics",
         "completed": false
       },
       {
@@ -152,7 +162,7 @@
       },
       {
         "id": "fri_3",
-        "title": "LearnOpenGL",
+        "title": "Ray Tracer",
         "completed": false
       }
     ],
@@ -169,7 +179,7 @@
       },
       {
         "id": "sat_4",
-        "title": "Ray Tracer Challenge",
+        "title": "LearnOpenGL",
         "completed": false
       }
     ],
@@ -189,49 +199,49 @@
   "dailyRevisionItems": {
     "Mon": [
       {
-        "id": "rev_mon_1",
-        "title": "Linear Algebra",
-        "description": "",
+        "id": "dsa_auto",
+        "title": "Two Pointers",
+        "description": "Valid Palindrome, Two Sum II, 3Sum, Container With Most Water, Trapping Rain Water",
         "completed": false
       }
     ],
     "Tue": [
       {
-        "id": "rev_tue_1",
-        "title": "Two Pointers",
-        "description": "Week 1 Pattern - solve 2 problems",
+        "id": "math_revision",
+        "title": "Linear Algebra",
+        "description": "Practice vector spaces, transforms, and equations",
         "completed": false
       }
     ],
     "Wed": [
       {
-        "id": "rev_wed_1",
-        "title": "Linear Algebra",
-        "description": "",
+        "id": "dsa_auto",
+        "title": "Two Pointers",
+        "description": "Valid Palindrome, Two Sum II, 3Sum, Container With Most Water, Trapping Rain Water",
         "completed": false
       }
     ],
     "Thu": [
       {
-        "id": "rev_thu_1",
-        "title": "Two Pointers",
-        "description": "Week 1 Pattern - solve 2 problems",
+        "id": "math_revision",
+        "title": "Linear Algebra",
+        "description": "Practice vector spaces, transforms, and equations",
         "completed": false
       }
     ],
     "Fri": [
       {
-        "id": "rev_fri_1",
+        "id": "math_revision",
         "title": "Linear Algebra",
-        "description": "",
+        "description": "Practice vector spaces, transforms, and equations",
         "completed": false
       }
     ],
     "Sat": [
       {
-        "id": "rev_sat_1",
-        "title": "Two Pointers",
-        "description": "Week 1 Pattern - solve 2 problems",
+        "id": "math_revision",
+        "title": "Linear Algebra",
+        "description": "Practice vector spaces, transforms, and equations",
         "completed": false
       }
     ],
@@ -402,7 +412,7 @@
           },
           {
             "item": "LeetCode Focus",
-            "desc": "Master the core problem-solving pattern templates: BFS/DFS & Backtracking, Linked List Patterns, Trees & BST, Heaps & Intervals, DP Fundamentals."
+            "desc": "Master the core problem-solving pattern templates: Heap/Priority Queue, Trees/DFS/BFS, Interval Problems, and DP Basics."
           }
         ]
       }
@@ -466,7 +476,11 @@
           },
           {
             "item": "LeetCode Focus",
-            "desc": "Implement a custom Bounding Volume Hierarchy (BVH) from scratch in your Ray Tracer or Engine repository."
+            "desc": "Implement a custom BVH from scratch in your Ray Tracer or Engine repository."
+          },
+          {
+            "item": "Interview Patterns",
+            "desc": "Graphs & Advanced DP: Topological Sort, Union-Find, 2D DP (grids/strings). Continue practicing medium/hard problems across all previous patterns."
           }
         ]
       }
@@ -536,6 +550,10 @@
           {
             "item": "LeetCode Focus",
             "desc": "Standard sorting algorithm mechanics and advanced Graph problems (Adjacency Lists)."
+          },
+          {
+            "item": "Interview Patterns",
+            "desc": "Trie, Backtracking, Advanced Graphs: Word Search II, Design Add/Search Words, advanced graph traversal. Full pattern review at hard difficulty."
           }
         ]
       }
@@ -578,9 +596,9 @@
       "category": "Programming Languages",
       "type": "Book",
       "status": "In Progress",
-      "currentPage": 57,
+      "currentPage": 111,
       "totalPages": 639,
-      "currentSubject": "Computation: 3.3.2 Operators",
+      "currentSubject": "Chapter 4: Errors! - Review",
       "link": "",
       "localPath": "~/Documents/PPPC++"
     },
@@ -865,6 +883,44 @@
       }
     ],
     "2026-07-08": [
+      {
+        "title": "C++ Book"
+      }
+    ],
+    "2026-07-09": [
+      {
+        "title": "Hash Map Patterns",
+        "description": "Two Sum, Group Anagrams, Top K Frequent Elements, Longest Consecutive Sequence"
+      },
+      {
+        "title": "DSA Pattern Study"
+      }
+    ],
+    "2026-07-10": [
+      {
+        "title": "Hash Map Patterns",
+        "description": "Two Sum, Group Anagrams, Top K Frequent Elements, Longest Consecutive Sequence"
+      },
+      {
+        "title": "DSA Practice"
+      },
+      {
+        "title": "C++ Book"
+      }
+    ],
+    "2026-07-13": [
+      {
+        "title": "C++ Book"
+      }
+    ],
+    "2026-07-14": [
+      {
+        "title": "Two Pointers",
+        "description": "Valid Palindrome, Two Sum II, 3Sum, Container With Most Water, Trapping Rain Water"
+      },
+      {
+        "title": "DSA Pattern Study"
+      },
       {
         "title": "C++ Book"
       }

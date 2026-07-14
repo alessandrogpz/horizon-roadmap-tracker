@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 
 interface ScheduleDayModalProps {
   day: { name: string; type: string; label: string };
@@ -11,6 +11,16 @@ interface ScheduleDayModalProps {
   updateAppState: (state: any) => Promise<any>;
 }
 
+const DEFAULT_WEEK_SCHEDULE = [
+  { name: "Mon", type: "math", label: "Math" },
+  { name: "Tue", type: "dsapattern", label: "DSA Pattern" },
+  { name: "Wed", type: "math", label: "Math" },
+  { name: "Thu", type: "dsapattern", label: "DSA Pattern" },
+  { name: "Fri", type: "math", label: "Math" },
+  { name: "Sat", type: "implementation", label: "DS Implementation" },
+  { name: "Sun", type: "free", label: "Free" }
+];
+
 export default function ScheduleDayModal({
   day,
   data,
@@ -19,19 +29,20 @@ export default function ScheduleDayModal({
   onClose,
   updateAppState
 }: ScheduleDayModalProps) {
+  const [showManager, setShowManager] = useState(false);
+
+  const focusTypes = data.focusTypes || {
+    math: { label: "Math", color: "#a78bfa" },
+    dsapattern: { label: "DSA Pattern", color: "#34d399" },
+    dsapractice: { label: "DSA Practice", color: "#22d3ee" },
+    implementation: { label: "DS Implementation", color: "#fbbf24" },
+    free: { label: "Free", color: "#a1a1aa" },
+  };
+
+  const currentDaySchedule = (data.weekSchedule || DEFAULT_WEEK_SCHEDULE).find((d: any) => d.name === day.name) || day;
+
   const getFullLabel = (type: string) => {
-    switch (type) {
-      case "math":
-        return "Mathematics Focus";
-      case "leetcode":
-        return "LeetCode & DOD (Data Oriented Design) Focus";
-      case "implementation":
-        return "Custom Data Structure Implementation";
-      case "reflection":
-        return "Weekly Reflection";
-      default:
-        return "Daily Focus";
-    }
+    return focusTypes[type]?.label || type || "Daily Focus";
   };
 
   const color = "var(--accent)";
@@ -62,7 +73,7 @@ export default function ScheduleDayModal({
           width: "100%",
           display: "flex",
           flexDirection: "column",
-          gap: "1.5rem",
+          gap: "1.25rem",
           padding: "2rem",
           boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4)",
           border: `1px solid ${color}`,
@@ -104,8 +115,250 @@ export default function ScheduleDayModal({
             {day.name} Schedule
           </span>
           <h2 style={{ fontSize: "1.3rem", fontWeight: 700, color: "#fff", marginTop: "0.5rem" }}>
-            {getFullLabel(day.type)}
+            {getFullLabel(currentDaySchedule.type)}
           </h2>
+        </div>
+
+        {/* Dynamic Focus Selection & Management */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <span style={{ fontSize: "0.8rem", color: "#a1a1aa" }}>Focus Type:</span>
+              <select
+                value={currentDaySchedule.type}
+                onChange={(e) => {
+                  const newType = e.target.value;
+                  const newLabel = focusTypes[newType]?.label || newType;
+                  const updatedSchedule = (data.weekSchedule || DEFAULT_WEEK_SCHEDULE).map((d: any) => {
+                    if (d.name === day.name) {
+                      return { ...d, type: newType, label: newLabel };
+                    }
+                    return d;
+                  });
+                  const newData = {
+                    ...data,
+                    weekSchedule: updatedSchedule
+                  };
+                  setData(newData);
+                  saveDailyChanges(newData);
+                }}
+                style={{
+                  background: "rgba(0, 0, 0, 0.4)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  borderRadius: "6px",
+                  padding: "0.3rem 0.5rem",
+                  color: "#fff",
+                  fontSize: "0.85rem",
+                  fontFamily: "inherit",
+                  outline: "none",
+                  cursor: "pointer"
+                }}
+              >
+                {Object.entries(focusTypes).map(([key, val]: [string, any]) => (
+                  <option key={key} value={key} style={{ background: "#18181b", color: "#fff" }}>
+                    {val.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <button
+              onClick={() => setShowManager(!showManager)}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "var(--accent)",
+                fontSize: "0.75rem",
+                cursor: "pointer",
+                fontFamily: "monospace",
+                padding: 0,
+                textDecoration: "underline"
+              }}
+            >
+              {showManager ? "Hide Settings" : "Customize Pool"}
+            </button>
+          </div>
+
+          {showManager && (
+            <div style={{
+              background: "rgba(255, 255, 255, 0.02)",
+              border: "1px solid rgba(255, 255, 255, 0.05)",
+              borderRadius: "8px",
+              padding: "0.8rem",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.6rem"
+            }}>
+              <span style={{ fontSize: "0.7rem", color: "#a1a1aa", fontWeight: "bold", textTransform: "uppercase" }}>
+                Edit Focus Types Pool
+              </span>
+              
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", maxHeight: "150px", overflowY: "auto", paddingRight: "0.25rem" }}>
+                {Object.entries(focusTypes).map(([key, val]: [string, any]) => (
+                  <div key={key} style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                    <input
+                      type="text"
+                      value={val.label}
+                      onChange={(e) => {
+                        const updatedTypes = {
+                          ...focusTypes,
+                          [key]: { ...val, label: e.target.value }
+                        };
+                        
+                        const updatedSchedule = (data.weekSchedule || DEFAULT_WEEK_SCHEDULE).map((d: any) => {
+                          if (d.type === key) {
+                            return { ...d, label: e.target.value };
+                          }
+                          return d;
+                        });
+
+                        const newData = {
+                          ...data,
+                          focusTypes: updatedTypes,
+                          weekSchedule: updatedSchedule
+                        };
+                        setData(newData);
+                        saveDailyChanges(newData);
+                      }}
+                      placeholder="Label"
+                      style={{
+                        flex: 1,
+                        background: "rgba(0, 0, 0, 0.25)",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        borderRadius: "4px",
+                        padding: "0.2rem 0.4rem",
+                        color: "#fff",
+                        fontSize: "0.75rem",
+                        outline: "none"
+                      }}
+                    />
+
+                    <input
+                      type="color"
+                      value={val.color || "#a1a1aa"}
+                      onChange={(e) => {
+                        const updatedTypes = {
+                          ...focusTypes,
+                          [key]: { ...val, color: e.target.value }
+                        };
+                        const newData = {
+                          ...data,
+                          focusTypes: updatedTypes
+                        };
+                        setData(newData);
+                        saveDailyChanges(newData);
+                      }}
+                      style={{
+                        width: "24px",
+                        height: "24px",
+                        border: "none",
+                        background: "transparent",
+                        cursor: "pointer",
+                        padding: 0
+                      }}
+                    />
+
+                    <button
+                      onClick={() => {
+                        const updatedTypes = { ...focusTypes };
+                        delete updatedTypes[key];
+
+                        const fallbackType = Object.keys(updatedTypes)[0] || "free";
+                        const fallbackLabel = updatedTypes[fallbackType]?.label || "Free";
+                        
+                        const updatedSchedule = (data.weekSchedule || DEFAULT_WEEK_SCHEDULE).map((d: any) => {
+                          if (d.type === key) {
+                            return { ...d, type: fallbackType, label: fallbackLabel };
+                          }
+                          return d;
+                        });
+
+                        const newData = {
+                          ...data,
+                          focusTypes: updatedTypes,
+                          weekSchedule: updatedSchedule
+                        };
+                        setData(newData);
+                        saveDailyChanges(newData);
+                      }}
+                      disabled={Object.keys(focusTypes).length <= 1}
+                      style={{
+                        background: "transparent",
+                        border: "none",
+                        color: Object.keys(focusTypes).length <= 1 ? "#3f3f46" : "#ef4444",
+                        cursor: Object.keys(focusTypes).length <= 1 ? "not-allowed" : "pointer",
+                        fontSize: "0.8rem",
+                        padding: "0 0.2rem"
+                      }}
+                      title="Delete Focus Type"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: "flex", gap: "0.4rem", alignItems: "center", borderTop: "1px solid rgba(255, 255, 255, 0.05)", paddingTop: "0.5rem" }}>
+                <input
+                  type="text"
+                  id="new-type-label"
+                  placeholder="New type label..."
+                  style={{
+                    flex: 1,
+                    background: "rgba(0, 0, 0, 0.25)",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    borderRadius: "4px",
+                    padding: "0.25rem 0.5rem",
+                    color: "#fff",
+                    fontSize: "0.75rem",
+                    outline: "none"
+                  }}
+                />
+                <input
+                  type="color"
+                  id="new-type-color"
+                  defaultValue="#0ea5e9"
+                  style={{
+                    width: "24px",
+                    height: "24px",
+                    border: "none",
+                    background: "transparent",
+                    cursor: "pointer",
+                    padding: 0
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    const labelInput = document.getElementById("new-type-label") as HTMLInputElement;
+                    const colorInput = document.getElementById("new-type-color") as HTMLInputElement;
+                    if (labelInput && labelInput.value.trim()) {
+                      const labelVal = labelInput.value.trim();
+                      const colorVal = colorInput ? colorInput.value : "#0ea5e9";
+                      const keyVal = labelVal.toLowerCase().replace(/[^a-z0-9]/g, "");
+                      
+                      if (keyVal && !focusTypes[keyVal]) {
+                        const updatedTypes = {
+                          ...focusTypes,
+                          [keyVal]: { label: labelVal, color: colorVal }
+                        };
+                        const newData = {
+                          ...data,
+                          focusTypes: updatedTypes
+                        };
+                        setData(newData);
+                        saveDailyChanges(newData);
+                        labelInput.value = "";
+                      }
+                    }
+                  }}
+                  className="btn"
+                  style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
+                >
+                  Add Type
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Modal Content */}
@@ -116,7 +369,7 @@ export default function ScheduleDayModal({
               {/* Today's Revision Section */}
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                 <strong style={{ color: color, fontSize: "0.75rem", fontFamily: "monospace", letterSpacing: "0.05em" }}>
-                  TODAY'S REVISION CHECKLIST:
+                  TODAY&apos;S REVISION CHECKLIST:
                 </strong>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                   {(data.dailyRevisionItems?.[day.name] || []).map((item: any, index: number) => (
@@ -395,7 +648,7 @@ export default function ScheduleDayModal({
               {/* Today's Focus Section */}
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                 <strong style={{ color: color, fontSize: "0.75rem", fontFamily: "monospace", letterSpacing: "0.05em" }}>
-                  TODAY'S FOCUS CHECKLIST:
+                  TODAY&apos;S FOCUS CHECKLIST:
                 </strong>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                   {(data.dailyTasks?.[day.name] || []).map((task: any, index: number) => (
