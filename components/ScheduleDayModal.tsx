@@ -9,6 +9,7 @@ interface ScheduleDayModalProps {
   saveDailyChanges: (data: any) => void;
   onClose: () => void;
   updateAppState: (state: any) => Promise<any>;
+  weekOffset?: number;
 }
 
 const DEFAULT_WEEK_SCHEDULE = [
@@ -27,7 +28,8 @@ export default function ScheduleDayModal({
   setData,
   saveDailyChanges,
   onClose,
-  updateAppState
+  updateAppState,
+  weekOffset = 0
 }: ScheduleDayModalProps) {
   const [showManager, setShowManager] = useState(false);
 
@@ -47,7 +49,7 @@ export default function ScheduleDayModal({
 
   const color = "var(--accent)";
 
-  // Compute the actual calendar date string for this day name (current week)
+  // Compute the actual calendar date string for this day name (with week offset)
   const getDateForDay = (dayName: string): string => {
     const dayNameToIndex: Record<string, number> = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 0 };
     const targetDayIndex = dayNameToIndex[dayName] ?? 0;
@@ -55,7 +57,7 @@ export default function ScheduleDayModal({
     const currentDay = today.getDay();
     const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay;
     const monday = new Date(today);
-    monday.setDate(today.getDate() + mondayOffset);
+    monday.setDate(today.getDate() + mondayOffset + weekOffset * 7);
     monday.setHours(0, 0, 0, 0);
     const diff = targetDayIndex === 0 ? 6 : targetDayIndex - 1;
     const targetDate = new Date(monday);
@@ -65,6 +67,11 @@ export default function ScheduleDayModal({
     const d = String(targetDate.getDate()).padStart(2, '0');
     return `${y}-${m}-${d}`;
   };
+
+  const targetDateStr = getDateForDay(day.name);
+  const todayObj = new Date();
+  const todayStr = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
+  const isTargetToday = targetDateStr === todayStr;
 
   return (
     <div 
@@ -387,8 +394,8 @@ export default function ScheduleDayModal({
               
               {/* Today's Revision Section */}
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                <strong style={{ color: color, fontSize: "0.75rem", fontFamily: "monospace", letterSpacing: "0.05em" }}>
-                  TODAY&apos;S REVISION CHECKLIST:
+                <strong style={{ color: color, fontSize: "0.75rem", fontFamily: "monospace", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                  {isTargetToday ? "TODAY'S" : targetDateStr} REVISION CHECKLIST:
                 </strong>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                   {(data.dailyRevisionItems?.[day.name] || []).map((item: any, index: number) => (
@@ -408,7 +415,7 @@ export default function ScheduleDayModal({
                         <input
                           type="checkbox"
                           className="checkbox-custom"
-                          checked={item.completed}
+                          checked={isTargetToday ? item.completed : (data.weeklyCompletions?.[targetDateStr]?.revisions || []).includes(item.id)}
                           onChange={(e) => {
                             const updatedItems = (data.dailyRevisionItems?.[day.name] || []).map((it: any) => {
                               if (it.id === item.id) {
@@ -421,13 +428,19 @@ export default function ScheduleDayModal({
                             const targetDateStr = getDateForDay(day.name);
                             let newStreakHistory = [...(data.streakHistory || [])];
                             let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
+                            let newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
 
                             const dateItems = newCompletedItemsHistory[targetDateStr] || [];
+                            const targetComps = newWeeklyCompletions[targetDateStr] || { tasks: [], revisions: [] };
+
                             if (e.target.checked) {
                               newStreakHistory.push(targetDateStr);
                               const alreadyExists = dateItems.some((it: any) => (typeof it === 'string' ? it === item.title : it.title === item.title));
                               if (!alreadyExists) {
                                 newCompletedItemsHistory[targetDateStr] = [...dateItems, { title: item.title, description: item.description || "" }];
+                              }
+                              if (!targetComps.revisions.includes(item.id)) {
+                                targetComps.revisions = [...targetComps.revisions, item.id];
                               }
                             } else {
                               const index = newStreakHistory.indexOf(targetDateStr);
@@ -435,7 +448,10 @@ export default function ScheduleDayModal({
                                 newStreakHistory.splice(index, 1);
                               }
                               newCompletedItemsHistory[targetDateStr] = dateItems.filter((it: any) => (typeof it === 'string' ? it !== item.title : it.title !== item.title));
+                              targetComps.revisions = targetComps.revisions.filter((id: string) => id !== item.id);
                             }
+                            
+                            newWeeklyCompletions[targetDateStr] = targetComps;
 
                             const newData = {
                               ...data,
@@ -444,7 +460,8 @@ export default function ScheduleDayModal({
                                 [day.name]: updatedItems
                               },
                               streakHistory: newStreakHistory,
-                              completedItemsHistory: newCompletedItemsHistory
+                              completedItemsHistory: newCompletedItemsHistory,
+                              weeklyCompletions: newWeeklyCompletions
                             };
                             setData(newData);
                             saveDailyChanges(newData);
@@ -497,6 +514,8 @@ export default function ScheduleDayModal({
                             const targetDateStr = getDateForDay(day.name);
                             let newStreakHistory = [...(data.streakHistory || [])];
                             let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
+                            let newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
+                            const targetComps = newWeeklyCompletions[targetDateStr] || { tasks: [], revisions: [] };
 
                             if (item.completed) {
                               const index = newStreakHistory.indexOf(targetDateStr);
@@ -506,6 +525,9 @@ export default function ScheduleDayModal({
                               const dateItems = newCompletedItemsHistory[targetDateStr] || [];
                               newCompletedItemsHistory[targetDateStr] = dateItems.filter((it: any) => (typeof it === 'string' ? it !== item.title : it.title !== item.title));
                             }
+                            
+                            targetComps.revisions = targetComps.revisions.filter((id: string) => id !== item.id);
+                            newWeeklyCompletions[targetDateStr] = targetComps;
 
                             const newData = {
                               ...data,
@@ -514,7 +536,8 @@ export default function ScheduleDayModal({
                                 [day.name]: updatedItems
                               },
                               streakHistory: newStreakHistory,
-                              completedItemsHistory: newCompletedItemsHistory
+                              completedItemsHistory: newCompletedItemsHistory,
+                              weeklyCompletions: newWeeklyCompletions
                             };
                             setData(newData);
                             saveDailyChanges(newData);
@@ -648,8 +671,8 @@ export default function ScheduleDayModal({
 
               {/* Today's Focus Section */}
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                <strong style={{ color: color, fontSize: "0.75rem", fontFamily: "monospace", letterSpacing: "0.05em" }}>
-                  TODAY&apos;S FOCUS CHECKLIST:
+                <strong style={{ color: color, fontSize: "0.75rem", fontFamily: "monospace", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                  {isTargetToday ? "TODAY'S" : targetDateStr} FOCUS CHECKLIST:
                 </strong>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                   {(data.dailyTasks?.[day.name] || []).map((task: any, index: number) => (
@@ -668,7 +691,7 @@ export default function ScheduleDayModal({
                       <input
                         type="checkbox"
                         className="checkbox-custom"
-                        checked={task.completed}
+                        checked={isTargetToday ? task.completed : (data.weeklyCompletions?.[targetDateStr]?.tasks || []).includes(task.id)}
                         onChange={(e) => {
                           const updatedTasks = (data.dailyTasks?.[day.name] || []).map((t: any) => {
                             if (t.id === task.id) {
@@ -681,13 +704,19 @@ export default function ScheduleDayModal({
                           const targetDateStr = getDateForDay(day.name);
                           let newStreakHistory = [...(data.streakHistory || [])];
                           let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
+                          let newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
 
                           const dateItems = newCompletedItemsHistory[targetDateStr] || [];
+                          const targetComps = newWeeklyCompletions[targetDateStr] || { tasks: [], revisions: [] };
+                          
                           if (e.target.checked) {
                             newStreakHistory.push(targetDateStr);
                             const alreadyExists = dateItems.some((it: any) => (typeof it === 'string' ? it === task.title : it.title === task.title));
                             if (!alreadyExists) {
                               newCompletedItemsHistory[targetDateStr] = [...dateItems, { title: task.title }];
+                            }
+                            if (!targetComps.tasks.includes(task.id)) {
+                              targetComps.tasks = [...targetComps.tasks, task.id];
                             }
                           } else {
                             const index = newStreakHistory.indexOf(targetDateStr);
@@ -695,7 +724,10 @@ export default function ScheduleDayModal({
                               newStreakHistory.splice(index, 1);
                             }
                             newCompletedItemsHistory[targetDateStr] = dateItems.filter((it: any) => (typeof it === 'string' ? it !== task.title : it.title !== task.title));
+                            targetComps.tasks = targetComps.tasks.filter((id: string) => id !== task.id);
                           }
+                          
+                          newWeeklyCompletions[targetDateStr] = targetComps;
                           
                           const newData = {
                             ...data,
@@ -704,7 +736,8 @@ export default function ScheduleDayModal({
                               [day.name]: updatedTasks
                             },
                             streakHistory: newStreakHistory,
-                            completedItemsHistory: newCompletedItemsHistory
+                            completedItemsHistory: newCompletedItemsHistory,
+                            weeklyCompletions: newWeeklyCompletions
                           };
                           setData(newData);
                           saveDailyChanges(newData);
@@ -756,6 +789,8 @@ export default function ScheduleDayModal({
                           const targetDateStr = getDateForDay(day.name);
                           let newStreakHistory = [...(data.streakHistory || [])];
                           let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
+                          let newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
+                          const targetComps = newWeeklyCompletions[targetDateStr] || { tasks: [], revisions: [] };
 
                           if (task.completed) {
                             const index = newStreakHistory.indexOf(targetDateStr);
@@ -766,6 +801,9 @@ export default function ScheduleDayModal({
                             newCompletedItemsHistory[targetDateStr] = dateItems.filter((it: any) => (typeof it === 'string' ? it !== task.title : it.title !== task.title));
                           }
                           
+                          targetComps.tasks = targetComps.tasks.filter((id: string) => id !== task.id);
+                          newWeeklyCompletions[targetDateStr] = targetComps;
+                          
                           const newData = {
                             ...data,
                             dailyTasks: {
@@ -773,7 +811,8 @@ export default function ScheduleDayModal({
                               [day.name]: updatedTasks
                             },
                             streakHistory: newStreakHistory,
-                            completedItemsHistory: newCompletedItemsHistory
+                            completedItemsHistory: newCompletedItemsHistory,
+                            weeklyCompletions: newWeeklyCompletions
                           };
                           setData(newData);
                           saveDailyChanges(newData);

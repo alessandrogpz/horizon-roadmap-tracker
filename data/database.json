@@ -68,11 +68,13 @@
     "2026-07-10",
     "2026-07-10",
     "2026-07-13",
-    "2026-07-14",
-    "2026-07-14",
-    "2026-07-14",
     "2026-07-15",
-    "2026-07-15"
+    "2026-07-15",
+    "2026-07-14",
+    "2026-07-14",
+    "2026-07-14",
+    "2026-07-14",
+    "2026-07-14"
   ],
   "lastDailyRoutineCheck": "2026-06-08",
   "lastTasksResetDate": "2026-07-15",
@@ -104,12 +106,12 @@
       {
         "id": "tue_1",
         "title": "DSA Pattern Study",
-        "completed": false
+        "completed": true
       },
       {
         "id": "tue_2",
         "title": "C++ Book",
-        "completed": false
+        "completed": true
       },
       {
         "id": "tue_5",
@@ -936,5 +938,14 @@
         "title": "Mathematics"
       }
     ]
+  },
+  "weeklyCompletions": {
+    "2026-07-14": {
+      "tasks": [
+        "tue_1",
+        "tue_2"
+      ],
+      "revisions": []
+    }
   }
 }
