@@ -773,8 +773,9 @@ export default function Home() {
         <div className="glass-panel" style={{ borderLeft: "4px solid var(--accent)", padding: "1.25rem 1.5rem" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             {/* Header */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: "0.5rem", borderBottom: "1px solid rgba(255, 255, 255, 0.05)", flexWrap: "wrap", gap: "0.5rem" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", paddingBottom: "0.75rem", borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
+              {/* Top Row: Title and Navigation */}
+              <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
                 <h3 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#fff", margin: 0, whiteSpace: "nowrap" }}>
                   Weekly Study Plan
                 </h3>
@@ -787,7 +788,8 @@ export default function Home() {
                   background: "rgba(255, 255, 255, 0.03)",
                   padding: "0.25rem 0.5rem",
                   borderRadius: "6px",
-                  border: "1px solid rgba(255, 255, 255, 0.05)"
+                  border: "1px solid rgba(255, 255, 255, 0.05)",
+                  flexShrink: 0
                 }}>
                   <button
                     onClick={() => setWeekOffset(weekOffset - 1)}
@@ -815,7 +817,8 @@ export default function Home() {
                       fontSize: "0.85rem",
                       minWidth: "60px",
                       textAlign: "center",
-                      fontFamily: "monospace"
+                      fontFamily: "monospace",
+                      whiteSpace: "nowrap"
                     }}
                   >
                     {(() => {
@@ -865,7 +868,8 @@ export default function Home() {
                         cursor: "pointer",
                         textTransform: "uppercase",
                         letterSpacing: "0.03em",
-                        transition: "opacity 0.2s"
+                        transition: "opacity 0.2s",
+                        whiteSpace: "nowrap"
                       }}
                       onMouseOver={(e) => e.currentTarget.style.opacity = "0.8"}
                       onMouseOut={(e) => e.currentTarget.style.opacity = "1"}
@@ -875,35 +879,40 @@ export default function Home() {
                   )}
                 </div>
               </div>
-              <div 
-                onClick={() => setShowRotationModal(true)}
-                style={{ 
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                  background: "rgba(14, 165, 233, 0.08)",
-                  border: "1px dashed rgba(14, 165, 233, 0.3)",
-                  padding: "0.35rem 0.75rem",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                }}
-                onMouseOver={(e) => { e.currentTarget.style.background = "rgba(14, 165, 233, 0.15)"; e.currentTarget.style.borderColor = "rgba(14, 165, 233, 0.5)"; }}
-                onMouseOut={(e) => { e.currentTarget.style.background = "rgba(14, 165, 233, 0.08)"; e.currentTarget.style.borderColor = "rgba(14, 165, 233, 0.3)"; }}
-                title="View full 10-week Algorithm plan"
-              >
-                <span style={{ fontSize: "0.7rem", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>
-                  Weekly Algorithm:
-                </span>
-                <span style={{ fontSize: "0.85rem", color: "var(--accent)", fontWeight: 700, fontFamily: "monospace" }}>
-                  {(() => {
-                    const targetDate = new Date();
-                    targetDate.setDate(targetDate.getDate() + weekOffset * 7);
-                    const wn = getWeekNum(data.startDate, targetDate);
-                    const idx = ((wn - (data.dsaStartWeek || 1)) % DSA_PATTERN_WEEKS.length + DSA_PATTERN_WEEKS.length) % DSA_PATTERN_WEEKS.length;
-                    return DSA_PATTERN_WEEKS[idx].pattern;
-                  })()}
-                </span>
+              
+              {/* Bottom Row: Algorithm Focus */}
+              <div>
+                <div 
+                  onClick={() => setShowRotationModal(true)}
+                  style={{ 
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                    background: "rgba(14, 165, 233, 0.08)",
+                    border: "1px dashed rgba(14, 165, 233, 0.3)",
+                    padding: "0.35rem 0.75rem",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    whiteSpace: "nowrap"
+                  }}
+                  onMouseOver={(e) => { e.currentTarget.style.background = "rgba(14, 165, 233, 0.15)"; e.currentTarget.style.borderColor = "rgba(14, 165, 233, 0.5)"; }}
+                  onMouseOut={(e) => { e.currentTarget.style.background = "rgba(14, 165, 233, 0.08)"; e.currentTarget.style.borderColor = "rgba(14, 165, 233, 0.3)"; }}
+                  title="View full 10-week Algorithm plan"
+                >
+                  <span style={{ fontSize: "0.7rem", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>
+                    Weekly Algorithm:
+                  </span>
+                  <span style={{ fontSize: "0.85rem", color: "var(--accent)", fontWeight: 700, fontFamily: "monospace" }}>
+                    {(() => {
+                      const targetDate = new Date();
+                      targetDate.setDate(targetDate.getDate() + weekOffset * 7);
+                      const wn = getWeekNum(data.startDate, targetDate);
+                      const idx = ((wn - (data.dsaStartWeek || 1)) % DSA_PATTERN_WEEKS.length + DSA_PATTERN_WEEKS.length) % DSA_PATTERN_WEEKS.length;
+                      return DSA_PATTERN_WEEKS[idx].pattern;
+                    })()}
+                  </span>
+                </div>
               </div>
             </div>
 
