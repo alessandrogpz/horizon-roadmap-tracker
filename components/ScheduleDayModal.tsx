@@ -138,7 +138,7 @@ export default function ScheduleDayModal({
             fontFamily: "monospace",
             letterSpacing: "0.05em"
           }}>
-            {day.name} Schedule
+            {day.name} Schedule • {targetDateStr}
           </span>
           <h2 style={{ fontSize: "1.3rem", fontWeight: 700, color: "#fff", marginTop: "0.5rem" }}>
             {getFullLabel(currentDaySchedule.type)}
@@ -395,7 +395,7 @@ export default function ScheduleDayModal({
               {/* Today's Revision Section */}
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                 <strong style={{ color: color, fontSize: "0.75rem", fontFamily: "monospace", letterSpacing: "0.05em", textTransform: "uppercase" }}>
-                  {isTargetToday ? "TODAY'S" : targetDateStr} REVISION CHECKLIST:
+                  {isTargetToday ? "TODAY'S " : ""}REVISION CHECKLIST:
                 </strong>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                   {(data.dailyRevisionItems?.[day.name] || []).map((item: any, index: number) => (
@@ -672,7 +672,7 @@ export default function ScheduleDayModal({
               {/* Today's Focus Section */}
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                 <strong style={{ color: color, fontSize: "0.75rem", fontFamily: "monospace", letterSpacing: "0.05em", textTransform: "uppercase" }}>
-                  {isTargetToday ? "TODAY'S" : targetDateStr} FOCUS CHECKLIST:
+                  {isTargetToday ? "TODAY'S " : ""}FOCUS CHECKLIST:
                 </strong>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                   {(data.dailyTasks?.[day.name] || []).map((task: any, index: number) => (
