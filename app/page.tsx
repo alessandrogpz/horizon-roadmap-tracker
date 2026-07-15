@@ -1177,6 +1177,7 @@ export default function Home() {
           saveDailyChanges={saveDailyChanges}
           onClose={() => setSelectedScheduleDay(null)}
           updateAppState={updateAppState}
+          weekOffset={weekOffset}
         />
       )}
       {showRotationModal && (
