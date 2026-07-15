@@ -70,10 +70,12 @@
     "2026-07-13",
     "2026-07-14",
     "2026-07-14",
-    "2026-07-14"
+    "2026-07-14",
+    "2026-07-15",
+    "2026-07-15"
   ],
   "lastDailyRoutineCheck": "2026-06-08",
-  "lastTasksResetDate": "2026-07-14",
+  "lastTasksResetDate": "2026-07-15",
   "dailyFocus": {
     "math": "",
     "leetcode": "",
@@ -102,12 +104,12 @@
       {
         "id": "tue_1",
         "title": "DSA Pattern Study",
-        "completed": true
+        "completed": false
       },
       {
         "id": "tue_2",
         "title": "C++ Book",
-        "completed": true
+        "completed": false
       },
       {
         "id": "tue_5",
@@ -119,7 +121,7 @@
       {
         "id": "wed_1",
         "title": "Mathematics",
-        "completed": false
+        "completed": true
       },
       {
         "id": "wed_2",
@@ -218,7 +220,7 @@
         "id": "dsa_auto",
         "title": "Two Pointers",
         "description": "Valid Palindrome, Two Sum II, 3Sum, Container With Most Water, Trapping Rain Water",
-        "completed": false
+        "completed": true
       }
     ],
     "Thu": [
@@ -231,9 +233,9 @@
     ],
     "Fri": [
       {
-        "id": "math_revision",
-        "title": "Linear Algebra",
-        "description": "Practice vector spaces, transforms, and equations",
+        "id": "dsa_auto",
+        "title": "Two Pointers",
+        "description": "Valid Palindrome, Two Sum II, 3Sum, Container With Most Water, Trapping Rain Water",
         "completed": false
       }
     ],
@@ -923,6 +925,15 @@
       },
       {
         "title": "C++ Book"
+      }
+    ],
+    "2026-07-15": [
+      {
+        "title": "Two Pointers",
+        "description": "Valid Palindrome, Two Sum II, 3Sum, Container With Most Water, Trapping Rain Water"
+      },
+      {
+        "title": "Mathematics"
       }
     ]
   }

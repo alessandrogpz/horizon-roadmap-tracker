@@ -47,6 +47,25 @@ export default function ScheduleDayModal({
 
   const color = "var(--accent)";
 
+  // Compute the actual calendar date string for this day name (current week)
+  const getDateForDay = (dayName: string): string => {
+    const dayNameToIndex: Record<string, number> = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 0 };
+    const targetDayIndex = dayNameToIndex[dayName] ?? 0;
+    const today = new Date();
+    const currentDay = today.getDay();
+    const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + mondayOffset);
+    monday.setHours(0, 0, 0, 0);
+    const diff = targetDayIndex === 0 ? 6 : targetDayIndex - 1;
+    const targetDate = new Date(monday);
+    targetDate.setDate(monday.getDate() + diff);
+    const y = targetDate.getFullYear();
+    const m = String(targetDate.getMonth() + 1).padStart(2, '0');
+    const d = String(targetDate.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
+
   return (
     <div 
       onClick={onClose}
@@ -398,33 +417,24 @@ export default function ScheduleDayModal({
                               return it;
                             });
 
-                            // Sync streak history if editing the actual today's day
-                            const today = new Date();
-                            const DAYS_SHORT_MAP = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-                            const todayKey = DAYS_SHORT_MAP[today.getDay()];
+                            // Sync streak history for the actual date of this day
+                            const targetDateStr = getDateForDay(day.name);
                             let newStreakHistory = [...(data.streakHistory || [])];
                             let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
 
-                            if (day.name === todayKey) {
-                              const year = today.getFullYear();
-                              const month = String(today.getMonth() + 1).padStart(2, '0');
-                              const dateVal = String(today.getDate()).padStart(2, '0');
-                              const todayStr = `${year}-${month}-${dateVal}`;
-
-                              const todayItems = newCompletedItemsHistory[todayStr] || [];
-                              if (e.target.checked) {
-                                newStreakHistory.push(todayStr);
-                                const alreadyExists = todayItems.some((it: any) => (typeof it === 'string' ? it === item.title : it.title === item.title));
-                                if (!alreadyExists) {
-                                  newCompletedItemsHistory[todayStr] = [...todayItems, { title: item.title, description: item.description || "" }];
-                                }
-                              } else {
-                                const index = newStreakHistory.indexOf(todayStr);
-                                if (index > -1) {
-                                  newStreakHistory.splice(index, 1);
-                                }
-                                newCompletedItemsHistory[todayStr] = todayItems.filter((it: any) => (typeof it === 'string' ? it !== item.title : it.title !== item.title));
+                            const dateItems = newCompletedItemsHistory[targetDateStr] || [];
+                            if (e.target.checked) {
+                              newStreakHistory.push(targetDateStr);
+                              const alreadyExists = dateItems.some((it: any) => (typeof it === 'string' ? it === item.title : it.title === item.title));
+                              if (!alreadyExists) {
+                                newCompletedItemsHistory[targetDateStr] = [...dateItems, { title: item.title, description: item.description || "" }];
                               }
+                            } else {
+                              const index = newStreakHistory.indexOf(targetDateStr);
+                              if (index > -1) {
+                                newStreakHistory.splice(index, 1);
+                              }
+                              newCompletedItemsHistory[targetDateStr] = dateItems.filter((it: any) => (typeof it === 'string' ? it !== item.title : it.title !== item.title));
                             }
 
                             const newData = {
@@ -483,27 +493,18 @@ export default function ScheduleDayModal({
                           onClick={() => {
                             const updatedItems = (data.dailyRevisionItems?.[day.name] || []).filter((it: any) => it.id !== item.id);
 
-                            // Sync streak history if editing the actual today's day
-                            const today = new Date();
-                            const DAYS_SHORT_MAP = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-                            const todayKey = DAYS_SHORT_MAP[today.getDay()];
+                            // Sync streak history for the actual date of this day
+                            const targetDateStr = getDateForDay(day.name);
                             let newStreakHistory = [...(data.streakHistory || [])];
                             let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
 
-                            if (day.name === todayKey) {
-                              const year = today.getFullYear();
-                              const month = String(today.getMonth() + 1).padStart(2, '0');
-                              const dateVal = String(today.getDate()).padStart(2, '0');
-                              const todayStr = `${year}-${month}-${dateVal}`;
-
-                              if (item.completed) {
-                                const index = newStreakHistory.indexOf(todayStr);
-                                if (index > -1) {
-                                  newStreakHistory.splice(index, 1);
-                                }
-                                const todayItems = newCompletedItemsHistory[todayStr] || [];
-                                newCompletedItemsHistory[todayStr] = todayItems.filter((it: any) => (typeof it === 'string' ? it !== item.title : it.title !== item.title));
+                            if (item.completed) {
+                              const index = newStreakHistory.indexOf(targetDateStr);
+                              if (index > -1) {
+                                newStreakHistory.splice(index, 1);
                               }
+                              const dateItems = newCompletedItemsHistory[targetDateStr] || [];
+                              newCompletedItemsHistory[targetDateStr] = dateItems.filter((it: any) => (typeof it === 'string' ? it !== item.title : it.title !== item.title));
                             }
 
                             const newData = {
@@ -676,33 +677,24 @@ export default function ScheduleDayModal({
                             return t;
                           });
                           
-                          // Sync streak history if editing the actual today's day
-                          const today = new Date();
-                          const DAYS_SHORT_MAP = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-                          const todayKey = DAYS_SHORT_MAP[today.getDay()];
+                          // Sync streak history for the actual date of this day
+                          const targetDateStr = getDateForDay(day.name);
                           let newStreakHistory = [...(data.streakHistory || [])];
                           let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
-                          
-                          if (day.name === todayKey) {
-                            const year = today.getFullYear();
-                            const month = String(today.getMonth() + 1).padStart(2, '0');
-                            const dateVal = String(today.getDate()).padStart(2, '0');
-                            const todayStr = `${year}-${month}-${dateVal}`;
-                            
-                            const todayItems = newCompletedItemsHistory[todayStr] || [];
-                            if (e.target.checked) {
-                              newStreakHistory.push(todayStr);
-                              const alreadyExists = todayItems.some((it: any) => (typeof it === 'string' ? it === task.title : it.title === task.title));
-                              if (!alreadyExists) {
-                                newCompletedItemsHistory[todayStr] = [...todayItems, { title: task.title }];
-                              }
-                            } else {
-                              const index = newStreakHistory.indexOf(todayStr);
-                              if (index > -1) {
-                                newStreakHistory.splice(index, 1);
-                              }
-                              newCompletedItemsHistory[todayStr] = todayItems.filter((it: any) => (typeof it === 'string' ? it !== task.title : it.title !== task.title));
+
+                          const dateItems = newCompletedItemsHistory[targetDateStr] || [];
+                          if (e.target.checked) {
+                            newStreakHistory.push(targetDateStr);
+                            const alreadyExists = dateItems.some((it: any) => (typeof it === 'string' ? it === task.title : it.title === task.title));
+                            if (!alreadyExists) {
+                              newCompletedItemsHistory[targetDateStr] = [...dateItems, { title: task.title }];
                             }
+                          } else {
+                            const index = newStreakHistory.indexOf(targetDateStr);
+                            if (index > -1) {
+                              newStreakHistory.splice(index, 1);
+                            }
+                            newCompletedItemsHistory[targetDateStr] = dateItems.filter((it: any) => (typeof it === 'string' ? it !== task.title : it.title !== task.title));
                           }
                           
                           const newData = {
@@ -760,27 +752,18 @@ export default function ScheduleDayModal({
                         onClick={() => {
                           const updatedTasks = (data.dailyTasks?.[day.name] || []).filter((t: any) => t.id !== task.id);
                           
-                          // Sync streak history if editing the actual today's day
-                          const today = new Date();
-                          const DAYS_SHORT_MAP = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-                          const todayKey = DAYS_SHORT_MAP[today.getDay()];
+                          // Sync streak history for the actual date of this day
+                          const targetDateStr = getDateForDay(day.name);
                           let newStreakHistory = [...(data.streakHistory || [])];
                           let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
-                          
-                          if (day.name === todayKey) {
-                            const year = today.getFullYear();
-                            const month = String(today.getMonth() + 1).padStart(2, '0');
-                            const dateVal = String(today.getDate()).padStart(2, '0');
-                            const todayStr = `${year}-${month}-${dateVal}`;
-                            
-                            if (task.completed) {
-                              const index = newStreakHistory.indexOf(todayStr);
-                              if (index > -1) {
-                                newStreakHistory.splice(index, 1);
-                              }
-                              const todayItems = newCompletedItemsHistory[todayStr] || [];
-                              newCompletedItemsHistory[todayStr] = todayItems.filter((it: any) => (typeof it === 'string' ? it !== task.title : it.title !== task.title));
+
+                          if (task.completed) {
+                            const index = newStreakHistory.indexOf(targetDateStr);
+                            if (index > -1) {
+                              newStreakHistory.splice(index, 1);
                             }
+                            const dateItems = newCompletedItemsHistory[targetDateStr] || [];
+                            newCompletedItemsHistory[targetDateStr] = dateItems.filter((it: any) => (typeof it === 'string' ? it !== task.title : it.title !== task.title));
                           }
                           
                           const newData = {

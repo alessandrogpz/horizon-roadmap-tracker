@@ -93,9 +93,28 @@ export default function Home() {
   const [dayOfWeek, setDayOfWeek] = useState(0);
   const [selectedScheduleDay, setSelectedScheduleDay] = useState<any>(null);
   const [showRotationModal, setShowRotationModal] = useState(false);
+  const [weekOffset, setWeekOffset] = useState(0);
   const [selectedPhase, setSelectedPhase] = useState<any>(null);
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle");
   const [syncError, setSyncError] = useState("");
+
+  // Compute the actual calendar date string for a given day name (Mon-Sun) at a given week offset
+  const getDateForDayName = (dayName: string, offset: number = 0): string => {
+    const dayNameToIndex: Record<string, number> = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 0 };
+    const targetDayIndex = dayNameToIndex[dayName] ?? 0;
+    const today = new Date();
+    const currentMonday = getMondayOfDateWeek(today);
+    const mondayOfTargetWeek = new Date(currentMonday);
+    mondayOfTargetWeek.setDate(currentMonday.getDate() + offset * 7);
+    // Calculate diff from Monday
+    const diff = targetDayIndex === 0 ? 6 : targetDayIndex - 1; // Mon=0, Tue=1, ..., Sun=6
+    const targetDate = new Date(mondayOfTargetWeek);
+    targetDate.setDate(mondayOfTargetWeek.getDate() + diff);
+    const y = targetDate.getFullYear();
+    const m = String(targetDate.getMonth() + 1).padStart(2, '0');
+    const d = String(targetDate.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
 
   const handleSyncWorkspace = async () => {
     setSyncStatus("syncing");
@@ -131,6 +150,39 @@ export default function Home() {
       .then(async (loadedData) => {
         let finalData = loadedData;
         if (loadedData && loadedData.lastTasksResetDate !== currentTodayStr) {
+          // Snapshot yesterday's completions into weeklyCompletions before resetting
+          const prevWeeklyCompletions = { ...(loadedData.weeklyCompletions || {}) };
+          const prevDateStr = loadedData.lastTasksResetDate;
+          if (prevDateStr) {
+            const completedTaskIds: string[] = [];
+            const completedRevisionIds: string[] = [];
+            if (loadedData.dailyTasks) {
+              Object.values(loadedData.dailyTasks).forEach((tasks: any) => {
+                (tasks || []).forEach((t: any) => {
+                  if (t.completed && t.id) completedTaskIds.push(t.id);
+                });
+              });
+            }
+            if (loadedData.dailyRevisionItems) {
+              Object.values(loadedData.dailyRevisionItems).forEach((items: any) => {
+                (items || []).forEach((it: any) => {
+                  if (it.completed && it.id) completedRevisionIds.push(it.id);
+                });
+              });
+            }
+            // Find which day name corresponds to the previous date
+            const prevDate = new Date(prevDateStr + "T00:00:00");
+            const DAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+            const prevDayName = DAYS_SHORT[prevDate.getDay()];
+            // Only save task/revision IDs for that specific day
+            const dayTasks = loadedData.dailyTasks?.[prevDayName] || [];
+            const dayRevisions = loadedData.dailyRevisionItems?.[prevDayName] || [];
+            prevWeeklyCompletions[prevDateStr] = {
+              tasks: dayTasks.filter((t: any) => t.completed).map((t: any) => t.id),
+              revisions: dayRevisions.filter((it: any) => it.completed).map((it: any) => it.id),
+            };
+          }
+
           // Reset all tasks in all phases to completed: false
           const resetPhases = loadedData.phases.map((phase: any) => ({
             ...phase,
@@ -215,6 +267,7 @@ export default function Home() {
               ...(loadedData.dailyRevisionItems || {}),
               ...resetDailyRevisionItems
             },
+            weeklyCompletions: prevWeeklyCompletions,
             lastTasksResetDate: currentTodayStr
           };
           finalData = updatedData;
@@ -721,9 +774,76 @@ export default function Home() {
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             {/* Header */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: "0.5rem", borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
-              <h3 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#fff", margin: 0 }}>
-                Weekly Study Plan <span style={{ color: "#71717a", fontWeight: 400, fontSize: "0.9rem" }}>(Week {getWeekNum(data.startDate)})</span>
-              </h3>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <h3 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#fff", margin: 0 }}>
+                  Weekly Study Plan
+                </h3>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                  <button
+                    onClick={() => setWeekOffset(weekOffset - 1)}
+                    style={{
+                      background: "transparent",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      borderRadius: "4px",
+                      color: "#a1a1aa",
+                      cursor: "pointer",
+                      padding: "0.1rem 0.35rem",
+                      fontSize: "0.75rem",
+                      fontFamily: "monospace",
+                      lineHeight: 1,
+                      transition: "all 0.15s ease",
+                    }}
+                    onMouseOver={(e) => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.color = "#fff"; }}
+                    onMouseOut={(e) => { e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)"; e.currentTarget.style.color = "#a1a1aa"; }}
+                  >
+                    ‹
+                  </button>
+                  <span
+                    onClick={() => setWeekOffset(0)}
+                    style={{
+                      color: weekOffset === 0 ? "#71717a" : "var(--accent)",
+                      fontWeight: 400,
+                      fontSize: "0.85rem",
+                      cursor: weekOffset !== 0 ? "pointer" : "default",
+                      textDecoration: weekOffset !== 0 ? "underline" : "none",
+                      minWidth: "70px",
+                      textAlign: "center",
+                    }}
+                    title={weekOffset !== 0 ? "Click to go back to current week" : ""}
+                  >
+                    {(() => {
+                      const targetDate = new Date();
+                      targetDate.setDate(targetDate.getDate() + weekOffset * 7);
+                      const wn = getWeekNum(data.startDate, targetDate);
+                      return `Week ${wn}`;
+                    })()}
+                    {weekOffset !== 0 && (
+                      <span style={{ fontSize: "0.7rem", color: "#71717a", marginLeft: "0.25rem" }}>
+                        ({weekOffset > 0 ? `+${weekOffset}` : weekOffset})
+                      </span>
+                    )}
+                  </span>
+                  <button
+                    onClick={() => setWeekOffset(weekOffset + 1)}
+                    style={{
+                      background: "transparent",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      borderRadius: "4px",
+                      color: "#a1a1aa",
+                      cursor: "pointer",
+                      padding: "0.1rem 0.35rem",
+                      fontSize: "0.75rem",
+                      fontFamily: "monospace",
+                      lineHeight: 1,
+                      transition: "all 0.15s ease",
+                    }}
+                    onMouseOver={(e) => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.color = "#fff"; }}
+                    onMouseOut={(e) => { e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)"; e.currentTarget.style.color = "#a1a1aa"; }}
+                  >
+                    ›
+                  </button>
+                </div>
+              </div>
               <span 
                 onClick={() => setShowRotationModal(true)}
                 style={{ 
@@ -738,7 +858,10 @@ export default function Home() {
                 onMouseOut={(e) => e.currentTarget.style.opacity = "1"}
               >
                 {(() => {
-                  const idx = ((getWeekNum(data.startDate) - (data.dsaStartWeek || 1)) % DSA_PATTERN_WEEKS.length + DSA_PATTERN_WEEKS.length) % DSA_PATTERN_WEEKS.length;
+                  const targetDate = new Date();
+                  targetDate.setDate(targetDate.getDate() + weekOffset * 7);
+                  const wn = getWeekNum(data.startDate, targetDate);
+                  const idx = ((wn - (data.dsaStartWeek || 1)) % DSA_PATTERN_WEEKS.length + DSA_PATTERN_WEEKS.length) % DSA_PATTERN_WEEKS.length;
                   return `DSA Pattern: ${DSA_PATTERN_WEEKS[idx].pattern}`;
                 })()}
               </span>
@@ -751,10 +874,118 @@ export default function Home() {
               gap: "0.4rem",
             }}>
               {(data.weekSchedule || DEFAULT_WEEK_SCHEDULE).map((dayItem: any, idx: number) => {
-                const isToday = idx === (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
+                const isCurrentWeek = weekOffset === 0;
+                const isToday = isCurrentWeek && idx === (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
                 const dayKey = dayItem.name;
+                const dayDateStr = getDateForDayName(dayKey, weekOffset);
                 const revisionItems = data?.dailyRevisionItems?.[dayKey] || [];
                 const focusTasks = data?.dailyTasks?.[dayKey] || [];
+
+                // Determine completion: for today use live data, for other days use weeklyCompletions
+                const weeklyCompletions = data.weeklyCompletions || {};
+                const dayCompletions = weeklyCompletions[dayDateStr] || { tasks: [], revisions: [] };
+                
+                // Check if this day is in the past relative to today (within current week)
+                const todayDate = new Date();
+                todayDate.setHours(0, 0, 0, 0);
+                const dayDate = new Date(dayDateStr + "T00:00:00");
+                const isPast = dayDate < todayDate;
+                const isFuture = dayDate > todayDate;
+
+                const getItemCompleted = (itemId: string, isRevision: boolean): boolean => {
+                  if (isToday) {
+                    // Use live data for today
+                    const items = isRevision ? revisionItems : focusTasks;
+                    const found = items.find((it: any) => it.id === itemId);
+                    return found?.completed ?? false;
+                  }
+                  // For other days, check weeklyCompletions
+                  return isRevision 
+                    ? (dayCompletions.revisions || []).includes(itemId)
+                    : (dayCompletions.tasks || []).includes(itemId);
+                };
+
+                const handleToggleItem = (itemId: string, itemTitle: string, itemDesc: string, isRevision: boolean, currentCompleted: boolean) => {
+                  const newCompleted = !currentCompleted;
+                  const newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
+                  const newStreakHistory = [...(data.streakHistory || [])];
+                  const newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
+
+                  if (isToday) {
+                    // Update live data for today
+                    const updatedList = isRevision
+                      ? revisionItems.map((it: any) => it.id === itemId ? { ...it, completed: newCompleted } : it)
+                      : focusTasks.map((t: any) => t.id === itemId ? { ...t, completed: newCompleted } : t);
+                    
+                    // Also update weeklyCompletions for today
+                    const todayComps = newWeeklyCompletions[todayStr] || { tasks: [], revisions: [] };
+                    const compKey = isRevision ? "revisions" : "tasks";
+                    if (newCompleted) {
+                      if (!todayComps[compKey].includes(itemId)) todayComps[compKey] = [...todayComps[compKey], itemId];
+                    } else {
+                      todayComps[compKey] = todayComps[compKey].filter((id: string) => id !== itemId);
+                    }
+                    newWeeklyCompletions[todayStr] = todayComps;
+
+                    // Streak sync for today
+                    const todayItems = newCompletedItemsHistory[todayStr] || [];
+                    if (newCompleted) {
+                      newStreakHistory.push(todayStr);
+                      const alreadyExists = todayItems.some((it: any) => (typeof it === 'string' ? it === itemTitle : it.title === itemTitle));
+                      if (!alreadyExists) {
+                        newCompletedItemsHistory[todayStr] = [...todayItems, { title: itemTitle, description: itemDesc || "" }];
+                      }
+                    } else {
+                      const sIdx = newStreakHistory.indexOf(todayStr);
+                      if (sIdx > -1) newStreakHistory.splice(sIdx, 1);
+                      newCompletedItemsHistory[todayStr] = todayItems.filter((it: any) => (typeof it === 'string' ? it !== itemTitle : it.title !== itemTitle));
+                    }
+
+                    const dataKey = isRevision ? "dailyRevisionItems" : "dailyTasks";
+                    const newData = {
+                      ...data,
+                      [dataKey]: { ...(data[dataKey] || {}), [dayKey]: updatedList },
+                      weeklyCompletions: newWeeklyCompletions,
+                      streakHistory: newStreakHistory,
+                      completedItemsHistory: newCompletedItemsHistory,
+                    };
+                    setData(newData);
+                    saveDailyChanges(newData);
+                  } else {
+                    // Update weeklyCompletions for a non-today day
+                    const dayComps = newWeeklyCompletions[dayDateStr] || { tasks: [], revisions: [] };
+                    const compKey = isRevision ? "revisions" : "tasks";
+                    if (newCompleted) {
+                      if (!dayComps[compKey].includes(itemId)) dayComps[compKey] = [...dayComps[compKey], itemId];
+                    } else {
+                      dayComps[compKey] = dayComps[compKey].filter((id: string) => id !== itemId);
+                    }
+                    newWeeklyCompletions[dayDateStr] = dayComps;
+
+                    // Streak sync for the target date (not today!)
+                    const targetDateItems = newCompletedItemsHistory[dayDateStr] || [];
+                    if (newCompleted) {
+                      newStreakHistory.push(dayDateStr);
+                      const alreadyExists = targetDateItems.some((it: any) => (typeof it === 'string' ? it === itemTitle : it.title === itemTitle));
+                      if (!alreadyExists) {
+                        newCompletedItemsHistory[dayDateStr] = [...targetDateItems, { title: itemTitle, description: itemDesc || "" }];
+                      }
+                    } else {
+                      const sIdx = newStreakHistory.indexOf(dayDateStr);
+                      if (sIdx > -1) newStreakHistory.splice(sIdx, 1);
+                      newCompletedItemsHistory[dayDateStr] = targetDateItems.filter((it: any) => (typeof it === 'string' ? it !== itemTitle : it.title !== itemTitle));
+                    }
+
+                    const newData = {
+                      ...data,
+                      weeklyCompletions: newWeeklyCompletions,
+                      streakHistory: newStreakHistory,
+                      completedItemsHistory: newCompletedItemsHistory,
+                    };
+                    setData(newData);
+                    saveDailyChanges(newData);
+                  }
+                };
 
                 const tagColors: Record<string, { bg: string; text: string }> = {};
                 const focusTypes = data.focusTypes || DEFAULT_FOCUS_TYPES;
@@ -784,9 +1015,10 @@ export default function Home() {
                       transition: "all 0.2s ease",
                       minHeight: "160px",
                       overflow: "hidden",
+                      opacity: isFuture ? 0.5 : 1,
                     }}
                   >
-                    {/* Day name */}
+                    {/* Day name + date */}
                     <div style={{ textAlign: "center", paddingBottom: "0.25rem", borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
                       <span style={{
                         fontSize: "0.7rem",
@@ -797,6 +1029,9 @@ export default function Home() {
                       }}>
                         {dayItem.name}
                       </span>
+                      <div style={{ fontSize: "0.55rem", color: "#52525b", marginTop: "0.05rem" }}>
+                        {dayDateStr.slice(5)}
+                      </div>
                     </div>
 
                     {/* Focus type tag */}
@@ -823,59 +1058,29 @@ export default function Home() {
                           Revision
                         </span>
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem", marginTop: "0.15rem" }}>
-                          {revisionItems.map((item: any, i: number) => (
-                            <div key={item.id || i} style={{ display: "flex", alignItems: "flex-start", gap: "0.3rem" }}>
-                              {isToday ? (
+                          {revisionItems.map((item: any, i: number) => {
+                            const completed = getItemCompleted(item.id, true);
+                            return (
+                              <div key={item.id || i} style={{ display: "flex", alignItems: "flex-start", gap: "0.3rem" }}>
                                 <input
                                   type="checkbox"
                                   className="checkbox-custom"
-                                  checked={item.completed}
+                                  checked={completed}
                                   onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                    const updatedItems = revisionItems.map((it: any) => {
-                                      if (it.id === item.id) return { ...it, completed: e.target.checked };
-                                      return it;
-                                    });
-                                    let newStreakHistory = [...(data.streakHistory || [])];
-                                    let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
-                                    const todayItems = newCompletedItemsHistory[todayStr] || [];
-                                    if (e.target.checked) {
-                                      newStreakHistory.push(todayStr);
-                                      const alreadyExists = todayItems.some((it: any) => (typeof it === 'string' ? it === item.title : it.title === item.title));
-                                      if (!alreadyExists) {
-                                        newCompletedItemsHistory[todayStr] = [...todayItems, { title: item.title, description: item.description || "" }];
-                                      }
-                                    } else {
-                                      const idx2 = newStreakHistory.indexOf(todayStr);
-                                      if (idx2 > -1) newStreakHistory.splice(idx2, 1);
-                                      newCompletedItemsHistory[todayStr] = todayItems.filter((it: any) => (typeof it === 'string' ? it !== item.title : it.title !== item.title));
-                                    }
-                                    const newData = {
-                                      ...data,
-                                      dailyRevisionItems: { ...(data.dailyRevisionItems || {}), [dayKey]: updatedItems },
-                                      streakHistory: newStreakHistory,
-                                      completedItemsHistory: newCompletedItemsHistory,
-                                    };
-                                    setData(newData);
-                                    saveDailyChanges(newData);
-                                  }}
+                                  onChange={() => handleToggleItem(item.id, item.title, item.description || "", true, completed)}
                                   style={{ marginTop: "0.1rem", transform: "scale(0.8)" }}
                                 />
-                              ) : (
-                                <span style={{ fontSize: "0.6rem", color: item.completed ? "var(--success)" : "#52525b", marginTop: "0.1rem", flexShrink: 0 }}>
-                                  {item.completed ? "✓" : "○"}
+                                <span style={{
+                                  fontSize: "0.72rem",
+                                  color: completed ? "#52525b" : (isToday ? "var(--foreground)" : "#a1a1aa"),
+                                  textDecoration: completed ? "line-through" : "none",
+                                  lineHeight: 1.3,
+                                }}>
+                                  {item.title}
                                 </span>
-                              )}
-                              <span style={{
-                                fontSize: "0.72rem",
-                                color: item.completed ? "#52525b" : (isToday ? "var(--foreground)" : "#a1a1aa"),
-                                textDecoration: item.completed ? "line-through" : "none",
-                                lineHeight: 1.3,
-                              }}>
-                                {item.title}
-                              </span>
-                            </div>
-                          ))}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
@@ -887,59 +1092,29 @@ export default function Home() {
                           Focus
                         </span>
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem", marginTop: "0.15rem" }}>
-                          {focusTasks.map((task: any, i: number) => (
-                            <div key={task.id || i} style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                              {isToday ? (
+                          {focusTasks.map((task: any, i: number) => {
+                            const completed = getItemCompleted(task.id, false);
+                            return (
+                              <div key={task.id || i} style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
                                 <input
                                   type="checkbox"
                                   className="checkbox-custom"
-                                  checked={task.completed}
+                                  checked={completed}
                                   onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                    const updatedTasks = focusTasks.map((t: any) => {
-                                      if (t.id === task.id) return { ...t, completed: e.target.checked };
-                                      return t;
-                                    });
-                                    let newStreakHistory = [...(data.streakHistory || [])];
-                                    let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
-                                    const todayItems = newCompletedItemsHistory[todayStr] || [];
-                                    if (e.target.checked) {
-                                      newStreakHistory.push(todayStr);
-                                      const alreadyExists = todayItems.some((it: any) => (typeof it === 'string' ? it === task.title : it.title === task.title));
-                                      if (!alreadyExists) {
-                                        newCompletedItemsHistory[todayStr] = [...todayItems, { title: task.title }];
-                                      }
-                                    } else {
-                                      const idx2 = newStreakHistory.indexOf(todayStr);
-                                      if (idx2 > -1) newStreakHistory.splice(idx2, 1);
-                                      newCompletedItemsHistory[todayStr] = todayItems.filter((it: any) => (typeof it === 'string' ? it !== task.title : it.title !== task.title));
-                                    }
-                                    const newData = {
-                                      ...data,
-                                      dailyTasks: { ...(data.dailyTasks || {}), [dayKey]: updatedTasks },
-                                      streakHistory: newStreakHistory,
-                                      completedItemsHistory: newCompletedItemsHistory,
-                                    };
-                                    setData(newData);
-                                    saveDailyChanges(newData);
-                                  }}
+                                  onChange={() => handleToggleItem(task.id, task.title, "", false, completed)}
                                   style={{ transform: "scale(0.8)" }}
                                 />
-                              ) : (
-                                <span style={{ fontSize: "0.6rem", color: task.completed ? "var(--success)" : "#52525b", flexShrink: 0 }}>
-                                  {task.completed ? "✓" : "○"}
+                                <span style={{
+                                  fontSize: "0.72rem",
+                                  color: completed ? "#52525b" : (isToday ? "var(--foreground)" : "#a1a1aa"),
+                                  textDecoration: completed ? "line-through" : "none",
+                                  lineHeight: 1.3,
+                                }}>
+                                  {task.title}
                                 </span>
-                              )}
-                              <span style={{
-                                fontSize: "0.72rem",
-                                color: task.completed ? "#52525b" : (isToday ? "var(--foreground)" : "#a1a1aa"),
-                                textDecoration: task.completed ? "line-through" : "none",
-                                lineHeight: 1.3,
-                              }}>
-                                {task.title}
-                              </span>
-                            </div>
-                          ))}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
@@ -956,6 +1131,7 @@ export default function Home() {
             </div>
           </div>
         </div>
+
 
         {/* Phase Tracker */}
         <PhaseTracker phases={data.phases} currentPhase={data.currentPhase} onPhaseClick={setSelectedPhase} />
