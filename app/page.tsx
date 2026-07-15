@@ -773,12 +773,22 @@ export default function Home() {
         <div className="glass-panel" style={{ borderLeft: "4px solid var(--accent)", padding: "1.25rem 1.5rem" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             {/* Header */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: "0.5rem", borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <h3 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#fff", margin: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: "0.5rem", borderBottom: "1px solid rgba(255, 255, 255, 0.05)", flexWrap: "wrap", gap: "0.5rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+                <h3 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#fff", margin: 0, whiteSpace: "nowrap" }}>
                   Weekly Study Plan
                 </h3>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                
+                {/* Week Navigation Pill */}
+                <div style={{ 
+                  display: "flex", 
+                  alignItems: "center", 
+                  gap: "0.4rem",
+                  background: "rgba(255, 255, 255, 0.03)",
+                  padding: "0.25rem 0.5rem",
+                  borderRadius: "6px",
+                  border: "1px solid rgba(255, 255, 255, 0.05)"
+                }}>
                   <button
                     onClick={() => setWeekOffset(weekOffset - 1)}
                     style={{
@@ -787,8 +797,8 @@ export default function Home() {
                       borderRadius: "4px",
                       color: "#a1a1aa",
                       cursor: "pointer",
-                      padding: "0.1rem 0.35rem",
-                      fontSize: "0.75rem",
+                      padding: "0.1rem 0.4rem",
+                      fontSize: "0.8rem",
                       fontFamily: "monospace",
                       lineHeight: 1,
                       transition: "all 0.15s ease",
@@ -799,17 +809,14 @@ export default function Home() {
                     ‹
                   </button>
                   <span
-                    onClick={() => setWeekOffset(0)}
                     style={{
-                      color: weekOffset === 0 ? "#71717a" : "var(--accent)",
-                      fontWeight: 400,
+                      color: "#e4e4e7",
+                      fontWeight: 500,
                       fontSize: "0.85rem",
-                      cursor: weekOffset !== 0 ? "pointer" : "default",
-                      textDecoration: weekOffset !== 0 ? "underline" : "none",
-                      minWidth: "70px",
+                      minWidth: "60px",
                       textAlign: "center",
+                      fontFamily: "monospace"
                     }}
-                    title={weekOffset !== 0 ? "Click to go back to current week" : ""}
                   >
                     {(() => {
                       const targetDate = new Date();
@@ -831,8 +838,8 @@ export default function Home() {
                       borderRadius: "4px",
                       color: "#a1a1aa",
                       cursor: "pointer",
-                      padding: "0.1rem 0.35rem",
-                      fontSize: "0.75rem",
+                      padding: "0.1rem 0.4rem",
+                      fontSize: "0.8rem",
                       fontFamily: "monospace",
                       lineHeight: 1,
                       transition: "all 0.15s ease",
@@ -842,29 +849,62 @@ export default function Home() {
                   >
                     ›
                   </button>
+                  
+                  {weekOffset !== 0 && (
+                    <button
+                      onClick={() => setWeekOffset(0)}
+                      style={{
+                        marginLeft: "0.5rem",
+                        background: "var(--accent)",
+                        color: "#000",
+                        border: "none",
+                        borderRadius: "4px",
+                        padding: "0.2rem 0.6rem",
+                        fontSize: "0.7rem",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.03em",
+                        transition: "opacity 0.2s"
+                      }}
+                      onMouseOver={(e) => e.currentTarget.style.opacity = "0.8"}
+                      onMouseOut={(e) => e.currentTarget.style.opacity = "1"}
+                    >
+                      Back to Today
+                    </button>
+                  )}
                 </div>
               </div>
-              <span 
+              <div 
                 onClick={() => setShowRotationModal(true)}
                 style={{ 
-                  fontSize: "0.75rem", 
-                  color: "var(--accent)", 
-                  fontFamily: "monospace",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  background: "rgba(14, 165, 233, 0.08)",
+                  border: "1px dashed rgba(14, 165, 233, 0.3)",
+                  padding: "0.35rem 0.75rem",
+                  borderRadius: "6px",
                   cursor: "pointer",
-                  textDecoration: "underline",
-                  transition: "opacity 0.2s",
+                  transition: "all 0.2s ease",
                 }}
-                onMouseOver={(e) => e.currentTarget.style.opacity = "0.8"}
-                onMouseOut={(e) => e.currentTarget.style.opacity = "1"}
+                onMouseOver={(e) => { e.currentTarget.style.background = "rgba(14, 165, 233, 0.15)"; e.currentTarget.style.borderColor = "rgba(14, 165, 233, 0.5)"; }}
+                onMouseOut={(e) => { e.currentTarget.style.background = "rgba(14, 165, 233, 0.08)"; e.currentTarget.style.borderColor = "rgba(14, 165, 233, 0.3)"; }}
+                title="View full 10-week Algorithm plan"
               >
-                {(() => {
-                  const targetDate = new Date();
-                  targetDate.setDate(targetDate.getDate() + weekOffset * 7);
-                  const wn = getWeekNum(data.startDate, targetDate);
-                  const idx = ((wn - (data.dsaStartWeek || 1)) % DSA_PATTERN_WEEKS.length + DSA_PATTERN_WEEKS.length) % DSA_PATTERN_WEEKS.length;
-                  return `DSA Pattern: ${DSA_PATTERN_WEEKS[idx].pattern}`;
-                })()}
-              </span>
+                <span style={{ fontSize: "0.7rem", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>
+                  Weekly Algorithm:
+                </span>
+                <span style={{ fontSize: "0.85rem", color: "var(--accent)", fontWeight: 700, fontFamily: "monospace" }}>
+                  {(() => {
+                    const targetDate = new Date();
+                    targetDate.setDate(targetDate.getDate() + weekOffset * 7);
+                    const wn = getWeekNum(data.startDate, targetDate);
+                    const idx = ((wn - (data.dsaStartWeek || 1)) % DSA_PATTERN_WEEKS.length + DSA_PATTERN_WEEKS.length) % DSA_PATTERN_WEEKS.length;
+                    return DSA_PATTERN_WEEKS[idx].pattern;
+                  })()}
+                </span>
+              </div>
             </div>
 
             {/* 7-column grid */}
