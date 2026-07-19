@@ -260,7 +260,7 @@ export default function Home() {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-4 bg-background text-foreground">
         <span className="animate-spin text-[2rem]">↻</span>
-        <p>Loading your engine dev workspace...</p>
+        <p>Loading your Horizon workspace...</p>
       </div>
     );
   }
