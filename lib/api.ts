@@ -452,16 +452,4 @@ export const saveNotes = async (id: string, content: string) => {
   }
 };
 
-export const syncWorkspace = async (): Promise<{ success: boolean; log: string[]; error?: string }> => {
-  // Will implement Google Drive synchronization in Phase 3
-  return { success: true, log: ["Dexie local-first mode active"] };
-};
-
-export const fetchReflection = async (week: number) => {
-  return { content: "" };
-};
-
-export const saveReflection = async (week: number, date: string, content: string, day: string = "Weekly") => {
-  return { success: true };
-};
 

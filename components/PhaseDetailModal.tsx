@@ -1,25 +1,7 @@
 "use client";
 
 import React from "react";
-
-interface DetailItem {
-  item: string;
-  desc: string;
-}
-
-interface DetailedInfo {
-  focus: DetailItem[];
-  deliverable: DetailItem[];
-  math: DetailItem[];
-  algoDS?: DetailItem[];
-}
-
-interface Phase {
-  id: number;
-  title: string;
-  description: string;
-  detailedInfo: DetailedInfo;
-}
+import type { Phase, PhaseDetailItem } from "@/lib/types";
 
 interface PhaseDetailModalProps {
   phase: Phase;
@@ -28,14 +10,24 @@ interface PhaseDetailModalProps {
   onActivatePhase: (id: number) => void;
 }
 
-export default function PhaseDetailModal({ 
-  phase, 
-  currentPhaseId, 
-  onClose, 
-  onActivatePhase 
+// Placeholder state stores these sections as plain strings; render those as a single item
+const asItems = (v: PhaseDetailItem[] | string | undefined): PhaseDetailItem[] => {
+  if (!v) return [];
+  return Array.isArray(v) ? v : [{ item: v, desc: "" }];
+};
+
+export default function PhaseDetailModal({
+  phase,
+  currentPhaseId,
+  onClose,
+  onActivatePhase
 }: PhaseDetailModalProps) {
   const { detailedInfo } = phase;
   const isActive = phase.id === currentPhaseId;
+  const focusItems = asItems(detailedInfo.focus);
+  const mathItems = asItems(detailedInfo.math);
+  const algoItems = asItems(detailedInfo.algoDS);
+  const deliverableItems = asItems(detailedInfo.deliverable);
 
   return (
     <div 
@@ -112,7 +104,7 @@ export default function PhaseDetailModal({
               Core Focus
             </h4>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              {detailedInfo.focus.map((f, idx) => (
+              {focusItems.map((f, idx) => (
                 <div key={idx} style={{ fontSize: "0.85rem", lineHeight: 1.5 }}>
                   <div style={{ color: "#fff", fontWeight: 600 }}>• {f.item}</div>
                   <div style={{ color: "#a1a1aa", paddingLeft: "1rem" }}>{f.desc}</div>
@@ -127,7 +119,7 @@ export default function PhaseDetailModal({
               Math Integration
             </h4>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              {detailedInfo.math.map((m, idx) => (
+              {mathItems.map((m, idx) => (
                 <div key={idx} style={{ fontSize: "0.85rem", lineHeight: 1.5 }}>
                   <div style={{ color: "#fff", fontWeight: 600 }}>• {m.item}</div>
                   <div style={{ color: "#a1a1aa", paddingLeft: "1rem" }}>{m.desc}</div>
@@ -137,13 +129,13 @@ export default function PhaseDetailModal({
           </div>
 
           {/* Algorithms & Data Structures Block */}
-          {detailedInfo.algoDS && detailedInfo.algoDS.length > 0 && (
+          {algoItems.length > 0 && (
             <div>
               <h4 style={{ fontSize: "0.8rem", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.5rem", borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: "0.25rem" }}>
                 Algorithms & Data Structures
               </h4>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                {detailedInfo.algoDS.map((a, idx) => (
+                {algoItems.map((a, idx) => (
                   <div key={idx} style={{ fontSize: "0.85rem", lineHeight: 1.5 }}>
                     <div style={{ color: "#fff", fontWeight: 600 }}>• {a.item}</div>
                     <div style={{ color: "#a1a1aa", paddingLeft: "1rem" }}>{a.desc}</div>
@@ -159,7 +151,7 @@ export default function PhaseDetailModal({
               Deliverable Goal
             </h4>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              {detailedInfo.deliverable.map((d, idx) => (
+              {deliverableItems.map((d, idx) => (
                 <div key={idx} style={{ fontSize: "0.85rem", lineHeight: 1.5, padding: "0.75rem", background: "rgba(14, 165, 233, 0.05)", borderRadius: "6px", borderLeft: "3px solid var(--accent)" }}>
                   <div style={{ color: "#fff", fontWeight: 600 }}>{d.item}</div>
                   <div style={{ color: "#d4d4d8", marginTop: "0.25rem" }}>{d.desc}</div>
