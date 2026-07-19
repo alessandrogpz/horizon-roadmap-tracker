@@ -177,9 +177,7 @@ export default function Home() {
         setTimeout(() => setSyncStatus("idle"), 3000);
         // Refresh local UI state and assert isSynced flag is true
         const loadedData = await fetchAppState();
-        const updatedData = { ...loadedData, isSynced: true };
-        await updateAppState(updatedData);
-        setData(updatedData);
+        setData(loadedData);
       } else {
         throw new Error(res.error || "Unknown sync error");
       }
