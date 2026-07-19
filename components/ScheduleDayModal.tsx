@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import type { AppState, WeekDay } from "@/lib/types";
 import { getDateForDayName, todayYMD } from "@/lib/dates";
+import { rebuildStreakHistory, completedItemTitle } from "@/lib/streak";
 import { DEFAULT_WEEK_SCHEDULE, DEFAULT_FOCUS_TYPES } from "@/lib/constants";
 
 interface ScheduleDayModalProps {
@@ -394,16 +395,14 @@ export default function ScheduleDayModal({
 
                             // Sync streak history for the actual date of this day
                             const targetDateStr = getDateForDay(day.name);
-                            let newStreakHistory = [...(data.streakHistory || [])];
-                            let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
-                            let newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
+                            const newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
+                            const newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
 
                             const dateItems = newCompletedItemsHistory[targetDateStr] || [];
                             const targetComps = newWeeklyCompletions[targetDateStr] || { tasks: [], revisions: [] };
 
                             if (e.target.checked) {
-                              newStreakHistory.push(targetDateStr);
-                              const alreadyExists = dateItems.some((it: any) => (typeof it === 'string' ? it === item.title : it.title === item.title));
+                              const alreadyExists = dateItems.some((it) => completedItemTitle(it) === item.title);
                               if (!alreadyExists) {
                                 newCompletedItemsHistory[targetDateStr] = [...dateItems, { title: item.title, description: item.description || "" }];
                               }
@@ -411,15 +410,12 @@ export default function ScheduleDayModal({
                                 targetComps.revisions = [...targetComps.revisions, item.id];
                               }
                             } else {
-                              const index = newStreakHistory.indexOf(targetDateStr);
-                              if (index > -1) {
-                                newStreakHistory.splice(index, 1);
-                              }
-                              newCompletedItemsHistory[targetDateStr] = dateItems.filter((it: any) => (typeof it === 'string' ? it !== item.title : it.title !== item.title));
+                              newCompletedItemsHistory[targetDateStr] = dateItems.filter((it) => completedItemTitle(it) !== item.title);
                               targetComps.revisions = targetComps.revisions.filter((id: string) => id !== item.id);
                             }
-                            
+
                             newWeeklyCompletions[targetDateStr] = targetComps;
+                            const newStreakHistory = rebuildStreakHistory(newCompletedItemsHistory);
 
                             const newData = {
                               ...data,
@@ -480,22 +476,18 @@ export default function ScheduleDayModal({
 
                             // Sync streak history for the actual date of this day
                             const targetDateStr = getDateForDay(day.name);
-                            let newStreakHistory = [...(data.streakHistory || [])];
-                            let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
-                            let newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
+                            const newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
+                            const newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
                             const targetComps = newWeeklyCompletions[targetDateStr] || { tasks: [], revisions: [] };
 
                             if (item.completed) {
-                              const index = newStreakHistory.indexOf(targetDateStr);
-                              if (index > -1) {
-                                newStreakHistory.splice(index, 1);
-                              }
                               const dateItems = newCompletedItemsHistory[targetDateStr] || [];
-                              newCompletedItemsHistory[targetDateStr] = dateItems.filter((it: any) => (typeof it === 'string' ? it !== item.title : it.title !== item.title));
+                              newCompletedItemsHistory[targetDateStr] = dateItems.filter((it) => completedItemTitle(it) !== item.title);
                             }
-                            
+
                             targetComps.revisions = targetComps.revisions.filter((id: string) => id !== item.id);
                             newWeeklyCompletions[targetDateStr] = targetComps;
+                            const newStreakHistory = rebuildStreakHistory(newCompletedItemsHistory);
 
                             const newData = {
                               ...data,
@@ -670,16 +662,14 @@ export default function ScheduleDayModal({
                           
                           // Sync streak history for the actual date of this day
                           const targetDateStr = getDateForDay(day.name);
-                          let newStreakHistory = [...(data.streakHistory || [])];
-                          let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
-                          let newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
+                          const newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
+                          const newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
 
                           const dateItems = newCompletedItemsHistory[targetDateStr] || [];
                           const targetComps = newWeeklyCompletions[targetDateStr] || { tasks: [], revisions: [] };
-                          
+
                           if (e.target.checked) {
-                            newStreakHistory.push(targetDateStr);
-                            const alreadyExists = dateItems.some((it: any) => (typeof it === 'string' ? it === task.title : it.title === task.title));
+                            const alreadyExists = dateItems.some((it) => completedItemTitle(it) === task.title);
                             if (!alreadyExists) {
                               newCompletedItemsHistory[targetDateStr] = [...dateItems, { title: task.title }];
                             }
@@ -687,15 +677,12 @@ export default function ScheduleDayModal({
                               targetComps.tasks = [...targetComps.tasks, task.id];
                             }
                           } else {
-                            const index = newStreakHistory.indexOf(targetDateStr);
-                            if (index > -1) {
-                              newStreakHistory.splice(index, 1);
-                            }
-                            newCompletedItemsHistory[targetDateStr] = dateItems.filter((it: any) => (typeof it === 'string' ? it !== task.title : it.title !== task.title));
+                            newCompletedItemsHistory[targetDateStr] = dateItems.filter((it) => completedItemTitle(it) !== task.title);
                             targetComps.tasks = targetComps.tasks.filter((id: string) => id !== task.id);
                           }
-                          
+
                           newWeeklyCompletions[targetDateStr] = targetComps;
+                          const newStreakHistory = rebuildStreakHistory(newCompletedItemsHistory);
                           
                           const newData = {
                             ...data,
@@ -755,22 +742,18 @@ export default function ScheduleDayModal({
                           
                           // Sync streak history for the actual date of this day
                           const targetDateStr = getDateForDay(day.name);
-                          let newStreakHistory = [...(data.streakHistory || [])];
-                          let newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
-                          let newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
+                          const newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
+                          const newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
                           const targetComps = newWeeklyCompletions[targetDateStr] || { tasks: [], revisions: [] };
 
                           if (task.completed) {
-                            const index = newStreakHistory.indexOf(targetDateStr);
-                            if (index > -1) {
-                              newStreakHistory.splice(index, 1);
-                            }
                             const dateItems = newCompletedItemsHistory[targetDateStr] || [];
-                            newCompletedItemsHistory[targetDateStr] = dateItems.filter((it: any) => (typeof it === 'string' ? it !== task.title : it.title !== task.title));
+                            newCompletedItemsHistory[targetDateStr] = dateItems.filter((it) => completedItemTitle(it) !== task.title);
                           }
-                          
+
                           targetComps.tasks = targetComps.tasks.filter((id: string) => id !== task.id);
                           newWeeklyCompletions[targetDateStr] = targetComps;
+                          const newStreakHistory = rebuildStreakHistory(newCompletedItemsHistory);
                           
                           const newData = {
                             ...data,
