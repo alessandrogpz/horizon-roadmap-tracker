@@ -14,6 +14,7 @@ interface Material {
   currentSubject: string;
   link: string;
   localPath?: string;
+  repoUrl?: string;
 }
 
 interface MaterialsTrackerProps {
