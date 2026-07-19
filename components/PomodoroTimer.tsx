@@ -1,11 +1,14 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 
 export default function PomodoroTimer() {
   const [minutes, setMinutes] = useState(25);
   const [secondsRemaining, setSecondsRemaining] = useState(25 * 60);
   const [isActive, setIsActive] = useState(false);
+  // Absolute end time drives the countdown, so the timer stays accurate even
+  // when the tab is throttled or the phone screen sleeps.
+  const endTimeRef = useRef<number>(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const updateDuration = (newMins: number) => {
@@ -15,22 +18,42 @@ export default function PomodoroTimer() {
     setSecondsRemaining((prev) => Math.max(0, prev + diff * 60));
   };
 
+  const notifyFinished = useCallback(() => {
+    // Short beep via WebAudio (no asset needed)
+    try {
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const ctx = new AudioCtx();
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+      oscillator.frequency.value = 880;
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.2);
+      oscillator.start();
+      oscillator.stop(ctx.currentTime + 1.2);
+    } catch {
+      // Audio not available — ignore
+    }
+
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification("Focus session complete", { body: "Time for a break." });
+    }
+  }, []);
+
   useEffect(() => {
     if (isActive) {
       intervalRef.current = setInterval(() => {
-        setSecondsRemaining((prev) => {
-          if (prev <= 1) {
-            if (intervalRef.current) clearInterval(intervalRef.current);
-            setIsActive(false);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
+        const remaining = Math.max(0, Math.round((endTimeRef.current - Date.now()) / 1000));
+        setSecondsRemaining(remaining);
+        if (remaining <= 0) {
+          if (intervalRef.current) clearInterval(intervalRef.current);
+          setIsActive(false);
+          notifyFinished();
+        }
+      }, 250);
+    } else if (intervalRef.current) {
+      clearInterval(intervalRef.current);
     }
 
     return () => {
@@ -38,10 +61,15 @@ export default function PomodoroTimer() {
         clearInterval(intervalRef.current);
       }
     };
-  }, [isActive]);
+  }, [isActive, notifyFinished]);
 
   const handleStart = () => {
+    endTimeRef.current = Date.now() + secondsRemaining * 1000;
     setIsActive(true);
+    // Ask once for permission so the finish notification can fire
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().catch(() => {});
+    }
   };
 
   const handlePause = () => {
@@ -68,13 +96,13 @@ export default function PomodoroTimer() {
   return (
     <div className="glass-panel" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <h2 className="section-title">Focus Timer</h2>
-      
+
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", padding: "0.5rem 0" }}>
         {/* Clock Display */}
-        <div style={{ 
-          fontSize: "3.5rem", 
-          fontWeight: 700, 
-          fontFamily: "monospace", 
+        <div style={{
+          fontSize: "3.5rem",
+          fontWeight: 700,
+          fontFamily: "monospace",
           color: isActive ? "var(--accent)" : "#fff",
           textShadow: isActive ? "0 0 15px var(--accent)33" : "none",
           transition: "all 0.3s ease",
@@ -86,12 +114,12 @@ export default function PomodoroTimer() {
 
         {/* Progress Bar */}
         <div style={{ width: "100%", height: "4px", backgroundColor: "rgba(255, 255, 255, 0.05)", borderRadius: "2px", overflow: "hidden", marginTop: "0.5rem" }}>
-          <div style={{ 
-            width: `${progressPercent}%`, 
-            height: "100%", 
-            backgroundColor: "var(--accent)", 
+          <div style={{
+            width: `${progressPercent}%`,
+            height: "100%",
+            backgroundColor: "var(--accent)",
             boxShadow: "0 0 8px var(--accent)",
-            transition: "width 1s linear" 
+            transition: "width 1s linear"
           }} />
         </div>
 
@@ -99,7 +127,7 @@ export default function PomodoroTimer() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", gap: "1rem", marginTop: "0.75rem" }}>
           <span style={{ fontSize: "0.85rem", color: "#a1a1aa" }}>Duration:</span>
           <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-            <button 
+            <button
               disabled={isActive}
               onClick={() => adjustMinutes(-5)}
               style={{
@@ -115,7 +143,7 @@ export default function PomodoroTimer() {
             >
               -5m
             </button>
-            <input 
+            <input
               type="number"
               min="1"
               max="180"
@@ -139,7 +167,7 @@ export default function PomodoroTimer() {
               }}
             />
             <span style={{ fontSize: "0.85rem", color: "#71717a", fontFamily: "monospace" }}>min</span>
-            <button 
+            <button
               disabled={isActive}
               onClick={() => adjustMinutes(5)}
               style={{
@@ -158,24 +186,23 @@ export default function PomodoroTimer() {
           </div>
         </div>
 
-
         {/* Control Buttons */}
         <div style={{ display: "flex", gap: "0.75rem", width: "100%", marginTop: "1rem" }}>
           {!isActive ? (
-            <button 
-              onClick={handleStart} 
-              className="btn" 
+            <button
+              onClick={handleStart}
+              className="btn"
               style={{ flex: 1, padding: "0.5rem", fontSize: "0.85rem" }}
             >
               Start
             </button>
           ) : (
-            <button 
-              onClick={handlePause} 
-              className="btn" 
-              style={{ 
-                flex: 1, 
-                padding: "0.5rem", 
+            <button
+              onClick={handlePause}
+              className="btn"
+              style={{
+                flex: 1,
+                padding: "0.5rem",
                 fontSize: "0.85rem",
                 borderColor: "#f59e0b",
                 color: "#fff"
@@ -184,12 +211,12 @@ export default function PomodoroTimer() {
               Pause
             </button>
           )}
-          <button 
-            onClick={handleReset} 
-            className="btn" 
-            style={{ 
-              flex: 1, 
-              padding: "0.5rem", 
+          <button
+            onClick={handleReset}
+            className="btn"
+            style={{
+              flex: 1,
+              padding: "0.5rem",
               fontSize: "0.85rem",
               borderColor: "rgba(255, 255, 255, 0.15)"
             }}
