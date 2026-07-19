@@ -203,8 +203,36 @@ export const updateAppState = async (newState: any) => {
     
     newState.lastUpdatedDates = lastUpdatedDates;
 
+    // Compare config fields to see if config has changed
+    const configFields = [
+      "materials",
+      "portfolio",
+      "currentPhase",
+      "startDate",
+      "currentPhaseStartDate",
+      "dsaStartWeek",
+      "dailyTasks",
+      "dailyRevisionItems",
+      "lastTasksResetDate"
+    ];
+
+    let configChanged = false;
+    for (const field of configFields) {
+      if (JSON.stringify(oldData[field]) !== JSON.stringify(newState[field])) {
+        configChanged = true;
+        break;
+      }
+    }
+
+    if (configChanged) {
+      newState.configVersion = (oldData.configVersion || 0) + 1;
+      newState.hasUnsyncedChanges = true;
+    } else {
+      newState.configVersion = oldData.configVersion || 0;
+    }
+
     if (newState.hasUnsyncedChanges === undefined) {
-      if (hasChanges) {
+      if (hasChanges || configChanged) {
         newState.hasUnsyncedChanges = true;
       } else {
         newState.hasUnsyncedChanges = oldData.hasUnsyncedChanges ?? false;
