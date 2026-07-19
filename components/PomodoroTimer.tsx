@@ -93,54 +93,32 @@ export default function PomodoroTimer() {
 
   const progressPercent = ((minutes * 60 - secondsRemaining) / (minutes * 60)) * 100;
 
+  const stepBtnClass = (active: boolean) =>
+    `bg-white/[0.03] border border-white/10 rounded px-2 py-1 text-[0.8rem] font-mono ${active ? "text-zinc-600 cursor-not-allowed" : "text-white cursor-pointer"}`;
+
   return (
-    <div className="glass-panel" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+    <div className="glass-panel flex flex-col gap-4">
       <h2 className="section-title">Focus Timer</h2>
 
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem", padding: "0.5rem 0" }}>
+      <div className="flex flex-col items-center gap-4 py-2">
         {/* Clock Display */}
-        <div style={{
-          fontSize: "3.5rem",
-          fontWeight: 700,
-          fontFamily: "monospace",
-          color: isActive ? "var(--accent)" : "#fff",
-          textShadow: isActive ? "0 0 15px var(--accent)33" : "none",
-          transition: "all 0.3s ease",
-          letterSpacing: "0.05em",
-          lineHeight: 1
-        }}>
+        <div className={`text-[3.5rem] font-bold font-mono tracking-[0.05em] leading-none transition-all duration-300 ${isActive ? "text-accent [text-shadow:0_0_15px_#0ea5e933]" : "text-white"}`}>
           {formatTime()}
         </div>
 
         {/* Progress Bar */}
-        <div style={{ width: "100%", height: "4px", backgroundColor: "rgba(255, 255, 255, 0.05)", borderRadius: "2px", overflow: "hidden", marginTop: "0.5rem" }}>
-          <div style={{
-            width: `${progressPercent}%`,
-            height: "100%",
-            backgroundColor: "var(--accent)",
-            boxShadow: "0 0 8px var(--accent)",
-            transition: "width 1s linear"
-          }} />
+        <div className="w-full h-1 bg-white/5 rounded-sm overflow-hidden mt-2">
+          <div
+            className="h-full bg-accent shadow-[0_0_8px_var(--accent)] transition-[width] duration-1000 ease-linear"
+            style={{ width: `${progressPercent}%` }}
+          />
         </div>
 
         {/* Duration Configuration */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", gap: "1rem", marginTop: "0.75rem" }}>
-          <span style={{ fontSize: "0.85rem", color: "#a1a1aa" }}>Duration:</span>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-            <button
-              disabled={isActive}
-              onClick={() => adjustMinutes(-5)}
-              style={{
-                background: "rgba(255, 255, 255, 0.03)",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-                color: isActive ? "#52525b" : "#fff",
-                borderRadius: "4px",
-                padding: "0.2rem 0.5rem",
-                cursor: isActive ? "not-allowed" : "pointer",
-                fontSize: "0.8rem",
-                fontFamily: "monospace"
-              }}
-            >
+        <div className="flex items-center justify-between w-full gap-4 mt-3">
+          <span className="text-[0.85rem] text-zinc-400">Duration:</span>
+          <div className="flex items-center gap-1.5">
+            <button disabled={isActive} onClick={() => adjustMinutes(-5)} className={stepBtnClass(isActive)}>
               -5m
             </button>
             <input
@@ -153,74 +131,27 @@ export default function PomodoroTimer() {
                 const val = Number(e.target.value) || 0;
                 updateDuration(val);
               }}
-              style={{
-                width: "55px",
-                background: "rgba(0, 0, 0, 0.25)",
-                border: "1px solid var(--card-border)",
-                borderRadius: "6px",
-                padding: "0.25rem 0.5rem",
-                color: "#e4e4e7",
-                fontFamily: "monospace",
-                fontSize: "0.85rem",
-                textAlign: "center",
-                outline: "none"
-              }}
+              className="w-[55px] bg-black/25 border border-card-border rounded-md px-2 py-1 text-zinc-200 font-mono text-[0.85rem] text-center outline-none"
             />
-            <span style={{ fontSize: "0.85rem", color: "#71717a", fontFamily: "monospace" }}>min</span>
-            <button
-              disabled={isActive}
-              onClick={() => adjustMinutes(5)}
-              style={{
-                background: "rgba(255, 255, 255, 0.03)",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-                color: isActive ? "#52525b" : "#fff",
-                borderRadius: "4px",
-                padding: "0.2rem 0.5rem",
-                cursor: isActive ? "not-allowed" : "pointer",
-                fontSize: "0.8rem",
-                fontFamily: "monospace"
-              }}
-            >
+            <span className="text-[0.85rem] text-zinc-500 font-mono">min</span>
+            <button disabled={isActive} onClick={() => adjustMinutes(5)} className={stepBtnClass(isActive)}>
               +5m
             </button>
           </div>
         </div>
 
         {/* Control Buttons */}
-        <div style={{ display: "flex", gap: "0.75rem", width: "100%", marginTop: "1rem" }}>
+        <div className="flex gap-3 w-full mt-4">
           {!isActive ? (
-            <button
-              onClick={handleStart}
-              className="btn"
-              style={{ flex: 1, padding: "0.5rem", fontSize: "0.85rem" }}
-            >
+            <button onClick={handleStart} className="btn flex-1 p-2 text-[0.85rem]">
               Start
             </button>
           ) : (
-            <button
-              onClick={handlePause}
-              className="btn"
-              style={{
-                flex: 1,
-                padding: "0.5rem",
-                fontSize: "0.85rem",
-                borderColor: "#f59e0b",
-                color: "#fff"
-              }}
-            >
+            <button onClick={handlePause} className="btn flex-1 p-2 text-[0.85rem] !border-warning !text-white">
               Pause
             </button>
           )}
-          <button
-            onClick={handleReset}
-            className="btn"
-            style={{
-              flex: 1,
-              padding: "0.5rem",
-              fontSize: "0.85rem",
-              borderColor: "rgba(255, 255, 255, 0.15)"
-            }}
-          >
+          <button onClick={handleReset} className="btn flex-1 p-2 text-[0.85rem] !border-white/15">
             Reset
           </button>
         </div>

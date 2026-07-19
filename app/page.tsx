@@ -94,10 +94,10 @@ export default function Home() {
       } else {
         throw new Error(res.error || "Unknown sync error");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Workspace sync failed:", err);
       setSyncStatus("error");
-      setSyncError(err.message || "Failed to sync workspace");
+      setSyncError(err instanceof Error ? err.message : "Failed to sync workspace");
       setTimeout(() => setSyncStatus("idle"), 5000);
     }
   };
@@ -145,11 +145,11 @@ export default function Home() {
     loadGoogleGisScript().catch(err => console.error("Failed to preload Google GIS:", err));
 
     const currentTodayStr = todayYMD();
-    setTodayStr(currentTodayStr);
-    setDayOfWeek(new Date().getDay());
 
     fetchAppState()
       .then(async (loadedData) => {
+        setTodayStr(currentTodayStr);
+        setDayOfWeek(new Date().getDay());
         const { data: finalData, changed } = applyDailyResetIfNeeded(loadedData, currentTodayStr);
         setData(finalData);
         if (changed) {
@@ -160,9 +160,9 @@ export default function Home() {
           }
         }
       })
-      .catch((err: any) => {
+      .catch((err: unknown) => {
         console.error("Initialization fetch error:", err);
-        setInitError(err.message || String(err));
+        setInitError(err instanceof Error ? err.message : String(err));
       })
       .finally(() => setLoading(false));
   }, []);
@@ -260,8 +260,8 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", height: "100vh", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "1rem", backgroundColor: "#09090b", color: "#e4e4e7" }}>
-        <span className="animate-spin" style={{ fontSize: "2rem" }}>↻</span>
+      <div className="flex h-screen flex-col items-center justify-center gap-4 bg-background text-foreground">
+        <span className="animate-spin text-[2rem]">↻</span>
         <p>Loading your engine dev workspace...</p>
       </div>
     );
@@ -269,12 +269,12 @@ export default function Home() {
 
   if (initError || !data) {
     return (
-      <div style={{ display: "flex", height: "100vh", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem", backgroundColor: "#09090b", color: "#e4e4e7", fontFamily: "monospace", textAlign: "center" }}>
-        <h2 style={{ color: "#f59e0b", marginBottom: "1rem", textTransform: 'uppercase', letterSpacing: '0.05em' }}>Initialization Failed</h2>
-        <p style={{ color: "#a1a1aa", fontSize: "0.9rem", marginBottom: "1.5rem" }}>
+      <div className="flex h-screen flex-col items-center justify-center p-8 bg-background text-foreground font-mono text-center">
+        <h2 className="text-warning mb-4 uppercase tracking-[0.05em] text-2xl font-bold">Initialization Failed</h2>
+        <p className="text-zinc-400 text-[0.9rem] mb-6">
           The app failed to connect to the backend server.
         </p>
-        <div style={{ padding: "1rem", backgroundColor: "#121214", borderRadius: "6px", border: "1px solid var(--card-border)", color: "#f87171", marginBottom: "1.5rem", maxWidth: "500px", wordBreak: "break-all" }}>
+        <div className="p-4 bg-card rounded-md border border-card-border text-red-400 mb-6 max-w-[500px] break-all">
           {initError || "No data was returned by the server."}
         </div>
         <button className="btn" onClick={() => window.location.reload()}>Retry Connection</button>
@@ -287,7 +287,7 @@ export default function Home() {
 
   return (
     <main className="container">
-      <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+      <div className="flex flex-col gap-8">
         <DashboardHeader
           data={data}
           syncStatus={syncStatus}
@@ -297,14 +297,13 @@ export default function Home() {
 
         {/* Phase recommendation alert */}
         {data.currentPhase !== recommendedPhase && (
-          <div className="glass-panel" style={{ borderLeft: "4px solid #f59e0b", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem 1.5rem" }}>
-            <span style={{ fontSize: "0.9rem", color: "#f3f4f6" }}>
+          <div className="glass-panel border-l-4 !border-l-warning flex justify-between items-center px-6 py-4">
+            <span className="text-[0.9rem] text-gray-100">
               Schedule suggestion: Time to transition to Phase {recommendedPhase} (Day {daysPassed})
             </span>
             <button
               onClick={() => handlePhaseChange(recommendedPhase)}
-              className="btn"
-              style={{ padding: "0.25rem 0.75rem", fontSize: "0.85rem", background: "#d97706" }}
+              className="btn px-3 py-1 text-[0.85rem] !bg-amber-600"
             >
               Switch Now
             </button>
@@ -333,7 +332,7 @@ export default function Home() {
         <PomodoroTimer />
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+      <div className="flex flex-col gap-8">
         <PortfolioTracker portfolio={data.portfolio} onToggle={handlePortfolioToggle} />
 
         <MaterialsTracker
