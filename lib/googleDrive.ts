@@ -225,6 +225,8 @@ export const syncWithGoogleDrive = async (): Promise<SyncResult> => {
           streakHistory: mergedStreakHistory,
           completedItemsHistory: mergedCompletedItemsHistory,
           lastUpdatedDates: mergedUpdated,
+          hasUnsyncedChanges: false,
+          lastSyncTime: Date.now(),
         };
 
         if (remoteReset > localReset) {
@@ -249,6 +251,8 @@ export const syncWithGoogleDrive = async (): Promise<SyncResult> => {
       }
     } else {
       localRecord.data.isSynced = true;
+      localRecord.data.hasUnsyncedChanges = false;
+      localRecord.data.lastSyncTime = Date.now();
       await db.appState.put({ id: "current", data: localRecord.data });
     }
 
