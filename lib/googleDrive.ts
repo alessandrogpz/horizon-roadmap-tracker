@@ -229,20 +229,40 @@ export const syncWithGoogleDrive = async (): Promise<SyncResult> => {
           lastSyncTime: Date.now(),
         };
 
-        if (remoteReset > localReset) {
-          logs.push("Remote timeline has newer checklist reset. Adopting remote daily structure.");
+        const localConfigVer = localData.configVersion || 0;
+        const remoteConfigVer = remoteData.configVersion || 0;
+
+        if (remoteConfigVer > localConfigVer) {
+          logs.push("Remote configuration is newer. Adopting remote settings.");
           finalData = {
             ...finalData,
+            materials: remoteData.materials,
+            portfolio: remoteData.portfolio,
+            currentPhase: remoteData.currentPhase,
+            startDate: remoteData.startDate,
+            currentPhaseStartDate: remoteData.currentPhaseStartDate,
+            dsaStartWeek: remoteData.dsaStartWeek,
             dailyTasks: remoteData.dailyTasks,
             dailyRevisionItems: remoteData.dailyRevisionItems,
-            lastTasksResetDate: remoteReset,
-            currentPhase: remoteData.currentPhase || localData.currentPhase,
-            materials: remoteData.materials || localData.materials,
-            portfolio: remoteData.portfolio || localData.portfolio,
-            startDate: remoteData.startDate || localData.startDate,
-            currentPhaseStartDate: remoteData.currentPhaseStartDate || localData.currentPhaseStartDate,
-            dsaStartWeek: remoteData.dsaStartWeek || localData.dsaStartWeek,
+            lastTasksResetDate: remoteData.lastTasksResetDate,
+            configVersion: remoteConfigVer,
           };
+        } else if (localConfigVer > remoteConfigVer) {
+          logs.push("Local configuration is newer. Keeping local settings and preparing upload.");
+          finalData.configVersion = localConfigVer;
+        } else {
+          // If versions are equal, fallback to reset date logic
+          const localReset = localData.lastTasksResetDate || "";
+          const remoteReset = remoteData.lastTasksResetDate || "";
+          if (remoteReset > localReset) {
+            logs.push("Remote timeline has newer checklist reset. Adopting remote daily structure.");
+            finalData = {
+              ...finalData,
+              dailyTasks: remoteData.dailyTasks,
+              dailyRevisionItems: remoteData.dailyRevisionItems,
+              lastTasksResetDate: remoteReset,
+            };
+          }
         }
 
         await db.appState.put({ id: "current", data: finalData });
