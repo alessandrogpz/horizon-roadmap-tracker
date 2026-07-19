@@ -1213,15 +1213,15 @@ export default function Home() {
                       <span style={{
                         fontSize: "0.55rem",
                         fontWeight: 600,
-                        color: tag.text,
-                        background: tag.bg,
+                        color: data.isSynced ? tag.text : "#71717a",
+                        background: data.isSynced ? tag.bg : "rgba(113, 113, 122, 0.12)",
                         padding: "0.1rem 0.4rem",
                         borderRadius: "3px",
                         textTransform: "uppercase",
                         letterSpacing: "0.03em",
                         whiteSpace: "nowrap",
                       }}>
-                        {dayItem.label}
+                        {data.isSynced ? dayItem.label : "UN-ASSIGNED"}
                       </span>
                     </div>
 
