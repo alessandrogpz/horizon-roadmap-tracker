@@ -156,9 +156,11 @@ export default function Home() {
       if (res.success) {
         setSyncStatus("success");
         setTimeout(() => setSyncStatus("idle"), 3000);
-        // Refresh local UI state
+        // Refresh local UI state and assert isSynced flag is true
         const loadedData = await fetchAppState();
-        setData(loadedData);
+        const updatedData = { ...loadedData, isSynced: true };
+        await updateAppState(updatedData);
+        setData(updatedData);
       } else {
         throw new Error(res.error || "Unknown sync error");
       }
@@ -196,7 +198,7 @@ export default function Home() {
     fetchAppState()
       .then(async (loadedData) => {
         let finalData = loadedData;
-        if (loadedData && loadedData.lastTasksResetDate !== currentTodayStr) {
+        if (loadedData && loadedData.isSynced && loadedData.lastTasksResetDate !== currentTodayStr) {
           // Snapshot yesterday's completions into weeklyCompletions before resetting
           const prevWeeklyCompletions = { ...(loadedData.weeklyCompletions || {}) };
           const prevDateStr = loadedData.lastTasksResetDate;
@@ -375,7 +377,7 @@ export default function Home() {
 
 
   const getDaysPassed = () => {
-    if (!data || !data.startDate) return 0;
+    if (!data || !data.startDate || !data.isSynced) return 0;
     // Parse YYYY-MM-DD local parameters to avoid timezone offset conversion shifts
     const parts = data.startDate.split("-");
     const start = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
@@ -388,7 +390,7 @@ export default function Home() {
   };
 
   const getDaysInCurrentPhase = () => {
-    if (!data) return 0;
+    if (!data || !data.isSynced) return "--";
     const phaseStartStr = data.currentPhaseStartDate || data.startDate;
     if (!phaseStartStr) return 0;
     const parts = phaseStartStr.split("-");
@@ -717,21 +719,35 @@ export default function Home() {
             <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
               <p style={{ color: "#a1a1aa", fontSize: "0.85rem", margin: 0 }}>12-Month Graphics Programming Tracker</p>
               <span style={{ color: "var(--card-border)", fontSize: "0.8rem" }}>|</span>
-              <a 
-                href="/roadmap" 
-                style={{ 
-                  color: "var(--accent)", 
-                  fontSize: "0.85rem", 
-                  textDecoration: "none", 
-                  fontWeight: 600,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.25rem"
-                }}
-                className="link-title"
-              >
-                Full Roadmap
-              </a>
+              {data?.isSynced ? (
+                <a 
+                  href="/roadmap" 
+                  style={{ 
+                    color: "var(--accent)", 
+                    fontSize: "0.85rem", 
+                    textDecoration: "none", 
+                    fontWeight: 600,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.25rem"
+                  }}
+                  className="link-title"
+                >
+                  Full Roadmap
+                </a>
+              ) : (
+                <span 
+                  style={{ 
+                    color: "#52525b", 
+                    fontSize: "0.85rem", 
+                    fontWeight: 600,
+                    cursor: "not-allowed"
+                  }}
+                  title="Connect Google Drive to unlock roadmap"
+                >
+                  Full Roadmap (Locked)
+                </span>
+              )}
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "nowrap", flex: "0 1 auto" }}>
@@ -919,6 +935,7 @@ export default function Home() {
                     }}
                   >
                     {(() => {
+                      if (!data || !data.isSynced) return "Week --";
                       const targetDate = new Date();
                       targetDate.setDate(targetDate.getDate() + weekOffset * 7);
                       const wn = getWeekNum(data.startDate, targetDate);
@@ -980,7 +997,7 @@ export default function Home() {
               {/* Bottom Row: Algorithm Focus */}
               <div>
                 <div 
-                  onClick={() => setShowRotationModal(true)}
+                  onClick={() => { if (data?.isSynced) setShowRotationModal(true); }}
                   style={{ 
                     display: "inline-flex",
                     alignItems: "center",
@@ -989,19 +1006,30 @@ export default function Home() {
                     border: "1px dashed rgba(14, 165, 233, 0.3)",
                     padding: "0.35rem 0.75rem",
                     borderRadius: "6px",
-                    cursor: "pointer",
+                    cursor: data?.isSynced ? "pointer" : "default",
                     transition: "all 0.2s ease",
                     whiteSpace: "nowrap"
                   }}
-                  onMouseOver={(e) => { e.currentTarget.style.background = "rgba(14, 165, 233, 0.15)"; e.currentTarget.style.borderColor = "rgba(14, 165, 233, 0.5)"; }}
-                  onMouseOut={(e) => { e.currentTarget.style.background = "rgba(14, 165, 233, 0.08)"; e.currentTarget.style.borderColor = "rgba(14, 165, 233, 0.3)"; }}
-                  title="View full 10-week Algorithm plan"
+                  onMouseOver={(e) => { 
+                    if (data?.isSynced) {
+                      e.currentTarget.style.background = "rgba(14, 165, 233, 0.15)"; 
+                      e.currentTarget.style.borderColor = "rgba(14, 165, 233, 0.5)"; 
+                    }
+                  }}
+                  onMouseOut={(e) => { 
+                    if (data?.isSynced) {
+                      e.currentTarget.style.background = "rgba(14, 165, 233, 0.08)"; 
+                      e.currentTarget.style.borderColor = "rgba(14, 165, 233, 0.3)"; 
+                    }
+                  }}
+                  title={data?.isSynced ? "View full 10-week Algorithm plan" : "Connect Google Drive to unlock"}
                 >
                   <span style={{ fontSize: "0.7rem", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>
                     Weekly Algorithm:
                   </span>
                   <span style={{ fontSize: "0.85rem", color: "var(--accent)", fontWeight: 700, fontFamily: "monospace" }}>
                     {(() => {
+                      if (!data || !data.isSynced) return "Algorithm (Placeholder)";
                       const targetDate = new Date();
                       targetDate.setDate(targetDate.getDate() + weekOffset * 7);
                       const wn = getWeekNum(data.startDate, targetDate);
@@ -1176,7 +1204,7 @@ export default function Home() {
                         {dayItem.name}
                       </span>
                       <div style={{ fontSize: "0.55rem", color: "#52525b", marginTop: "0.05rem" }}>
-                        {dayDateStr.slice(5)}
+                        {data?.isSynced ? dayDateStr.slice(5) : "MM-DD"}
                       </div>
                     </div>
 
