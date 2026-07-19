@@ -8,6 +8,7 @@ interface Project {
   title: string;
   completed: boolean;
   localPath?: string;
+  repoUrl?: string;
 }
 
 interface PortfolioTrackerProps {
@@ -20,8 +21,10 @@ export default function PortfolioTracker({ portfolio, onToggle }: PortfolioTrack
 
   useEffect(() => {
     portfolio.forEach(proj => {
-      if (proj.localPath) {
-        fetchGitStats(proj.localPath)
+      // localPath stores GitHub URL (migrated from local path), repoUrl is a cleaner alias
+      const source = proj.repoUrl || proj.localPath || "";
+      if (source.includes("github.com") || source.startsWith("/") || source.startsWith("~")) {
+        fetchGitStats(source)
           .then(stats => {
             setGitStats(prev => ({ ...prev, [proj.id]: stats }));
           })

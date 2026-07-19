@@ -269,12 +269,19 @@ export const openLinkOnSystem = async (link: string) => {
 
 export const fetchGitStats = async (pathOrRepo: string) => {
   // If it's a GitHub repo identifier (e.g. "owner/repo" or a github URL)
-  const githubRegex = /(?:github\.com\/|git@github\.com:)([^\/]+)\/([^.]+)(?:\.git)?/;
+  const githubRegex = /(?:github\.com\/|git@github\.com:)([^\/]+)\/([^.\/]+)(?:\.git)?/;
   const match = pathOrRepo.match(githubRegex) || (!pathOrRepo.startsWith("/") && !pathOrRepo.startsWith("~") && pathOrRepo.includes("/") ? [pathOrRepo, ...pathOrRepo.split("/")] : null);
 
   if (match) {
     const owner = match[1];
     const repo = match[2]?.replace(".git", "");
+    const cacheKey = `${owner}/${repo}`;
+
+    // Return cached result for the session to avoid exhausting the 60 req/hr rate limit
+    if ((fetchGitStats as any)._cache?.[cacheKey]) {
+      return (fetchGitStats as any)._cache[cacheKey];
+    }
+
     try {
       const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
       if (!repoRes.ok) throw new Error("Failed to fetch repo info");
@@ -297,13 +304,19 @@ export const fetchGitStats = async (pathOrRepo: string) => {
         else relativeTime = `${diffDays} days ago`;
       }
 
-      return {
+      const result = {
         isRepo: true,
         branch: defaultBranch,
-        uncommittedCount: 0, // Not available client-side
-        lastCommitMsg: lastCommit?.commit?.message || "",
+        uncommittedCount: 0, // Not available client-side via GitHub API
+        lastCommitMsg: (lastCommit?.commit?.message || "").split("\n")[0], // first line only
         lastCommitTime: relativeTime || "unknown",
       };
+
+      // Cache for this session
+      if (!(fetchGitStats as any)._cache) (fetchGitStats as any)._cache = {};
+      (fetchGitStats as any)._cache[cacheKey] = result;
+
+      return result;
     } catch (err) {
       console.error("GitHub API fetch failed:", err);
       return { isRepo: false };
