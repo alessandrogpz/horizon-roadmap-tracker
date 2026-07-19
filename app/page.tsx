@@ -8,6 +8,7 @@ import {
   authenticateGoogleDrive,
   syncWithGoogleDrive,
   setGoogleClientId,
+  clearGoogleAccessToken,
   loadGoogleGisScript
 } from "@/lib/googleDrive";
 import type { AppState, Material, Phase, WeekDay } from "@/lib/types";
@@ -22,6 +23,7 @@ import PhaseDetailModal from "@/components/PhaseDetailModal";
 import ScheduleDayModal from "@/components/ScheduleDayModal";
 import PomodoroTimer from "@/components/PomodoroTimer";
 import DashboardHeader, { type SyncStatus } from "@/components/DashboardHeader";
+import DriveConnectModal, { type DriveModalMode } from "@/components/DriveConnectModal";
 import WeeklyPlan from "@/components/WeeklyPlan";
 import RotationModal from "@/components/RotationModal";
 
@@ -58,6 +60,7 @@ export default function Home() {
   const [selectedPhase, setSelectedPhase] = useState<Phase | null>(null);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
   const [syncError, setSyncError] = useState("");
+  const [driveModalMode, setDriveModalMode] = useState<DriveModalMode | null>(null);
   const [, setSyncTick] = useState(0);
 
   // Re-render periodically so the "Last Sync" relative time stays fresh
@@ -68,36 +71,16 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleSyncWorkspace = async (e: React.MouseEvent) => {
-    // Shift click to disconnect Google Drive
-    if (e.shiftKey) {
-      if (confirm("Disconnect Google Drive and clear client configuration?")) {
-        localStorage.removeItem("google_drive_client_id");
-        localStorage.removeItem("google_drive_access_token");
-        localStorage.removeItem("google_drive_token_expiry");
-        alert("Google Drive disconnected.");
-      }
-      return;
-    }
-
+  const runSync = async (clientId: string) => {
     setSyncStatus("syncing");
     setSyncError("");
     try {
-      let clientId = getGoogleClientId();
       if (!isGoogleAuthenticated()) {
-        if (!clientId) {
-          clientId = prompt("Enter your Google OAuth Client ID to connect Google Drive:") || "";
-          if (!clientId) {
-            setSyncStatus("idle");
-            return;
-          }
-          setGoogleClientId(clientId);
-        }
         await authenticateGoogleDrive(clientId);
       }
 
       let res = await syncWithGoogleDrive();
-      if (!res.success && res.authRequired && clientId) {
+      if (!res.success && res.authRequired) {
         // Token expired or was revoked mid-session: re-authenticate and retry once
         await authenticateGoogleDrive(clientId);
         res = await syncWithGoogleDrive();
@@ -117,6 +100,34 @@ export default function Home() {
       setSyncError(err.message || "Failed to sync workspace");
       setTimeout(() => setSyncStatus("idle"), 5000);
     }
+  };
+
+  const handleSyncWorkspace = (e: React.MouseEvent) => {
+    // Shift click opens connection management (disconnect)
+    if (e.shiftKey) {
+      setDriveModalMode("manage");
+      return;
+    }
+    if (syncStatus === "syncing") return;
+
+    const clientId = getGoogleClientId();
+    if (!clientId) {
+      setDriveModalMode("connect");
+      return;
+    }
+    runSync(clientId);
+  };
+
+  const handleDriveConnect = (clientId: string) => {
+    setGoogleClientId(clientId);
+    setDriveModalMode(null);
+    runSync(clientId);
+  };
+
+  const handleDriveDisconnect = () => {
+    localStorage.removeItem("google_drive_client_id");
+    clearGoogleAccessToken();
+    setDriveModalMode(null);
   };
 
   useEffect(() => {
@@ -359,6 +370,16 @@ export default function Home() {
           data={data}
           onClose={() => setShowRotationModal(false)}
           applyChange={applyChange}
+        />
+      )}
+      {driveModalMode && (
+        <DriveConnectModal
+          mode={driveModalMode}
+          initialClientId={getGoogleClientId()}
+          isAuthenticated={isGoogleAuthenticated()}
+          onConnect={handleDriveConnect}
+          onDisconnect={handleDriveDisconnect}
+          onClose={() => setDriveModalMode(null)}
         />
       )}
     </main>
