@@ -191,17 +191,20 @@ export default function MaterialsTracker({
   }, [notesContent]);
 
   // Fetch Git stats for linked materials on mount and whenever materials change
-  // Uses localPath if set (local dev), otherwise falls back to mat.link for GitHub URLs
+  // Uses repoUrl (injected by migration) as primary source
   useEffect(() => {
     materials.forEach(mat => {
-      // repoUrl is injected by migrateLocalPaths from the authoritative ID map — always reliable
       const source = mat.repoUrl || mat.localPath || "";
+      console.log(`[GitStats] ${mat.title} | repoUrl=${mat.repoUrl} | localPath=${mat.localPath} | source="${source}"`);
       if (source.includes("github.com") || source.startsWith("/") || source.startsWith("~")) {
         fetchGitStats(source)
           .then(stats => {
+            console.log(`[GitStats] ${mat.title} result:`, stats);
             setGitStats(prev => ({ ...prev, [mat.id]: stats }));
           })
           .catch(err => console.error(`Error fetching git stats for ${mat.title}:`, err));
+      } else {
+        console.log(`[GitStats] ${mat.title}: SKIPPED (source not a valid path)`);
       }
     });
   }, [materials]);
