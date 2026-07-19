@@ -22,18 +22,6 @@ export default function manifest(): MetadataRoute.Manifest {
     },
     icons: [
       {
-        src: '/icon.jpg',
-        sizes: '512x512',
-        type: 'image/jpeg',
-        purpose: 'any',
-      },
-      {
-        src: '/icon.jpg',
-        sizes: '512x512',
-        type: 'image/jpeg',
-        purpose: 'maskable',
-      },
-      {
         src: '/icon.png',
         sizes: '192x192',
         type: 'image/png',
@@ -44,22 +32,12 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any',
-      }
-    ],
-    screenshots: [
-      {
-        src: '/icon.png',
-        sizes: '512x512',
-        type: 'image/png',
-        form_factor: 'wide',
-        label: 'Desktop Dashboard'
       },
       {
         src: '/icon.png',
         sizes: '512x512',
         type: 'image/png',
-        form_factor: 'narrow',
-        label: 'Mobile App View'
+        purpose: 'maskable',
       }
     ],
     shortcuts: [
