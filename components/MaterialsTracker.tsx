@@ -190,10 +190,14 @@ export default function MaterialsTracker({
   }, [notesContent]);
 
   // Fetch Git stats for linked materials on mount and whenever materials change
+  // Uses localPath if set (local dev), otherwise falls back to mat.link for GitHub URLs
   useEffect(() => {
     materials.forEach(mat => {
-      if (mat.localPath) {
-        fetchGitStats(mat.localPath)
+      const source = mat.localPath || mat.link || "";
+      const isGitHub = source.includes("github.com");
+      const isLocalPath = source.startsWith("/") || source.startsWith("~");
+      if (isGitHub || isLocalPath) {
+        fetchGitStats(source)
           .then(stats => {
             setGitStats(prev => ({ ...prev, [mat.id]: stats }));
           })
