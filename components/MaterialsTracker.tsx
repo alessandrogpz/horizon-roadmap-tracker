@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { fetchGitStats, fetchNotes, saveNotes } from "@/lib/api";
+import { renderMarkdownToHtml } from "@/lib/markdown";
 
 interface Material {
   id: string;
@@ -24,125 +25,6 @@ interface MaterialsTrackerProps {
   onAddMaterial: (material: Omit<Material, "id">) => void;
   onDeleteMaterial: (id: string) => void;
   onOpenLink: (link: string) => void;
-}
-
-// Simple but robust markdown to HTML preview compiler
-function renderMarkdownToHtml(markdown: string): string {
-  if (!markdown.trim()) {
-    return "<p style='color: #71717a; font-style: italic;'>No notes yet. Start writing in the Write tab...</p>";
-  }
-
-  const lines = markdown.split("\n");
-  const processedLines: string[] = [];
-  let inList = false;
-  let inCodeBlock = false;
-  let codeBlockContent: string[] = [];
-
-  for (let line of lines) {
-    const rawLine = line;
-    const trimmedRaw = rawLine.trim();
-
-    // Horizontal rules (---)
-    if (trimmedRaw === "---" || trimmedRaw === "***" || trimmedRaw === "___") {
-      if (inList) {
-        processedLines.push("</ul>");
-        inList = false;
-      }
-      processedLines.push(`<hr style="border: 0; border-top: 1px solid var(--card-border); margin: 2.5rem 0;" />`);
-      continue;
-    }
-
-    // Code blocks
-    if (trimmedRaw.startsWith("```")) {
-      if (inCodeBlock) {
-        inCodeBlock = false;
-        processedLines.push(`<pre><code>${codeBlockContent.join("\n")}</code></pre>`);
-        codeBlockContent = [];
-      } else {
-        inCodeBlock = true;
-      }
-      continue;
-    }
-
-    if (inCodeBlock) {
-      const escapedLine = rawLine
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
-      codeBlockContent.push(escapedLine);
-      continue;
-    }
-
-    // Check blockquotes before HTML escaping
-    let isBlockquote = false;
-    let contentLine = rawLine;
-    if (trimmedRaw.startsWith(">")) {
-      isBlockquote = true;
-      contentLine = trimmedRaw.slice(1);
-      if (contentLine.startsWith(" ")) {
-        contentLine = contentLine.slice(1);
-      }
-    }
-
-    let processedLine = contentLine
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-
-    // Inline formatting: Bold, Italic, Code
-    processedLine = processedLine.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
-    processedLine = processedLine.replace(/\*([^*]+)\*/g, "<em>$1</em>");
-    processedLine = processedLine.replace(/__([^_]+)__/g, "<strong>$1</strong>");
-    processedLine = processedLine.replace(/_([^_]+)_/g, "<em>$1</em>");
-    processedLine = processedLine.replace(/`([^`]+)`/g, "<code>$1</code>");
-
-    const trimmed = processedLine.trim();
-
-    // Headers (h1 - h6)
-    const headingMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
-    if (headingMatch) {
-      if (inList) {
-        processedLines.push("</ul>");
-        inList = false;
-      }
-      const level = headingMatch[1].length;
-      const text = headingMatch[2];
-      processedLines.push(`<h${level}>${text}</h${level}>`);
-      continue;
-    }
-
-    // Lists (handles leading space nesting flatly)
-    const listMatch = trimmed.match(/^([-\*])\s+(.*)$/);
-    if (listMatch) {
-      if (!inList) {
-        processedLines.push("<ul>");
-        inList = true;
-      }
-      processedLines.push(`<li>${listMatch[2]}</li>`);
-      continue;
-    }
-
-    // Normal text / blockquotes
-    if (inList) {
-      processedLines.push("</ul>");
-      inList = false;
-    }
-
-    if (trimmed === "") {
-      processedLines.push("<br />");
-    } else {
-      if (isBlockquote) {
-        processedLines.push(`<blockquote>${processedLine}</blockquote>`);
-      } else {
-        processedLines.push(`<p>${processedLine}</p>`);
-      }
-    }
-  }
-
-  // Close open structures
-  if (inList) processedLines.push("</ul>");
-
-  return processedLines.join("\n");
 }
 
 export default function MaterialsTracker({
@@ -813,7 +695,7 @@ export default function MaterialsTracker({
           ) : (
             <div 
               className="notes-preview-pane"
-              dangerouslySetInnerHTML={{ __html: renderMarkdownToHtml(notesContent) }}
+              dangerouslySetInnerHTML={{ __html: renderMarkdownToHtml(notesContent, "<p style='color: #71717a; font-style: italic;'>No notes yet. Start writing in the Write tab...</p>") }}
             />
           )}
         </div>

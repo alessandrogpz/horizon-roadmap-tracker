@@ -1,26 +1,19 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
+import type { AppState, WeekDay } from "@/lib/types";
+import { getDateForDayName, todayYMD } from "@/lib/dates";
+import { DEFAULT_WEEK_SCHEDULE, DEFAULT_FOCUS_TYPES } from "@/lib/constants";
 
 interface ScheduleDayModalProps {
-  day: { name: string; type: string; label: string };
-  data: any;
-  setData: (data: any) => void;
-  saveDailyChanges: (data: any) => void;
+  day: WeekDay;
+  data: AppState;
+  setData: (data: AppState) => void;
+  saveDailyChanges: (data: AppState) => void;
   onClose: () => void;
-  updateAppState: (state: any) => Promise<any>;
+  updateAppState: (state: AppState) => Promise<unknown>;
   weekOffset?: number;
 }
-
-const DEFAULT_WEEK_SCHEDULE = [
-  { name: "Mon", type: "math", label: "Math" },
-  { name: "Tue", type: "dsapattern", label: "DSA Pattern" },
-  { name: "Wed", type: "math", label: "Math" },
-  { name: "Thu", type: "dsapattern", label: "DSA Pattern" },
-  { name: "Fri", type: "math", label: "Math" },
-  { name: "Sat", type: "implementation", label: "DS Implementation" },
-  { name: "Sun", type: "free", label: "Free" }
-];
 
 export default function ScheduleDayModal({
   day,
@@ -33,15 +26,9 @@ export default function ScheduleDayModal({
 }: ScheduleDayModalProps) {
   const [showManager, setShowManager] = useState(false);
 
-  const focusTypes = data.focusTypes || {
-    math: { label: "Math", color: "#a78bfa" },
-    dsapattern: { label: "DSA Pattern", color: "#34d399" },
-    dsapractice: { label: "DSA Practice", color: "#22d3ee" },
-    implementation: { label: "DS Implementation", color: "#fbbf24" },
-    free: { label: "Free", color: "#a1a1aa" },
-  };
+  const focusTypes = data.focusTypes || DEFAULT_FOCUS_TYPES;
 
-  const currentDaySchedule = (data.weekSchedule || DEFAULT_WEEK_SCHEDULE).find((d: any) => d.name === day.name) || day;
+  const currentDaySchedule = (data.weekSchedule || DEFAULT_WEEK_SCHEDULE).find((d) => d.name === day.name) || day;
 
   const getFullLabel = (type: string) => {
     return focusTypes[type]?.label || type || "Daily Focus";
@@ -49,29 +36,10 @@ export default function ScheduleDayModal({
 
   const color = "var(--accent)";
 
-  // Compute the actual calendar date string for this day name (with week offset)
-  const getDateForDay = (dayName: string): string => {
-    const dayNameToIndex: Record<string, number> = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 0 };
-    const targetDayIndex = dayNameToIndex[dayName] ?? 0;
-    const today = new Date();
-    const currentDay = today.getDay();
-    const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay;
-    const monday = new Date(today);
-    monday.setDate(today.getDate() + mondayOffset + weekOffset * 7);
-    monday.setHours(0, 0, 0, 0);
-    const diff = targetDayIndex === 0 ? 6 : targetDayIndex - 1;
-    const targetDate = new Date(monday);
-    targetDate.setDate(monday.getDate() + diff);
-    const y = targetDate.getFullYear();
-    const m = String(targetDate.getMonth() + 1).padStart(2, '0');
-    const d = String(targetDate.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-  };
+  const getDateForDay = (dayName: string): string => getDateForDayName(dayName, weekOffset);
 
   const targetDateStr = getDateForDay(day.name);
-  const todayObj = new Date();
-  const todayStr = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
-  const isTargetToday = targetDateStr === todayStr;
+  const isTargetToday = targetDateStr === todayYMD();
 
   return (
     <div 
