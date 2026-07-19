@@ -74,10 +74,11 @@
     "2026-07-14",
     "2026-07-14",
     "2026-07-14",
-    "2026-07-14"
+    "2026-07-14",
+    "2026-07-17"
   ],
   "lastDailyRoutineCheck": "2026-06-08",
-  "lastTasksResetDate": "2026-07-15",
+  "lastTasksResetDate": "2026-07-19",
   "dailyFocus": {
     "math": "",
     "leetcode": "",
@@ -106,12 +107,12 @@
       {
         "id": "tue_1",
         "title": "DSA Pattern Study",
-        "completed": true
+        "completed": false
       },
       {
         "id": "tue_2",
         "title": "C++ Book",
-        "completed": true
+        "completed": false
       },
       {
         "id": "tue_5",
@@ -123,7 +124,7 @@
       {
         "id": "wed_1",
         "title": "Mathematics",
-        "completed": true
+        "completed": false
       },
       {
         "id": "wed_2",
@@ -222,7 +223,7 @@
         "id": "dsa_auto",
         "title": "Two Pointers",
         "description": "Valid Palindrome, Two Sum II, 3Sum, Container With Most Water, Trapping Rain Water",
-        "completed": true
+        "completed": false
       }
     ],
     "Thu": [
@@ -937,6 +938,12 @@
       {
         "title": "Mathematics"
       }
+    ],
+    "2026-07-17": [
+      {
+        "title": "Two Pointers",
+        "description": "Valid Palindrome, Two Sum II, 3Sum, Container With Most Water, Trapping Rain Water"
+      }
     ]
   },
   "weeklyCompletions": {
@@ -945,6 +952,24 @@
         "tue_1",
         "tue_2"
       ],
+      "revisions": []
+    },
+    "2026-07-15": {
+      "tasks": [
+        "wed_1"
+      ],
+      "revisions": [
+        "dsa_auto"
+      ]
+    },
+    "2026-07-17": {
+      "tasks": [],
+      "revisions": [
+        "dsa_auto"
+      ]
+    },
+    "2026-07-18": {
+      "tasks": [],
       "revisions": []
     }
   }
