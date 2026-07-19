@@ -185,10 +185,6 @@ body {
     gap: 2rem;
     grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
   }
-  .main-header {
-    flex-direction: row;
-    align-items: flex-end;
-  }
 }
 
 /* Custom sleek scrollbars */

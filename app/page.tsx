@@ -105,6 +105,25 @@ export default function Home() {
   const [selectedPhase, setSelectedPhase] = useState<any>(null);
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle");
   const [syncError, setSyncError] = useState("");
+  const [syncTick, setSyncTick] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSyncTick((t) => t + 1);
+    }, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const getRelativeTimeString = (timestamp: number | undefined) => {
+    if (!timestamp) return "Never";
+    const diff = Date.now() - timestamp;
+    if (diff < 60000) return "Just now";
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    return new Date(timestamp).toLocaleDateString();
+  };
 
   // Compute the actual calendar date string for a given day name (Mon-Sun) at a given week offset
   const getDateForDayName = (dayName: string, offset: number = 0): string => {
@@ -704,148 +723,107 @@ export default function Home() {
           style={{ 
             width: "100%",
             display: "flex", 
-            justifyContent: "space-between", 
-            alignItems: "center", 
-            flexWrap: "wrap", 
-            gap: "1.5rem", 
+            flexDirection: "column",
+            gap: "0.75rem", 
             borderBottom: "1px solid var(--card-border)", 
             paddingBottom: "1.5rem" 
           }}
         >
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-            <h1 style={{ fontSize: "1.75rem", fontWeight: 700, color: "#fff", margin: 0, display: "flex", alignItems: "center", gap: "0.5rem", letterSpacing: "-0.01em" }}>
-              <span style={{ color: "var(--accent)" }}>&gt;_</span> Engine Developer Hub
-            </h1>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
-              <p style={{ color: "#a1a1aa", fontSize: "0.85rem", margin: 0 }}>12-Month Graphics Programming Tracker</p>
-              <span style={{ color: "var(--card-border)", fontSize: "0.8rem" }}>|</span>
-              {data?.isSynced ? (
-                <a 
-                  href="/roadmap" 
-                  style={{ 
-                    color: "var(--accent)", 
-                    fontSize: "0.85rem", 
-                    textDecoration: "none", 
-                    fontWeight: 600,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "0.25rem"
-                  }}
-                  className="link-title"
-                >
-                  Full Roadmap
-                </a>
-              ) : (
-                <span 
-                  style={{ 
-                    color: "#52525b", 
-                    fontSize: "0.85rem", 
-                    fontWeight: 600,
-                    cursor: "not-allowed"
-                  }}
-                  title="Connect Google Drive to unlock roadmap"
-                >
-                  Full Roadmap (Locked)
-                </span>
-              )}
-            </div>
+          {/* Line 1: Title */}
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 700, color: "#fff", margin: 0, display: "flex", alignItems: "center", gap: "0.5rem", letterSpacing: "-0.01em" }}>
+            <span style={{ color: "var(--accent)" }}>&gt;_</span> Engine Developer Hub
+          </h1>
+
+          {/* Line 2: 12-Month subtitle & roadmap link */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap", fontSize: "0.85rem" }}>
+            <span style={{ color: "#a1a1aa" }}>12-Month Graphics Programming Tracker</span>
+            <span style={{ color: "var(--card-border)" }}>|</span>
+            {data?.isSynced ? (
+              <a 
+                href="/roadmap" 
+                style={{ 
+                  color: "var(--accent)", 
+                  textDecoration: "none", 
+                  fontWeight: 600,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.25rem"
+                }}
+                className="link-title"
+              >
+                Full Roadmap
+              </a>
+            ) : (
+              <span 
+                style={{ 
+                  color: "#52525b", 
+                  fontWeight: 600,
+                  cursor: "not-allowed"
+                }}
+                title="Connect Google Drive to unlock roadmap"
+              >
+                Full Roadmap (Locked)
+              </span>
+            )}
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "nowrap", flex: "0 1 auto" }}>
-            {/* Sync Workspace Button */}
-            <button
-              onClick={handleSyncWorkspace}
-              disabled={syncStatus === "syncing"}
-              className="glass-panel"
-              style={{
-                padding: "0 1.25rem",
-                display: "flex",
-                alignItems: "center",
-                height: "38px",
-                margin: 0,
-                borderRadius: "6px",
-                boxShadow: "none",
-                whiteSpace: "nowrap",
-                flexShrink: 0,
-                background: syncStatus === "success" ? "rgba(16, 185, 129, 0.12)" : syncStatus === "error" ? "rgba(239, 68, 68, 0.12)" : "rgba(255, 255, 255, 0.03)",
-                border: `1px solid ${syncStatus === "success" ? "rgba(16, 185, 129, 0.3)" : syncStatus === "error" ? "rgba(239, 68, 68, 0.3)" : "rgba(255, 255, 255, 0.05)"}`,
-                cursor: syncStatus === "syncing" ? "not-allowed" : "pointer",
-                transition: "all 0.2s ease"
-              }}
-              onMouseOver={(e) => {
-                if (syncStatus === "idle") {
-                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
-                  e.currentTarget.style.borderColor = "var(--accent)";
-                }
-              }}
-              onMouseOut={(e) => {
-                if (syncStatus === "idle") {
-                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.03)";
-                  e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.05)";
-                }
-              }}
-              title={syncStatus === "error" ? syncError : "Backup and Sync to Google Drive (Shift+Click to disconnect)"}
-            >
-              <span style={{ fontSize: "0.6rem", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "monospace", marginRight: "0.4rem" }}>
-                Cloud Sync:
-              </span>
-              <span style={{ 
-                fontSize: "0.8rem", 
-                fontWeight: 600, 
-                color: syncStatus === "success" ? "var(--success)" : syncStatus === "error" ? "#ef4444" : "var(--accent)", 
-                fontFamily: "monospace" 
-              }}>
-                {syncStatus === "idle" && "Sync Now"}
-                {syncStatus === "syncing" && "Syncing..."}
-                {syncStatus === "success" && "Success ✓"}
-                {syncStatus === "error" && "Error ✕"}
-              </span>
-            </button>
 
-            {/* Days in current Phase badge */}
-            <div 
-              className="glass-panel" 
-              style={{ 
-                padding: "0 1rem", 
-                display: "flex", 
-                alignItems: "center", 
-                height: "38px",
-                margin: 0,
-                borderRadius: "6px",
-                boxShadow: "none",
-                whiteSpace: "nowrap",
-                flexShrink: 0
-              }}
-            >
-              <span style={{ fontSize: "0.6rem", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "monospace", marginRight: "0.4rem" }}>
-                Phase Day
-              </span>
-              <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--accent)", fontFamily: "monospace" }}>
-                {getDaysInCurrentPhase()}
-              </span>
+          {/* Line 3: Cloud status line, clickable to sync */}
+          <div 
+            onClick={handleSyncWorkspace}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              fontSize: "0.85rem",
+              color: "#a1a1aa",
+              cursor: syncStatus === "syncing" ? "not-allowed" : "pointer",
+              userSelect: "none",
+              width: "fit-content",
+              padding: "0.2rem 0.5rem",
+              borderRadius: "4px",
+              marginLeft: "-0.5rem",
+              transition: "background 0.2s ease"
+            }}
+            onMouseOver={(e) => {
+              if (syncStatus !== "syncing") {
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+              }
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = "transparent";
+            }}
+            title={syncStatus === "error" ? syncError : "Click to sync with Google Drive (Shift+Click to disconnect)"}
+          >
+            <div style={{
+              width: "8px",
+              height: "8px",
+              borderRadius: "50%",
+              backgroundColor: syncStatus === "syncing" ? "var(--accent)" : syncStatus === "error" ? "#ef4444" : (data?.hasUnsyncedChanges ? "#eab308" : "#10b981"),
+              boxShadow: syncStatus === "syncing" ? "0 0 8px var(--accent)" : syncStatus === "error" ? "0 0 8px #ef4444" : (data?.hasUnsyncedChanges ? "0 0 8px #eab308" : "0 0 8px #10b981"),
+              transition: "all 0.3s ease",
+              flexShrink: 0
+            }} />
+            <span style={{ fontWeight: 500 }}>
+              {syncStatus === "syncing" && "Syncing with cloud..."}
+              {syncStatus === "error" && "Sync Error (Click to retry)"}
+              {syncStatus === "success" && "Sync Complete ✓"}
+              {syncStatus === "idle" && (data?.hasUnsyncedChanges ? "Unsynced Changes (Click to Sync)" : "Synced with Cloud")}
+            </span>
+            <span style={{ color: "#3f3f46" }}>•</span>
+            <span style={{ color: "#71717a" }}>Last Sync: {getRelativeTimeString(data?.lastSyncTime)}</span>
+          </div>
+
+          {/* Line 4: Phase day and Year Progress */}
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap", fontSize: "0.85rem", color: "#a1a1aa", marginTop: "0.25rem" }}>
+            <div>
+              <span style={{ color: "#71717a", marginRight: "0.4rem" }}>Phase Day:</span>
+              <span style={{ color: "#fff", fontWeight: 600, fontFamily: "monospace" }}>{getDaysInCurrentPhase()}</span>
             </div>
-
-            {/* Overall Plan Progress */}
-            <div 
-              className="glass-panel" 
-              style={{ 
-                padding: "0 1rem", 
-                display: "flex", 
-                alignItems: "center", 
-                gap: "1rem", 
-                minWidth: "200px", 
-                height: "38px",
-                margin: 0,
-                borderRadius: "6px",
-                boxShadow: "none"
-              }}
-            >
-              <div style={{ flexShrink: 0, display: "flex", alignItems: "baseline", gap: "0.4rem" }}>
-                <span style={{ fontSize: "0.6rem", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "monospace" }}>Progress</span>
-                <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#fff", fontFamily: "monospace" }}>
-                  {getDaysPassed()}/365
-                </span>
-              </div>
-              <div style={{ flex: 1, height: "4px", backgroundColor: "rgba(255,255,255,0.08)", borderRadius: "2px", overflow: "hidden" }}>
+            <span style={{ color: "var(--card-border)" }}>|</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", minWidth: "250px" }}>
+              <span style={{ color: "#71717a" }}>Progress:</span>
+              <span style={{ color: "#fff", fontWeight: 600, fontFamily: "monospace", flexShrink: 0 }}>{getDaysPassed()}/365</span>
+              <div style={{ flex: 1, height: "6px", backgroundColor: "rgba(255,255,255,0.08)", borderRadius: "3px", overflow: "hidden" }}>
                 <div 
                   style={{ 
                     width: `${Math.min(100, (getDaysPassed() / 365) * 100)}%`, 
