@@ -1067,19 +1067,10 @@ export default function Home() {
                 const isFuture = dayDate > todayDate;
 
                 const getItemCompleted = (itemId: string, isRevision: boolean): boolean => {
-                   const completedInHistory = isRevision 
-                     ? (dayCompletions.revisions || []).includes(itemId)
-                     : (dayCompletions.tasks || []).includes(itemId);
-                   if (completedInHistory) return true;
-
-                   if (isToday) {
-                     // Use live data for today
-                     const items = isRevision ? revisionItems : focusTasks;
-                     const found = items.find((it: any) => it.id === itemId);
-                     return found?.completed ?? false;
-                   }
-                   return false;
-                 };
+                  return isRevision 
+                    ? (dayCompletions.revisions || []).includes(itemId)
+                    : (dayCompletions.tasks || []).includes(itemId);
+                };
 
                 const handleToggleItem = (itemId: string, itemTitle: string, itemDesc: string, isRevision: boolean, currentCompleted: boolean) => {
                   const newCompleted = !currentCompleted;
