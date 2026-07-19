@@ -193,10 +193,9 @@ export default function MaterialsTracker({
   // Uses localPath if set (local dev), otherwise falls back to mat.link for GitHub URLs
   useEffect(() => {
     materials.forEach(mat => {
-      const source = mat.localPath || mat.link || "";
-      const isGitHub = source.includes("github.com");
-      const isLocalPath = source.startsWith("/") || source.startsWith("~");
-      if (isGitHub || isLocalPath) {
+      // repoUrl is injected by migrateLocalPaths from the authoritative ID map — always reliable
+      const source = mat.repoUrl || mat.localPath || "";
+      if (source.includes("github.com") || source.startsWith("/") || source.startsWith("~")) {
         fetchGitStats(source)
           .then(stats => {
             setGitStats(prev => ({ ...prev, [mat.id]: stats }));
