@@ -132,69 +132,80 @@ export const syncWithGoogleDrive = async (): Promise<SyncResult> => {
     }
 
     if (remoteData) {
-      logs.push("Merging progress and streaks...");
-      const mergedWeeklyCompletions = { ...(localData.weeklyCompletions || {}) };
-      const remoteCompletions = remoteData.weeklyCompletions || {};
+      if (!localData.isSynced) {
+        logs.push("Local database is unsynced. Overwriting completely with remote backup data.");
+        const finalData = { ...remoteData, isSynced: true };
+        await db.appState.put({ id: "current", data: finalData });
+        logs.push("Local database initialized with remote backup.");
+        localRecord.data = finalData;
+      } else {
+        logs.push("Merging progress and streaks...");
+        const mergedWeeklyCompletions = { ...(localData.weeklyCompletions || {}) };
+        const remoteCompletions = remoteData.weeklyCompletions || {};
 
-      Object.keys(remoteCompletions).forEach((date) => {
-        if (!mergedWeeklyCompletions[date]) {
-          mergedWeeklyCompletions[date] = remoteCompletions[date];
-        } else {
-          mergedWeeklyCompletions[date] = {
-            tasks: Array.from(new Set([...(mergedWeeklyCompletions[date].tasks || []), ...(remoteCompletions[date].tasks || [])])),
-            revisions: Array.from(new Set([...(mergedWeeklyCompletions[date].revisions || []), ...(remoteCompletions[date].revisions || [])])),
+        Object.keys(remoteCompletions).forEach((date) => {
+          if (!mergedWeeklyCompletions[date]) {
+            mergedWeeklyCompletions[date] = remoteCompletions[date];
+          } else {
+            mergedWeeklyCompletions[date] = {
+              tasks: Array.from(new Set([...(mergedWeeklyCompletions[date].tasks || []), ...(remoteCompletions[date].tasks || [])])),
+              revisions: Array.from(new Set([...(mergedWeeklyCompletions[date].revisions || []), ...(remoteCompletions[date].revisions || [])])),
+            };
+          }
+        });
+
+        const mergedStreakHistory = Array.from(new Set([
+          ...(localData.streakHistory || []),
+          ...(remoteData.streakHistory || []),
+        ]));
+
+        const mergedCompletedItemsHistory = { ...(localData.completedItemsHistory || {}) };
+        const remoteCompletedItems = remoteData.completedItemsHistory || {};
+        Object.keys(remoteCompletedItems).forEach((date) => {
+          const localItems = mergedCompletedItemsHistory[date] || [];
+          const remoteItems = remoteCompletedItems[date] || [];
+          const mergedItems = [...localItems];
+          remoteItems.forEach((rIt: any) => {
+            const rTitle = typeof rIt === "string" ? rIt : rIt.title;
+            const exists = mergedItems.some((lIt: any) => {
+              const lTitle = typeof lIt === "string" ? lIt : lIt.title;
+              return lTitle === rTitle;
+            });
+            if (!exists) mergedItems.push(rIt);
+          });
+          mergedCompletedItemsHistory[date] = mergedItems;
+        });
+
+        const localReset = localData.lastTasksResetDate || "";
+        const remoteReset = remoteData.lastTasksResetDate || "";
+
+        let finalData = {
+          ...localData,
+          weeklyCompletions: mergedWeeklyCompletions,
+          streakHistory: mergedStreakHistory,
+          completedItemsHistory: mergedCompletedItemsHistory,
+        };
+
+        if (remoteReset > localReset) {
+          logs.push("Remote timeline has newer checklist reset. Adopting remote daily structure.");
+          finalData = {
+            ...finalData,
+            dailyTasks: remoteData.dailyTasks,
+            dailyRevisionItems: remoteData.dailyRevisionItems,
+            lastTasksResetDate: remoteReset,
+            currentPhase: remoteData.currentPhase || localData.currentPhase,
+            materials: remoteData.materials || localData.materials,
+            portfolio: remoteData.portfolio || localData.portfolio,
+            startDate: remoteData.startDate || localData.startDate,
+            currentPhaseStartDate: remoteData.currentPhaseStartDate || localData.currentPhaseStartDate,
+            dsaStartWeek: remoteData.dsaStartWeek || localData.dsaStartWeek,
           };
         }
-      });
 
-      const mergedStreakHistory = Array.from(new Set([
-        ...(localData.streakHistory || []),
-        ...(remoteData.streakHistory || []),
-      ]));
-
-      const mergedCompletedItemsHistory = { ...(localData.completedItemsHistory || {}) };
-      const remoteCompletedItems = remoteData.completedItemsHistory || {};
-      Object.keys(remoteCompletedItems).forEach((date) => {
-        const localItems = mergedCompletedItemsHistory[date] || [];
-        const remoteItems = remoteCompletedItems[date] || [];
-        const mergedItems = [...localItems];
-        remoteItems.forEach((rIt: any) => {
-          const rTitle = typeof rIt === "string" ? rIt : rIt.title;
-          const exists = mergedItems.some((lIt: any) => {
-            const lTitle = typeof lIt === "string" ? lIt : lIt.title;
-            return lTitle === rTitle;
-          });
-          if (!exists) mergedItems.push(rIt);
-        });
-        mergedCompletedItemsHistory[date] = mergedItems;
-      });
-
-      const localReset = localData.lastTasksResetDate || "";
-      const remoteReset = remoteData.lastTasksResetDate || "";
-
-      let finalData = {
-        ...localData,
-        weeklyCompletions: mergedWeeklyCompletions,
-        streakHistory: mergedStreakHistory,
-        completedItemsHistory: mergedCompletedItemsHistory,
-      };
-
-      if (remoteReset > localReset) {
-        logs.push("Remote timeline has newer checklist reset. Adopting remote daily structure.");
-        finalData = {
-          ...finalData,
-          dailyTasks: remoteData.dailyTasks,
-          dailyRevisionItems: remoteData.dailyRevisionItems,
-          lastTasksResetDate: remoteReset,
-          currentPhase: remoteData.currentPhase || localData.currentPhase,
-          materials: remoteData.materials || localData.materials,
-          portfolio: remoteData.portfolio || localData.portfolio,
-        };
+        await db.appState.put({ id: "current", data: finalData });
+        logs.push("Local database successfully updated with merged state.");
+        localRecord.data = finalData;
       }
-
-      await db.appState.put({ id: "current", data: finalData });
-      logs.push("Local database successfully updated with merged state.");
-      localRecord.data = finalData;
     }
 
     const stringifiedData = JSON.stringify(localRecord.data, null, 2);
