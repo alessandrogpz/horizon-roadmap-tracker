@@ -1,6 +1,8 @@
-# Engine Dev Productivity Tracker
+# Horizon: Roadmap Tracker
 
-A sleek, premium desktop-and-mobile control panel for tracking your 12-Month Graphics & Engine Developer roadmap, daily revision habits, local project Git statistics, and study material notes.
+A sleek, premium desktop-and-mobile control panel for tracking custom learning roadmaps, daily revision habits, local project Git statistics, and study notes.
+
+*Note: The current active roadmap in this workspace is configured for the 12-Month Graphics & Game Engine Developer track.*
 
 ---
 
