@@ -1,14 +1,16 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import type { CompletedItem } from "@/lib/types";
+import { formatDateYMD, parseYMD } from "@/lib/dates";
 
-export default function StreakGraph({ 
-  streakHistory = [], 
+export default function StreakGraph({
+  streakHistory = [],
   completedItemsHistory = {},
   startDate
-}: { 
-  streakHistory?: string[]; 
-  completedItemsHistory?: { [date: string]: any[] };
+}: {
+  streakHistory?: string[];
+  completedItemsHistory?: { [date: string]: CompletedItem[] };
   startDate?: string;
 }) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -32,8 +34,7 @@ export default function StreakGraph({
   let startDateObj: Date;
 
   if (startDate) {
-    const parts = startDate.split("-");
-    startDateObj = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    startDateObj = parseYMD(startDate);
   } else {
     // Fallback: 53 weeks ago if startDate not provided
     startDateObj = new Date(today);
@@ -51,10 +52,7 @@ export default function StreakGraph({
   const tempDate = new Date(startDateObj);
   // Render up to today
   while (tempDate <= today) {
-    const year = tempDate.getFullYear();
-    const month = String(tempDate.getMonth() + 1).padStart(2, '0');
-    const day = String(tempDate.getDate()).padStart(2, '0');
-    const dateStr = `${year}-${month}-${day}`;
+    const dateStr = formatDateYMD(tempDate);
     const count = dateCounts[dateStr] || 0;
 
     currentWeek.push({ dateStr, count });
@@ -84,36 +82,28 @@ export default function StreakGraph({
     return 'var(--streak-4)';
   };
 
+  const itemAsObject = (it: CompletedItem) => (typeof it === "string" ? { title: it, description: "" } : { description: "", ...it });
+
   return (
-    <div 
-      ref={scrollContainerRef}
-      className="glass-panel" 
-      style={{ overflowX: 'auto' }}
-    >
+    <div ref={scrollContainerRef} className="glass-panel overflow-x-auto">
       <h2 className="section-title">Consistency Streak</h2>
-      <div style={{ display: 'flex', gap: '4px', padding: '10px 0' }}>
+      <div className="flex gap-1 py-2.5">
         {weeks.map((week, wIdx) => (
-          <div key={wIdx} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div key={wIdx} className="flex flex-col gap-1">
             {week.map((day, dIdx) => (
-              <div 
-                key={dIdx} 
+              <div
+                key={dIdx}
                 onClick={() => day.dateStr && setSelectedDateDetails(day.dateStr)}
-                style={{
-                  width: '10px',
-                  height: '10px',
-                  borderRadius: '2px',
-                  backgroundColor: day.dateStr ? getColorClass(day.count) : 'transparent',
-                  transition: 'background-color 0.3s ease',
-                  cursor: day.dateStr ? 'pointer' : 'default'
-                }}
+                className={`w-2.5 h-2.5 rounded-sm transition-colors duration-300 ${day.dateStr ? "cursor-pointer" : "cursor-default"}`}
+                style={{ backgroundColor: day.dateStr ? getColorClass(day.count) : 'transparent' }}
                 title={
-                  day.dateStr 
+                  day.dateStr
                     ? `${day.dateStr}: ${day.count} update${day.count !== 1 ? 's' : ''}${
                         completedItemsHistory[day.dateStr] && completedItemsHistory[day.dateStr].length > 0
                           ? `\nAccomplished:\n• ${completedItemsHistory[day.dateStr]
-                              .map((it: any) => {
-                                const itemObj = typeof it === 'string' ? { title: it, description: "" } : it;
-                                return itemObj.description 
+                              .map((it) => {
+                                const itemObj = itemAsObject(it);
+                                return itemObj.description
                                   ? `${itemObj.title} (${itemObj.description})`
                                   : itemObj.title;
                               })
@@ -129,101 +119,49 @@ export default function StreakGraph({
       </div>
 
       {selectedDateDetails && (
-        <div 
+        <div
           onClick={() => setSelectedDateDetails(null)}
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.75)",
-            backdropFilter: "blur(4px)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-            padding: "1rem"
-          }}
+          className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-[1000] p-4"
         >
-          <div 
+          <div
             onClick={(e) => e.stopPropagation()}
-            className="glass-panel"
-            style={{
-              maxWidth: "400px",
-              width: "100%",
-              padding: "1.5rem",
-              border: "1px solid var(--accent)",
-              borderRadius: "8px",
-              position: "relative",
-              display: "flex",
-              flexDirection: "column",
-              gap: "1rem",
-              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4)"
-            }}
+            className="glass-panel max-w-[400px] w-full p-6 border !border-accent rounded-lg relative flex flex-col gap-4 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.5),0_10px_10px_-5px_rgba(0,0,0,0.4)]"
           >
             {/* Close Button */}
-            <button 
+            <button
               onClick={() => setSelectedDateDetails(null)}
-              style={{
-                position: "absolute",
-                top: "1rem",
-                right: "1rem",
-                background: "transparent",
-                border: "none",
-                color: "#a1a1aa",
-                fontSize: "1.1rem",
-                cursor: "pointer"
-              }}
+              className="absolute top-4 right-4 bg-transparent border-none text-zinc-400 text-[1.1rem] cursor-pointer"
             >
               ✕
             </button>
 
             {/* Header */}
             <div>
-              <span style={{ 
-                fontSize: "0.75rem", 
-                background: "rgba(14, 165, 233, 0.1)", 
-                color: "var(--accent)", 
-                padding: "0.15rem 0.5rem", 
-                borderRadius: "4px", 
-                fontWeight: 600,
-                fontFamily: "monospace",
-                letterSpacing: "0.05em"
-              }}>
+              <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold font-mono tracking-[0.05em]">
                 Streak Achievement
               </span>
-              <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#fff", marginTop: "0.5rem", marginBottom: 0 }}>
+              <h3 className="text-[1.1rem] font-bold text-white mt-2 mb-0">
                 Accomplished on {selectedDateDetails}
               </h3>
             </div>
 
             {/* Completed Items List */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            <div className="flex flex-col gap-2">
               {completedItemsHistory[selectedDateDetails] && completedItemsHistory[selectedDateDetails].length > 0 ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", maxHeight: "250px", overflowY: "auto" }}>
-                  {completedItemsHistory[selectedDateDetails].map((it: any, idx: number) => {
-                    const itemObj = typeof it === 'string' ? { title: it, description: "" } : it;
+                <div className="flex flex-col gap-2 max-h-[250px] overflow-y-auto">
+                  {completedItemsHistory[selectedDateDetails].map((it, idx) => {
+                    const itemObj = itemAsObject(it);
                     return (
-                      <div 
+                      <div
                         key={idx}
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "0.2rem",
-                          background: "rgba(0, 0, 0, 0.15)",
-                          padding: "0.5rem 0.75rem",
-                          borderRadius: "6px",
-                          border: "1px solid rgba(255, 255, 255, 0.05)",
-                          width: "100%"
-                        }}
+                        className="flex flex-col gap-1 bg-black/15 px-3 py-2 rounded-md border border-white/5 w-full"
                       >
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                          <span style={{ color: "var(--accent)", fontSize: "0.95rem" }}>✓</span>
-                          <span style={{ fontSize: "0.85rem", color: "#fff", fontWeight: 600 }}>{itemObj.title}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-accent text-[0.95rem]">✓</span>
+                          <span className="text-[0.85rem] text-white font-semibold">{itemObj.title}</span>
                         </div>
                         {itemObj.description && (
-                          <span style={{ fontSize: "0.75rem", color: "#71717a", marginLeft: "1.65rem" }}>
+                          <span className="text-xs text-zinc-500 ml-[1.65rem]">
                             {itemObj.description}
                           </span>
                         )}
@@ -232,18 +170,17 @@ export default function StreakGraph({
                   })}
                 </div>
               ) : (
-                <p style={{ color: "#71717a", fontSize: "0.85rem", fontStyle: "italic", margin: 0, textAlign: "center", padding: "1rem 0" }}>
+                <p className="text-zinc-500 text-[0.85rem] italic m-0 text-center py-4">
                   No accomplishments recorded on this day.
                 </p>
               )}
             </div>
 
             {/* Footer */}
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <button 
-                onClick={() => setSelectedDateDetails(null)} 
-                className="btn"
-                style={{ padding: "0.4rem 1.25rem", fontSize: "0.8rem" }}
+            <div className="flex justify-end">
+              <button
+                onClick={() => setSelectedDateDetails(null)}
+                className="btn px-5 py-1.5 text-[0.8rem]"
               >
                 Close
               </button>

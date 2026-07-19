@@ -7,7 +7,7 @@ export async function GET() {
   try {
     const content = fs.readFileSync(roadmapPath, "utf8");
     return NextResponse.json({ content });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ content: "Roadmap file not found at project root." }, { status: 404 });
   }
 }

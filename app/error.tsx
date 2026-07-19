@@ -14,81 +14,28 @@ export default function Error({
   }, [error]);
 
   return (
-    <div style={{
-      display: 'flex',
-      minHeight: '100vh',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '2rem',
-      backgroundColor: '#09090b',
-      color: '#e4e4e7',
-      fontFamily: 'monospace',
-      textAlign: 'center'
-    }}>
-      <div style={{
-        padding: '2rem',
-        borderRadius: '8px',
-        backgroundColor: '#121214',
-        border: '1px solid rgba(245, 158, 11, 0.2)',
-        maxWidth: '600px',
-        width: '100%',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
-      }}>
-        <h2 style={{ color: '#f59e0b', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+    <div className="flex min-h-screen flex-col items-center justify-center p-8 bg-background text-foreground font-mono text-center">
+      <div className="p-8 rounded-lg bg-card border border-warning/20 max-w-[600px] w-full shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
+        <h2 className="text-warning mb-4 uppercase tracking-[0.05em] text-2xl font-bold">
           Workspace Error
         </h2>
-        <p style={{ color: '#a1a1aa', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
+        <p className="text-zinc-400 text-[0.9rem] mb-6 leading-normal">
           A client-side rendering or hydration error occurred while building the dashboard.
         </p>
-        <div style={{
-          padding: '1rem',
-          backgroundColor: '#000',
-          borderRadius: '6px',
-          textAlign: 'left',
-          fontSize: '0.8rem',
-          color: '#f87171',
-          overflowX: 'auto',
-          marginBottom: '2rem',
-          border: '1px solid rgba(255, 255, 255, 0.05)'
-        }}>
+        <div className="p-4 bg-black rounded-md text-left text-[0.8rem] text-red-400 overflow-x-auto mb-8 border border-white/5">
           <strong>Error:</strong> {error.message || String(error)}
-          {error.digest && <div style={{ color: '#71717a', marginTop: '0.5rem' }}>Digest: {error.digest}</div>}
+          {error.digest && <div className="text-zinc-500 mt-2">Digest: {error.digest}</div>}
         </div>
-        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+        <div className="flex gap-4 justify-center">
           <button
             onClick={() => reset()}
-            style={{
-              background: 'transparent',
-              color: '#fff',
-              border: '1px solid #0ea5e9',
-              borderRadius: '6px',
-              padding: '0.5rem 1.25rem',
-              cursor: 'pointer',
-              fontWeight: 500,
-              fontFamily: 'inherit',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#0ea5e9'; e.currentTarget.style.color = '#000'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#fff'; }}
+            className="bg-transparent text-white border border-accent rounded-md px-5 py-2 cursor-pointer font-medium transition-all duration-200 hover:bg-accent hover:text-black"
           >
             Try Again
           </button>
           <button
             onClick={() => window.location.reload()}
-            style={{
-              background: 'transparent',
-              color: '#71717a',
-              border: '1px solid var(--card-border)',
-              borderRadius: '6px',
-              padding: '0.5rem 1.25rem',
-              cursor: 'pointer',
-              fontWeight: 500,
-              fontFamily: 'inherit',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#fff'; e.currentTarget.style.color = '#fff'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--card-border)'; e.currentTarget.style.color = '#71717a'; }}
+            className="bg-transparent text-zinc-500 border border-card-border rounded-md px-5 py-2 cursor-pointer font-medium transition-all duration-200 hover:border-white hover:text-white"
           >
             Reload Page
           </button>

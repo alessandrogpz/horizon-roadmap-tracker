@@ -44,42 +44,23 @@ export default function WeeklyPlan({
   })();
 
   return (
-    <div className="glass-panel" style={{ borderLeft: "4px solid var(--accent)", padding: "1.25rem 1.5rem" }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+    <div className="glass-panel border-l-4 !border-l-accent px-6 py-5">
+      <div className="flex flex-col gap-3">
         {/* Header */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", paddingBottom: "0.75rem", borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
+        <div className="flex flex-col gap-3 pb-3 border-b border-white/5">
           {/* Top Row: Title and Navigation */}
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#fff", margin: 0, whiteSpace: "nowrap" }}>
+          <div className="flex items-center gap-4">
+            <h3 className="text-[1.1rem] font-semibold text-white m-0 whitespace-nowrap">
               Weekly Study Plan
             </h3>
 
             {/* Week Navigation Pill */}
-            <div style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.4rem",
-              background: "rgba(255, 255, 255, 0.03)",
-              padding: "0.25rem 0.5rem",
-              borderRadius: "6px",
-              border: "1px solid rgba(255, 255, 255, 0.05)",
-              flexShrink: 0
-            }}>
+            <div className="flex items-center gap-1.5 bg-white/[0.03] px-2 py-1 rounded-md border border-white/5 shrink-0">
               <WeekNavButton label="‹" onClick={() => setWeekOffset(weekOffset - 1)} />
-              <span
-                style={{
-                  color: "#e4e4e7",
-                  fontWeight: 500,
-                  fontSize: "0.85rem",
-                  minWidth: "60px",
-                  textAlign: "center",
-                  fontFamily: "monospace",
-                  whiteSpace: "nowrap"
-                }}
-              >
+              <span className="text-zinc-200 font-medium text-[0.85rem] min-w-[60px] text-center font-mono whitespace-nowrap">
                 {weekLabel}
                 {weekOffset !== 0 && (
-                  <span style={{ fontSize: "0.7rem", color: "#71717a", marginLeft: "0.25rem" }}>
+                  <span className="text-[0.7rem] text-zinc-500 ml-1">
                     ({weekOffset > 0 ? `+${weekOffset}` : weekOffset})
                   </span>
                 )}
@@ -89,23 +70,7 @@ export default function WeeklyPlan({
               {weekOffset !== 0 && (
                 <button
                   onClick={() => setWeekOffset(0)}
-                  style={{
-                    marginLeft: "0.5rem",
-                    background: "var(--accent)",
-                    color: "#000",
-                    border: "none",
-                    borderRadius: "4px",
-                    padding: "0.2rem 0.6rem",
-                    fontSize: "0.7rem",
-                    fontWeight: 600,
-                    cursor: "pointer",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.03em",
-                    transition: "opacity 0.2s",
-                    whiteSpace: "nowrap"
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.opacity = "0.8"}
-                  onMouseOut={(e) => e.currentTarget.style.opacity = "1"}
+                  className="ml-2 bg-accent text-black border-none rounded px-2.5 py-0.5 text-[0.7rem] font-semibold cursor-pointer uppercase tracking-[0.03em] transition-opacity duration-200 whitespace-nowrap hover:opacity-80"
                 >
                   Back to Today
                 </button>
@@ -117,36 +82,15 @@ export default function WeeklyPlan({
           <div>
             <div
               onClick={() => { if (data.isSynced) onRotationClick(); }}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                background: "rgba(14, 165, 233, 0.08)",
-                border: "1px dashed rgba(14, 165, 233, 0.3)",
-                padding: "0.35rem 0.75rem",
-                borderRadius: "6px",
-                cursor: data.isSynced ? "pointer" : "default",
-                transition: "all 0.2s ease",
-                whiteSpace: "nowrap"
-              }}
-              onMouseOver={(e) => {
-                if (data.isSynced) {
-                  e.currentTarget.style.background = "rgba(14, 165, 233, 0.15)";
-                  e.currentTarget.style.borderColor = "rgba(14, 165, 233, 0.5)";
-                }
-              }}
-              onMouseOut={(e) => {
-                if (data.isSynced) {
-                  e.currentTarget.style.background = "rgba(14, 165, 233, 0.08)";
-                  e.currentTarget.style.borderColor = "rgba(14, 165, 233, 0.3)";
-                }
-              }}
+              className={`inline-flex items-center gap-2 bg-accent/[0.08] border border-dashed border-accent/30 px-3 py-1.5 rounded-md transition-all duration-200 whitespace-nowrap ${
+                data.isSynced ? "cursor-pointer hover:bg-accent/15 hover:border-accent/50" : "cursor-default"
+              }`}
               title={data.isSynced ? "View full 10-week Algorithm plan" : "Connect Google Drive to unlock"}
             >
-              <span style={{ fontSize: "0.7rem", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>
+              <span className="text-[0.7rem] text-zinc-400 uppercase tracking-[0.05em] font-semibold">
                 Weekly Algorithm:
               </span>
-              <span style={{ fontSize: "0.85rem", color: "var(--accent)", fontWeight: 700, fontFamily: "monospace" }}>
+              <span className="text-[0.85rem] text-accent font-bold font-mono">
                 {weeklyAlgorithm}
               </span>
             </div>
@@ -180,20 +124,7 @@ function WeekNavButton({ label, onClick }: { label: string; onClick: () => void 
   return (
     <button
       onClick={onClick}
-      style={{
-        background: "transparent",
-        border: "1px solid rgba(255, 255, 255, 0.1)",
-        borderRadius: "4px",
-        color: "#a1a1aa",
-        cursor: "pointer",
-        padding: "0.1rem 0.4rem",
-        fontSize: "0.8rem",
-        fontFamily: "monospace",
-        lineHeight: 1,
-        transition: "all 0.15s ease",
-      }}
-      onMouseOver={(e) => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.color = "#fff"; }}
-      onMouseOut={(e) => { e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)"; e.currentTarget.style.color = "#a1a1aa"; }}
+      className="bg-transparent border border-white/10 rounded text-zinc-400 cursor-pointer px-1.5 py-0.5 text-[0.8rem] font-mono leading-none transition-all duration-150 hover:border-accent hover:text-white"
     >
       {label}
     </button>
@@ -319,51 +250,28 @@ function DayCard({ dayItem, idx, data, todayStr, dayOfWeek, weekOffset, onDayCli
   return (
     <div
       onClick={() => onDayClick(dayItem)}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "0.35rem",
-        padding: "0.6rem 0.5rem",
-        borderRadius: "8px",
-        background: isToday ? "rgba(14, 165, 233, 0.06)" : "rgba(0, 0, 0, 0.15)",
-        border: isToday ? "1px solid var(--accent)" : "1px solid rgba(255, 255, 255, 0.05)",
-        boxShadow: isToday ? "0 0 12px rgba(14, 165, 233, 0.15)" : "none",
-        cursor: "pointer",
-        transition: "all 0.2s ease",
-        minHeight: "160px",
-        overflow: "hidden",
-        opacity: isFuture ? 0.5 : 1,
-      }}
+      className={`flex flex-col gap-[0.35rem] px-2 py-[0.6rem] rounded-lg cursor-pointer transition-all duration-200 min-h-[160px] overflow-hidden ${
+        isToday
+          ? "bg-accent/[0.06] border border-accent shadow-[0_0_12px_rgba(14,165,233,0.15)]"
+          : "bg-black/15 border border-white/5"
+      } ${isFuture ? "opacity-50" : ""}`}
     >
       {/* Day name + date */}
-      <div style={{ textAlign: "center", paddingBottom: "0.25rem", borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
-        <span style={{
-          fontSize: "0.7rem",
-          fontWeight: isToday ? 700 : 600,
-          color: isToday ? "#fff" : "#71717a",
-          textTransform: "uppercase",
-          letterSpacing: "0.05em",
-        }}>
+      <div className="text-center pb-1 border-b border-white/5">
+        <span className={`text-[0.7rem] uppercase tracking-[0.05em] ${isToday ? "font-bold text-white" : "font-semibold text-zinc-500"}`}>
           {dayItem.name}
         </span>
-        <div style={{ fontSize: "0.55rem", color: "#52525b", marginTop: "0.05rem" }}>
+        <div className="text-[0.55rem] text-zinc-600 mt-px">
           {data.isSynced ? dayDateStr.slice(5) : "MM-DD"}
         </div>
       </div>
 
       {/* Focus type tag */}
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: "0.15rem" }}>
-        <span style={{
-          fontSize: "0.55rem",
-          fontWeight: 600,
-          color: data.isSynced ? tag.text : "#71717a",
-          background: data.isSynced ? tag.bg : "rgba(113, 113, 122, 0.12)",
-          padding: "0.1rem 0.4rem",
-          borderRadius: "3px",
-          textTransform: "uppercase",
-          letterSpacing: "0.03em",
-          whiteSpace: "nowrap",
-        }}>
+      <div className="flex justify-center mb-[0.15rem]">
+        <span
+          className="text-[0.55rem] font-semibold px-1.5 py-px rounded-[3px] uppercase tracking-[0.03em] whitespace-nowrap"
+          style={data.isSynced ? { color: tag.text, background: tag.bg } : { color: "#71717a", background: "rgba(113, 113, 122, 0.12)" }}
+        >
           {data.isSynced ? dayItem.label : "UN-ASSIGNED"}
         </span>
       </div>
@@ -371,28 +279,22 @@ function DayCard({ dayItem, idx, data, todayStr, dayOfWeek, weekOffset, onDayCli
       {/* Revision section */}
       {revisionItems.length > 0 && (
         <div>
-          <span style={{ fontSize: "0.55rem", color: "var(--accent)", fontWeight: "bold", fontFamily: "monospace", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+          <span className="text-[0.55rem] text-accent font-bold font-mono tracking-[0.05em] uppercase">
             Revision
           </span>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem", marginTop: "0.15rem" }}>
+          <div className="flex flex-col gap-[0.15rem] mt-[0.15rem]">
             {revisionItems.map((item, i) => {
               const completed = getItemCompleted(item.id, true);
               return (
-                <div key={item.id || i} style={{ display: "flex", alignItems: "flex-start", gap: "0.3rem" }}>
+                <div key={item.id || i} className="flex items-start gap-[0.3rem]">
                   <input
                     type="checkbox"
-                    className="checkbox-custom"
+                    className="checkbox-custom mt-0.5 scale-[0.8]"
                     checked={completed}
                     onClick={(e: React.MouseEvent) => e.stopPropagation()}
                     onChange={() => handleToggleItem(item.id, item.title, item.description || "", true, completed)}
-                    style={{ marginTop: "0.1rem", transform: "scale(0.8)" }}
                   />
-                  <span style={{
-                    fontSize: "0.72rem",
-                    color: completed ? "#52525b" : (isToday ? "var(--foreground)" : "#a1a1aa"),
-                    textDecoration: completed ? "line-through" : "none",
-                    lineHeight: 1.3,
-                  }}>
+                  <span className={`text-[0.72rem] leading-[1.3] ${completed ? "text-zinc-600 line-through" : isToday ? "text-foreground" : "text-zinc-400"}`}>
                     {item.title}
                   </span>
                 </div>
@@ -404,29 +306,23 @@ function DayCard({ dayItem, idx, data, todayStr, dayOfWeek, weekOffset, onDayCli
 
       {/* Focus tasks section */}
       {focusTasks.length > 0 && (
-        <div style={{ marginTop: "0.1rem" }}>
-          <span style={{ fontSize: "0.55rem", color: "var(--accent)", fontWeight: "bold", fontFamily: "monospace", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+        <div className="mt-[0.1rem]">
+          <span className="text-[0.55rem] text-accent font-bold font-mono tracking-[0.05em] uppercase">
             Focus
           </span>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.15rem", marginTop: "0.15rem" }}>
+          <div className="flex flex-col gap-[0.15rem] mt-[0.15rem]">
             {focusTasks.map((task, i) => {
               const completed = getItemCompleted(task.id, false);
               return (
-                <div key={task.id || i} style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                <div key={task.id || i} className="flex items-center gap-[0.3rem]">
                   <input
                     type="checkbox"
-                    className="checkbox-custom"
+                    className="checkbox-custom scale-[0.8]"
                     checked={completed}
                     onClick={(e: React.MouseEvent) => e.stopPropagation()}
                     onChange={() => handleToggleItem(task.id, task.title, "", false, completed)}
-                    style={{ transform: "scale(0.8)" }}
                   />
-                  <span style={{
-                    fontSize: "0.72rem",
-                    color: completed ? "#52525b" : (isToday ? "var(--foreground)" : "#a1a1aa"),
-                    textDecoration: completed ? "line-through" : "none",
-                    lineHeight: 1.3,
-                  }}>
+                  <span className={`text-[0.72rem] leading-[1.3] ${completed ? "text-zinc-600 line-through" : isToday ? "text-foreground" : "text-zinc-400"}`}>
                     {task.title}
                   </span>
                 </div>
@@ -438,8 +334,8 @@ function DayCard({ dayItem, idx, data, todayStr, dayOfWeek, weekOffset, onDayCli
 
       {/* Empty state */}
       {revisionItems.length === 0 && focusTasks.length === 0 && (
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <span style={{ fontSize: "0.7rem", color: "#3f3f46", fontStyle: "italic" }}>No tasks</span>
+        <div className="flex-1 flex items-center justify-center">
+          <span className="text-[0.7rem] text-zinc-700 italic">No tasks</span>
         </div>
       )}
     </div>

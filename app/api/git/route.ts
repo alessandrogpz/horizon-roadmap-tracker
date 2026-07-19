@@ -96,7 +96,8 @@ export async function GET(req: NextRequest) {
       lastCommitMsg,
       lastCommitTime,
     });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || "Failed to query Git repository" }, { status: 500 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to query Git repository";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
