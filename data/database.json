@@ -78,7 +78,7 @@
     "2026-07-17"
   ],
   "lastDailyRoutineCheck": "2026-06-08",
-  "lastTasksResetDate": "2026-07-19",
+  "lastTasksResetDate": "",
   "dailyFocus": {
     "math": "",
     "leetcode": "",
@@ -946,31 +946,6 @@
       }
     ]
   },
-  "weeklyCompletions": {
-    "2026-07-14": {
-      "tasks": [
-        "tue_1",
-        "tue_2"
-      ],
-      "revisions": []
-    },
-    "2026-07-15": {
-      "tasks": [
-        "wed_1"
-      ],
-      "revisions": [
-        "dsa_auto"
-      ]
-    },
-    "2026-07-17": {
-      "tasks": [],
-      "revisions": [
-        "dsa_auto"
-      ]
-    },
-    "2026-07-18": {
-      "tasks": [],
-      "revisions": []
-    }
-  }
+  "weeklyCompletions": {},
+  "studyStreak": []
 }
