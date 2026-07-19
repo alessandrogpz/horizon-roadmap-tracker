@@ -203,38 +203,25 @@ export const updateAppState = async (newState: any) => {
     
     newState.lastUpdatedDates = lastUpdatedDates;
 
-    // Compare config fields to see if config has changed
-    const configFields = [
-      "materials",
-      "portfolio",
-      "currentPhase",
-      "startDate",
-      "currentPhaseStartDate",
-      "dsaStartWeek",
-      "dailyTasks",
-      "dailyRevisionItems",
-      "lastTasksResetDate"
-    ];
+    const TRACKING_FIELDS = ['lastUpdatedDates', 'configVersion', 'hasUnsyncedChanges', 'lastSyncTime', 'isSynced'];
 
-    let configChanged = false;
-    for (const field of configFields) {
-      if (JSON.stringify(oldData[field]) !== JSON.stringify(newState[field])) {
-        configChanged = true;
-        break;
-      }
-    }
+    const stripTracking = (obj: any) => {
+      if (!obj) return obj;
+      const copy = { ...obj };
+      TRACKING_FIELDS.forEach(f => delete copy[f]);
+      return copy;
+    };
 
-    if (configChanged) {
+    const oldStripped = stripTracking(oldData);
+    const newStripped = stripTracking(newState);
+    const anythingChanged = JSON.stringify(oldStripped) !== JSON.stringify(newStripped);
+
+    if (anythingChanged) {
       newState.configVersion = (oldData.configVersion || 0) + 1;
       newState.hasUnsyncedChanges = true;
     } else {
       newState.configVersion = oldData.configVersion || 0;
-    }
-
-    if (newState.hasUnsyncedChanges === undefined) {
-      if (hasChanges || configChanged) {
-        newState.hasUnsyncedChanges = true;
-      } else {
+      if (newState.hasUnsyncedChanges === undefined) {
         newState.hasUnsyncedChanges = oldData.hasUnsyncedChanges ?? false;
       }
     }
