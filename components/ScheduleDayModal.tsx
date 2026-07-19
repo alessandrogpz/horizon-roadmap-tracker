@@ -415,7 +415,7 @@ export default function ScheduleDayModal({
                         <input
                           type="checkbox"
                           className="checkbox-custom"
-                          checked={item.completed || (data.weeklyCompletions?.[targetDateStr]?.revisions || []).includes(item.id)}
+                          checked={(data.weeklyCompletions?.[targetDateStr]?.revisions || []).includes(item.id)}
                           onChange={(e) => {
                             const updatedItems = (data.dailyRevisionItems?.[day.name] || []).map((it: any) => {
                               if (it.id === item.id) {
@@ -691,7 +691,7 @@ export default function ScheduleDayModal({
                       <input
                         type="checkbox"
                         className="checkbox-custom"
-                        checked={task.completed || (data.weeklyCompletions?.[targetDateStr]?.tasks || []).includes(task.id)}
+                        checked={(data.weeklyCompletions?.[targetDateStr]?.tasks || []).includes(task.id)}
                         onChange={(e) => {
                           const updatedTasks = (data.dailyTasks?.[day.name] || []).map((t: any) => {
                             if (t.id === task.id) {
