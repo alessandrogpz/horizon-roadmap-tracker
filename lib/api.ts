@@ -33,53 +33,53 @@ const DEFAULT_SKETCH_STATE = {
   phases: [
     {
       id: 1,
-      title: "Phase 1: Foundation (Placeholder)",
-      description: "Connect Google Drive to load your actual Graphics & Engine Developer Roadmap syllabus.",
+      title: "Phase 01 (Placeholder)",
+      description: "Connect Google Drive to load your personalized curriculum details.",
       tasks: [
-        { id: "p1_t1", title: "Syllabus Task Placeholder 1", completed: false },
-        { id: "p1_t2", title: "Syllabus Task Placeholder 2", completed: false }
+        { id: "p1_t1", title: "Task Placeholder 1", completed: false },
+        { id: "p1_t2", title: "Task Placeholder 2", completed: false }
       ],
       detailedInfo: {
-        focus: "Graphics & Math fundamentals",
-        deliverable: "Simple Software Renderer / Math library",
-        math: "Linear Algebra (Placeholder)",
-        algoDS: "Arrays, Vectors, Recursion (Placeholder)"
+        focus: "Placeholder Focus",
+        deliverable: "Placeholder Deliverable",
+        math: "Placeholder Math",
+        algoDS: "Placeholder DSA"
       }
     },
     {
       id: 2,
-      title: "Phase 2: Graphics API (Placeholder)",
-      description: "Connect Google Drive to load your syllabus.",
+      title: "Phase 02 (Placeholder)",
+      description: "Connect Google Drive to load your personalized curriculum details.",
       tasks: [],
       detailedInfo: {
-        focus: "Rasterization & GPU pipelines",
-        deliverable: "OpenGL Renderer",
-        math: "Transforms & Projections",
-        algoDS: "Trees & Graphs"
+        focus: "Placeholder Focus",
+        deliverable: "Placeholder Deliverable",
+        math: "Placeholder Math",
+        algoDS: "Placeholder DSA"
       }
     },
     {
       id: 3,
-      title: "Phase 3: Engine Architecture (Placeholder)",
-      description: "Connect Google Drive to load your syllabus.",
+      title: "Phase 03 (Placeholder)",
+      description: "Connect Google Drive to load your personalized curriculum details.",
       tasks: [],
       detailedInfo: {
-        focus: "Engine subsystems & scenes",
-        deliverable: "Game Engine Framework",
-        math: "Quaternions & Physics",
-        algoDS: "Heaps & Priority Queues"
+        focus: "Placeholder Focus",
+        deliverable: "Placeholder Deliverable",
+        math: "Placeholder Math",
+        algoDS: "Placeholder DSA"
       }
     },
     {
       id: 4,
-      title: "Phase 4: Advanced Engine (Placeholder)",
-      description: "Connect Google Drive to load your syllabus.",
+      title: "Phase 04 (Placeholder)",
+      description: "Connect Google Drive to load your personalized curriculum details.",
       tasks: [],
       detailedInfo: {
-        focus: "Physically Based Rendering & Ray Tracing",
-        deliverable: "PBR Ray Tracer",
-        math: "Radiometry & Integrals",
-        algoDS: "BVH & Spatial Partitioning"
+        focus: "Placeholder Focus",
+        deliverable: "Placeholder Deliverable",
+        math: "Placeholder Math",
+        algoDS: "Placeholder DSA"
       }
     }
   ],
