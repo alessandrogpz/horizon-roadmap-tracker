@@ -284,12 +284,38 @@ export const fetchGitStats = async (pathOrRepo: string) => {
 
     try {
       const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
-      if (!repoRes.ok) throw new Error("Failed to fetch repo info");
+
+      if (repoRes.status === 403) {
+        // Rate limited — log once and bail out silently
+        console.warn(`GitHub API rate limited for ${cacheKey}. Stats unavailable until the limit resets.`);
+        return { isRepo: false, rateLimited: true };
+      }
+      if (repoRes.status === 404) {
+        // Private repo or doesn't exist — silently skip
+        return { isRepo: false };
+      }
+      if (!repoRes.ok) {
+        console.warn(`GitHub API returned ${repoRes.status} for ${cacheKey}`);
+        return { isRepo: false };
+      }
+
       const repoData = await repoRes.json();
       const defaultBranch = repoData.default_branch || "main";
 
       const commitRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/commits?per_page=1`);
-      if (!commitRes.ok) throw new Error("Failed to fetch commit info");
+      if (!commitRes.ok) {
+        // Could be empty repo or permissions issue — still show branch
+        const result = {
+          isRepo: true,
+          branch: defaultBranch,
+          uncommittedCount: 0,
+          lastCommitMsg: "",
+          lastCommitTime: "",
+        };
+        if (!(fetchGitStats as any)._cache) (fetchGitStats as any)._cache = {};
+        (fetchGitStats as any)._cache[cacheKey] = result;
+        return result;
+      }
       const commits = await commitRes.json();
       const lastCommit = commits[0];
 
@@ -318,7 +344,7 @@ export const fetchGitStats = async (pathOrRepo: string) => {
 
       return result;
     } catch (err) {
-      console.error("GitHub API fetch failed:", err);
+      console.warn("GitHub API fetch failed (network error):", err);
       return { isRepo: false };
     }
   }
