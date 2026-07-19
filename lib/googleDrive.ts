@@ -56,10 +56,13 @@ export const loadGoogleGisScript = (): Promise<void> => {
 };
 
 export const authenticateGoogleDrive = async (clientId: string): Promise<string> => {
-  await loadGoogleGisScript();
   setGoogleClientId(clientId);
 
   return new Promise((resolve, reject) => {
+    if (typeof window === "undefined" || !(window as any).google?.accounts?.oauth2) {
+      reject(new Error("Google Identity Services script not loaded. Please wait a moment and try again."));
+      return;
+    }
     const client = (window as any).google.accounts.oauth2.initTokenClient({
       client_id: clientId,
       scope: "https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file",
@@ -102,7 +105,8 @@ export const syncWithGoogleDrive = async (): Promise<SyncResult> => {
     let remoteFileId = "";
     let remoteData: any = null;
 
-    const searchUrl = "https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='database.json' and trashed=false";
+    const q = "name='database.json' and trashed=false";
+    const searchUrl = `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=${encodeURIComponent(q)}`;
     const searchRes = await fetch(searchUrl, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -253,7 +257,8 @@ export const syncWithGoogleDrive = async (): Promise<SyncResult> => {
 const syncNotesWithGoogleDrive = async (token: string, logs: string[]): Promise<void> => {
   const localNotes = await db.notes.toArray();
 
-  const searchUrl = "https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=mimeType='text/markdown' and trashed=false";
+  const q = "mimeType='text/markdown' and trashed=false";
+  const searchUrl = `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=${encodeURIComponent(q)}`;
   const searchRes = await fetch(searchUrl, {
     headers: { Authorization: `Bearer ${token}` },
   });

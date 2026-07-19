@@ -7,7 +7,8 @@ import {
   getGoogleClientId, 
   authenticateGoogleDrive, 
   syncWithGoogleDrive, 
-  setGoogleClientId 
+  setGoogleClientId,
+  loadGoogleGisScript
 } from "@/lib/googleDrive";
 import StreakGraph from "@/components/StreakGraph";
 import PhaseTracker from "@/components/PhaseTracker";
@@ -179,6 +180,9 @@ export default function Home() {
         );
       });
     }
+
+    // Pre-load Google GIS script to prevent popup blocker issues
+    loadGoogleGisScript().catch(err => console.error("Failed to preload Google GIS:", err));
 
     const today = new Date();
     const year = today.getFullYear();
