@@ -203,26 +203,49 @@ export const updateAppState = async (newState: any) => {
     
     newState.lastUpdatedDates = lastUpdatedDates;
 
-    const TRACKING_FIELDS = ['lastUpdatedDates', 'configVersion', 'hasUnsyncedChanges', 'lastSyncTime', 'isSynced'];
-
-    const stripTracking = (obj: any) => {
-      if (!obj) return obj;
-      const copy = { ...obj };
-      TRACKING_FIELDS.forEach(f => delete copy[f]);
-      return copy;
-    };
-
-    const oldStripped = stripTracking(oldData);
-    const newStripped = stripTracking(newState);
-    const anythingChanged = JSON.stringify(oldStripped) !== JSON.stringify(newStripped);
-
-    if (anythingChanged) {
-      newState.configVersion = (oldData.configVersion || 0) + 1;
-      newState.hasUnsyncedChanges = true;
-    } else {
+    // If this is a system-initiated daily reset, do NOT change configVersion
+    // so we don't accidentally win version conflicts against other devices
+    const isReset = !!newState.isReset;
+    if (isReset) {
+      delete newState.isReset;
       newState.configVersion = oldData.configVersion || 0;
       if (newState.hasUnsyncedChanges === undefined) {
         newState.hasUnsyncedChanges = oldData.hasUnsyncedChanges ?? false;
+      }
+    } else {
+      // Targeted comparison of user-editable config fields only
+      // Use sorted JSON so array order differences don't create false positives
+      const sortedJSON = (v: any) => JSON.stringify(v, Object.keys(v || {}).sort());
+      const CONFIG_COMPARE_FIELDS = [
+        "materials",
+        "portfolio",
+        "currentPhase",
+        "startDate",
+        "currentPhaseStartDate",
+        "dsaStartWeek",
+        "weekSchedule",
+      ];
+
+      let configChanged = false;
+      for (const field of CONFIG_COMPARE_FIELDS) {
+        const oldVal = oldData[field];
+        const newVal = newState[field];
+        if (sortedJSON(oldVal) !== sortedJSON(newVal)) {
+          configChanged = true;
+          break;
+        }
+      }
+
+      if (configChanged || hasChanges) {
+        newState.hasUnsyncedChanges = true;
+      } else if (newState.hasUnsyncedChanges === undefined) {
+        newState.hasUnsyncedChanges = oldData.hasUnsyncedChanges ?? false;
+      }
+
+      if (configChanged) {
+        newState.configVersion = (oldData.configVersion || 0) + 1;
+      } else {
+        newState.configVersion = oldData.configVersion || 0;
       }
     }
 
