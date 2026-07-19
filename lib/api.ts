@@ -1,5 +1,100 @@
 import { db } from "./localDb";
 
+const DEFAULT_SKETCH_STATE = {
+  currentPhase: 1,
+  startDate: "2026-07-01",
+  dsaStartWeek: 1,
+  streakHistory: {},
+  lastDailyRoutineCheck: "",
+  lastTasksResetDate: "",
+  dailyFocus: {
+    math: "",
+    leetcode: "",
+    revision: ""
+  },
+  dailyTasks: {
+    Mon: [{ id: "mon_1", title: "Placeholder Study Task", completed: false }],
+    Tue: [{ id: "tue_1", title: "Placeholder Study Task", completed: false }],
+    Wed: [{ id: "wed_1", title: "Placeholder Study Task", completed: false }],
+    Thu: [{ id: "thu_1", title: "Placeholder Study Task", completed: false }],
+    Fri: [{ id: "fri_1", title: "Placeholder Study Task", completed: false }],
+    Sat: [{ id: "sat_1", title: "Placeholder Study Task", completed: false }],
+    Sun: []
+  },
+  dailyRevisionItems: {
+    Mon: [{ id: "dsa_auto", title: "Placeholder DSA Pattern", description: "Placeholder problems", completed: false }],
+    Tue: [{ id: "math_revision", title: "Placeholder Math Review", description: "Placeholder details", completed: false }],
+    Wed: [{ id: "dsa_auto", title: "Placeholder DSA Pattern", description: "Placeholder problems", completed: false }],
+    Thu: [{ id: "math_revision", title: "Placeholder Math Review", description: "Placeholder details", completed: false }],
+    Fri: [{ id: "dsa_auto", title: "Placeholder DSA Pattern", description: "Placeholder problems", completed: false }],
+    Sat: [{ id: "math_revision", title: "Placeholder Math Review", description: "Placeholder details", completed: false }],
+    Sun: []
+  },
+  phases: [
+    {
+      id: 1,
+      title: "Phase 1: Foundation (Placeholder)",
+      description: "Connect Google Drive to load your actual Graphics & Engine Developer Roadmap syllabus.",
+      tasks: [
+        { id: "p1_t1", title: "Syllabus Task Placeholder 1", completed: false },
+        { id: "p1_t2", title: "Syllabus Task Placeholder 2", completed: false }
+      ],
+      detailedInfo: {
+        focus: "Graphics & Math fundamentals",
+        deliverable: "Simple Software Renderer / Math library",
+        math: "Linear Algebra (Placeholder)",
+        algoDS: "Arrays, Vectors, Recursion (Placeholder)"
+      }
+    },
+    {
+      id: 2,
+      title: "Phase 2: Graphics API (Placeholder)",
+      description: "Connect Google Drive to load your syllabus.",
+      tasks: [],
+      detailedInfo: {
+        focus: "Rasterization & GPU pipelines",
+        deliverable: "OpenGL Renderer",
+        math: "Transforms & Projections",
+        algoDS: "Trees & Graphs"
+      }
+    },
+    {
+      id: 3,
+      title: "Phase 3: Engine Architecture (Placeholder)",
+      description: "Connect Google Drive to load your syllabus.",
+      tasks: [],
+      detailedInfo: {
+        focus: "Engine subsystems & scenes",
+        deliverable: "Game Engine Framework",
+        math: "Quaternions & Physics",
+        algoDS: "Heaps & Priority Queues"
+      }
+    },
+    {
+      id: 4,
+      title: "Phase 4: Advanced Engine (Placeholder)",
+      description: "Connect Google Drive to load your syllabus.",
+      tasks: [],
+      detailedInfo: {
+        focus: "Physically Based Rendering & Ray Tracing",
+        deliverable: "PBR Ray Tracer",
+        math: "Radiometry & Integrals",
+        algoDS: "BVH & Spatial Partitioning"
+      }
+    }
+  ],
+  portfolio: [
+    { id: "port_1", title: "Sample Portfolio Project", completed: false, localPath: "owner/repo" }
+  ],
+  materials: [
+    { id: "m1", title: "Sample Reference Material / Book", category: "Math", type: "Book", status: "Not Started", currentPage: 0, totalPages: 100, currentSubject: "Sample Subject", link: "https://example.com", localPath: "" }
+  ],
+  dailyStudyPoints: {},
+  completedItemsHistory: [],
+  weeklyCompletions: {},
+  studyStreak: []
+};
+
 export const fetchAppState = async () => {
   try {
     // 1. Try to load from IndexedDB
@@ -8,15 +103,10 @@ export const fetchAppState = async () => {
       return record.data;
     }
 
-    // 2. If empty, perform one-time migration from Next.js database.json
-    console.log("IndexedDB is empty, migrating from server database.json...");
-    const res = await fetch("/api/data", { cache: "no-store" });
-    if (!res.ok) throw new Error("Failed to fetch initial migration data");
-    const serverData = await res.json();
-
-    // 3. Save to IndexedDB
-    await db.appState.put({ id: "current", data: serverData });
-    return serverData;
+    // 2. If empty, save the default mock sketch template to IndexedDB
+    console.log("IndexedDB is empty, initializing default sketch template...");
+    await db.appState.put({ id: "current", data: DEFAULT_SKETCH_STATE });
+    return DEFAULT_SKETCH_STATE;
   } catch (error) {
     console.error("fetchAppState local error:", error);
     throw error;
