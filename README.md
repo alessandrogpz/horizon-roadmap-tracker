@@ -4,7 +4,7 @@ A sleek, premium desktop-and-mobile control panel for tracking your 12-Month Gra
 
 ---
 
-## 🛠️ Tech Stack & Architecture
+## Tech Stack & Architecture
 
 The project has been refactored into a modular, type-safe Next.js PWA:
 
@@ -14,7 +14,7 @@ The project has been refactored into a modular, type-safe Next.js PWA:
 *   **Storage & Sync:** Google Drive API (sandboxed `appDataFolder` scope) with a custom, day-level logical-version conflict resolution engine.
 *   **Tests:** Vitest for testing date-helpers and state merge algorithms.
 
-### 📂 Directory Structure
+### Directory Structure
 
 ```
 ├── app/                     # Next.js Pages & Styles
@@ -43,51 +43,27 @@ The project has been refactored into a modular, type-safe Next.js PWA:
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
-### Option A: Run Only on your Computer (Private)
-Use this command to restrict the app access to your host PC only:
+### Local Development
+To run only on your local computer:
 ```bash
 npm run dev
 ```
 *   **URL:** [http://localhost:3000](http://localhost:3000)
 
-### Option B: Run on Both Computer & Phone (LAN Exposed)
-Use this command to expose the app on your local network, enabling access from your phone or tablet on the same Wi-Fi:
-```bash
-npm run dev:lan
-```
-*   **PC URL:** [http://localhost:3000](http://localhost:3000)
-*   **Mobile URL:** `http://<YOUR_PC_IP>:3000` (e.g. `http://192.168.0.253:3000`)
-
-#### Firewall Configuration (UFW on Linux)
-If the page hangs or fails to load on your phone under Option B, your system's firewall (`ufw`) is likely blocking port `3000`. You can open and close the port with the following commands:
-
-*   **To Open the Port (Restricted to Home Wi-Fi - Recommended):**
-    ```bash
-    sudo ufw allow proto tcp from 192.168.0.0/24 to any port 3000
-    ```
-*   **To Check Active Rules (Verify):**
-    ```bash
-    sudo ufw status numbered
-    ```
-*   **To Close the Port (Delete Rule when finished):**
-    ```bash
-    sudo ufw delete allow proto tcp from 192.168.0.0/24 to any port 3000
-    ```
-
 ---
 
-## 📱 Progressive Web App (PWA) on Mobile
+## Progressive Web App (PWA) on Mobile
 
-When running via **Option B**, you can install the tracker as a native standalone application on your Android/iOS phone:
-1. Open Chrome/Safari on your phone and go to your PC's network address (e.g., `http://192.168.0.253:3000`).
+You can install the tracker as a native standalone application on your Android/iOS phone:
+1. Open your live Vercel URL on your phone's browser (e.g., Chrome or Safari).
 2. Tap the browser menu and select **Add to Home screen** or **Install app**.
-3. Launch the app from your home screen. It will load in full-screen standalone mode (no browser address bars, complete with a custom glossy graphics torus launcher icon).
+3. Launch the app from your home screen. It will load in full-screen standalone mode (no browser address bars, complete with your custom glossy graphics torus launcher icon).
 
 ---
 
-## 💡 Core Features & Mechanics
+## Core Features & Mechanics
 
 *   **Roadmap Timeline:** Interactive vertical timeline detailing the monthly phases and specific syllabi.
 *   **Consistency Streak:** GitHub-style contributions graph (rounded squares) tracking your revisions in real-time.
@@ -98,7 +74,7 @@ When running via **Option B**, you can install the tracker as a native standalon
 
 ---
 
-## 🔒 Notes & Security
+## Notes & Security
 
 *   **Universal Change Tracking:** Sync comparison logic monitors all data arrays (materials, portfolio, configurations). Changes to any item trigger an auto-save and raise `configVersion` for the next sync.
 *   **Git Stats Caching:** GitHub API calls are subject to a 60 requests/hour unauthenticated limit. The app mitigates this by:
