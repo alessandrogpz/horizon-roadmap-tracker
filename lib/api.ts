@@ -99,6 +99,7 @@ const migrateLocalPaths = (state: any) => {
   if (!state) return { state, modified: false };
   let modified = false;
 
+  // Old local path → GitHub URL (backward compat)
   const pathMap: Record<string, string> = {
     "~/Documents/ray-tracer": "https://github.com/alessandrogpz/ray-tracer",
     "~/Documents/LinearAlgebra": "https://github.com/alessandrogpz/linear-algebra",
@@ -106,26 +107,53 @@ const migrateLocalPaths = (state: any) => {
     "~/Documents/LearnOpenGL": "https://github.com/alessandrogpz/learn-opengl"
   };
 
+  // Authoritative ID → GitHub repo URL mapping
+  // This ensures git stats always show regardless of what localPath has in IndexedDB
+  const materialRepoMap: Record<string, string> = {
+    "m1": "https://github.com/alessandrogpz/linear-algebra",
+    "m2": "https://github.com/alessandrogpz/CCCP-3rd",
+    "m4": "https://github.com/alessandrogpz/ray-tracer",
+    "m5": "https://github.com/alessandrogpz/learn-opengl",
+  };
+
+  const portfolioRepoMap: Record<string, string> = {
+    "p1": "https://github.com/alessandrogpz/ray-tracer",
+  };
+
   if (state.portfolio) {
     const updatedPortfolio = state.portfolio.map((proj: any) => {
+      let updated = { ...proj };
+      // Convert old local path → GitHub URL in localPath
       if (proj.localPath && pathMap[proj.localPath]) {
+        updated.localPath = pathMap[proj.localPath];
         modified = true;
-        return { ...proj, localPath: pathMap[proj.localPath] };
       }
-      return proj;
+      // Inject repoUrl by ID — always authoritative
+      if (portfolioRepoMap[proj.id] && updated.repoUrl !== portfolioRepoMap[proj.id]) {
+        updated.repoUrl = portfolioRepoMap[proj.id];
+        modified = true;
+      }
+      return updated;
     });
-    if (modified) state.portfolio = updatedPortfolio;
+    state.portfolio = updatedPortfolio;
   }
 
   if (state.materials) {
     const updatedMaterials = state.materials.map((mat: any) => {
+      let updated = { ...mat };
+      // Convert old local path → GitHub URL in localPath
       if (mat.localPath && pathMap[mat.localPath]) {
+        updated.localPath = pathMap[mat.localPath];
         modified = true;
-        return { ...mat, localPath: pathMap[mat.localPath] };
       }
-      return mat;
+      // Inject repoUrl by ID — always authoritative
+      if (materialRepoMap[mat.id] && updated.repoUrl !== materialRepoMap[mat.id]) {
+        updated.repoUrl = materialRepoMap[mat.id];
+        modified = true;
+      }
+      return updated;
     });
-    if (modified) state.materials = updatedMaterials;
+    state.materials = updatedMaterials;
   }
 
   return { state, modified };
