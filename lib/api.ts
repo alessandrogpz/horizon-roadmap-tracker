@@ -296,8 +296,14 @@ export const fetchGitStats = async (pathOrRepo: string) => {
       }
     }
 
+    // Optional personal access token raises the GitHub API rate limit from
+    // 60 requests/hour (per IP) to 5000/hour. Set it once from the browser
+    // console: localStorage.setItem("github_token", "<token>")
+    const githubToken = typeof window !== "undefined" ? localStorage.getItem("github_token") || "" : "";
+    const githubHeaders: Record<string, string> = githubToken ? { Authorization: `Bearer ${githubToken}` } : {};
+
     try {
-      const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
+      const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers: githubHeaders });
 
       if (repoRes.status === 403) {
         console.warn(`GitHub API rate limited for ${cacheKey}. Stats unavailable until the limit resets.`);
@@ -320,7 +326,7 @@ export const fetchGitStats = async (pathOrRepo: string) => {
       const repoData = await repoRes.json();
       const defaultBranch = repoData.default_branch || "main";
 
-      const commitRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/commits?per_page=1`);
+      const commitRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/commits?per_page=1`, { headers: githubHeaders });
       if (!commitRes.ok) {
         const result = {
           isRepo: true,

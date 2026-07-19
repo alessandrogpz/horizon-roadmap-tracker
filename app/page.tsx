@@ -83,8 +83,8 @@ export default function Home() {
     setSyncStatus("syncing");
     setSyncError("");
     try {
+      let clientId = getGoogleClientId();
       if (!isGoogleAuthenticated()) {
-        let clientId = getGoogleClientId();
         if (!clientId) {
           clientId = prompt("Enter your Google OAuth Client ID to connect Google Drive:") || "";
           if (!clientId) {
@@ -96,7 +96,12 @@ export default function Home() {
         await authenticateGoogleDrive(clientId);
       }
 
-      const res = await syncWithGoogleDrive();
+      let res = await syncWithGoogleDrive();
+      if (!res.success && res.authRequired && clientId) {
+        // Token expired or was revoked mid-session: re-authenticate and retry once
+        await authenticateGoogleDrive(clientId);
+        res = await syncWithGoogleDrive();
+      }
       if (res.success) {
         setSyncStatus("success");
         setTimeout(() => setSyncStatus("idle"), 3000);
