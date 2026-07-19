@@ -115,6 +115,51 @@ export const fetchAppState = async () => {
 
 export const updateAppState = async (newState: any) => {
   try {
+    const record = await db.appState.get("current");
+    const oldData = record?.data || {};
+    
+    const lastUpdatedDates = { ...(newState.lastUpdatedDates || {}) };
+    
+    // Compare weeklyCompletions to see if any date changed
+    const oldComps = oldData.weeklyCompletions || {};
+    const newComps = newState.weeklyCompletions || {};
+    const allDates = Array.from(new Set([
+      ...Object.keys(oldComps),
+      ...Object.keys(newComps)
+    ]));
+    
+    const now = Date.now();
+    allDates.forEach((date) => {
+      const oldVal = oldComps[date] || { tasks: [], revisions: [] };
+      const newVal = newComps[date] || { tasks: [], revisions: [] };
+      
+      const tasksChanged = JSON.stringify(oldVal.tasks) !== JSON.stringify(newVal.tasks);
+      const revsChanged = JSON.stringify(oldVal.revisions) !== JSON.stringify(newVal.revisions);
+      
+      if (tasksChanged || revsChanged) {
+        lastUpdatedDates[date] = now;
+      }
+    });
+    
+    // Compare completedItemsHistory
+    const oldHist = oldData.completedItemsHistory || {};
+    const newHist = newState.completedItemsHistory || {};
+    const allHistDates = Array.from(new Set([
+      ...Object.keys(oldHist),
+      ...Object.keys(newHist)
+    ]));
+    
+    allHistDates.forEach((date) => {
+      const oldItems = oldHist[date] || [];
+      const newItems = newHist[date] || [];
+      
+      if (JSON.stringify(oldItems) !== JSON.stringify(newItems)) {
+        lastUpdatedDates[date] = now;
+      }
+    });
+    
+    newState.lastUpdatedDates = lastUpdatedDates;
+
     await db.appState.put({ id: "current", data: newState });
     return { success: true };
   } catch (error) {

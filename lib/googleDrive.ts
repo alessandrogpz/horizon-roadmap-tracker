@@ -139,42 +139,70 @@ export const syncWithGoogleDrive = async (): Promise<SyncResult> => {
         logs.push("Local database initialized with remote backup.");
         localRecord.data = finalData;
       } else {
-        logs.push("Merging progress and streaks...");
+        logs.push("Merging progress and streaks using day-level timestamps...");
         const mergedWeeklyCompletions = { ...(localData.weeklyCompletions || {}) };
-        const remoteCompletions = remoteData.weeklyCompletions || {};
+        const mergedCompletedItemsHistory = { ...(localData.completedItemsHistory || {}) };
+        
+        const localUpdated = localData.lastUpdatedDates || {};
+        const remoteUpdated = remoteData.lastUpdatedDates || {};
+        const mergedUpdated = { ...localUpdated, ...remoteUpdated };
 
-        Object.keys(remoteCompletions).forEach((date) => {
-          if (!mergedWeeklyCompletions[date]) {
-            mergedWeeklyCompletions[date] = remoteCompletions[date];
+        const allDates = Array.from(new Set([
+          ...Object.keys(localUpdated),
+          ...Object.keys(remoteUpdated),
+          ...Object.keys(localData.weeklyCompletions || {}),
+          ...Object.keys(remoteData.weeklyCompletions || {}),
+          ...Object.keys(localData.completedItemsHistory || {}),
+          ...Object.keys(remoteData.completedItemsHistory || {})
+        ]));
+
+        allDates.forEach((date) => {
+          const localTime = localUpdated[date] || 0;
+          const remoteTime = remoteUpdated[date] || 0;
+
+          if (remoteTime > localTime) {
+            // Remote is newer: adopt remote completions and achievements for this day
+            if (remoteData.weeklyCompletions?.[date]) {
+              mergedWeeklyCompletions[date] = remoteData.weeklyCompletions[date];
+            } else {
+              delete mergedWeeklyCompletions[date];
+            }
+
+            if (remoteData.completedItemsHistory?.[date]) {
+              mergedCompletedItemsHistory[date] = remoteData.completedItemsHistory[date];
+            } else {
+              delete mergedCompletedItemsHistory[date];
+            }
+          } else if (localTime > remoteTime) {
+            // Local is newer: keep local completions (already in mergedWeeklyCompletions / mergedCompletedItemsHistory)
           } else {
+            // Equal or both 0: do standard union merge
+            const remoteComps = remoteData.weeklyCompletions?.[date] || { tasks: [], revisions: [] };
+            const localComps = mergedWeeklyCompletions[date] || { tasks: [], revisions: [] };
             mergedWeeklyCompletions[date] = {
-              tasks: Array.from(new Set([...(mergedWeeklyCompletions[date].tasks || []), ...(remoteCompletions[date].tasks || [])])),
-              revisions: Array.from(new Set([...(mergedWeeklyCompletions[date].revisions || []), ...(remoteCompletions[date].revisions || [])])),
+              tasks: Array.from(new Set([...(localComps.tasks || []), ...(remoteComps.tasks || [])])),
+              revisions: Array.from(new Set([...(localComps.revisions || []), ...(remoteComps.revisions || [])])),
             };
+
+            const localItems = mergedCompletedItemsHistory[date] || [];
+            const remoteItems = remoteData.completedItemsHistory?.[date] || [];
+            const mergedItems = [...localItems];
+            remoteItems.forEach((rIt: any) => {
+              const rTitle = typeof rIt === "string" ? rIt : rIt.title;
+              const exists = mergedItems.some((lIt: any) => {
+                const lTitle = typeof lIt === "string" ? lIt : lIt.title;
+                return lTitle === rTitle;
+              });
+              if (!exists) mergedItems.push(rIt);
+            });
+            mergedCompletedItemsHistory[date] = mergedItems;
           }
         });
 
-        const mergedStreakHistory = Array.from(new Set([
-          ...(localData.streakHistory || []),
-          ...(remoteData.streakHistory || []),
-        ]));
-
-        const mergedCompletedItemsHistory = { ...(localData.completedItemsHistory || {}) };
-        const remoteCompletedItems = remoteData.completedItemsHistory || {};
-        Object.keys(remoteCompletedItems).forEach((date) => {
-          const localItems = mergedCompletedItemsHistory[date] || [];
-          const remoteItems = remoteCompletedItems[date] || [];
-          const mergedItems = [...localItems];
-          remoteItems.forEach((rIt: any) => {
-            const rTitle = typeof rIt === "string" ? rIt : rIt.title;
-            const exists = mergedItems.some((lIt: any) => {
-              const lTitle = typeof lIt === "string" ? lIt : lIt.title;
-              return lTitle === rTitle;
-            });
-            if (!exists) mergedItems.push(rIt);
-          });
-          mergedCompletedItemsHistory[date] = mergedItems;
-        });
+        // Rebuild streakHistory from completedItemsHistory (days that have > 0 completions)
+        const mergedStreakHistory = Object.keys(mergedCompletedItemsHistory).filter(
+          (date) => mergedCompletedItemsHistory[date] && mergedCompletedItemsHistory[date].length > 0
+        );
 
         const localReset = localData.lastTasksResetDate || "";
         const remoteReset = remoteData.lastTasksResetDate || "";
@@ -184,6 +212,7 @@ export const syncWithGoogleDrive = async (): Promise<SyncResult> => {
           weeklyCompletions: mergedWeeklyCompletions,
           streakHistory: mergedStreakHistory,
           completedItemsHistory: mergedCompletedItemsHistory,
+          lastUpdatedDates: mergedUpdated,
         };
 
         if (remoteReset > localReset) {
