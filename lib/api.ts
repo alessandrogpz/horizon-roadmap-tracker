@@ -128,6 +128,7 @@ export const updateAppState = async (newState: any) => {
       ...Object.keys(newComps)
     ]));
     
+    let hasChanges = false;
     allDates.forEach((date) => {
       const oldVal = oldComps[date] || { tasks: [], revisions: [] };
       const newVal = newComps[date] || { tasks: [], revisions: [] };
@@ -137,6 +138,7 @@ export const updateAppState = async (newState: any) => {
       
       if (tasksChanged || revsChanged) {
         lastUpdatedDates[date] = (oldData.lastUpdatedDates?.[date] || 0) + 1;
+        hasChanges = true;
       }
     });
     
@@ -154,10 +156,19 @@ export const updateAppState = async (newState: any) => {
       
       if (JSON.stringify(oldItems) !== JSON.stringify(newItems)) {
         lastUpdatedDates[date] = (oldData.lastUpdatedDates?.[date] || 0) + 1;
+        hasChanges = true;
       }
     });
     
     newState.lastUpdatedDates = lastUpdatedDates;
+
+    if (newState.hasUnsyncedChanges === undefined) {
+      if (hasChanges) {
+        newState.hasUnsyncedChanges = true;
+      } else {
+        newState.hasUnsyncedChanges = oldData.hasUnsyncedChanges ?? false;
+      }
+    }
 
     await db.appState.put({ id: "current", data: newState });
     return { success: true };
