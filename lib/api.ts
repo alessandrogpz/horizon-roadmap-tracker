@@ -1,4 +1,6 @@
 import { db } from "./localDb";
+import type { Material, PortfolioProject } from "./types";
+import { LEGACY_PATH_TO_REPO, MATERIAL_REPO_MAP, PORTFOLIO_REPO_MAP } from "./migrationConfig";
 
 const DEFAULT_SKETCH_STATE = {
   currentPhase: 1,
@@ -99,61 +101,30 @@ const migrateLocalPaths = (state: any) => {
   if (!state) return { state, modified: false };
   let modified = false;
 
-  // Old local path → GitHub URL (backward compat)
-  const pathMap: Record<string, string> = {
-    "~/Documents/ray-tracer": "https://github.com/alessandrogpz/ray-tracer",
-    "~/Documents/LinearAlgebra": "https://github.com/alessandrogpz/linear-algebra",
-    "~/Documents/PPPC++": "https://github.com/alessandrogpz/CCCP-3rd",
-    "~/Documents/LearnOpenGL": "https://github.com/alessandrogpz/learn-opengl"
-  };
-
-  // Authoritative ID → GitHub repo URL mapping
-  // This ensures git stats always show regardless of what localPath has in IndexedDB
-  const materialRepoMap: Record<string, string> = {
-    "m1": "https://github.com/alessandrogpz/linear-algebra",
-    "m2": "https://github.com/alessandrogpz/CCCP-3rd",
-    "m4": "https://github.com/alessandrogpz/ray-tracer",
-    "m5": "https://github.com/alessandrogpz/learn-opengl",
-  };
-
-  const portfolioRepoMap: Record<string, string> = {
-    "p1": "https://github.com/alessandrogpz/ray-tracer",
+  const migrateEntry = <T extends { id: string; localPath?: string; repoUrl?: string }>(
+    entry: T,
+    repoMap: Record<string, string>
+  ): T => {
+    const updated = { ...entry };
+    // Convert old local path → GitHub URL in localPath
+    if (entry.localPath && LEGACY_PATH_TO_REPO[entry.localPath]) {
+      updated.localPath = LEGACY_PATH_TO_REPO[entry.localPath];
+      modified = true;
+    }
+    // Inject repoUrl by ID — always authoritative
+    if (repoMap[entry.id] && updated.repoUrl !== repoMap[entry.id]) {
+      updated.repoUrl = repoMap[entry.id];
+      modified = true;
+    }
+    return updated;
   };
 
   if (state.portfolio) {
-    const updatedPortfolio = state.portfolio.map((proj: any) => {
-      let updated = { ...proj };
-      // Convert old local path → GitHub URL in localPath
-      if (proj.localPath && pathMap[proj.localPath]) {
-        updated.localPath = pathMap[proj.localPath];
-        modified = true;
-      }
-      // Inject repoUrl by ID — always authoritative
-      if (portfolioRepoMap[proj.id] && updated.repoUrl !== portfolioRepoMap[proj.id]) {
-        updated.repoUrl = portfolioRepoMap[proj.id];
-        modified = true;
-      }
-      return updated;
-    });
-    state.portfolio = updatedPortfolio;
+    state.portfolio = state.portfolio.map((proj: PortfolioProject) => migrateEntry(proj, PORTFOLIO_REPO_MAP));
   }
 
   if (state.materials) {
-    const updatedMaterials = state.materials.map((mat: any) => {
-      let updated = { ...mat };
-      // Convert old local path → GitHub URL in localPath
-      if (mat.localPath && pathMap[mat.localPath]) {
-        updated.localPath = pathMap[mat.localPath];
-        modified = true;
-      }
-      // Inject repoUrl by ID — always authoritative
-      if (materialRepoMap[mat.id] && updated.repoUrl !== materialRepoMap[mat.id]) {
-        updated.repoUrl = materialRepoMap[mat.id];
-        modified = true;
-      }
-      return updated;
-    });
-    state.materials = updatedMaterials;
+    state.materials = state.materials.map((mat: Material) => migrateEntry(mat, MATERIAL_REPO_MAP));
   }
 
   return { state, modified };
