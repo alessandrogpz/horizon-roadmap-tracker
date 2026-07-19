@@ -216,16 +216,73 @@ export const syncWithGoogleDrive = async (): Promise<SyncResult> => {
           (date) => mergedCompletedItemsHistory[date] && mergedCompletedItemsHistory[date].length > 0
         );
 
-        const localReset = localData.lastTasksResetDate || "";
-        const remoteReset = remoteData.lastTasksResetDate || "";
-
         const localConfigVer = localData.configVersion || 0;
         const remoteConfigVer = remoteData.configVersion || 0;
-        
-        const baseData = remoteConfigVer > localConfigVer ? remoteData : localData;
+
+        // Per-material merge: always prefer a real URL (http/https) over a local path
+        // This ensures link edits on any device win regardless of inflated configVersion
+        const isUrl = (s: string) => typeof s === "string" && (s.startsWith("http://") || s.startsWith("https://"));
+        const mergeMaterials = (localMats: any[] = [], remoteMats: any[] = []) => {
+          const byId = new Map<string, any>();
+          localMats.forEach(m => byId.set(m.id, { ...m }));
+          remoteMats.forEach(rm => {
+            const lm = byId.get(rm.id);
+            if (!lm) {
+              byId.set(rm.id, { ...rm });
+            } else {
+              // Prefer real URL over local path for link field
+              const preferRemoteLink = isUrl(rm.link) && !isUrl(lm.link);
+              const preferLocalLink  = isUrl(lm.link)  && !isUrl(rm.link);
+              byId.set(rm.id, {
+                ...lm,
+                // Adopt all remote scalar fields unless local clearly has a better link
+                title: rm.title || lm.title,
+                category: rm.category || lm.category,
+                type: rm.type || lm.type,
+                status: rm.status || lm.status,
+                totalPages: rm.totalPages || lm.totalPages,
+                currentPage: rm.currentPage ?? lm.currentPage,
+                currentSubject: rm.currentSubject || lm.currentSubject,
+                link: preferLocalLink ? lm.link : (preferRemoteLink ? rm.link : (rm.link || lm.link)),
+                localPath: rm.localPath || lm.localPath,
+              });
+            }
+          });
+          return Array.from(byId.values());
+        };
+
+        // For portfolio, prefer whichever device has a repo URL
+        const mergePortfolio = (localPort: any[] = [], remotePort: any[] = []) => {
+          const byId = new Map<string, any>();
+          localPort.forEach(p => byId.set(p.id, { ...p }));
+          remotePort.forEach(rp => {
+            const lp = byId.get(rp.id);
+            if (!lp) {
+              byId.set(rp.id, { ...rp });
+            } else {
+              const preferRemoteRepo = isUrl(rp.repoUrl) && !isUrl(lp.repoUrl);
+              byId.set(rp.id, {
+                ...lp,
+                ...rp,
+                repoUrl: preferRemoteRepo ? rp.repoUrl : (lp.repoUrl || rp.repoUrl),
+              });
+            }
+          });
+          return Array.from(byId.values());
+        };
+
+        // For structural config (phase info, startDate, weekSchedule etc) pick the higher configVersion side
+        const configBase = remoteConfigVer > localConfigVer ? remoteData : localData;
+
+        const mergedMaterials  = mergeMaterials(localData.materials,  remoteData.materials);
+        const mergedPortfolio  = mergePortfolio(localData.portfolio,  remoteData.portfolio);
 
         let finalData = {
-          ...baseData,
+          ...configBase,
+          // Always use smart-merged materials & portfolio
+          materials: mergedMaterials,
+          portfolio: mergedPortfolio,
+          // Always use merged progress data
           weeklyCompletions: mergedWeeklyCompletions,
           streakHistory: mergedStreakHistory,
           completedItemsHistory: mergedCompletedItemsHistory,
@@ -233,15 +290,16 @@ export const syncWithGoogleDrive = async (): Promise<SyncResult> => {
           hasUnsyncedChanges: false,
           lastSyncTime: Date.now(),
           isSynced: true,
-          configVersion: Math.max(localConfigVer, remoteConfigVer)
+          // Normalise configVersion so both sides start from same baseline after sync
+          configVersion: Math.max(localConfigVer, remoteConfigVer),
         };
 
         if (remoteConfigVer > localConfigVer) {
-          logs.push("Remote configuration is newer. Adopting remote settings.");
+          logs.push("Remote configuration is newer. Adopting remote structural config.");
         } else if (localConfigVer > remoteConfigVer) {
-          logs.push("Local configuration is newer. Keeping local settings and preparing upload.");
+          logs.push("Local configuration is newer. Keeping local structural config.");
         } else {
-          // If versions are equal, fallback to reset date logic
+          // If versions are equal, fallback to reset date logic for daily structure
           const localReset = localData.lastTasksResetDate || "";
           const remoteReset = remoteData.lastTasksResetDate || "";
           if (remoteReset > localReset) {
