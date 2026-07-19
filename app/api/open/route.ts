@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { spawn } from 'child_process';
 import os from 'os';
 import path from 'path';
+import { isLocalRequest, localOnlyResponse } from '@/lib/server/localRequest';
 
 // Resolve paths beginning with ~ to the system user's home directory
 function resolveHomePath(inputPath: string): string {
@@ -12,6 +13,9 @@ function resolveHomePath(inputPath: string): string {
 }
 
 export async function POST(request: Request) {
+  if (!isLocalRequest(request)) {
+    return localOnlyResponse();
+  }
   try {
     const { link } = await request.json();
     if (!link) {

@@ -3,6 +3,7 @@ import { execSync } from "child_process";
 import fs from "fs";
 import os from "os";
 import path from "path";
+import { isLocalRequest, localOnlyResponse } from "@/lib/server/localRequest";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,9 @@ function resolveHomePath(inputPath: string): string {
 }
 
 export async function GET(req: NextRequest) {
+  if (!isLocalRequest(req)) {
+    return localOnlyResponse();
+  }
   const { searchParams } = new URL(req.url);
   const targetPath = searchParams.get("path");
 
