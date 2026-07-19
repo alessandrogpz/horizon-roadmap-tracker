@@ -128,7 +128,6 @@ export const updateAppState = async (newState: any) => {
       ...Object.keys(newComps)
     ]));
     
-    const now = Date.now();
     allDates.forEach((date) => {
       const oldVal = oldComps[date] || { tasks: [], revisions: [] };
       const newVal = newComps[date] || { tasks: [], revisions: [] };
@@ -137,7 +136,7 @@ export const updateAppState = async (newState: any) => {
       const revsChanged = JSON.stringify(oldVal.revisions) !== JSON.stringify(newVal.revisions);
       
       if (tasksChanged || revsChanged) {
-        lastUpdatedDates[date] = now;
+        lastUpdatedDates[date] = (oldData.lastUpdatedDates?.[date] || 0) + 1;
       }
     });
     
@@ -154,7 +153,7 @@ export const updateAppState = async (newState: any) => {
       const newItems = newHist[date] || [];
       
       if (JSON.stringify(oldItems) !== JSON.stringify(newItems)) {
-        lastUpdatedDates[date] = now;
+        lastUpdatedDates[date] = (oldData.lastUpdatedDates?.[date] || 0) + 1;
       }
     });
     

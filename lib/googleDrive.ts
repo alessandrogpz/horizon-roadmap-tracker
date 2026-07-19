@@ -176,26 +176,38 @@ export const syncWithGoogleDrive = async (): Promise<SyncResult> => {
           } else if (localTime > remoteTime) {
             // Local is newer: keep local completions (already in mergedWeeklyCompletions / mergedCompletedItemsHistory)
           } else {
-            // Equal or both 0: do standard union merge
-            const remoteComps = remoteData.weeklyCompletions?.[date] || { tasks: [], revisions: [] };
-            const localComps = mergedWeeklyCompletions[date] || { tasks: [], revisions: [] };
-            mergedWeeklyCompletions[date] = {
-              tasks: Array.from(new Set([...(localComps.tasks || []), ...(remoteComps.tasks || [])])),
-              revisions: Array.from(new Set([...(localComps.revisions || []), ...(remoteComps.revisions || [])])),
-            };
+            // Equal versions: deletion wins over addition
+            const remoteTaskCount = (remoteData.weeklyCompletions?.[date]?.tasks || []).length;
+            const localTaskCount = (mergedWeeklyCompletions[date]?.tasks || []).length;
+            const remoteRevCount = (remoteData.weeklyCompletions?.[date]?.revisions || []).length;
+            const localRevCount = (mergedWeeklyCompletions[date]?.revisions || []).length;
+            
+            if (remoteTaskCount < localTaskCount || remoteRevCount < localRevCount) {
+              // Remote deleted something, adopt remote
+              mergedWeeklyCompletions[date] = remoteData.weeklyCompletions?.[date] || { tasks: [], revisions: [] };
+              mergedCompletedItemsHistory[date] = remoteData.completedItemsHistory?.[date] || [];
+            } else {
+              // Standard union merge for additions
+              const remoteComps = remoteData.weeklyCompletions?.[date] || { tasks: [], revisions: [] };
+              const localComps = mergedWeeklyCompletions[date] || { tasks: [], revisions: [] };
+              mergedWeeklyCompletions[date] = {
+                tasks: Array.from(new Set([...(localComps.tasks || []), ...(remoteComps.tasks || [])])),
+                revisions: Array.from(new Set([...(localComps.revisions || []), ...(remoteComps.revisions || [])])),
+              };
 
-            const localItems = mergedCompletedItemsHistory[date] || [];
-            const remoteItems = remoteData.completedItemsHistory?.[date] || [];
-            const mergedItems = [...localItems];
-            remoteItems.forEach((rIt: any) => {
-              const rTitle = typeof rIt === "string" ? rIt : rIt.title;
-              const exists = mergedItems.some((lIt: any) => {
-                const lTitle = typeof lIt === "string" ? lIt : lIt.title;
-                return lTitle === rTitle;
+              const localItems = mergedCompletedItemsHistory[date] || [];
+              const remoteItems = remoteData.completedItemsHistory?.[date] || [];
+              const mergedItems = [...localItems];
+              remoteItems.forEach((rIt: any) => {
+                const rTitle = typeof rIt === "string" ? rIt : rIt.title;
+                const exists = mergedItems.some((lIt: any) => {
+                  const lTitle = typeof lIt === "string" ? lIt : lIt.title;
+                  return lTitle === rTitle;
+                });
+                if (!exists) mergedItems.push(rIt);
               });
-              if (!exists) mergedItems.push(rIt);
-            });
-            mergedCompletedItemsHistory[date] = mergedItems;
+              mergedCompletedItemsHistory[date] = mergedItems;
+            }
           }
         });
 
@@ -235,6 +247,9 @@ export const syncWithGoogleDrive = async (): Promise<SyncResult> => {
         logs.push("Local database successfully updated with merged state.");
         localRecord.data = finalData;
       }
+    } else {
+      localRecord.data.isSynced = true;
+      await db.appState.put({ id: "current", data: localRecord.data });
     }
 
     const stringifiedData = JSON.stringify(localRecord.data, null, 2);
