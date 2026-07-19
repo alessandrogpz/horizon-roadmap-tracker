@@ -219,37 +219,27 @@ export const syncWithGoogleDrive = async (): Promise<SyncResult> => {
         const localReset = localData.lastTasksResetDate || "";
         const remoteReset = remoteData.lastTasksResetDate || "";
 
+        const localConfigVer = localData.configVersion || 0;
+        const remoteConfigVer = remoteData.configVersion || 0;
+        
+        const baseData = remoteConfigVer > localConfigVer ? remoteData : localData;
+
         let finalData = {
-          ...localData,
+          ...baseData,
           weeklyCompletions: mergedWeeklyCompletions,
           streakHistory: mergedStreakHistory,
           completedItemsHistory: mergedCompletedItemsHistory,
           lastUpdatedDates: mergedUpdated,
           hasUnsyncedChanges: false,
           lastSyncTime: Date.now(),
+          isSynced: true,
+          configVersion: Math.max(localConfigVer, remoteConfigVer)
         };
-
-        const localConfigVer = localData.configVersion || 0;
-        const remoteConfigVer = remoteData.configVersion || 0;
 
         if (remoteConfigVer > localConfigVer) {
           logs.push("Remote configuration is newer. Adopting remote settings.");
-          finalData = {
-            ...finalData,
-            materials: remoteData.materials,
-            portfolio: remoteData.portfolio,
-            currentPhase: remoteData.currentPhase,
-            startDate: remoteData.startDate,
-            currentPhaseStartDate: remoteData.currentPhaseStartDate,
-            dsaStartWeek: remoteData.dsaStartWeek,
-            dailyTasks: remoteData.dailyTasks,
-            dailyRevisionItems: remoteData.dailyRevisionItems,
-            lastTasksResetDate: remoteData.lastTasksResetDate,
-            configVersion: remoteConfigVer,
-          };
         } else if (localConfigVer > remoteConfigVer) {
           logs.push("Local configuration is newer. Keeping local settings and preparing upload.");
-          finalData.configVersion = localConfigVer;
         } else {
           // If versions are equal, fallback to reset date logic
           const localReset = localData.lastTasksResetDate || "";
