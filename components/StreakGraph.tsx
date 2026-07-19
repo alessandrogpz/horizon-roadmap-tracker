@@ -20,10 +20,12 @@ export default function StreakGraph({
     }
   }, [streakHistory]);
 
-  // Count occurrences of each date
+  // Count achievements per date from completedItemsHistory
   const dateCounts: { [key: string]: number } = {};
-  streakHistory.forEach((date) => {
-    dateCounts[date] = (dateCounts[date] || 0) + 1;
+  Object.entries(completedItemsHistory || {}).forEach(([date, items]) => {
+    if (Array.isArray(items)) {
+      dateCounts[date] = items.length;
+    }
   });
 
   const today = new Date();
