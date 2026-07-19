@@ -569,7 +569,7 @@
       "id": "p1",
       "title": "CPU Ray Tracer",
       "completed": false,
-      "localPath": "~/Documents/ray-tracer"
+      "localPath": "https://github.com/alessandrogpz/ray-tracer"
     },
     {
       "id": "p2",
@@ -593,7 +593,7 @@
       "totalPages": 183,
       "currentSubject": "2.7.2 Rotation With Quaternions",
       "link": "/mnt/Storage4TB/Bookshelf/Game Engine/Foundations of Game Engine Development, Volume 1 Mathematics by Eric Lengyel.pdf",
-      "localPath": "~/Documents/LinearAlgebra"
+      "localPath": "https://github.com/alessandrogpz/linear-algebra"
     },
     {
       "id": "m2",
@@ -605,7 +605,7 @@
       "totalPages": 639,
       "currentSubject": "Chapter 4: Errors! - Review",
       "link": "",
-      "localPath": "~/Documents/PPPC++"
+      "localPath": "https://github.com/alessandrogpz/CCCP-3rd"
     },
     {
       "id": "m4",
@@ -617,7 +617,7 @@
       "totalPages": 264,
       "currentSubject": "Chapter 8: Shadows",
       "link": "/mnt/Storage4TB/Bookshelf/Graphics Programming/Ray Tracer Challenge _ A Test-driven Guide to Your First 3d Renderer (9781680506792).pdf",
-      "localPath": "~/Documents/ray-tracer"
+      "localPath": "https://github.com/alessandrogpz/ray-tracer"
     },
     {
       "id": "m5",
@@ -629,7 +629,7 @@
       "totalPages": 50,
       "currentSubject": "Understand \"Hello Triangle\" deeply",
       "link": "https://learnopengl.com",
-      "localPath": "~/Documents/LearnOpenGL"
+      "localPath": "https://github.com/alessandrogpz/learn-opengl"
     },
     {
       "id": "m6",

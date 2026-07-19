@@ -95,18 +95,59 @@ const DEFAULT_SKETCH_STATE = {
   studyStreak: []
 };
 
+const migrateLocalPaths = (state: any) => {
+  if (!state) return { state, modified: false };
+  let modified = false;
+
+  const pathMap: Record<string, string> = {
+    "~/Documents/ray-tracer": "https://github.com/alessandrogpz/ray-tracer",
+    "~/Documents/LinearAlgebra": "https://github.com/alessandrogpz/linear-algebra",
+    "~/Documents/PPPC++": "https://github.com/alessandrogpz/CCCP-3rd",
+    "~/Documents/LearnOpenGL": "https://github.com/alessandrogpz/learn-opengl"
+  };
+
+  if (state.portfolio) {
+    const updatedPortfolio = state.portfolio.map((proj: any) => {
+      if (proj.localPath && pathMap[proj.localPath]) {
+        modified = true;
+        return { ...proj, localPath: pathMap[proj.localPath] };
+      }
+      return proj;
+    });
+    if (modified) state.portfolio = updatedPortfolio;
+  }
+
+  if (state.materials) {
+    const updatedMaterials = state.materials.map((mat: any) => {
+      if (mat.localPath && pathMap[mat.localPath]) {
+        modified = true;
+        return { ...mat, localPath: pathMap[mat.localPath] };
+      }
+      return mat;
+    });
+    if (modified) state.materials = updatedMaterials;
+  }
+
+  return { state, modified };
+};
+
 export const fetchAppState = async () => {
   try {
     // 1. Try to load from IndexedDB
     const record = await db.appState.get("current");
     if (record) {
-      return record.data;
+      const { state, modified } = migrateLocalPaths(record.data);
+      if (modified) {
+        await db.appState.put({ id: "current", data: state });
+      }
+      return state;
     }
 
     // 2. If empty, save the default mock sketch template to IndexedDB
     console.log("IndexedDB is empty, initializing default sketch template...");
-    await db.appState.put({ id: "current", data: DEFAULT_SKETCH_STATE });
-    return DEFAULT_SKETCH_STATE;
+    const { state: migratedDefault } = migrateLocalPaths({ ...DEFAULT_SKETCH_STATE });
+    await db.appState.put({ id: "current", data: migratedDefault });
+    return migratedDefault;
   } catch (error) {
     console.error("fetchAppState local error:", error);
     throw error;
