@@ -26,70 +26,27 @@ export default function DriveConnectModal({
   return (
     <div
       onClick={onClose}
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: "rgba(0, 0, 0, 0.85)",
-        backdropFilter: "blur(4px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1000,
-        padding: "1rem"
-      }}
+      className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center z-[1000] p-4"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="glass-panel"
-        style={{
-          maxWidth: "460px",
-          width: "100%",
-          display: "flex",
-          flexDirection: "column",
-          gap: "1.25rem",
-          padding: "2rem",
-          border: "1px solid var(--accent)",
-          position: "relative",
-          borderRadius: "8px"
-        }}
+        className="glass-panel max-w-[460px] w-full flex flex-col gap-5 p-8 border !border-accent relative rounded-lg"
       >
         <button
           onClick={onClose}
-          style={{
-            position: "absolute",
-            top: "1.5rem",
-            right: "1.5rem",
-            background: "transparent",
-            border: "none",
-            color: "#a1a1aa",
-            fontSize: "1.2rem",
-            cursor: "pointer",
-          }}
+          className="absolute top-6 right-6 bg-transparent border-none text-zinc-400 text-[1.2rem] cursor-pointer"
         >
           ✕
         </button>
 
         <div>
-          <span style={{
-            fontSize: "0.75rem",
-            background: "rgba(14, 165, 233, 0.1)",
-            color: "var(--accent)",
-            padding: "0.15rem 0.5rem",
-            borderRadius: "4px",
-            fontWeight: 600,
-            textTransform: "uppercase",
-            fontFamily: "monospace",
-            letterSpacing: "0.05em"
-          }}>
+          <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold uppercase font-mono tracking-[0.05em]">
             Google Drive
           </span>
-          <h2 style={{ fontSize: "1.3rem", fontWeight: 700, color: "#fff", marginTop: "0.5rem", marginBottom: "0.25rem" }}>
+          <h2 className="text-[1.3rem] font-bold text-white mt-2 mb-1">
             {mode === "connect" ? "Connect Cloud Sync" : "Manage Connection"}
           </h2>
-          <p style={{ fontSize: "0.85rem", color: "#a1a1aa", margin: 0, lineHeight: 1.5 }}>
+          <p className="text-[0.85rem] text-zinc-400 m-0 leading-normal">
             {mode === "connect"
               ? "Your progress is stored in your own Google Drive (hidden app folder). Enter the OAuth Client ID of your Google Cloud project to connect."
               : `Status: ${isAuthenticated ? "authenticated" : "not authenticated"}. Disconnecting clears the stored Client ID and access token from this browser.`}
@@ -98,7 +55,7 @@ export default function DriveConnectModal({
 
         {mode === "connect" && (
           <div>
-            <label style={{ display: "block", fontSize: "0.7rem", color: "#a1a1aa", marginBottom: "0.35rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <label className="block text-[0.7rem] text-zinc-400 mb-1.5 uppercase tracking-[0.05em]">
               OAuth Client ID
             </label>
             <input
@@ -110,52 +67,31 @@ export default function DriveConnectModal({
               onKeyDown={(e) => {
                 if (e.key === "Enter" && clientId.trim()) onConnect(clientId.trim());
               }}
-              style={{
-                width: "100%",
-                padding: "0.5rem 0.75rem",
-                borderRadius: "6px",
-                background: "rgba(0,0,0,0.3)",
-                border: "1px solid var(--card-border)",
-                color: "#fff",
-                outline: "none",
-                fontFamily: "inherit",
-                fontSize: "0.85rem"
-              }}
+              className="w-full px-3 py-2 rounded-md bg-black/30 border border-card-border text-white outline-none font-[inherit] text-[0.85rem]"
             />
           </div>
         )}
 
-        <div style={{ display: "flex", justifyContent: mode === "manage" ? "space-between" : "flex-end", gap: "0.75rem", alignItems: "center" }}>
+        <div className={`flex ${mode === "manage" ? "justify-between" : "justify-end"} gap-3 items-center`}>
           {mode === "manage" && (
             <button
               onClick={onDisconnect}
-              style={{
-                background: "rgba(239, 68, 68, 0.1)",
-                color: "#ef4444",
-                border: "1px solid rgba(239, 68, 68, 0.3)",
-                borderRadius: "6px",
-                padding: "0.5rem 1rem",
-                fontSize: "0.85rem",
-                cursor: "pointer",
-                fontFamily: "inherit"
-              }}
+              className="bg-red-500/10 text-red-500 border border-red-500/30 rounded-md px-4 py-2 text-[0.85rem] cursor-pointer font-[inherit]"
             >
               Disconnect Drive
             </button>
           )}
-          <div style={{ display: "flex", gap: "0.75rem" }}>
+          <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="btn"
-              style={{ padding: "0.5rem 1rem", fontSize: "0.85rem", background: "transparent", color: "#a1a1aa", border: "1px solid rgba(255, 255, 255, 0.1)" }}
+              className="btn px-4 py-2 text-[0.85rem] !bg-transparent !text-zinc-400 !border-white/10 hover:!text-white"
             >
               Cancel
             </button>
             {mode === "connect" && (
               <button
                 onClick={() => clientId.trim() && onConnect(clientId.trim())}
-                className="btn"
-                style={{ padding: "0.5rem 1.25rem", fontSize: "0.85rem" }}
+                className="btn px-5 py-2 text-[0.85rem] disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={!clientId.trim()}
               >
                 Connect & Sync

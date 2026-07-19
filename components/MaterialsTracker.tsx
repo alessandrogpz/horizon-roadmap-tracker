@@ -3,20 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { fetchGitStats, fetchNotes, saveNotes } from "@/lib/api";
 import { renderMarkdownToHtml } from "@/lib/markdown";
-
-interface Material {
-  id: string;
-  title: string;
-  category: string;
-  type: string;
-  status: string;
-  currentPage: number;
-  totalPages: number;
-  currentSubject: string;
-  link: string;
-  localPath?: string;
-  repoUrl?: string;
-}
+import type { GitStats, Material } from "@/lib/types";
 
 interface MaterialsTrackerProps {
   materials: Material[];
@@ -27,9 +14,13 @@ interface MaterialsTrackerProps {
   onOpenLink: (link: string) => void;
 }
 
+const inputClass = "w-full p-1 rounded bg-black/30 border border-card-border text-white outline-none font-[inherit] text-[0.85rem]";
+const selectClass = "w-full p-1 rounded bg-black/30 border border-card-border text-white outline-none font-[inherit] text-[0.8rem]";
+const labelClass = "block text-[0.7rem] text-zinc-400 mb-1 uppercase";
+const metricLabelClass = "text-[0.65rem] text-zinc-500 w-[70px] uppercase font-mono font-bold tracking-[0.05em]";
+
 export default function MaterialsTracker({
   materials,
-  onStatusChange,
   onProgressChange,
   onAddMaterial,
   onDeleteMaterial,
@@ -56,7 +47,7 @@ export default function MaterialsTracker({
   const [editLocalPath, setEditLocalPath] = useState("");
 
   // Git stats state
-  const [gitStats, setGitStats] = useState<{ [id: string]: any }>({});
+  const [gitStats, setGitStats] = useState<{ [id: string]: GitStats }>({});
 
   // Notes drawer states
   const [activeNotesId, setActiveNotesId] = useState<string | null>(null);
@@ -77,16 +68,12 @@ export default function MaterialsTracker({
   useEffect(() => {
     materials.forEach(mat => {
       const source = mat.repoUrl || mat.localPath || "";
-      console.log(`[GitStats] ${mat.title} | repoUrl=${mat.repoUrl} | localPath=${mat.localPath} | source="${source}"`);
       if (source.includes("github.com") || source.startsWith("/") || source.startsWith("~")) {
         fetchGitStats(source)
           .then(stats => {
-            console.log(`[GitStats] ${mat.title} result:`, stats);
             setGitStats(prev => ({ ...prev, [mat.id]: stats }));
           })
           .catch(err => console.error(`Error fetching git stats for ${mat.title}:`, err));
-      } else {
-        console.log(`[GitStats] ${mat.title}: SKIPPED (source not a valid path)`);
       }
     });
   }, [materials]);
@@ -230,259 +217,187 @@ export default function MaterialsTracker({
   };
 
   return (
-    <div className="glass-panel" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--card-border)", paddingBottom: "0.75rem" }}>
-        <h2 className="section-title" style={{ marginBottom: 0 }}>Materials</h2>
+    <div className="glass-panel flex flex-col gap-4">
+      <div className="flex justify-between items-center border-b border-card-border pb-3">
+        <h2 className="section-title !mb-0">Materials</h2>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className="btn"
-          style={{ padding: "0.2rem 0.6rem", fontSize: "0.75rem" }}
+          className="btn px-2.5 py-1 text-xs"
         >
           {showAddForm ? "Cancel" : "[+ Add]"}
         </button>
       </div>
 
       {showAddForm && (
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "0.75rem", background: "rgba(255,255,255,0.01)", border: "1px solid var(--card-border)", borderRadius: "4px" }}>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-3 bg-white/[0.01] border border-card-border rounded">
           <div>
-            <label style={{ display: "block", fontSize: "0.7rem", color: "#a1a1aa", marginBottom: "0.25rem", textTransform: "uppercase" }}>Title</label>
+            <label className={labelClass}>Title</label>
             <input
               type="text"
               required
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
-              style={{ width: "100%", padding: "0.3rem", borderRadius: "4px", background: "rgba(0,0,0,0.3)", border: "1px solid var(--card-border)", color: "#fff", outline: "none", fontFamily: "inherit", fontSize: "0.85rem" }}
+              className={inputClass}
             />
           </div>
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            <div style={{ flex: "1 1 120px" }}>
-              <label style={{ display: "block", fontSize: "0.7rem", color: "#a1a1aa", marginBottom: "0.25rem", textTransform: "uppercase" }}>Category</label>
-              <select
-                value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value)}
-                style={{ width: "100%", padding: "0.3rem", borderRadius: "4px", background: "rgba(0,0,0,0.3)", border: "1px solid var(--card-border)", color: "#fff", outline: "none", fontFamily: "inherit", fontSize: "0.8rem" }}
-              >
-                {categories.map(c => <option key={c} value={c} style={{ background: "var(--background)" }}>{c}</option>)}
+          <div className="flex gap-2 flex-wrap">
+            <div className="flex-[1_1_120px]">
+              <label className={labelClass}>Category</label>
+              <select value={newCategory} onChange={(e) => setNewCategory(e.target.value)} className={selectClass}>
+                {categories.map(c => <option key={c} value={c} className="bg-background">{c}</option>)}
               </select>
             </div>
-            <div style={{ flex: "1 1 120px" }}>
-              <label style={{ display: "block", fontSize: "0.7rem", color: "#a1a1aa", marginBottom: "0.25rem", textTransform: "uppercase" }}>Type</label>
-              <select
-                value={newType}
-                onChange={(e) => setNewType(e.target.value)}
-                style={{ width: "100%", padding: "0.3rem", borderRadius: "4px", background: "rgba(0,0,0,0.3)", border: "1px solid var(--card-border)", color: "#fff", outline: "none", fontFamily: "inherit", fontSize: "0.8rem" }}
-              >
-                {types.map(t => <option key={t} value={t} style={{ background: "var(--background)" }}>{t}</option>)}
+            <div className="flex-[1_1_120px]">
+              <label className={labelClass}>Type</label>
+              <select value={newType} onChange={(e) => setNewType(e.target.value)} className={selectClass}>
+                {types.map(t => <option key={t} value={t} className="bg-background">{t}</option>)}
               </select>
             </div>
           </div>
           {newType === "Book" && (
             <div>
-              <label style={{ display: "block", fontSize: "0.7rem", color: "#a1a1aa", marginBottom: "0.25rem", textTransform: "uppercase" }}>Total Pages</label>
+              <label className={labelClass}>Total Pages</label>
               <input
                 type="number"
                 min={1}
                 value={newTotalPages}
                 onChange={(e) => setNewTotalPages(Number(e.target.value))}
-                style={{ width: "100%", padding: "0.3rem", borderRadius: "4px", background: "rgba(0,0,0,0.3)", border: "1px solid var(--card-border)", color: "#fff", outline: "none", fontFamily: "inherit", fontSize: "0.85rem" }}
+                className={inputClass}
               />
             </div>
           )}
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            <div style={{ flex: "1 1 180px" }}>
-              <label style={{ display: "block", fontSize: "0.7rem", color: "#a1a1aa", marginBottom: "0.25rem", textTransform: "uppercase" }}>Link (URL)</label>
+          <div className="flex gap-2 flex-wrap">
+            <div className="flex-[1_1_180px]">
+              <label className={labelClass}>Link (URL)</label>
               <input
                 type="text"
                 value={newLink}
                 onChange={(e) => setNewLink(e.target.value)}
                 placeholder="https://..."
-                style={{ width: "100%", padding: "0.3rem", borderRadius: "4px", background: "rgba(0,0,0,0.3)", border: "1px solid var(--card-border)", color: "#fff", outline: "none", fontFamily: "inherit", fontSize: "0.85rem" }}
+                className={inputClass}
               />
             </div>
-            <div style={{ flex: "1 1 180px" }}>
-              <label style={{ display: "block", fontSize: "0.7rem", color: "#a1a1aa", marginBottom: "0.25rem", textTransform: "uppercase" }}>Local Repo Path (Git Stats)</label>
+            <div className="flex-[1_1_180px]">
+              <label className={labelClass}>Local Repo Path (Git Stats)</label>
               <input
                 type="text"
                 value={newLocalPath}
                 onChange={(e) => setNewLocalPath(e.target.value)}
                 placeholder="~/Documents/..."
-                style={{ width: "100%", padding: "0.3rem", borderRadius: "4px", background: "rgba(0,0,0,0.3)", border: "1px solid var(--card-border)", color: "#fff", outline: "none", fontFamily: "inherit", fontSize: "0.85rem" }}
+                className={inputClass}
               />
             </div>
           </div>
-          <button type="submit" className="btn" style={{ marginTop: "0.25rem", fontSize: "0.8rem" }}>Save Material</button>
+          <button type="submit" className="btn mt-1 text-[0.8rem]">Save Material</button>
         </form>
       )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+      <div className="flex flex-col gap-5">
         {Object.entries(grouped).map(([category, items]) => (
           <div key={category}>
-            <h3 style={{ fontSize: "0.75rem", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.05em", borderLeft: "2px solid var(--accent)", paddingLeft: "0.5rem", marginBottom: "0.75rem" }}>
+            <h3 className="text-xs text-accent uppercase tracking-[0.05em] border-l-2 border-accent pl-2 mb-3 font-bold">
               {category}
             </h3>
-            <div style={{ 
-              display: "flex", 
-              flexDirection: "column", 
-              border: "1px solid var(--card-border)", 
-              borderRadius: "6px", 
-              background: "rgba(255,255,255,0.01)", 
-              overflow: "hidden" 
-            }}>
+            <div className="flex flex-col border border-card-border rounded-md bg-white/[0.01] overflow-hidden">
               {items.map((mat, idx) => {
                 const isEditing = editingId === mat.id;
+                const stats = gitStats[mat.id];
 
                 if (isEditing) {
                   return (
-                    <div 
-                      key={mat.id} 
-                      style={{ 
-                        display: "flex", 
-                        flexDirection: "column", 
-                        gap: "0.75rem", 
-                        padding: "1rem", 
-                        background: "rgba(14, 165, 233, 0.02)", 
-                        borderLeft: "3px solid var(--accent)",
-                        borderBottom: idx === items.length - 1 ? "none" : "1px solid var(--card-border)"
-                      }}
+                    <div
+                      key={mat.id}
+                      className={`flex flex-col gap-3 p-4 bg-accent/[0.02] border-l-[3px] border-l-accent ${idx === items.length - 1 ? "" : "border-b border-card-border"}`}
                     >
                       <div>
-                        <label style={{ fontSize: "0.7rem", color: "#a1a1aa", textTransform: "uppercase" }}>Title</label>
-                        <input
-                          type="text"
-                          value={editTitle}
-                          onChange={(e) => setEditTitle(e.target.value)}
-                          style={{ width: "100%", padding: "0.25rem", borderRadius: "4px", background: "rgba(0,0,0,0.3)", border: "1px solid var(--card-border)", color: "#fff", fontFamily: "inherit", fontSize: "0.85rem" }}
-                        />
+                        <label className={labelClass}>Title</label>
+                        <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className={inputClass} />
                       </div>
-                      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                        <div style={{ flex: "1 1 120px" }}>
-                          <label style={{ fontSize: "0.7rem", color: "#a1a1aa", textTransform: "uppercase" }}>Category</label>
-                          <select
-                            value={editCategory}
-                            onChange={(e) => setEditCategory(e.target.value)}
-                            style={{ width: "100%", padding: "0.25rem", borderRadius: "4px", background: "rgba(0,0,0,0.3)", border: "1px solid var(--card-border)", color: "#fff", fontFamily: "inherit", fontSize: "0.8rem" }}
-                          >
-                            {categories.map(c => <option key={c} value={c} style={{ background: "var(--background)" }}>{c}</option>)}
+                      <div className="flex gap-2 flex-wrap">
+                        <div className="flex-[1_1_120px]">
+                          <label className={labelClass}>Category</label>
+                          <select value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className={selectClass}>
+                            {categories.map(c => <option key={c} value={c} className="bg-background">{c}</option>)}
                           </select>
                         </div>
-                        <div style={{ flex: "1 1 120px" }}>
-                          <label style={{ fontSize: "0.7rem", color: "#a1a1aa", textTransform: "uppercase" }}>Type</label>
-                          <select
-                            value={editType}
-                            onChange={(e) => setEditType(e.target.value)}
-                            style={{ width: "100%", padding: "0.25rem", borderRadius: "4px", background: "rgba(0,0,0,0.3)", border: "1px solid var(--card-border)", color: "#fff", fontFamily: "inherit", fontSize: "0.8rem" }}
-                          >
-                            {types.map(t => <option key={t} value={t} style={{ background: "var(--background)" }}>{t}</option>)}
+                        <div className="flex-[1_1_120px]">
+                          <label className={labelClass}>Type</label>
+                          <select value={editType} onChange={(e) => setEditType(e.target.value)} className={selectClass}>
+                            {types.map(t => <option key={t} value={t} className="bg-background">{t}</option>)}
                           </select>
                         </div>
                       </div>
-                      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                        <div style={{ flex: "1 1 120px" }}>
-                          <label style={{ fontSize: "0.7rem", color: "#a1a1aa", textTransform: "uppercase" }}>Status</label>
-                          <select
-                            value={editStatus}
-                            onChange={(e) => setEditStatus(e.target.value)}
-                            style={{ width: "100%", padding: "0.25rem", borderRadius: "4px", background: "rgba(0,0,0,0.3)", border: "1px solid var(--card-border)", color: "#fff", fontFamily: "inherit", fontSize: "0.8rem" }}
-                          >
-                            {statuses.map(s => <option key={s} value={s} style={{ background: "var(--background)" }}>{s}</option>)}
+                      <div className="flex gap-2 flex-wrap">
+                        <div className="flex-[1_1_120px]">
+                          <label className={labelClass}>Status</label>
+                          <select value={editStatus} onChange={(e) => setEditStatus(e.target.value)} className={selectClass}>
+                            {statuses.map(s => <option key={s} value={s} className="bg-background">{s}</option>)}
                           </select>
                         </div>
                         {editType === "Book" && (
-                          <div style={{ flex: "1 1 120px" }}>
-                            <label style={{ fontSize: "0.7rem", color: "#a1a1aa", textTransform: "uppercase" }}>Total Pages</label>
-                            <input
-                              type="number"
-                              value={editTotalPages}
-                              onChange={(e) => setEditTotalPages(Number(e.target.value))}
-                              style={{ width: "100%", padding: "0.25rem", borderRadius: "4px", background: "rgba(0,0,0,0.3)", border: "1px solid var(--card-border)", color: "#fff", fontFamily: "inherit", fontSize: "0.85rem" }}
-                            />
+                          <div className="flex-[1_1_120px]">
+                            <label className={labelClass}>Total Pages</label>
+                            <input type="number" value={editTotalPages} onChange={(e) => setEditTotalPages(Number(e.target.value))} className={inputClass} />
                           </div>
                         )}
                       </div>
-                      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                        <div style={{ flex: "1 1 180px" }}>
-                          <label style={{ fontSize: "0.7rem", color: "#a1a1aa", textTransform: "uppercase" }}>Link (URL)</label>
-                          <input
-                            type="text"
-                            value={editLink}
-                            onChange={(e) => setEditLink(e.target.value)}
-                            style={{ width: "100%", padding: "0.25rem", borderRadius: "4px", background: "rgba(0,0,0,0.3)", border: "1px solid var(--card-border)", color: "#fff", fontFamily: "inherit", fontSize: "0.85rem" }}
-                          />
+                      <div className="flex gap-2 flex-wrap">
+                        <div className="flex-[1_1_180px]">
+                          <label className={labelClass}>Link (URL)</label>
+                          <input type="text" value={editLink} onChange={(e) => setEditLink(e.target.value)} className={inputClass} />
                         </div>
-                        <div style={{ flex: "1 1 180px" }}>
-                          <label style={{ fontSize: "0.7rem", color: "#a1a1aa", textTransform: "uppercase" }}>Local Repo Path</label>
-                          <input
-                            type="text"
-                            value={editLocalPath}
-                            onChange={(e) => setEditLocalPath(e.target.value)}
-                            style={{ width: "100%", padding: "0.25rem", borderRadius: "4px", background: "rgba(0,0,0,0.3)", border: "1px solid var(--card-border)", color: "#fff", fontFamily: "inherit", fontSize: "0.85rem" }}
-                          />
+                        <div className="flex-[1_1_180px]">
+                          <label className={labelClass}>Local Repo Path</label>
+                          <input type="text" value={editLocalPath} onChange={(e) => setEditLocalPath(e.target.value)} className={inputClass} />
                         </div>
                       </div>
 
                       {editStatus !== "Not Started" && (
-                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                        <div className="flex flex-col gap-2">
                           {editType === "Book" && (
-                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                              <span style={{ fontSize: "0.65rem", color: "#71717a", width: "70px", textTransform: "uppercase", fontFamily: "monospace", fontWeight: "bold", letterSpacing: "0.05em" }}>PAGE</span>
+                            <div className="flex items-center gap-2">
+                              <span className={metricLabelClass}>PAGE</span>
                               <input
                                 type="number"
                                 value={editCurrentPage}
                                 onChange={(e) => setEditCurrentPage(Number(e.target.value))}
-                                style={{ width: "60px", padding: "0.25rem", borderRadius: "4px", background: "rgba(0,0,0,0.3)", border: "1px solid var(--card-border)", color: "#fff", fontFamily: "inherit", fontSize: "0.85rem", textAlign: "center" }}
+                                className="w-[60px] p-1 rounded bg-black/30 border border-card-border text-white font-[inherit] text-[0.85rem] text-center outline-none"
                               />
-                              <span style={{ fontSize: "0.8rem", color: "#a1a1aa" }}>/ {editTotalPages}</span>
+                              <span className="text-[0.8rem] text-zinc-400">/ {editTotalPages}</span>
                             </div>
                           )}
-                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                            <span style={{ fontSize: "0.65rem", color: "#71717a", width: "70px", textTransform: "uppercase", fontFamily: "monospace", fontWeight: "bold", letterSpacing: "0.05em" }}>SUBJECT</span>
+                          <div className="flex items-center gap-2">
+                            <span className={metricLabelClass}>SUBJECT</span>
                             <input
                               type="text"
                               value={editCurrentSubject}
                               onChange={(e) => setEditCurrentSubject(e.target.value)}
-                              style={{ flex: 1, minWidth: 0, padding: "0.25rem", borderRadius: "4px", background: "rgba(0,0,0,0.3)", border: "1px solid var(--card-border)", color: "#fff", fontFamily: "inherit", fontSize: "0.85rem" }}
+                              className="flex-1 min-w-0 p-1 rounded bg-black/30 border border-card-border text-white font-[inherit] text-[0.85rem] outline-none"
                             />
                           </div>
                         </div>
                       )}
 
-                      <div style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem", marginTop: "0.25rem" }}>
+                      <div className="flex justify-between gap-2 mt-1">
                         <button
                           type="button"
                           onClick={() => onDeleteMaterial(mat.id)}
-                          style={{
-                            background: "rgba(239, 68, 68, 0.1)",
-                            color: "#ef4444",
-                            border: "1px solid rgba(239, 68, 68, 0.3)",
-                            borderRadius: "4px",
-                            padding: "0.2rem 0.5rem",
-                            fontSize: "0.75rem",
-                            cursor: "pointer"
-                          }}
+                          className="bg-red-500/10 text-red-500 border border-red-500/30 rounded px-2 py-1 text-xs cursor-pointer"
                         >
                           Delete
                         </button>
-                        <div style={{ display: "flex", gap: "0.5rem" }}>
+                        <div className="flex gap-2">
                           <button
                             type="button"
                             onClick={() => setEditingId(null)}
-                            style={{
-                              background: "transparent",
-                              color: "#a1a1aa",
-                              border: "1px solid var(--card-border)",
-                              borderRadius: "4px",
-                              padding: "0.2rem 0.5rem",
-                              fontSize: "0.75rem",
-                              cursor: "pointer"
-                            }}
+                            className="bg-transparent text-zinc-400 border border-card-border rounded px-2 py-1 text-xs cursor-pointer"
                           >
                             Cancel
                           </button>
                           <button
                             type="button"
                             onClick={() => saveEdit(mat.id)}
-                            className="btn"
-                            style={{ padding: "0.2rem 0.5rem", fontSize: "0.75rem" }}
+                            className="btn px-2 py-1 text-xs"
                           >
                             Save
                           </button>
@@ -493,102 +408,71 @@ export default function MaterialsTracker({
                 }
 
                 return (
-                  <div 
-                    key={mat.id} 
-                    style={{ 
-                      display: "flex", 
-                      flexDirection: "column", 
-                      gap: "0.5rem", 
-                      padding: "0.75rem 1rem", 
-                      background: "transparent", 
-                      borderLeft: `3px solid ${getLeftBorderColor(mat.status)}`,
-                      borderBottom: idx === items.length - 1 ? "none" : "1px solid var(--card-border)"
-                    }}
+                  <div
+                    key={mat.id}
+                    className={`flex flex-col gap-2 px-4 py-3 bg-transparent border-l-[3px] ${idx === items.length - 1 ? "" : "border-b border-card-border"}`}
+                    style={{ borderLeftColor: getLeftBorderColor(mat.status) }}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1 min-w-0">
                         {mat.link ? (
-                          <div 
+                          <div
                             onClick={() => onOpenLink(mat.link)}
-                            className="link-title"
-                            style={{ fontWeight: 600, fontSize: "0.9rem", display: "inline-block" }}
+                            className="link-title font-semibold text-[0.9rem] inline-block"
                             title={`Open ${mat.link}`}
                           >
                             {mat.title}
                           </div>
                         ) : (
-                          <div style={{ fontWeight: 600, fontSize: "0.9rem", color: "#fff" }}>
+                          <div className="font-semibold text-[0.9rem] text-white">
                             {mat.title}
                           </div>
                         )}
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.1rem" }}>
-                          <span style={{ fontSize: "0.65rem", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "monospace" }}>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[0.65rem] text-accent uppercase tracking-[0.05em] font-mono">
                             {mat.type}
                           </span>
                         </div>
-                        {gitStats[mat.id] && gitStats[mat.id].isRepo && (
-                          <div style={{ fontSize: "0.7rem", color: "#a1a1aa", marginTop: "0.25rem", fontFamily: "monospace", display: "flex", flexWrap: "wrap", columnGap: "0.5rem", rowGap: "0.1rem" }}>
-                            <span>branch: <span style={{ color: "var(--accent)" }}>{gitStats[mat.id].branch}</span></span>
+                        {stats && stats.isRepo && (
+                          <div className="text-[0.7rem] text-zinc-400 mt-1 font-mono flex flex-wrap gap-x-2 gap-y-px">
+                            <span>branch: <span className="text-accent">{stats.branch}</span></span>
                             <span>|</span>
-                            {gitStats[mat.id].uncommittedCount > 0 ? (
-                              <span style={{ color: "var(--warning)" }}>{gitStats[mat.id].uncommittedCount} modified</span>
+                            {(stats.uncommittedCount ?? 0) > 0 ? (
+                              <span className="text-warning">{stats.uncommittedCount} modified</span>
                             ) : (
-                              <span style={{ color: "var(--success)" }}>clean</span>
+                              <span className="text-success">clean</span>
                             )}
-                            {gitStats[mat.id].lastCommitMsg && (
+                            {stats.lastCommitMsg && (
                               <>
                                 <span>|</span>
-                                <span style={{ color: "#71717a" }} title={gitStats[mat.id].lastCommitMsg}>
-                                  last: {gitStats[mat.id].lastCommitMsg.length > 20 ? `${gitStats[mat.id].lastCommitMsg.slice(0, 20)}...` : gitStats[mat.id].lastCommitMsg} ({gitStats[mat.id].lastCommitTime})
+                                <span className="text-zinc-500" title={stats.lastCommitMsg}>
+                                  last: {stats.lastCommitMsg.length > 20 ? `${stats.lastCommitMsg.slice(0, 20)}...` : stats.lastCommitMsg} ({stats.lastCommitTime})
                                 </span>
                               </>
                             )}
                           </div>
                         )}
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginLeft: "1rem", flexShrink: 0 }}>
+                      <div className="flex items-center gap-2 ml-4 shrink-0">
                         <button
                           onClick={() => openNotes(mat.id, mat.title)}
-                          style={{
-                            background: "transparent",
-                            border: "none",
-                            color: "var(--accent)",
-                            cursor: "pointer",
-                            fontSize: "0.7rem",
-                            padding: "0.1rem 0.3rem",
-                            fontFamily: "inherit",
-                            fontWeight: 500
-                          }}
+                          className="bg-transparent border-none text-accent cursor-pointer text-[0.7rem] px-1 py-px font-[inherit] font-medium"
                         >
                           Notes
                         </button>
                         <button
                           onClick={() => startEdit(mat)}
-                          style={{
-                            background: "transparent",
-                            border: "none",
-                            color: "#a1a1aa",
-                            cursor: "pointer",
-                            fontSize: "0.7rem",
-                            padding: "0.1rem 0.3rem",
-                            fontFamily: "inherit"
-                          }}
+                          className="bg-transparent border-none text-zinc-400 cursor-pointer text-[0.7rem] px-1 py-px font-[inherit]"
                         >
                           Edit
                         </button>
-                        <span style={{ 
-                          fontSize: "0.7rem", 
-                          color: mat.status === "Completed" ? "var(--success)" : mat.status === "In Progress" ? "var(--accent)" : "#71717a",
-                          textTransform: "uppercase", 
-                          fontFamily: "monospace",
-                          fontWeight: "bold",
-                          letterSpacing: "0.05em",
-                          padding: "0.15rem 0.4rem",
-                          border: `1px solid ${mat.status === "Completed" ? "rgba(16, 185, 129, 0.2)" : mat.status === "In Progress" ? "rgba(14, 165, 233, 0.2)" : "rgba(255,255,255,0.06)"}`,
-                          background: mat.status === "Completed" ? "rgba(16, 185, 129, 0.05)" : mat.status === "In Progress" ? "rgba(14, 165, 233, 0.05)" : "transparent",
-                          borderRadius: "4px",
-                          whiteSpace: "nowrap"
-                        }}>
+                        <span className={`text-[0.7rem] uppercase font-mono font-bold tracking-[0.05em] px-1.5 py-0.5 border rounded whitespace-nowrap ${
+                          mat.status === "Completed"
+                            ? "text-success border-success/20 bg-success/5"
+                            : mat.status === "In Progress"
+                              ? "text-accent border-accent/20 bg-accent/5"
+                              : "text-zinc-500 border-white/[0.06] bg-transparent"
+                        }`}>
                           {mat.status}
                         </span>
                       </div>
@@ -596,26 +480,19 @@ export default function MaterialsTracker({
 
                     {/* Progress properties as static display metrics */}
                     {mat.status !== "Not Started" && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginTop: "0.25rem", borderTop: "1px dashed rgba(255,255,255,0.05)", paddingTop: "0.5rem" }}>
+                      <div className="flex flex-col gap-1.5 mt-1 border-t border-dashed border-white/5 pt-2">
                         {mat.type === "Book" && (
-                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                            <span style={{ fontSize: "0.65rem", color: "#71717a", width: "70px", textTransform: "uppercase", fontFamily: "monospace", fontWeight: "bold", letterSpacing: "0.05em" }}>PAGE</span>
-                            <span style={{
-                              fontSize: "0.8rem",
-                              color: "#e4e4e7",
-                              fontFamily: "monospace"
-                            }}>
+                          <div className="flex items-center gap-2">
+                            <span className={metricLabelClass}>PAGE</span>
+                            <span className="text-[0.8rem] text-zinc-200 font-mono">
                               {mat.currentPage || 0} / {mat.totalPages || 100}
                             </span>
                           </div>
                         )}
                         {mat.currentSubject && (
-                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                            <span style={{ fontSize: "0.65rem", color: "#71717a", width: "70px", textTransform: "uppercase", fontFamily: "monospace", fontWeight: "bold", letterSpacing: "0.05em" }}>SUBJECT</span>
-                            <span style={{
-                              fontSize: "0.8rem",
-                              color: "#e4e4e7"
-                            }}>
+                          <div className="flex items-center gap-2">
+                            <span className={metricLabelClass}>SUBJECT</span>
+                            <span className="text-[0.8rem] text-zinc-200">
                               {mat.currentSubject}
                             </span>
                           </div>
@@ -631,7 +508,7 @@ export default function MaterialsTracker({
       </div>
 
       {/* Notes Drawer Overlay */}
-      <div 
+      <div
         className={`notes-drawer-overlay ${activeNotesId ? "open" : ""}`}
         onClick={closeNotes}
       />
@@ -639,28 +516,28 @@ export default function MaterialsTracker({
       {/* Notes Drawer */}
       <div className={`notes-drawer ${activeNotesId ? "open" : ""}`}>
         <div className="notes-drawer-header">
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", minWidth: 0, flex: 1, paddingRight: "1rem" }}>
-            <span style={{ fontSize: "0.65rem", color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "monospace", fontWeight: 600 }}>
+          <div className="flex flex-col gap-1 min-w-0 flex-1 pr-4">
+            <span className="text-[0.65rem] text-accent uppercase tracking-[0.05em] font-mono font-semibold">
               Study Notes
             </span>
-            <h3 
-              style={{ fontSize: "1rem", fontWeight: 600, color: "#fff", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+            <h3
+              className="text-base font-semibold text-white m-0 overflow-hidden text-ellipsis whitespace-nowrap"
               title={activeNotesTitle}
             >
               {activeNotesTitle}
             </h3>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexShrink: 0 }}>
-            <span style={{ fontSize: "0.7rem", color: notesStatus === "error" ? "#ef4444" : "#a1a1aa", fontFamily: "monospace" }}>
+          <div className="flex items-center gap-4 shrink-0">
+            <span className={`text-[0.7rem] font-mono ${notesStatus === "error" ? "text-red-500" : "text-zinc-400"}`}>
               {notesStatus === "loading" && "Loading..."}
               {notesStatus === "saving" && "Saving..."}
               {notesStatus === "saved" && "Saved ✓"}
               {notesStatus === "error" && "Error saving!"}
               {notesStatus === "idle" && ""}
             </span>
-            <button 
+            <button
               onClick={closeNotes}
-              style={{ background: "transparent", border: "none", color: "#fff", cursor: "pointer", fontSize: "1.2rem", padding: "0.2rem", display: "flex", alignItems: "center" }}
+              className="bg-transparent border-none text-white cursor-pointer text-[1.2rem] p-1 flex items-center"
             >
               ✕
             </button>
@@ -668,13 +545,13 @@ export default function MaterialsTracker({
         </div>
 
         <div className="notes-drawer-tabs">
-          <button 
+          <button
             className={`notes-tab-btn ${notesTab === "write" ? "active" : ""}`}
             onClick={() => setNotesTab("write")}
           >
             Write
           </button>
-          <button 
+          <button
             className={`notes-tab-btn ${notesTab === "preview" ? "active" : ""}`}
             onClick={() => setNotesTab("preview")}
           >
@@ -693,7 +570,7 @@ export default function MaterialsTracker({
               disabled={notesStatus === "loading"}
             />
           ) : (
-            <div 
+            <div
               className="notes-preview-pane"
               dangerouslySetInnerHTML={{ __html: renderMarkdownToHtml(notesContent, "<p style='color: #71717a; font-style: italic;'>No notes yet. Start writing in the Write tab...</p>") }}
             />
@@ -701,13 +578,12 @@ export default function MaterialsTracker({
         </div>
 
         <div className="notes-drawer-footer">
-          <span style={{ fontSize: "0.7rem", color: "#71717a" }}>
+          <span className="text-[0.7rem] text-zinc-500">
             Markdown supported • Autosaves
           </span>
-          <button 
+          <button
             onClick={() => activeNotesId && performSave(activeNotesId, notesContent)}
-            className="btn"
-            style={{ padding: "0.25rem 0.75rem", fontSize: "0.75rem" }}
+            className="btn px-3 py-1 text-xs disabled:opacity-50"
             disabled={notesStatus === "loading" || notesStatus === "saving"}
           >
             Save Now

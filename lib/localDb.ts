@@ -1,8 +1,9 @@
 import Dexie, { type Table } from "dexie";
+import type { AppState } from "./types";
 
 export interface AppStateRecord {
   id: string;
-  data: any;
+  data: AppState;
 }
 
 export interface NoteRecord {

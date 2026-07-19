@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
   --background: #09090b;
   --foreground: #e4e4e7;
@@ -12,6 +14,27 @@
   --streak-2: #047857;
   --streak-3: #10b981;
   --streak-4: #34d399;
+}
+
+/* Expose the design tokens as Tailwind color utilities
+   (bg-card, text-accent, border-card-border, text-success, ...) */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-card: var(--card-bg);
+  --color-card-border: var(--card-border);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+}
+
+/* Tailwind's preflight removes list markers; markdown previews need them */
+.notes-preview-pane ul {
+  list-style: disc;
+}
+.notes-preview-pane ol {
+  list-style: decimal;
 }
 
 * {

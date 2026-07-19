@@ -2,22 +2,15 @@
 
 import React, { useEffect, useState } from "react";
 import { fetchGitStats } from "@/lib/api";
-
-interface Project {
-  id: string;
-  title: string;
-  completed: boolean;
-  localPath?: string;
-  repoUrl?: string;
-}
+import type { GitStats, PortfolioProject } from "@/lib/types";
 
 interface PortfolioTrackerProps {
-  portfolio: Project[];
+  portfolio: PortfolioProject[];
   onToggle: (id: string) => void;
 }
 
 export default function PortfolioTracker({ portfolio, onToggle }: PortfolioTrackerProps) {
-  const [gitStats, setGitStats] = useState<{ [id: string]: any }>({});
+  const [gitStats, setGitStats] = useState<{ [id: string]: GitStats }>({});
 
   useEffect(() => {
     portfolio.forEach(proj => {
@@ -34,50 +27,38 @@ export default function PortfolioTracker({ portfolio, onToggle }: PortfolioTrack
   }, [portfolio]);
 
   return (
-    <div className="glass-panel" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+    <div className="glass-panel flex flex-col gap-4">
       <h2 className="section-title">Portfolio Deliverables</h2>
-      <div style={{ display: "flex", flexDirection: "column", marginTop: "0.5rem" }}>
+      <div className="flex flex-col mt-2">
         {portfolio.map((proj, idx) => (
-          <div 
-            key={proj.id} 
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "1rem",
-              padding: "0.75rem 0",
-              borderBottom: idx === portfolio.length - 1 ? "none" : "1px solid var(--card-border)"
-            }}
+          <div
+            key={proj.id}
+            className={`flex items-center gap-4 py-3 ${idx === portfolio.length - 1 ? "" : "border-b border-card-border"}`}
           >
-            <input 
-              type="checkbox" 
+            <input
+              type="checkbox"
               className="checkbox-custom"
-              checked={proj.completed} 
+              checked={proj.completed}
               onChange={() => onToggle(proj.id)}
             />
-            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-              <span style={{ 
-                fontSize: "0.95rem", 
-                fontWeight: 500,
-                color: proj.completed ? "#71717a" : "var(--foreground)",
-                textDecoration: proj.completed ? "line-through" : "none",
-                transition: "color 0.2s ease"
-              }}>
+            <div className="flex-1 flex flex-col">
+              <span className={`text-[0.95rem] font-medium transition-colors duration-200 ${proj.completed ? "text-zinc-500 line-through" : "text-foreground"}`}>
                 {proj.title}
               </span>
               {gitStats[proj.id] && gitStats[proj.id].isRepo && (
-                <div style={{ fontSize: "0.7rem", color: "#a1a1aa", marginTop: "0.2rem", fontFamily: "monospace", display: "flex", flexWrap: "wrap", columnGap: "0.5rem" }}>
-                  <span>branch: <span style={{ color: "var(--accent)" }}>{gitStats[proj.id].branch}</span></span>
+                <div className="text-[0.7rem] text-zinc-400 mt-1 font-mono flex flex-wrap gap-x-2">
+                  <span>branch: <span className="text-accent">{gitStats[proj.id].branch}</span></span>
                   <span>|</span>
-                  {gitStats[proj.id].uncommittedCount > 0 ? (
-                    <span style={{ color: "var(--warning)" }}>{gitStats[proj.id].uncommittedCount} modified</span>
+                  {(gitStats[proj.id].uncommittedCount ?? 0) > 0 ? (
+                    <span className="text-warning">{gitStats[proj.id].uncommittedCount} modified</span>
                   ) : (
-                    <span style={{ color: "var(--success)" }}>clean</span>
+                    <span className="text-success">clean</span>
                   )}
                   {gitStats[proj.id].lastCommitMsg && (
                     <>
                       <span>|</span>
-                      <span style={{ color: "#71717a" }} title={gitStats[proj.id].lastCommitMsg}>
-                        last: {gitStats[proj.id].lastCommitMsg.length > 20 ? `${gitStats[proj.id].lastCommitMsg.slice(0, 20)}...` : gitStats[proj.id].lastCommitMsg} ({gitStats[proj.id].lastCommitTime})
+                      <span className="text-zinc-500" title={gitStats[proj.id].lastCommitMsg}>
+                        last: {(gitStats[proj.id].lastCommitMsg || "").length > 20 ? `${gitStats[proj.id].lastCommitMsg!.slice(0, 20)}...` : gitStats[proj.id].lastCommitMsg} ({gitStats[proj.id].lastCommitTime})
                       </span>
                     </>
                   )}

@@ -16,6 +16,8 @@ interface ScheduleDayModalProps {
   weekOffset?: number;
 }
 
+const fieldInputClass = "bg-black/25 border border-card-border rounded-md text-zinc-200 font-[inherit] text-[0.8rem] outline-none px-2.5 py-1.5";
+
 export default function ScheduleDayModal({
   day,
   data,
@@ -35,162 +37,96 @@ export default function ScheduleDayModal({
     return focusTypes[type]?.label || type || "Daily Focus";
   };
 
-  const color = "var(--accent)";
-
   const getDateForDay = (dayName: string): string => getDateForDayName(dayName, weekOffset);
 
   const targetDateStr = getDateForDay(day.name);
   const isTargetToday = targetDateStr === todayYMD();
 
+  const applyChange = (newData: AppState) => {
+    setData(newData);
+    saveDailyChanges(newData);
+  };
+
+  const persistOnBlur = async () => {
+    try {
+      await updateAppState(data);
+    } catch (err) {
+      console.error("Failed to save edits inside schedule modal", err);
+    }
+  };
+
   return (
-    <div 
+    <div
       onClick={onClose}
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: "rgba(0, 0, 0, 0.8)",
-        backdropFilter: "blur(4px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1000,
-        padding: "1rem"
-      }}
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[1000] p-4"
     >
-      <div 
+      <div
         onClick={(e) => e.stopPropagation()}
-        className="glass-panel"
-        style={{
-          maxWidth: "500px",
-          width: "100%",
-          display: "flex",
-          flexDirection: "column",
-          gap: "1.25rem",
-          padding: "2rem",
-          boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4)",
-          border: `1px solid ${color}`,
-          position: "relative",
-          borderRadius: "8px"
-        }}
+        className="glass-panel max-w-[500px] w-full flex flex-col gap-5 p-8 border !border-accent relative rounded-lg shadow-[0_20px_25px_-5px_rgba(0,0,0,0.5),0_10px_10px_-5px_rgba(0,0,0,0.4)]"
       >
         {/* Close Button */}
-        <button 
+        <button
           onClick={onClose}
-          style={{
-            position: "absolute",
-            top: "1.5rem",
-            right: "1.5rem",
-            background: "transparent",
-            border: "none",
-            color: "#a1a1aa",
-            fontSize: "1.2rem",
-            cursor: "pointer",
-            fontFamily: "inherit"
-          }}
+          className="absolute top-6 right-6 bg-transparent border-none text-zinc-400 text-[1.2rem] cursor-pointer font-[inherit]"
         >
           ✕
         </button>
 
         {/* Modal Header */}
         <div>
-          <span style={{ 
-            fontSize: "0.75rem", 
-            background: `${color}1a`, 
-            color: color, 
-            padding: "0.15rem 0.5rem", 
-            borderRadius: "4px", 
-            fontWeight: 600,
-            textTransform: "uppercase",
-            fontFamily: "monospace",
-            letterSpacing: "0.05em"
-          }}>
+          <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold uppercase font-mono tracking-[0.05em]">
             {day.name} Schedule • {targetDateStr}
           </span>
-          <h2 style={{ fontSize: "1.3rem", fontWeight: 700, color: "#fff", marginTop: "0.5rem" }}>
+          <h2 className="text-[1.3rem] font-bold text-white mt-2">
             {getFullLabel(currentDaySchedule.type)}
           </h2>
         </div>
 
         {/* Dynamic Focus Selection & Management */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <span style={{ fontSize: "0.8rem", color: "#a1a1aa" }}>Focus Type:</span>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-[0.8rem] text-zinc-400">Focus Type:</span>
               <select
                 value={currentDaySchedule.type}
                 onChange={(e) => {
                   const newType = e.target.value;
                   const newLabel = focusTypes[newType]?.label || newType;
-                  const updatedSchedule = (data.weekSchedule || DEFAULT_WEEK_SCHEDULE).map((d: any) => {
+                  const updatedSchedule = (data.weekSchedule || DEFAULT_WEEK_SCHEDULE).map((d) => {
                     if (d.name === day.name) {
                       return { ...d, type: newType, label: newLabel };
                     }
                     return d;
                   });
-                  const newData = {
-                    ...data,
-                    weekSchedule: updatedSchedule
-                  };
-                  setData(newData);
-                  saveDailyChanges(newData);
+                  applyChange({ ...data, weekSchedule: updatedSchedule });
                 }}
-                style={{
-                  background: "rgba(0, 0, 0, 0.4)",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                  borderRadius: "6px",
-                  padding: "0.3rem 0.5rem",
-                  color: "#fff",
-                  fontSize: "0.85rem",
-                  fontFamily: "inherit",
-                  outline: "none",
-                  cursor: "pointer"
-                }}
+                className="bg-black/40 border border-white/10 rounded-md px-2 py-1.5 text-white text-[0.85rem] font-[inherit] outline-none cursor-pointer"
               >
-                {Object.entries(focusTypes).map(([key, val]: [string, any]) => (
-                  <option key={key} value={key} style={{ background: "#18181b", color: "#fff" }}>
+                {Object.entries(focusTypes).map(([key, val]) => (
+                  <option key={key} value={key} className="bg-zinc-900 text-white">
                     {val.label}
                   </option>
                 ))}
               </select>
             </div>
-            
+
             <button
               onClick={() => setShowManager(!showManager)}
-              style={{
-                background: "transparent",
-                border: "none",
-                color: "var(--accent)",
-                fontSize: "0.75rem",
-                cursor: "pointer",
-                fontFamily: "monospace",
-                padding: 0,
-                textDecoration: "underline"
-              }}
+              className="bg-transparent border-none text-accent text-xs cursor-pointer font-mono p-0 underline"
             >
               {showManager ? "Hide Settings" : "Customize Pool"}
             </button>
           </div>
 
           {showManager && (
-            <div style={{
-              background: "rgba(255, 255, 255, 0.02)",
-              border: "1px solid rgba(255, 255, 255, 0.05)",
-              borderRadius: "8px",
-              padding: "0.8rem",
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.6rem"
-            }}>
-              <span style={{ fontSize: "0.7rem", color: "#a1a1aa", fontWeight: "bold", textTransform: "uppercase" }}>
+            <div className="bg-white/[0.02] border border-white/5 rounded-lg p-3 flex flex-col gap-[0.6rem]">
+              <span className="text-[0.7rem] text-zinc-400 font-bold uppercase">
                 Edit Focus Types Pool
               </span>
-              
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", maxHeight: "150px", overflowY: "auto", paddingRight: "0.25rem" }}>
-                {Object.entries(focusTypes).map(([key, val]: [string, any]) => (
-                  <div key={key} style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+
+              <div className="flex flex-col gap-2 max-h-[150px] overflow-y-auto pr-1">
+                {Object.entries(focusTypes).map(([key, val]) => (
+                  <div key={key} className="flex items-center gap-1.5">
                     <input
                       type="text"
                       value={val.label}
@@ -199,33 +135,18 @@ export default function ScheduleDayModal({
                           ...focusTypes,
                           [key]: { ...val, label: e.target.value }
                         };
-                        
-                        const updatedSchedule = (data.weekSchedule || DEFAULT_WEEK_SCHEDULE).map((d: any) => {
+
+                        const updatedSchedule = (data.weekSchedule || DEFAULT_WEEK_SCHEDULE).map((d) => {
                           if (d.type === key) {
                             return { ...d, label: e.target.value };
                           }
                           return d;
                         });
 
-                        const newData = {
-                          ...data,
-                          focusTypes: updatedTypes,
-                          weekSchedule: updatedSchedule
-                        };
-                        setData(newData);
-                        saveDailyChanges(newData);
+                        applyChange({ ...data, focusTypes: updatedTypes, weekSchedule: updatedSchedule });
                       }}
                       placeholder="Label"
-                      style={{
-                        flex: 1,
-                        background: "rgba(0, 0, 0, 0.25)",
-                        border: "1px solid rgba(255, 255, 255, 0.1)",
-                        borderRadius: "4px",
-                        padding: "0.2rem 0.4rem",
-                        color: "#fff",
-                        fontSize: "0.75rem",
-                        outline: "none"
-                      }}
+                      className="flex-1 bg-black/25 border border-white/10 rounded px-1.5 py-0.5 text-white text-xs outline-none"
                     />
 
                     <input
@@ -236,21 +157,9 @@ export default function ScheduleDayModal({
                           ...focusTypes,
                           [key]: { ...val, color: e.target.value }
                         };
-                        const newData = {
-                          ...data,
-                          focusTypes: updatedTypes
-                        };
-                        setData(newData);
-                        saveDailyChanges(newData);
+                        applyChange({ ...data, focusTypes: updatedTypes });
                       }}
-                      style={{
-                        width: "24px",
-                        height: "24px",
-                        border: "none",
-                        background: "transparent",
-                        cursor: "pointer",
-                        padding: 0
-                      }}
+                      className="w-6 h-6 border-none bg-transparent cursor-pointer p-0"
                     />
 
                     <button
@@ -260,31 +169,20 @@ export default function ScheduleDayModal({
 
                         const fallbackType = Object.keys(updatedTypes)[0] || "free";
                         const fallbackLabel = updatedTypes[fallbackType]?.label || "Free";
-                        
-                        const updatedSchedule = (data.weekSchedule || DEFAULT_WEEK_SCHEDULE).map((d: any) => {
+
+                        const updatedSchedule = (data.weekSchedule || DEFAULT_WEEK_SCHEDULE).map((d) => {
                           if (d.type === key) {
                             return { ...d, type: fallbackType, label: fallbackLabel };
                           }
                           return d;
                         });
 
-                        const newData = {
-                          ...data,
-                          focusTypes: updatedTypes,
-                          weekSchedule: updatedSchedule
-                        };
-                        setData(newData);
-                        saveDailyChanges(newData);
+                        applyChange({ ...data, focusTypes: updatedTypes, weekSchedule: updatedSchedule });
                       }}
                       disabled={Object.keys(focusTypes).length <= 1}
-                      style={{
-                        background: "transparent",
-                        border: "none",
-                        color: Object.keys(focusTypes).length <= 1 ? "#3f3f46" : "#ef4444",
-                        cursor: Object.keys(focusTypes).length <= 1 ? "not-allowed" : "pointer",
-                        fontSize: "0.8rem",
-                        padding: "0 0.2rem"
-                      }}
+                      className={`bg-transparent border-none text-[0.8rem] px-0.5 ${
+                        Object.keys(focusTypes).length <= 1 ? "text-zinc-700 cursor-not-allowed" : "text-red-500 cursor-pointer"
+                      }`}
                       title="Delete Focus Type"
                     >
                       ✕
@@ -293,34 +191,18 @@ export default function ScheduleDayModal({
                 ))}
               </div>
 
-              <div style={{ display: "flex", gap: "0.4rem", alignItems: "center", borderTop: "1px solid rgba(255, 255, 255, 0.05)", paddingTop: "0.5rem" }}>
+              <div className="flex gap-1.5 items-center border-t border-white/5 pt-2">
                 <input
                   type="text"
                   id="new-type-label"
                   placeholder="New type label..."
-                  style={{
-                    flex: 1,
-                    background: "rgba(0, 0, 0, 0.25)",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                    borderRadius: "4px",
-                    padding: "0.25rem 0.5rem",
-                    color: "#fff",
-                    fontSize: "0.75rem",
-                    outline: "none"
-                  }}
+                  className="flex-1 bg-black/25 border border-white/10 rounded px-2 py-1 text-white text-xs outline-none"
                 />
                 <input
                   type="color"
                   id="new-type-color"
                   defaultValue="#0ea5e9"
-                  style={{
-                    width: "24px",
-                    height: "24px",
-                    border: "none",
-                    background: "transparent",
-                    cursor: "pointer",
-                    padding: 0
-                  }}
+                  className="w-6 h-6 border-none bg-transparent cursor-pointer p-0"
                 />
                 <button
                   onClick={() => {
@@ -330,24 +212,18 @@ export default function ScheduleDayModal({
                       const labelVal = labelInput.value.trim();
                       const colorVal = colorInput ? colorInput.value : "#0ea5e9";
                       const keyVal = labelVal.toLowerCase().replace(/[^a-z0-9]/g, "");
-                      
+
                       if (keyVal && !focusTypes[keyVal]) {
                         const updatedTypes = {
                           ...focusTypes,
                           [keyVal]: { label: labelVal, color: colorVal }
                         };
-                        const newData = {
-                          ...data,
-                          focusTypes: updatedTypes
-                        };
-                        setData(newData);
-                        saveDailyChanges(newData);
+                        applyChange({ ...data, focusTypes: updatedTypes });
                         labelInput.value = "";
                       }
                     }
                   }}
-                  className="btn"
-                  style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
+                  className="btn px-2 py-1 text-xs"
                 >
                   Add Type
                 </button>
@@ -357,311 +233,35 @@ export default function ScheduleDayModal({
         </div>
 
         {/* Modal Content */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <div className="flex flex-col gap-4">
           {/* Daily Revision and Focus Checklist Editors inside Modal */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem", maxHeight: "550px", overflowY: "auto", paddingRight: "0.25rem" }}>
-              
-              {/* Today's Revision Section */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                <strong style={{ color: color, fontSize: "0.75rem", fontFamily: "monospace", letterSpacing: "0.05em", textTransform: "uppercase" }}>
-                  {isTargetToday ? "TODAY'S " : ""}REVISION CHECKLIST:
-                </strong>
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  {(data.dailyRevisionItems?.[day.name] || []).map((item: any, index: number) => (
-                    <div 
-                      key={item.id || index} 
-                      style={{ 
-                        display: "flex", 
-                        flexDirection: "column",
-                        gap: "0.4rem",
-                        background: "rgba(0, 0, 0, 0.15)",
-                        padding: "0.6rem 0.75rem",
-                        borderRadius: "6px",
-                        border: "1px solid rgba(255, 255, 255, 0.05)"
-                      }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                        <input
-                          type="checkbox"
-                          className="checkbox-custom"
-                          checked={(data.weeklyCompletions?.[targetDateStr]?.revisions || []).includes(item.id)}
-                          onChange={(e) => {
-                            const updatedItems = (data.dailyRevisionItems?.[day.name] || []).map((it: any) => {
-                              if (it.id === item.id) {
-                                  return { ...it, completed: e.target.checked };
-                              }
-                              return it;
-                            });
+          <div className="flex flex-col gap-5 max-h-[550px] overflow-y-auto pr-1">
 
-                            // Sync streak history for the actual date of this day
-                            const targetDateStr = getDateForDay(day.name);
-                            const newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
-                            const newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
-
-                            const dateItems = newCompletedItemsHistory[targetDateStr] || [];
-                            const targetComps = newWeeklyCompletions[targetDateStr] || { tasks: [], revisions: [] };
-
-                            if (e.target.checked) {
-                              const alreadyExists = dateItems.some((it) => completedItemTitle(it) === item.title);
-                              if (!alreadyExists) {
-                                newCompletedItemsHistory[targetDateStr] = [...dateItems, { title: item.title, description: item.description || "" }];
-                              }
-                              if (!targetComps.revisions.includes(item.id)) {
-                                targetComps.revisions = [...targetComps.revisions, item.id];
-                              }
-                            } else {
-                              newCompletedItemsHistory[targetDateStr] = dateItems.filter((it) => completedItemTitle(it) !== item.title);
-                              targetComps.revisions = targetComps.revisions.filter((id: string) => id !== item.id);
-                            }
-
-                            newWeeklyCompletions[targetDateStr] = targetComps;
-                            const newStreakHistory = rebuildStreakHistory(newCompletedItemsHistory);
-
-                            const newData = {
-                              ...data,
-                              dailyRevisionItems: {
-                                ...(data.dailyRevisionItems || {}),
-                                [day.name]: updatedItems
-                              },
-                              streakHistory: newStreakHistory,
-                              completedItemsHistory: newCompletedItemsHistory,
-                              weeklyCompletions: newWeeklyCompletions
-                            };
-                            setData(newData);
-                            saveDailyChanges(newData);
-                          }}
-                        />
-                        <input
-                          type="text"
-                          value={item.title}
-                          onChange={(e) => {
-                            const updatedItems = (data.dailyRevisionItems?.[day.name] || []).map((it: any) => {
-                              if (it.id === item.id) {
-                                return { ...it, title: e.target.value };
-                              }
-                              return it;
-                            });
-                            const newData = {
-                              ...data,
-                              dailyRevisionItems: {
-                                ...(data.dailyRevisionItems || {}),
-                                [day.name]: updatedItems
-                              }
-                            };
-                            setData(newData);
-                            saveDailyChanges(newData);
-                          }}
-                          onBlur={async () => {
-                            try {
-                              await updateAppState(data);
-                            } catch (err) {
-                              console.error("Failed to save revision item title inside modal", err);
-                            }
-                          }}
-                          placeholder="Revision topic..."
-                          style={{
-                            flex: 1,
-                            background: "transparent",
-                            border: "none",
-                            color: "#fff",
-                            fontFamily: "inherit",
-                            fontSize: "0.85rem",
-                            fontWeight: 600,
-                            outline: "none"
-                          }}
-                        />
-                        <button
-                          onClick={() => {
-                            const updatedItems = (data.dailyRevisionItems?.[day.name] || []).filter((it: any) => it.id !== item.id);
-
-                            // Sync streak history for the actual date of this day
-                            const targetDateStr = getDateForDay(day.name);
-                            const newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
-                            const newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
-                            const targetComps = newWeeklyCompletions[targetDateStr] || { tasks: [], revisions: [] };
-
-                            if (item.completed) {
-                              const dateItems = newCompletedItemsHistory[targetDateStr] || [];
-                              newCompletedItemsHistory[targetDateStr] = dateItems.filter((it) => completedItemTitle(it) !== item.title);
-                            }
-
-                            targetComps.revisions = targetComps.revisions.filter((id: string) => id !== item.id);
-                            newWeeklyCompletions[targetDateStr] = targetComps;
-                            const newStreakHistory = rebuildStreakHistory(newCompletedItemsHistory);
-
-                            const newData = {
-                              ...data,
-                              dailyRevisionItems: {
-                                ...(data.dailyRevisionItems || {}),
-                                [day.name]: updatedItems
-                              },
-                              streakHistory: newStreakHistory,
-                              completedItemsHistory: newCompletedItemsHistory,
-                              weeklyCompletions: newWeeklyCompletions
-                            };
-                            setData(newData);
-                            saveDailyChanges(newData);
-                          }}
-                          style={{
-                            background: "transparent",
-                            border: "none",
-                            color: "#ef4444",
-                            cursor: "pointer",
-                            fontSize: "0.9rem"
-                          }}
-                        >
-                          ✕
-                        </button>
-                      </div>
-                      
-                      {/* Description Field */}
-                      <input
-                        type="text"
-                        value={item.description || ""}
-                        onChange={(e) => {
-                          const updatedItems = (data.dailyRevisionItems?.[day.name] || []).map((it: any) => {
-                            if (it.id === item.id) {
-                              return { ...it, description: e.target.value };
-                            }
-                            return it;
-                          });
-                          const newData = {
-                            ...data,
-                            dailyRevisionItems: {
-                              ...(data.dailyRevisionItems || {}),
-                              [day.name]: updatedItems
-                            }
-                          };
-                          setData(newData);
-                          saveDailyChanges(newData);
-                        }}
-                        onBlur={async () => {
-                          try {
-                            await updateAppState(data);
-                          } catch (err) {
-                            console.error("Failed to save revision item description inside modal", err);
-                          }
-                        }}
-                        placeholder="Topic description (optional)..."
-                        style={{
-                          background: "transparent",
-                          border: "none",
-                          borderBottom: "1px dashed rgba(255, 255, 255, 0.1)",
-                          color: "#a1a1aa",
-                          fontFamily: "inherit",
-                          fontSize: "0.8rem",
-                          outline: "none",
-                          padding: "0.1rem 0",
-                          marginLeft: "1.75rem"
-                        }}
-                      />
-                    </div>
-                  ))}
-
-                  {/* Add revision item form */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", background: "rgba(255, 255, 255, 0.02)", padding: "0.6rem", borderRadius: "6px", border: "1px dashed rgba(255, 255, 255, 0.1)" }}>
-                    <input
-                      type="text"
-                      id="new-rev-title"
-                      placeholder="New revision topic..."
-                      style={{
-                        background: "rgba(0, 0, 0, 0.25)",
-                        border: "1px solid var(--card-border)",
-                        borderRadius: "6px",
-                        padding: "0.4rem 0.6rem",
-                        color: "#e4e4e7",
-                        fontFamily: "inherit",
-                        fontSize: "0.8rem",
-                        outline: "none"
-                      }}
-                    />
-                    <div style={{ display: "flex", gap: "0.5rem" }}>
-                      <input
-                        type="text"
-                        id="new-rev-desc"
-                        placeholder="Topic description (optional)..."
-                        style={{
-                          flex: 1,
-                          background: "rgba(0, 0, 0, 0.25)",
-                          border: "1px solid var(--card-border)",
-                          borderRadius: "6px",
-                          padding: "0.4rem 0.6rem",
-                          color: "#e4e4e7",
-                          fontFamily: "inherit",
-                          fontSize: "0.8rem",
-                          outline: "none"
-                        }}
-                      />
-                      <button
-                        onClick={() => {
-                          const titleInput = document.getElementById("new-rev-title") as HTMLInputElement;
-                          const descInput = document.getElementById("new-rev-desc") as HTMLInputElement;
-                          if (titleInput && titleInput.value.trim()) {
-                            const newItem = {
-                              id: `rev_${Date.now()}`,
-                              title: titleInput.value.trim(),
-                              description: descInput ? descInput.value.trim() : "",
-                              completed: false
-                            };
-                            const updatedItems = [...(data.dailyRevisionItems?.[day.name] || []), newItem];
-                            const newData = {
-                              ...data,
-                              dailyRevisionItems: {
-                                ...(data.dailyRevisionItems || {}),
-                                [day.name]: updatedItems
-                              }
-                            };
-                            setData(newData);
-                            saveDailyChanges(newData);
-                            titleInput.value = "";
-                            if (descInput) descInput.value = "";
-                          }
-                        }}
-                        className="btn"
-                        style={{ padding: "0.4rem 0.75rem", fontSize: "0.8rem" }}
-                      >
-                        + Add
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <hr style={{ border: "none", borderTop: "1px solid var(--card-border)", margin: "0.5rem 0" }} />
-
-              {/* Today's Focus Section */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                <strong style={{ color: color, fontSize: "0.75rem", fontFamily: "monospace", letterSpacing: "0.05em", textTransform: "uppercase" }}>
-                  {isTargetToday ? "TODAY'S " : ""}FOCUS CHECKLIST:
-                </strong>
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  {(data.dailyTasks?.[day.name] || []).map((task: any, index: number) => (
-                    <div 
-                      key={task.id || index} 
-                      style={{ 
-                        display: "flex", 
-                        alignItems: "center", 
-                        gap: "0.75rem",
-                        background: "rgba(0, 0, 0, 0.15)",
-                        padding: "0.4rem 0.6rem",
-                        borderRadius: "6px",
-                        border: "1px solid rgba(255, 255, 255, 0.05)"
-                      }}
-                    >
+            {/* Revision Section */}
+            <div className="flex flex-col gap-3">
+              <strong className="text-accent text-xs font-mono tracking-[0.05em] uppercase">
+                {isTargetToday ? "TODAY'S " : ""}REVISION CHECKLIST:
+              </strong>
+              <div className="flex flex-col gap-2">
+                {(data.dailyRevisionItems?.[day.name] || []).map((item, index) => (
+                  <div
+                    key={item.id || index}
+                    className="flex flex-col gap-1.5 bg-black/15 px-3 py-[0.6rem] rounded-md border border-white/5"
+                  >
+                    <div className="flex items-center gap-3">
                       <input
                         type="checkbox"
                         className="checkbox-custom"
-                        checked={(data.weeklyCompletions?.[targetDateStr]?.tasks || []).includes(task.id)}
+                        checked={(data.weeklyCompletions?.[targetDateStr]?.revisions || []).includes(item.id)}
                         onChange={(e) => {
-                          const updatedTasks = (data.dailyTasks?.[day.name] || []).map((t: any) => {
-                            if (t.id === task.id) {
-                              return { ...t, completed: e.target.checked };
+                          const updatedItems = (data.dailyRevisionItems?.[day.name] || []).map((it) => {
+                            if (it.id === item.id) {
+                              return { ...it, completed: e.target.checked };
                             }
-                            return t;
+                            return it;
                           });
-                          
+
                           // Sync streak history for the actual date of this day
-                          const targetDateStr = getDateForDay(day.name);
                           const newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
                           const newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
 
@@ -669,186 +269,153 @@ export default function ScheduleDayModal({
                           const targetComps = newWeeklyCompletions[targetDateStr] || { tasks: [], revisions: [] };
 
                           if (e.target.checked) {
-                            const alreadyExists = dateItems.some((it) => completedItemTitle(it) === task.title);
+                            const alreadyExists = dateItems.some((it) => completedItemTitle(it) === item.title);
                             if (!alreadyExists) {
-                              newCompletedItemsHistory[targetDateStr] = [...dateItems, { title: task.title }];
+                              newCompletedItemsHistory[targetDateStr] = [...dateItems, { title: item.title, description: item.description || "" }];
                             }
-                            if (!targetComps.tasks.includes(task.id)) {
-                              targetComps.tasks = [...targetComps.tasks, task.id];
+                            if (!targetComps.revisions.includes(item.id)) {
+                              targetComps.revisions = [...targetComps.revisions, item.id];
                             }
                           } else {
-                            newCompletedItemsHistory[targetDateStr] = dateItems.filter((it) => completedItemTitle(it) !== task.title);
-                            targetComps.tasks = targetComps.tasks.filter((id: string) => id !== task.id);
+                            newCompletedItemsHistory[targetDateStr] = dateItems.filter((it) => completedItemTitle(it) !== item.title);
+                            targetComps.revisions = targetComps.revisions.filter((id: string) => id !== item.id);
                           }
 
                           newWeeklyCompletions[targetDateStr] = targetComps;
-                          const newStreakHistory = rebuildStreakHistory(newCompletedItemsHistory);
-                          
-                          const newData = {
+
+                          applyChange({
                             ...data,
-                            dailyTasks: {
-                              ...(data.dailyTasks || {}),
-                              [day.name]: updatedTasks
+                            dailyRevisionItems: {
+                              ...(data.dailyRevisionItems || {}),
+                              [day.name]: updatedItems
                             },
-                            streakHistory: newStreakHistory,
+                            streakHistory: rebuildStreakHistory(newCompletedItemsHistory),
                             completedItemsHistory: newCompletedItemsHistory,
                             weeklyCompletions: newWeeklyCompletions
-                          };
-                          setData(newData);
-                          saveDailyChanges(newData);
+                          });
                         }}
                       />
                       <input
                         type="text"
-                        value={task.title}
+                        value={item.title}
                         onChange={(e) => {
-                          const updatedTasks = (data.dailyTasks?.[day.name] || []).map((t: any) => {
-                            if (t.id === task.id) {
-                              return { ...t, title: e.target.value };
+                          const updatedItems = (data.dailyRevisionItems?.[day.name] || []).map((it) => {
+                            if (it.id === item.id) {
+                              return { ...it, title: e.target.value };
                             }
-                            return t;
+                            return it;
                           });
-                          const newData = {
+                          applyChange({
                             ...data,
-                            dailyTasks: {
-                              ...(data.dailyTasks || {}),
-                              [day.name]: updatedTasks
+                            dailyRevisionItems: {
+                              ...(data.dailyRevisionItems || {}),
+                              [day.name]: updatedItems
                             }
-                          };
-                          setData(newData);
-                          saveDailyChanges(newData);
+                          });
                         }}
-                        onBlur={async () => {
-                          try {
-                            await updateAppState(data);
-                          } catch (err) {
-                            console.error("Failed to save daily task title inside modal", err);
-                          }
-                        }}
-                        placeholder="Task description..."
-                        style={{
-                          flex: 1,
-                          background: "transparent",
-                          border: "none",
-                          color: "#fff",
-                          fontFamily: "inherit",
-                          fontSize: "0.85rem",
-                          outline: "none"
-                        }}
+                        onBlur={persistOnBlur}
+                        placeholder="Revision topic..."
+                        className="flex-1 bg-transparent border-none text-white font-[inherit] text-[0.85rem] font-semibold outline-none"
                       />
                       <button
                         onClick={() => {
-                          const updatedTasks = (data.dailyTasks?.[day.name] || []).filter((t: any) => t.id !== task.id);
-                          
+                          const updatedItems = (data.dailyRevisionItems?.[day.name] || []).filter((it) => it.id !== item.id);
+
                           // Sync streak history for the actual date of this day
-                          const targetDateStr = getDateForDay(day.name);
                           const newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
                           const newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
                           const targetComps = newWeeklyCompletions[targetDateStr] || { tasks: [], revisions: [] };
 
-                          if (task.completed) {
+                          if (item.completed) {
                             const dateItems = newCompletedItemsHistory[targetDateStr] || [];
-                            newCompletedItemsHistory[targetDateStr] = dateItems.filter((it) => completedItemTitle(it) !== task.title);
+                            newCompletedItemsHistory[targetDateStr] = dateItems.filter((it) => completedItemTitle(it) !== item.title);
                           }
 
-                          targetComps.tasks = targetComps.tasks.filter((id: string) => id !== task.id);
+                          targetComps.revisions = targetComps.revisions.filter((id: string) => id !== item.id);
                           newWeeklyCompletions[targetDateStr] = targetComps;
-                          const newStreakHistory = rebuildStreakHistory(newCompletedItemsHistory);
-                          
-                          const newData = {
+
+                          applyChange({
                             ...data,
-                            dailyTasks: {
-                              ...(data.dailyTasks || {}),
-                              [day.name]: updatedTasks
+                            dailyRevisionItems: {
+                              ...(data.dailyRevisionItems || {}),
+                              [day.name]: updatedItems
                             },
-                            streakHistory: newStreakHistory,
+                            streakHistory: rebuildStreakHistory(newCompletedItemsHistory),
                             completedItemsHistory: newCompletedItemsHistory,
                             weeklyCompletions: newWeeklyCompletions
-                          };
-                          setData(newData);
-                          saveDailyChanges(newData);
+                          });
                         }}
-                        style={{
-                          background: "transparent",
-                          border: "none",
-                          color: "#ef4444",
-                          cursor: "pointer",
-                          fontSize: "0.9rem"
-                        }}
+                        className="bg-transparent border-none text-red-500 cursor-pointer text-[0.9rem]"
                       >
                         ✕
                       </button>
                     </div>
-                  ))}
-                  
-                  {/* Add task option inside modal */}
-                  <div 
-                    style={{ 
-                      display: "flex", 
-                      alignItems: "center", 
-                      gap: "0.75rem",
-                      marginTop: "0.5rem"
-                    }}
-                  >
+
+                    {/* Description Field */}
                     <input
                       type="text"
-                      placeholder="Add a focus item..."
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && e.currentTarget.value.trim()) {
-                          const newTask = {
-                            id: `task_${Date.now()}`,
-                            title: e.currentTarget.value.trim(),
-                            completed: false
-                          };
-                          const updatedTasks = [...(data.dailyTasks?.[day.name] || []), newTask];
-                          const newData = {
-                            ...data,
-                            dailyTasks: {
-                              ...(data.dailyTasks || {}),
-                              [day.name]: updatedTasks
-                            }
-                          };
-                          setData(newData);
-                          saveDailyChanges(newData);
-                          e.currentTarget.value = "";
-                        }
+                      value={item.description || ""}
+                      onChange={(e) => {
+                        const updatedItems = (data.dailyRevisionItems?.[day.name] || []).map((it) => {
+                          if (it.id === item.id) {
+                            return { ...it, description: e.target.value };
+                          }
+                          return it;
+                        });
+                        applyChange({
+                          ...data,
+                          dailyRevisionItems: {
+                            ...(data.dailyRevisionItems || {}),
+                            [day.name]: updatedItems
+                          }
+                        });
                       }}
-                      style={{
-                        flex: 1,
-                        background: "rgba(0, 0, 0, 0.25)",
-                        border: "1px solid var(--card-border)",
-                        borderRadius: "6px",
-                        padding: "0.5rem 0.75rem",
-                        color: "#e4e4e7",
-                        fontFamily: "inherit",
-                        fontSize: "0.85rem",
-                        outline: "none"
-                      }}
+                      onBlur={persistOnBlur}
+                      placeholder="Topic description (optional)..."
+                      className="bg-transparent border-none border-b border-dashed border-white/10 text-zinc-400 font-[inherit] text-[0.8rem] outline-none py-px ml-7"
+                    />
+                  </div>
+                ))}
+
+                {/* Add revision item form */}
+                <div className="flex flex-col gap-1.5 bg-white/[0.02] p-[0.6rem] rounded-md border border-dashed border-white/10">
+                  <input
+                    type="text"
+                    id="new-rev-title"
+                    placeholder="New revision topic..."
+                    className={fieldInputClass}
+                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      id="new-rev-desc"
+                      placeholder="Topic description (optional)..."
+                      className={`flex-1 ${fieldInputClass}`}
                     />
                     <button
-                      onClick={(e) => {
-                        const input = e.currentTarget.previousElementSibling as HTMLInputElement;
-                        if (input && input.value.trim()) {
-                          const newTask = {
-                            id: `task_${Date.now()}`,
-                            title: input.value.trim(),
+                      onClick={() => {
+                        const titleInput = document.getElementById("new-rev-title") as HTMLInputElement;
+                        const descInput = document.getElementById("new-rev-desc") as HTMLInputElement;
+                        if (titleInput && titleInput.value.trim()) {
+                          const newItem = {
+                            id: `rev_${Date.now()}`,
+                            title: titleInput.value.trim(),
+                            description: descInput ? descInput.value.trim() : "",
                             completed: false
                           };
-                          const updatedTasks = [...(data.dailyTasks?.[day.name] || []), newTask];
-                          const newData = {
+                          const updatedItems = [...(data.dailyRevisionItems?.[day.name] || []), newItem];
+                          applyChange({
                             ...data,
-                            dailyTasks: {
-                              ...(data.dailyTasks || {}),
-                              [day.name]: updatedTasks
+                            dailyRevisionItems: {
+                              ...(data.dailyRevisionItems || {}),
+                              [day.name]: updatedItems
                             }
-                          };
-                          setData(newData);
-                          saveDailyChanges(newData);
-                          input.value = "";
+                          });
+                          titleInput.value = "";
+                          if (descInput) descInput.value = "";
                         }
                       }}
-                      className="btn"
-                      style={{ padding: "0.5rem 1rem", fontSize: "0.85rem" }}
+                      className="btn px-3 py-1.5 text-[0.8rem]"
                     >
                       + Add
                     </button>
@@ -856,11 +423,181 @@ export default function ScheduleDayModal({
                 </div>
               </div>
             </div>
+
+            <hr className="border-none border-t border-card-border my-2" />
+
+            {/* Focus Section */}
+            <div className="flex flex-col gap-3">
+              <strong className="text-accent text-xs font-mono tracking-[0.05em] uppercase">
+                {isTargetToday ? "TODAY'S " : ""}FOCUS CHECKLIST:
+              </strong>
+              <div className="flex flex-col gap-2">
+                {(data.dailyTasks?.[day.name] || []).map((task, index) => (
+                  <div
+                    key={task.id || index}
+                    className="flex items-center gap-3 bg-black/15 px-[0.6rem] py-1.5 rounded-md border border-white/5"
+                  >
+                    <input
+                      type="checkbox"
+                      className="checkbox-custom"
+                      checked={(data.weeklyCompletions?.[targetDateStr]?.tasks || []).includes(task.id)}
+                      onChange={(e) => {
+                        const updatedTasks = (data.dailyTasks?.[day.name] || []).map((t) => {
+                          if (t.id === task.id) {
+                            return { ...t, completed: e.target.checked };
+                          }
+                          return t;
+                        });
+
+                        // Sync streak history for the actual date of this day
+                        const newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
+                        const newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
+
+                        const dateItems = newCompletedItemsHistory[targetDateStr] || [];
+                        const targetComps = newWeeklyCompletions[targetDateStr] || { tasks: [], revisions: [] };
+
+                        if (e.target.checked) {
+                          const alreadyExists = dateItems.some((it) => completedItemTitle(it) === task.title);
+                          if (!alreadyExists) {
+                            newCompletedItemsHistory[targetDateStr] = [...dateItems, { title: task.title }];
+                          }
+                          if (!targetComps.tasks.includes(task.id)) {
+                            targetComps.tasks = [...targetComps.tasks, task.id];
+                          }
+                        } else {
+                          newCompletedItemsHistory[targetDateStr] = dateItems.filter((it) => completedItemTitle(it) !== task.title);
+                          targetComps.tasks = targetComps.tasks.filter((id: string) => id !== task.id);
+                        }
+
+                        newWeeklyCompletions[targetDateStr] = targetComps;
+
+                        applyChange({
+                          ...data,
+                          dailyTasks: {
+                            ...(data.dailyTasks || {}),
+                            [day.name]: updatedTasks
+                          },
+                          streakHistory: rebuildStreakHistory(newCompletedItemsHistory),
+                          completedItemsHistory: newCompletedItemsHistory,
+                          weeklyCompletions: newWeeklyCompletions
+                        });
+                      }}
+                    />
+                    <input
+                      type="text"
+                      value={task.title}
+                      onChange={(e) => {
+                        const updatedTasks = (data.dailyTasks?.[day.name] || []).map((t) => {
+                          if (t.id === task.id) {
+                            return { ...t, title: e.target.value };
+                          }
+                          return t;
+                        });
+                        applyChange({
+                          ...data,
+                          dailyTasks: {
+                            ...(data.dailyTasks || {}),
+                            [day.name]: updatedTasks
+                          }
+                        });
+                      }}
+                      onBlur={persistOnBlur}
+                      placeholder="Task description..."
+                      className="flex-1 bg-transparent border-none text-white font-[inherit] text-[0.85rem] outline-none"
+                    />
+                    <button
+                      onClick={() => {
+                        const updatedTasks = (data.dailyTasks?.[day.name] || []).filter((t) => t.id !== task.id);
+
+                        // Sync streak history for the actual date of this day
+                        const newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
+                        const newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
+                        const targetComps = newWeeklyCompletions[targetDateStr] || { tasks: [], revisions: [] };
+
+                        if (task.completed) {
+                          const dateItems = newCompletedItemsHistory[targetDateStr] || [];
+                          newCompletedItemsHistory[targetDateStr] = dateItems.filter((it) => completedItemTitle(it) !== task.title);
+                        }
+
+                        targetComps.tasks = targetComps.tasks.filter((id: string) => id !== task.id);
+                        newWeeklyCompletions[targetDateStr] = targetComps;
+
+                        applyChange({
+                          ...data,
+                          dailyTasks: {
+                            ...(data.dailyTasks || {}),
+                            [day.name]: updatedTasks
+                          },
+                          streakHistory: rebuildStreakHistory(newCompletedItemsHistory),
+                          completedItemsHistory: newCompletedItemsHistory,
+                          weeklyCompletions: newWeeklyCompletions
+                        });
+                      }}
+                      className="bg-transparent border-none text-red-500 cursor-pointer text-[0.9rem]"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+
+                {/* Add task option inside modal */}
+                <div className="flex items-center gap-3 mt-2">
+                  <input
+                    type="text"
+                    placeholder="Add a focus item..."
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && e.currentTarget.value.trim()) {
+                        const newTask = {
+                          id: `task_${Date.now()}`,
+                          title: e.currentTarget.value.trim(),
+                          completed: false
+                        };
+                        const updatedTasks = [...(data.dailyTasks?.[day.name] || []), newTask];
+                        applyChange({
+                          ...data,
+                          dailyTasks: {
+                            ...(data.dailyTasks || {}),
+                            [day.name]: updatedTasks
+                          }
+                        });
+                        e.currentTarget.value = "";
+                      }
+                    }}
+                    className="flex-1 bg-black/25 border border-card-border rounded-md px-3 py-2 text-zinc-200 font-[inherit] text-[0.85rem] outline-none"
+                  />
+                  <button
+                    onClick={(e) => {
+                      const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                      if (input && input.value.trim()) {
+                        const newTask = {
+                          id: `task_${Date.now()}`,
+                          title: input.value.trim(),
+                          completed: false
+                        };
+                        const updatedTasks = [...(data.dailyTasks?.[day.name] || []), newTask];
+                        applyChange({
+                          ...data,
+                          dailyTasks: {
+                            ...(data.dailyTasks || {}),
+                            [day.name]: updatedTasks
+                          }
+                        });
+                        input.value = "";
+                      }
+                    }}
+                    className="btn px-4 py-2 text-[0.85rem]"
+                  >
+                    + Add
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Modal Footer */}
-        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "0.5rem" }}>
-          <button onClick={onClose} className="btn" style={{ padding: "0.5rem 1.5rem", fontSize: "0.85rem" }}>
+        <div className="flex justify-end mt-2">
+          <button onClick={onClose} className="btn px-6 py-2 text-[0.85rem]">
             Done
           </button>
         </div>

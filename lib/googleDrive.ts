@@ -3,7 +3,25 @@ import type { AppState, SyncResult } from "./types";
 import { mergeAppState } from "./merge";
 
 let CLIENT_ID = "";
-let ACCESS_TOKEN = "";
+
+interface GoogleTokenResponse {
+  access_token: string;
+  error?: string;
+  error_description?: string;
+}
+
+interface GoogleOAuth2 {
+  initTokenClient: (config: {
+    client_id: string;
+    scope: string;
+    callback: (response: GoogleTokenResponse) => void;
+  }) => { requestAccessToken: () => void };
+}
+
+type WindowWithGis = Window & { google?: { accounts?: { oauth2?: GoogleOAuth2 } } };
+
+const getGis = (): GoogleOAuth2 | undefined =>
+  typeof window !== "undefined" ? (window as WindowWithGis).google?.accounts?.oauth2 : undefined;
 
 export const setGoogleClientId = (id: string) => {
   CLIENT_ID = id;
@@ -21,7 +39,6 @@ export const getGoogleClientId = () => {
 };
 
 export const setGoogleAccessToken = (token: string) => {
-  ACCESS_TOKEN = token;
   if (typeof window !== "undefined") {
     localStorage.setItem("google_drive_access_token", token);
     localStorage.setItem("google_drive_token_expiry", String(Date.now() + 3500 * 1000));
@@ -29,7 +46,6 @@ export const setGoogleAccessToken = (token: string) => {
 };
 
 export const clearGoogleAccessToken = () => {
-  ACCESS_TOKEN = "";
   if (typeof window !== "undefined") {
     localStorage.removeItem("google_drive_access_token");
     localStorage.removeItem("google_drive_token_expiry");
@@ -53,7 +69,7 @@ export const isGoogleAuthenticated = () => {
 export const loadGoogleGisScript = (): Promise<void> => {
   return new Promise((resolve, reject) => {
     if (typeof window === "undefined") return resolve();
-    if ((window as any).google?.accounts?.oauth2 ) return resolve();
+    if (getGis()) return resolve();
 
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
@@ -69,15 +85,16 @@ export const authenticateGoogleDrive = async (clientId: string): Promise<string>
   setGoogleClientId(clientId);
 
   return new Promise((resolve, reject) => {
-    if (typeof window === "undefined" || !(window as any).google?.accounts?.oauth2) {
+    const gis = getGis();
+    if (!gis) {
       reject(new Error("Google Identity Services script not loaded. Please wait a moment and try again."));
       return;
     }
-    const client = (window as any).google.accounts.oauth2.initTokenClient({
+    const client = gis.initTokenClient({
       client_id: clientId,
       // appDataFolder is the only Drive surface this app touches
       scope: "https://www.googleapis.com/auth/drive.appdata",
-      callback: (response: any) => {
+      callback: (response: GoogleTokenResponse) => {
         if (response.error) {
           reject(new Error(response.error_description || "Authentication failed"));
         } else {
@@ -223,13 +240,14 @@ export const syncWithGoogleDrive = async (): Promise<SyncResult> => {
 
     logs.push("Sync completed successfully ✓");
     return { success: true, log: logs };
-  } catch (err: any) {
+  } catch (err) {
     console.error("Google Drive sync failed:", err);
-    logs.push(`Sync failed ✕: ${err.message || err}`);
+    const message = err instanceof Error ? err.message : String(err);
+    logs.push(`Sync failed ✕: ${message}`);
     return {
       success: false,
       log: logs,
-      error: err.message || String(err),
+      error: message,
       authRequired: err instanceof DriveAuthError,
     };
   }
@@ -246,11 +264,11 @@ const syncNotesWithGoogleDrive = async (token: string, logs: string[]): Promise<
     return;
   }
   const searchData = await searchRes.json();
-  const remoteNotes = searchData.files || [];
+  const remoteNotes: { id: string; name: string }[] = searchData.files || [];
 
   for (const localNote of localNotes) {
     const fileName = `note_${localNote.id}.md`;
-    const remoteFile = remoteNotes.find((f: any) => f.name === fileName);
+    const remoteFile = remoteNotes.find((f) => f.name === fileName);
 
     if (remoteFile) {
       const fileId = remoteFile.id;

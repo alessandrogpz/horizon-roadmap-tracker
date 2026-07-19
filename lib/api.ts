@@ -1,8 +1,8 @@
 import { db } from "./localDb";
-import type { Material, PortfolioProject } from "./types";
+import type { AppState, GitStats, Material, PortfolioProject } from "./types";
 import { LEGACY_PATH_TO_REPO, MATERIAL_REPO_MAP, PORTFOLIO_REPO_MAP } from "./migrationConfig";
 
-const DEFAULT_SKETCH_STATE = {
+const DEFAULT_SKETCH_STATE: AppState = {
   currentPhase: 1,
   startDate: "2026-07-01",
   dsaStartWeek: 1,
@@ -92,12 +92,12 @@ const DEFAULT_SKETCH_STATE = {
     { id: "m1", title: "Sample Reference Material / Book", category: "Math", type: "Book", status: "Not Started", currentPage: 0, totalPages: 100, currentSubject: "Sample Subject", link: "https://example.com", localPath: "" }
   ],
   dailyStudyPoints: {},
-  completedItemsHistory: [],
+  completedItemsHistory: {},
   weeklyCompletions: {},
   studyStreak: []
 };
 
-const migrateLocalPaths = (state: any) => {
+const migrateLocalPaths = (state: AppState) => {
   if (!state) return { state, modified: false };
   let modified = false;
 
@@ -130,7 +130,7 @@ const migrateLocalPaths = (state: any) => {
   return { state, modified };
 };
 
-export const fetchAppState = async () => {
+export const fetchAppState = async (): Promise<AppState> => {
   try {
     // 1. Try to load from IndexedDB
     const record = await db.appState.get("current");
@@ -153,12 +153,12 @@ export const fetchAppState = async () => {
   }
 };
 
-export const updateAppState = async (newState: any) => {
+export const updateAppState = async (newState: AppState) => {
   try {
     const record = await db.appState.get("current");
-    const oldData = record?.data || {};
+    const oldData: Partial<AppState> = record?.data || {};
     
-    const lastUpdatedDates = { ...(newState.lastUpdatedDates || {}) };
+    const lastUpdatedDates: Record<string, number> = { ...(newState.lastUpdatedDates || {}) };
     
     // Compare weeklyCompletions to see if any date changed
     const oldComps = oldData.weeklyCompletions || {};
@@ -214,7 +214,7 @@ export const updateAppState = async (newState: any) => {
     } else {
       // Targeted comparison of user-editable config fields only
       // Use sorted JSON so array order differences don't create false positives
-      const sortedJSON = (v: any) => JSON.stringify(v, Object.keys(v || {}).sort());
+      const sortedJSON = (v: unknown) => JSON.stringify(v, Object.keys(v || {}).sort());
       const CONFIG_COMPARE_FIELDS = [
         "materials",
         "portfolio",
@@ -223,7 +223,7 @@ export const updateAppState = async (newState: any) => {
         "currentPhaseStartDate",
         "dsaStartWeek",
         "weekSchedule",
-      ];
+      ] as const;
 
       let configChanged = false;
       for (const field of CONFIG_COMPARE_FIELDS) {
@@ -266,7 +266,7 @@ export const openLinkOnSystem = async (link: string) => {
   return res.json();
 };
 
-export const fetchGitStats = async (pathOrRepo: string) => {
+export const fetchGitStats = async (pathOrRepo: string): Promise<GitStats> => {
   // If it's a GitHub repo identifier (e.g. "owner/repo" or a github URL)
   const githubRegex = /(?:github\.com\/|git@github\.com:)([^\/]+)\/([^.\/]+)(?:\.git)?/;
   const match = pathOrRepo.match(githubRegex) || (!pathOrRepo.startsWith("/") && !pathOrRepo.startsWith("~") && pathOrRepo.includes("/") ? [pathOrRepo, ...pathOrRepo.split("/")] : null);
@@ -277,14 +277,14 @@ export const fetchGitStats = async (pathOrRepo: string) => {
     const cacheKey = `${owner}/${repo}`;
 
     // Read from localStorage cache if available
-    let storedCache: Record<string, { data: any, timestamp: number }> = {};
+    let storedCache: Record<string, { data: GitStats, timestamp: number }> = {};
     if (typeof window !== "undefined") {
       try {
         const stored = localStorage.getItem("github_git_stats_cache");
         if (stored) {
           storedCache = JSON.parse(stored);
         }
-      } catch (e) {}
+      } catch {}
     }
 
     const cachedEntry = storedCache[cacheKey];
@@ -340,7 +340,7 @@ export const fetchGitStats = async (pathOrRepo: string) => {
           try {
             storedCache[cacheKey] = { data: result, timestamp: Date.now() };
             localStorage.setItem("github_git_stats_cache", JSON.stringify(storedCache));
-          } catch (e) {}
+          } catch {}
         }
         return result;
       }
@@ -370,7 +370,7 @@ export const fetchGitStats = async (pathOrRepo: string) => {
         try {
           storedCache[cacheKey] = { data: result, timestamp: Date.now() };
           localStorage.setItem("github_git_stats_cache", JSON.stringify(storedCache));
-        } catch (e) {}
+        } catch {}
       }
 
       return result;

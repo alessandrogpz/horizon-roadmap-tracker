@@ -1,91 +1,49 @@
 "use client";
 
 import React from "react";
+import type { Phase } from "@/lib/types";
 
-export default function PhaseTracker({ phases, currentPhase, onPhaseClick }: { phases: any[], currentPhase: number, onPhaseClick: (phase: any) => void }) {
+export default function PhaseTracker({ phases, currentPhase, onPhaseClick }: { phases: Phase[], currentPhase: number, onPhaseClick: (phase: Phase) => void }) {
   return (
-    <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <div className="glass-panel flex flex-col gap-6">
       <h2 className="section-title">Roadmap Timeline</h2>
-      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-        
+      <div className="relative flex flex-col gap-5">
+
         {/* Timeline Line */}
-        <div style={{
-          position: 'absolute',
-          left: '12px',
-          top: '18px',
-          bottom: '18px',
-          width: '2px',
-          background: 'linear-gradient(to bottom, var(--success) 0%, var(--accent) 50%, var(--card-border) 100%)',
-          opacity: 0.3,
-        }} />
+        <div className="absolute left-[12px] top-[18px] bottom-[18px] w-[2px] opacity-30 bg-gradient-to-b from-success via-accent to-card-border" />
 
         {phases.map((phase) => {
           const isActive = phase.id === currentPhase;
           const isPast = phase.id < currentPhase;
-          
+
           return (
-            <div 
-              key={phase.id} 
+            <div
+              key={phase.id}
               onClick={() => onPhaseClick(phase)}
-              style={{
-                position: 'relative',
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.25rem",
-                cursor: 'pointer',
-                opacity: isPast ? 0.65 : 1,
-                transition: 'all 0.2s ease',
-                padding: '0.5rem 0.5rem 0.5rem 2.25rem',
-                borderRadius: '6px'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent';
-              }}
+              className={`relative flex flex-col gap-1 cursor-pointer transition-all duration-200 py-2 pr-2 pl-9 rounded-md hover:bg-white/[0.02] ${isPast ? "opacity-65" : ""}`}
             >
               {/* Timeline Indicator Dot */}
-              <div style={{
-                position: 'absolute',
-                left: '5px',
-                top: '10px',
-                width: '16px',
-                height: '16px',
-                borderRadius: '50%',
-                background: isActive ? 'var(--background)' : isPast ? 'var(--success)' : '#18181b',
-                border: isActive ? '3px solid var(--accent)' : isPast ? '2px solid var(--success)' : '2px solid var(--card-border)',
-                boxShadow: isActive ? '0 0 8px var(--accent)' : 'none',
-                zIndex: 1,
-                transition: 'all 0.2s ease',
-              }} />
+              <div
+                className={`absolute left-[5px] top-[10px] w-4 h-4 rounded-full z-[1] transition-all duration-200 ${
+                  isActive
+                    ? "bg-background border-[3px] border-accent shadow-[0_0_8px_var(--accent)]"
+                    : isPast
+                      ? "bg-success border-2 border-success"
+                      : "bg-zinc-900 border-2 border-card-border"
+                }`}
+              />
 
               {/* Header Title Row */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-                <span style={{ 
-                  fontSize: '0.75rem', 
-                  fontFamily: 'monospace', 
-                  color: isActive ? 'var(--accent)' : isPast ? 'var(--success)' : '#71717a',
-                  fontWeight: 'bold',
-                  letterSpacing: '0.05em'
-                }}>
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className={`text-xs font-mono font-bold tracking-[0.05em] ${isActive ? "text-accent" : isPast ? "text-success" : "text-zinc-500"}`}>
                   PHASE 0{phase.id}
                 </span>
-                <h3 style={{ 
-                  fontSize: '0.95rem', 
-                  color: isActive ? '#fff' : '#e4e4e7', 
-                  fontWeight: 600,
-                  margin: 0
-                }}>
+                <h3 className={`text-[0.95rem] font-semibold m-0 ${isActive ? "text-white" : "text-zinc-200"}`}>
                   {phase.title.replace(/Phase \d+:\s*/, "")}
                 </h3>
               </div>
-              
-              <p style={{ 
-                fontSize: '0.8rem', 
-                color: '#a1a1aa', 
-                margin: 0
-              }}>
+
+              <p className="text-[0.8rem] text-zinc-400 m-0">
                 {phase.description}
               </p>
             </div>
