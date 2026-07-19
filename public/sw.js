@@ -4,7 +4,8 @@ const CACHE_NAME = "dev-tracker-cache-v2";
 const PRECACHE_URLS = [
   "/",
   "/manifest.webmanifest",
-  "/icon.png",
+  "/icon-192.png",
+  "/icon-512.png",
 ];
 
 self.addEventListener("install", (event) => {
