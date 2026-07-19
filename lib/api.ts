@@ -305,25 +305,44 @@ export const fetchGitStats = async (pathOrRepo: string) => {
     const repo = match[2]?.replace(".git", "");
     const cacheKey = `${owner}/${repo}`;
 
-    // Return cached result for the session to avoid exhausting the 60 req/hr rate limit
-    if ((fetchGitStats as any)._cache?.[cacheKey]) {
-      return (fetchGitStats as any)._cache[cacheKey];
+    // Read from localStorage cache if available
+    let storedCache: Record<string, { data: any, timestamp: number }> = {};
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("github_git_stats_cache");
+        if (stored) {
+          storedCache = JSON.parse(stored);
+        }
+      } catch (e) {}
+    }
+
+    const cachedEntry = storedCache[cacheKey];
+    if (cachedEntry) {
+      // 15-minute cache lifespan
+      const isExpired = Date.now() - cachedEntry.timestamp > 15 * 60 * 1000;
+      if (!isExpired) {
+        return cachedEntry.data;
+      }
     }
 
     try {
       const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
 
       if (repoRes.status === 403) {
-        // Rate limited — log once and bail out silently
         console.warn(`GitHub API rate limited for ${cacheKey}. Stats unavailable until the limit resets.`);
+        // Fall back to expired cache if available so UI doesn't break
+        if (cachedEntry) {
+          console.log(`Using rate-limited expired cache fallback for ${cacheKey}`);
+          return cachedEntry.data;
+        }
         return { isRepo: false, rateLimited: true };
       }
       if (repoRes.status === 404) {
-        // Private repo or doesn't exist — silently skip
         return { isRepo: false };
       }
       if (!repoRes.ok) {
         console.warn(`GitHub API returned ${repoRes.status} for ${cacheKey}`);
+        if (cachedEntry) return cachedEntry.data;
         return { isRepo: false };
       }
 
@@ -332,7 +351,6 @@ export const fetchGitStats = async (pathOrRepo: string) => {
 
       const commitRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/commits?per_page=1`);
       if (!commitRes.ok) {
-        // Could be empty repo or permissions issue — still show branch
         const result = {
           isRepo: true,
           branch: defaultBranch,
@@ -340,14 +358,18 @@ export const fetchGitStats = async (pathOrRepo: string) => {
           lastCommitMsg: "",
           lastCommitTime: "",
         };
-        if (!(fetchGitStats as any)._cache) (fetchGitStats as any)._cache = {};
-        (fetchGitStats as any)._cache[cacheKey] = result;
+        // Update cache
+        if (typeof window !== "undefined") {
+          try {
+            storedCache[cacheKey] = { data: result, timestamp: Date.now() };
+            localStorage.setItem("github_git_stats_cache", JSON.stringify(storedCache));
+          } catch (e) {}
+        }
         return result;
       }
       const commits = await commitRes.json();
       const lastCommit = commits[0];
 
-      // Format timestamp relatively or cleanly
       let relativeTime = "";
       if (lastCommit?.commit?.author?.date) {
         const commitDate = new Date(lastCommit.commit.author.date);
@@ -361,18 +383,23 @@ export const fetchGitStats = async (pathOrRepo: string) => {
       const result = {
         isRepo: true,
         branch: defaultBranch,
-        uncommittedCount: 0, // Not available client-side via GitHub API
-        lastCommitMsg: (lastCommit?.commit?.message || "").split("\n")[0], // first line only
+        uncommittedCount: 0,
+        lastCommitMsg: (lastCommit?.commit?.message || "").split("\n")[0],
         lastCommitTime: relativeTime || "unknown",
       };
 
-      // Cache for this session
-      if (!(fetchGitStats as any)._cache) (fetchGitStats as any)._cache = {};
-      (fetchGitStats as any)._cache[cacheKey] = result;
+      // Save to localStorage cache
+      if (typeof window !== "undefined") {
+        try {
+          storedCache[cacheKey] = { data: result, timestamp: Date.now() };
+          localStorage.setItem("github_git_stats_cache", JSON.stringify(storedCache));
+        } catch (e) {}
+      }
 
       return result;
     } catch (err) {
       console.warn("GitHub API fetch failed (network error):", err);
+      if (cachedEntry) return cachedEntry.data;
       return { isRepo: false };
     }
   }
