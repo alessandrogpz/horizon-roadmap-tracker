@@ -3,6 +3,7 @@
 import React from "react";
 import type { AppState, WeekDay } from "@/lib/types";
 import { getDateForDayName, getWeekNum } from "@/lib/dates";
+import { rebuildStreakHistory, completedItemTitle } from "@/lib/streak";
 import { DEFAULT_WEEK_SCHEDULE, DEFAULT_FOCUS_TYPES, DSA_PATTERN_WEEKS, dsaPatternIndex } from "@/lib/constants";
 
 interface WeeklyPlanProps {
@@ -238,7 +239,6 @@ function DayCard({ dayItem, idx, data, todayStr, dayOfWeek, weekOffset, onDayCli
   const handleToggleItem = (itemId: string, itemTitle: string, itemDesc: string, isRevision: boolean, currentCompleted: boolean) => {
     const newCompleted = !currentCompleted;
     const newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
-    const newStreakHistory = [...(data.streakHistory || [])];
     const newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
 
     if (isToday) {
@@ -260,15 +260,12 @@ function DayCard({ dayItem, idx, data, todayStr, dayOfWeek, weekOffset, onDayCli
       // Streak sync for today
       const todayItems = newCompletedItemsHistory[todayStr] || [];
       if (newCompleted) {
-        newStreakHistory.push(todayStr);
-        const alreadyExists = todayItems.some((it) => (typeof it === 'string' ? it === itemTitle : it.title === itemTitle));
+        const alreadyExists = todayItems.some((it) => completedItemTitle(it) === itemTitle);
         if (!alreadyExists) {
           newCompletedItemsHistory[todayStr] = [...todayItems, { title: itemTitle, description: itemDesc || "" }];
         }
       } else {
-        const sIdx = newStreakHistory.indexOf(todayStr);
-        if (sIdx > -1) newStreakHistory.splice(sIdx, 1);
-        newCompletedItemsHistory[todayStr] = todayItems.filter((it) => (typeof it === 'string' ? it !== itemTitle : it.title !== itemTitle));
+        newCompletedItemsHistory[todayStr] = todayItems.filter((it) => completedItemTitle(it) !== itemTitle);
       }
 
       const dataKey = isRevision ? "dailyRevisionItems" : "dailyTasks";
@@ -276,7 +273,7 @@ function DayCard({ dayItem, idx, data, todayStr, dayOfWeek, weekOffset, onDayCli
         ...data,
         [dataKey]: { ...(data[dataKey] || {}), [dayKey]: updatedList },
         weeklyCompletions: newWeeklyCompletions,
-        streakHistory: newStreakHistory,
+        streakHistory: rebuildStreakHistory(newCompletedItemsHistory),
         completedItemsHistory: newCompletedItemsHistory,
       });
     } else {
@@ -293,21 +290,18 @@ function DayCard({ dayItem, idx, data, todayStr, dayOfWeek, weekOffset, onDayCli
       // Streak sync for the target date (not today!)
       const targetDateItems = newCompletedItemsHistory[dayDateStr] || [];
       if (newCompleted) {
-        newStreakHistory.push(dayDateStr);
-        const alreadyExists = targetDateItems.some((it) => (typeof it === 'string' ? it === itemTitle : it.title === itemTitle));
+        const alreadyExists = targetDateItems.some((it) => completedItemTitle(it) === itemTitle);
         if (!alreadyExists) {
           newCompletedItemsHistory[dayDateStr] = [...targetDateItems, { title: itemTitle, description: itemDesc || "" }];
         }
       } else {
-        const sIdx = newStreakHistory.indexOf(dayDateStr);
-        if (sIdx > -1) newStreakHistory.splice(sIdx, 1);
-        newCompletedItemsHistory[dayDateStr] = targetDateItems.filter((it) => (typeof it === 'string' ? it !== itemTitle : it.title !== itemTitle));
+        newCompletedItemsHistory[dayDateStr] = targetDateItems.filter((it) => completedItemTitle(it) !== itemTitle);
       }
 
       applyChange({
         ...data,
         weeklyCompletions: newWeeklyCompletions,
-        streakHistory: newStreakHistory,
+        streakHistory: rebuildStreakHistory(newCompletedItemsHistory),
         completedItemsHistory: newCompletedItemsHistory,
       });
     }
