@@ -42,12 +42,17 @@ export default function DashboardHeader({ data, syncStatus, syncError, onSync }:
     <header className="main-header w-full flex flex-col gap-3 border-b border-card-border pb-6">
       {/* Line 1: Title */}
       <h1 className="text-[1.75rem] font-bold text-white m-0 flex items-center gap-2 tracking-[-0.01em]">
-        <span className="text-accent">&gt;_</span> Engine Developer Hub
+        <span className="text-accent">&gt;_</span> Horizon: Roadmap Tracker
       </h1>
 
-      {/* Line 2: 12-Month subtitle & roadmap link */}
+      {/* Line 2: Active Track & roadmap link */}
       <div className="flex items-center gap-3 flex-wrap text-[0.85rem]">
-        <span className="text-zinc-400">12-Month Graphics Programming Tracker</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-zinc-500">Track:</span>
+          <span className="text-accent font-semibold hover:underline cursor-pointer transition-all duration-150" title="Switch Track (Future Feature)">
+            Game Engine & Graphics
+          </span>
+        </div>
         <span className="text-card-border">|</span>
         {data.isSynced ? (
           <a href="/roadmap" className="link-title !text-accent no-underline font-semibold inline-flex items-center gap-1">

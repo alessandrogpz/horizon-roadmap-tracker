@@ -5,12 +5,12 @@ import "./globals.css";
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains-mono" });
 
 export const metadata: Metadata = {
-  title: "Engine Dev Tracker",
-  description: "12-month Graphics & Engine Developer Path Tracker",
+  title: "Horizon: Roadmap Tracker",
+  description: "Personal roadmap and consistency engine. Active Track: Game Engine Development",
   icons: {
-    icon: "/icon.jpg",
-    shortcut: "/icon.jpg",
-    apple: "/icon.jpg",
+    icon: "/icon-512.png",
+    shortcut: "/icon-512.png",
+    apple: "/icon-512.png",
   },
 };
 

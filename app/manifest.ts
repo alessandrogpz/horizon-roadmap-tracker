@@ -2,9 +2,9 @@ import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Engine Dev Tracker',
-    short_name: 'DevTracker',
-    description: '12-month Graphics & Engine Developer Path Tracker',
+    name: 'Horizon: Roadmap Tracker',
+    short_name: 'Horizon',
+    description: 'Personal roadmap and consistency engine. Active Track: Game Engine Development',
     start_url: '/',
     id: '/',
     scope: '/',
