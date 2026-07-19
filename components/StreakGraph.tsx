@@ -94,8 +94,11 @@ export default function StreakGraph({
               <div
                 key={dIdx}
                 onClick={() => day.dateStr && setSelectedDateDetails(day.dateStr)}
-                className={`w-2.5 h-2.5 rounded-sm transition-colors duration-300 ${day.dateStr ? "cursor-pointer" : "cursor-default"}`}
-                style={{ backgroundColor: day.dateStr ? getColorClass(day.count) : 'transparent' }}
+                className={`w-2.5 h-2.5 transition-colors duration-300 ${day.dateStr ? "cursor-pointer" : "cursor-default"}`}
+                style={{ 
+                  backgroundColor: day.dateStr ? getColorClass(day.count) : 'transparent',
+                  borderRadius: '2px'
+                }}
                 title={
                   day.dateStr
                     ? `${day.dateStr}: ${day.count} update${day.count !== 1 ? 's' : ''}${
