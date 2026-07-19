@@ -21,7 +21,7 @@ export default function PortfolioTracker({ portfolio, onToggle }: PortfolioTrack
 
   useEffect(() => {
     portfolio.forEach(proj => {
-      // localPath stores GitHub URL (migrated from local path), repoUrl is a cleaner alias
+      // repoUrl is injected by migrateLocalPaths from the authoritative ID map — always reliable
       const source = proj.repoUrl || proj.localPath || "";
       if (source.includes("github.com") || source.startsWith("/") || source.startsWith("~")) {
         fetchGitStats(source)
