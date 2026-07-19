@@ -2,6 +2,13 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import { fetchAppState, updateAppState, openLinkOnSystem, syncWorkspace } from "@/lib/api";
+import { 
+  isGoogleAuthenticated, 
+  getGoogleClientId, 
+  authenticateGoogleDrive, 
+  syncWithGoogleDrive, 
+  setGoogleClientId 
+} from "@/lib/googleDrive";
 import StreakGraph from "@/components/StreakGraph";
 import PhaseTracker from "@/components/PhaseTracker";
 import PortfolioTracker from "@/components/PortfolioTracker";
@@ -116,14 +123,41 @@ export default function Home() {
     return `${y}-${m}-${d}`;
   };
 
-  const handleSyncWorkspace = async () => {
+  const handleSyncWorkspace = async (e: React.MouseEvent) => {
+    // Shift click to disconnect Google Drive
+    if (e.shiftKey) {
+      if (confirm("Disconnect Google Drive and clear client configuration?")) {
+        localStorage.removeItem("google_drive_client_id");
+        localStorage.removeItem("google_drive_access_token");
+        localStorage.removeItem("google_drive_token_expiry");
+        alert("Google Drive disconnected.");
+      }
+      return;
+    }
+
     setSyncStatus("syncing");
     setSyncError("");
     try {
-      const res = await syncWorkspace();
+      if (!isGoogleAuthenticated()) {
+        let clientId = getGoogleClientId();
+        if (!clientId) {
+          clientId = prompt("Enter your Google OAuth Client ID to connect Google Drive:") || "";
+          if (!clientId) {
+            setSyncStatus("idle");
+            return;
+          }
+          setGoogleClientId(clientId);
+        }
+        await authenticateGoogleDrive(clientId);
+      }
+
+      const res = await syncWithGoogleDrive();
       if (res.success) {
         setSyncStatus("success");
         setTimeout(() => setSyncStatus("idle"), 3000);
+        // Refresh local UI state
+        const loadedData = await fetchAppState();
+        setData(loadedData);
       } else {
         throw new Error(res.error || "Unknown sync error");
       }
@@ -136,7 +170,16 @@ export default function Home() {
   };
 
   useEffect(() => {
-    // Client-only initialization
+    // Client-only initialization and service worker registration for PWA
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/sw.js").then(
+          (reg) => console.log("SW registered:", reg.scope),
+          (err) => console.error("SW registration failed:", err)
+        );
+      });
+    }
+
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -688,6 +731,56 @@ export default function Home() {
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "nowrap", flex: "0 1 auto" }}>
+            {/* Sync Workspace Button */}
+            <button
+              onClick={handleSyncWorkspace}
+              disabled={syncStatus === "syncing"}
+              className="glass-panel"
+              style={{
+                padding: "0 1.25rem",
+                display: "flex",
+                alignItems: "center",
+                height: "38px",
+                margin: 0,
+                borderRadius: "6px",
+                boxShadow: "none",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+                background: syncStatus === "success" ? "rgba(16, 185, 129, 0.12)" : syncStatus === "error" ? "rgba(239, 68, 68, 0.12)" : "rgba(255, 255, 255, 0.03)",
+                border: `1px solid ${syncStatus === "success" ? "rgba(16, 185, 129, 0.3)" : syncStatus === "error" ? "rgba(239, 68, 68, 0.3)" : "rgba(255, 255, 255, 0.05)"}`,
+                cursor: syncStatus === "syncing" ? "not-allowed" : "pointer",
+                transition: "all 0.2s ease"
+              }}
+              onMouseOver={(e) => {
+                if (syncStatus === "idle") {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
+                  e.currentTarget.style.borderColor = "var(--accent)";
+                }
+              }}
+              onMouseOut={(e) => {
+                if (syncStatus === "idle") {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.03)";
+                  e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.05)";
+                }
+              }}
+              title={syncStatus === "error" ? syncError : "Backup and Sync to Google Drive (Shift+Click to disconnect)"}
+            >
+              <span style={{ fontSize: "0.6rem", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "monospace", marginRight: "0.4rem" }}>
+                Cloud Sync:
+              </span>
+              <span style={{ 
+                fontSize: "0.8rem", 
+                fontWeight: 600, 
+                color: syncStatus === "success" ? "var(--success)" : syncStatus === "error" ? "#ef4444" : "var(--accent)", 
+                fontFamily: "monospace" 
+              }}>
+                {syncStatus === "idle" && "Sync Now"}
+                {syncStatus === "syncing" && "Syncing..."}
+                {syncStatus === "success" && "Success ✓"}
+                {syncStatus === "error" && "Error ✕"}
+              </span>
+            </button>
+
             {/* Days in current Phase badge */}
             <div 
               className="glass-panel" 
