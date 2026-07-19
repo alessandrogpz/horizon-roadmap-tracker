@@ -390,6 +390,25 @@ body {
   align-items: center;
 }
 
+/* Weekly plan grid: 7 equal columns on desktop; on small screens the cards
+   keep a readable width and the row scrolls horizontally instead */
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+@media (max-width: 767px) {
+  .week-grid-scroll {
+    overflow-x: auto;
+    margin: 0 -0.5rem;
+    padding: 0 0.5rem;
+  }
+  .week-grid {
+    grid-template-columns: repeat(7, minmax(140px, 1fr));
+  }
+}
+
 /* Animations */
 @keyframes spin {
   from { transform: rotate(0deg); }

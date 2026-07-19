@@ -153,25 +153,23 @@ export default function WeeklyPlan({
           </div>
         </div>
 
-        {/* 7-column grid */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(7, 1fr)",
-          gap: "0.4rem",
-        }}>
-          {(data.weekSchedule || DEFAULT_WEEK_SCHEDULE).map((dayItem, idx) => (
-            <DayCard
-              key={dayItem.name}
-              dayItem={dayItem}
-              idx={idx}
-              data={data}
-              todayStr={todayStr}
-              dayOfWeek={dayOfWeek}
-              weekOffset={weekOffset}
-              onDayClick={onDayClick}
-              applyChange={applyChange}
-            />
-          ))}
+        {/* 7-column grid (scrolls horizontally on small screens) */}
+        <div className="week-grid-scroll">
+          <div className="week-grid">
+            {(data.weekSchedule || DEFAULT_WEEK_SCHEDULE).map((dayItem, idx) => (
+              <DayCard
+                key={dayItem.name}
+                dayItem={dayItem}
+                idx={idx}
+                data={data}
+                todayStr={todayStr}
+                dayOfWeek={dayOfWeek}
+                weekOffset={weekOffset}
+                onDayClick={onDayClick}
+                applyChange={applyChange}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>
