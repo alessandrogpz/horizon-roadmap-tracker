@@ -4,7 +4,7 @@ const DEFAULT_SKETCH_STATE = {
   currentPhase: 1,
   startDate: "2026-07-01",
   dsaStartWeek: 1,
-  streakHistory: {},
+  streakHistory: [],
   lastDailyRoutineCheck: "",
   lastTasksResetDate: "",
   dailyFocus: {
