@@ -27,7 +27,7 @@ export default function PortfolioTracker({ portfolio, onToggle }: PortfolioTrack
   }, [portfolio]);
 
   return (
-    <div className="glass-panel flex flex-col gap-4">
+    <div className="glass-panel p-6 flex flex-col gap-4">
       <h2 className="section-title">Portfolio Deliverables</h2>
       <div className="flex flex-col mt-2">
         {portfolio.map((proj, idx) => (

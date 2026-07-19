@@ -97,7 +97,7 @@ export default function PomodoroTimer() {
     `bg-white/[0.03] border border-white/10 rounded px-2 py-1 text-[0.8rem] font-mono ${active ? "text-zinc-600 cursor-not-allowed" : "text-white cursor-pointer"}`;
 
   return (
-    <div className="glass-panel flex flex-col gap-4">
+    <div className="glass-panel p-6 flex flex-col gap-4">
       <h2 className="section-title">Focus Timer</h2>
 
       <div className="flex flex-col items-center gap-4 py-2">
