@@ -85,7 +85,7 @@ export default function StreakGraph({
   const itemAsObject = (it: CompletedItem) => (typeof it === "string" ? { title: it, description: "" } : { description: "", ...it });
 
   return (
-    <div ref={scrollContainerRef} className="glass-panel overflow-x-auto">
+    <div ref={scrollContainerRef} className="glass-panel p-6 overflow-x-auto">
       <h2 className="section-title">Consistency Streak</h2>
       <div className="flex gap-1 py-2.5">
         {weeks.map((week, wIdx) => (
