@@ -133,12 +133,10 @@ export default function Home() {
   useEffect(() => {
     // Client-only initialization and service worker registration for PWA
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("/sw.js").then(
-          (reg) => console.log("SW registered:", reg.scope),
-          (err) => console.error("SW registration failed:", err)
-        );
-      });
+      navigator.serviceWorker.register("/sw.js").then(
+        (reg) => console.log("SW registered:", reg.scope),
+        (err) => console.error("SW registration failed:", err)
+      );
     }
 
     // Pre-load Google GIS script to prevent popup blocker issues
