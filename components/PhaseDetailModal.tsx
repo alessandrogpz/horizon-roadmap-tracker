@@ -13,11 +13,30 @@ interface PhaseDetailModalProps {
   canDelete: boolean;
 }
 
-// Placeholder state stores these sections as plain strings; normalize to array form for editing.
+// Placeholder state stores these sections as plain strings; normalize to array form.
 const asItems = (v: PhaseDetailItem[] | string | undefined): PhaseDetailItem[] => {
   if (!v) return [];
   return Array.isArray(v) ? v : [{ item: v, desc: "" }];
 };
+
+function ReadOnlyDetailSection({ title, items }: { title: string; items: PhaseDetailItem[] }) {
+  if (items.length === 0) return null;
+  return (
+    <div>
+      <h4 className="text-[0.8rem] text-accent uppercase tracking-[0.05em] mb-2 border-b border-white/5 pb-1 font-bold">
+        {title}
+      </h4>
+      <div className="flex flex-col gap-3">
+        {items.map((f, idx) => (
+          <div key={idx} className="text-[0.85rem] leading-normal">
+            <div className="text-white font-semibold">• {f.item}</div>
+            {f.desc && <div className="text-zinc-400 pl-4">{f.desc}</div>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function EditableDetailSection({
   title,
@@ -90,6 +109,7 @@ export default function PhaseDetailModal({
 }: PhaseDetailModalProps) {
   const { detailedInfo } = phase;
   const isActive = phase.id === currentPhaseId;
+  const [isEditing, setIsEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const updateDetail = (field: keyof Phase["detailedInfo"], items: PhaseDetailItem[]) => {
@@ -109,6 +129,8 @@ export default function PhaseDetailModal({
     onChange({ ...phase, tasks: [...phase.tasks, { id: `t_${Date.now()}`, title: title.trim(), completed: false }] });
   };
 
+  const algoItems = asItems(detailedInfo.algoDS);
+
   return (
     <div
       onClick={onClose}
@@ -126,125 +148,191 @@ export default function PhaseDetailModal({
           ✕
         </button>
 
-        {/* Modal Header */}
-        <div className="flex flex-col gap-2 pr-8">
-          <div className="flex items-center gap-4">
-            <input
-              type="text"
-              value={phase.title}
-              onChange={(e) => onChange({ ...phase, title: e.target.value })}
-              className="flex-1 bg-transparent border-none text-[1.4rem] font-bold text-accent outline-none"
-            />
-            {isActive ? (
-              <span className="text-xs bg-success/15 text-success px-2 py-0.5 rounded font-semibold shrink-0">
-                ACTIVE FOCUS
-              </span>
-            ) : null}
-          </div>
-          <textarea
-            value={phase.description}
-            onChange={(e) => onChange({ ...phase, description: e.target.value })}
-            placeholder="What is this phase about?"
-            className="bg-transparent border-none border-b border-dashed border-white/10 text-zinc-400 text-[0.9rem] outline-none pb-1.5 resize-none"
-            rows={2}
-          />
-        </div>
-
-        {/* Tasks */}
-        <div>
-          <h4 className="text-[0.8rem] text-accent uppercase tracking-[0.05em] mb-2 border-b border-white/5 pb-1 font-bold">
-            Tasks
-          </h4>
-          <div className="flex flex-col gap-2">
-            {phase.tasks.map((task) => (
-              <div key={task.id} className="flex items-center gap-2 bg-black/15 border border-white/5 rounded-md px-2.5 py-1.5">
-                <input
-                  type="checkbox"
-                  className="checkbox-custom"
-                  checked={task.completed}
-                  onChange={(e) => updateTask(task.id, { completed: e.target.checked })}
-                />
+        {isEditing ? (
+          <>
+            {/* Modal Header (editing) */}
+            <div className="flex flex-col gap-2 pr-8">
+              <div className="flex items-center gap-4">
                 <input
                   type="text"
-                  value={task.title}
-                  onChange={(e) => updateTask(task.id, { title: e.target.value })}
-                  className="flex-1 bg-transparent border-none text-white text-[0.85rem] outline-none"
+                  value={phase.title}
+                  onChange={(e) => onChange({ ...phase, title: e.target.value })}
+                  className="flex-1 bg-transparent border-none text-[1.4rem] font-bold text-accent outline-none"
                 />
-                <button onClick={() => removeTask(task.id)} className="bg-transparent border-none text-red-500 cursor-pointer text-[0.85rem]">
-                  ✕
-                </button>
+                {isActive ? (
+                  <span className="text-xs bg-success/15 text-success px-2 py-0.5 rounded font-semibold shrink-0">
+                    ACTIVE FOCUS
+                  </span>
+                ) : null}
               </div>
-            ))}
-          </div>
-          <input
-            type="text"
-            placeholder="Add a task and press Enter..."
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && e.currentTarget.value.trim()) {
-                addTask(e.currentTarget.value);
-                e.currentTarget.value = "";
-              }
-            }}
-            className="mt-2 w-full bg-black/25 border border-dashed border-white/10 rounded-md px-2.5 py-1.5 text-white text-[0.85rem] outline-none"
-          />
-        </div>
+              <textarea
+                value={phase.description}
+                onChange={(e) => onChange({ ...phase, description: e.target.value })}
+                placeholder="What is this phase about?"
+                className="bg-transparent border-none border-b border-dashed border-white/10 text-zinc-400 text-[0.9rem] outline-none pb-1.5 resize-none"
+                rows={2}
+              />
+            </div>
 
-        {/* Detailed Sections */}
-        <div className="flex flex-col gap-5">
-          <EditableDetailSection title="Core Focus" items={asItems(detailedInfo.focus)} onChange={(items) => updateDetail("focus", items)} />
-          <EditableDetailSection title="Math Integration" items={asItems(detailedInfo.math)} onChange={(items) => updateDetail("math", items)} />
-          <EditableDetailSection title="Algorithms & Data Structures" items={asItems(detailedInfo.algoDS)} onChange={(items) => updateDetail("algoDS", items)} />
-          <EditableDetailSection title="Deliverable Goal" items={asItems(detailedInfo.deliverable)} onChange={(items) => updateDetail("deliverable", items)} />
-        </div>
-
-        {/* Modal Footer */}
-        <div className="flex justify-between items-center mt-2 border-t border-white/5 pt-4">
-          <div className="flex items-center gap-3">
-            {!isActive && (
-              <button
-                onClick={() => {
-                  onActivatePhase(phase.id);
-                  onClose();
+            {/* Tasks (editing) */}
+            <div>
+              <h4 className="text-[0.8rem] text-accent uppercase tracking-[0.05em] mb-2 border-b border-white/5 pb-1 font-bold">
+                Tasks
+              </h4>
+              <div className="flex flex-col gap-2">
+                {phase.tasks.map((task) => (
+                  <div key={task.id} className="flex items-center gap-2 bg-black/15 border border-white/5 rounded-md px-2.5 py-1.5">
+                    <input
+                      type="checkbox"
+                      className="checkbox-custom"
+                      checked={task.completed}
+                      onChange={(e) => updateTask(task.id, { completed: e.target.checked })}
+                    />
+                    <input
+                      type="text"
+                      value={task.title}
+                      onChange={(e) => updateTask(task.id, { title: e.target.value })}
+                      className="flex-1 bg-transparent border-none text-white text-[0.85rem] outline-none"
+                    />
+                    <button onClick={() => removeTask(task.id)} className="bg-transparent border-none text-red-500 cursor-pointer text-[0.85rem]">
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <input
+                type="text"
+                placeholder="Add a task and press Enter..."
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && e.currentTarget.value.trim()) {
+                    addTask(e.currentTarget.value);
+                    e.currentTarget.value = "";
+                  }
                 }}
-                className="btn !bg-accent/15 !text-accent border !border-accent text-[0.85rem]"
-              >
-                Set as Active Phase
+                className="mt-2 w-full bg-black/25 border border-dashed border-white/10 rounded-md px-2.5 py-1.5 text-white text-[0.85rem] outline-none"
+              />
+            </div>
+
+            {/* Detailed Sections (editing) */}
+            <div className="flex flex-col gap-5">
+              <EditableDetailSection title="Core Focus" items={asItems(detailedInfo.focus)} onChange={(items) => updateDetail("focus", items)} />
+              <EditableDetailSection title="Math Integration" items={asItems(detailedInfo.math)} onChange={(items) => updateDetail("math", items)} />
+              <EditableDetailSection title="Algorithms & Data Structures" items={algoItems} onChange={(items) => updateDetail("algoDS", items)} />
+              <EditableDetailSection title="Deliverable Goal" items={asItems(detailedInfo.deliverable)} onChange={(items) => updateDetail("deliverable", items)} />
+            </div>
+
+            {/* Footer (editing) */}
+            <div className="flex justify-between items-center mt-2 border-t border-white/5 pt-4">
+              {confirmingDelete ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-[0.8rem] text-red-400">Delete this phase?</span>
+                  <button
+                    onClick={() => {
+                      onDelete(phase.id);
+                      onClose();
+                    }}
+                    className="btn px-3 py-1.5 text-[0.8rem] !bg-red-500/15 !text-red-400 !border-red-500/40"
+                  >
+                    Confirm
+                  </button>
+                  <button
+                    onClick={() => setConfirmingDelete(false)}
+                    className="btn px-3 py-1.5 text-[0.8rem] !bg-transparent !text-zinc-400 !border-white/10"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  {canDelete && (
+                    <button
+                      onClick={() => setConfirmingDelete(true)}
+                      className="text-red-500 bg-transparent border-none cursor-pointer text-[0.8rem]"
+                    >
+                      Delete Phase
+                    </button>
+                  )}
+                </div>
+              )}
+              <button onClick={() => setIsEditing(false)} className="btn px-5 py-2 text-[0.85rem]">
+                Done
               </button>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Modal Header (read-only) */}
+            <div className="pr-8">
+              <div className="flex items-center gap-4">
+                <h2 className="text-[1.4rem] font-bold text-accent m-0">{phase.title}</h2>
+                {isActive ? (
+                  <span className="text-xs bg-success/15 text-success px-2 py-0.5 rounded font-semibold shrink-0">
+                    ACTIVE FOCUS
+                  </span>
+                ) : null}
+              </div>
+              <p className="text-zinc-400 text-[0.9rem] mt-1">{phase.description}</p>
+            </div>
+
+            {/* Tasks (read-only, checkboxes still interactive) */}
+            {phase.tasks.length > 0 && (
+              <div>
+                <h4 className="text-[0.8rem] text-accent uppercase tracking-[0.05em] mb-2 border-b border-white/5 pb-1 font-bold">
+                  Tasks
+                </h4>
+                <div className="flex flex-col gap-2">
+                  {phase.tasks.map((task) => (
+                    <label key={task.id} className="flex items-center gap-2.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="checkbox-custom"
+                        checked={task.completed}
+                        onChange={(e) => updateTask(task.id, { completed: e.target.checked })}
+                      />
+                      <span className={`text-[0.85rem] ${task.completed ? "text-zinc-500 line-through" : "text-foreground"}`}>
+                        {task.title}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
             )}
-            {confirmingDelete ? (
-              <div className="flex items-center gap-2">
-                <span className="text-[0.8rem] text-red-400">Delete this phase?</span>
+
+            {/* Detailed Sections (read-only) */}
+            <div className="flex flex-col gap-5">
+              <ReadOnlyDetailSection title="Core Focus" items={asItems(detailedInfo.focus)} />
+              <ReadOnlyDetailSection title="Math Integration" items={asItems(detailedInfo.math)} />
+              <ReadOnlyDetailSection title="Algorithms & Data Structures" items={algoItems} />
+              <ReadOnlyDetailSection title="Deliverable Goal" items={asItems(detailedInfo.deliverable)} />
+            </div>
+
+            {/* Footer (read-only) */}
+            <div className="flex justify-between items-center mt-2 border-t border-white/5 pt-4">
+              <div className="flex items-center gap-3">
+                {!isActive && (
+                  <button
+                    onClick={() => {
+                      onActivatePhase(phase.id);
+                      onClose();
+                    }}
+                    className="btn !bg-accent/15 !text-accent border !border-accent text-[0.85rem]"
+                  >
+                    Set as Active Phase
+                  </button>
+                )}
                 <button
-                  onClick={() => {
-                    onDelete(phase.id);
-                    onClose();
-                  }}
-                  className="btn px-3 py-1.5 text-[0.8rem] !bg-red-500/15 !text-red-400 !border-red-500/40"
+                  onClick={() => setIsEditing(true)}
+                  className="btn px-4 py-2 text-[0.85rem] !bg-transparent !text-zinc-400 !border-white/10 hover:!text-white"
                 >
-                  Confirm
-                </button>
-                <button
-                  onClick={() => setConfirmingDelete(false)}
-                  className="btn px-3 py-1.5 text-[0.8rem] !bg-transparent !text-zinc-400 !border-white/10"
-                >
-                  Cancel
+                  Edit
                 </button>
               </div>
-            ) : (
-              canDelete && (
-                <button
-                  onClick={() => setConfirmingDelete(true)}
-                  className="text-red-500 bg-transparent border-none cursor-pointer text-[0.8rem]"
-                >
-                  Delete Phase
-                </button>
-              )
-            )}
-          </div>
-          <button onClick={onClose} className="btn px-5 py-2 text-[0.85rem]">
-            Done
-          </button>
-        </div>
+              <button onClick={onClose} className="btn px-5 py-2 text-[0.85rem]">
+                Close
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
