@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { exportSingleFile, exportZipBundle } from "@/lib/export";
 
 export type DriveModalMode = "connect" | "manage";
 
@@ -22,6 +23,21 @@ export default function DriveConnectModal({
   onClose,
 }: DriveConnectModalProps) {
   const [clientId, setClientId] = useState(initialClientId);
+  const [exporting, setExporting] = useState<"single" | "zip" | null>(null);
+  const [exportError, setExportError] = useState("");
+
+  const handleExport = async (format: "single" | "zip") => {
+    setExportError("");
+    setExporting(format);
+    try {
+      await (format === "single" ? exportSingleFile() : exportZipBundle());
+    } catch (err) {
+      console.error("Export failed:", err);
+      setExportError("Export failed — see console for details.");
+    } finally {
+      setExporting(null);
+    }
+  };
 
   return (
     <div
@@ -30,7 +46,7 @@ export default function DriveConnectModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="glass-panel max-w-[460px] w-full flex flex-col gap-5 p-8 border border-accent-muted relative rounded-lg"
+        className="glass-panel max-w-[460px] w-full max-h-[90vh] overflow-y-auto flex flex-col gap-5 p-8 border border-accent-muted relative rounded-lg"
       >
         <button
           onClick={onClose}
@@ -44,7 +60,7 @@ export default function DriveConnectModal({
             Google Drive
           </span>
           <h2 className="text-[1.3rem] font-bold text-white mt-2 mb-1">
-            {mode === "connect" ? "Connect Cloud Sync" : "Manage Connection"}
+            {mode === "connect" ? "Connect Cloud Sync" : "Cloud & Backup"}
           </h2>
           <p className="text-[0.85rem] text-zinc-400 m-0 leading-normal">
             {mode === "connect"
@@ -69,6 +85,32 @@ export default function DriveConnectModal({
               }}
               className="w-full px-3 py-2 rounded-md bg-black/30 border border-card-border text-white outline-none font-[inherit] text-[0.85rem]"
             />
+          </div>
+        )}
+
+        {mode === "manage" && (
+          <div className="flex flex-col gap-2 border-t border-white/5 pt-4">
+            <span className="text-[0.7rem] text-zinc-400 uppercase tracking-[0.05em] font-semibold">Backup</span>
+            <p className="text-[0.8rem] text-zinc-500 m-0 leading-normal">
+              Download everything that syncs — every track, its roadmap, rotations, materials, and notes.
+            </p>
+            <div className="flex gap-2 flex-wrap mt-1">
+              <button
+                onClick={() => handleExport("single")}
+                disabled={exporting !== null}
+                className="btn px-4 py-2 text-[0.8rem] !bg-transparent !text-zinc-300 !border-white/10 hover:!text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {exporting === "single" ? "Exporting..." : "Single File (.json)"}
+              </button>
+              <button
+                onClick={() => handleExport("zip")}
+                disabled={exporting !== null}
+                className="btn px-4 py-2 text-[0.8rem] !bg-transparent !text-zinc-300 !border-white/10 hover:!text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {exporting === "zip" ? "Exporting..." : "Separate Files (.zip)"}
+              </button>
+            </div>
+            {exportError && <p className="text-[0.75rem] text-red-400 m-0">{exportError}</p>}
           </div>
         )}
 

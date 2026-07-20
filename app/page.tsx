@@ -244,12 +244,7 @@ export default function Home() {
     }
   };
 
-  const handleSyncWorkspace = (e: React.MouseEvent) => {
-    // Shift click opens connection management (disconnect)
-    if (e.shiftKey) {
-      setDriveModalMode("manage");
-      return;
-    }
+  const handleSyncWorkspace = () => {
     if (syncStatus === "syncing") return;
 
     const clientId = getGoogleClientId();
@@ -259,6 +254,8 @@ export default function Home() {
     }
     runSync(clientId);
   };
+
+  const handleOpenCloudMenu = () => setDriveModalMode("manage");
 
   const handleDriveConnect = (clientId: string) => {
     setGoogleClientId(clientId);
@@ -615,6 +612,7 @@ export default function Home() {
             syncStatus={syncStatus}
             syncError={syncError}
             onSync={handleSyncWorkspace}
+            onOpenCloudMenu={handleOpenCloudMenu}
             onSwitchTrack={handleSwitchTrack}
             onNewTrack={() => router.push("/onboarding?mode=add")}
             onEditTrack={handleEditTrackIdentity}
