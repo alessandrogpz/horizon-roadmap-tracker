@@ -1,13 +1,13 @@
 import "fake-indexeddb/auto";
 import { describe, it, expect } from "vitest";
 import { fetchWorkspace, updateWorkspace, createTrack } from "../api";
-import type { TrackState } from "../types";
+import { db } from "../localDb";
+import type { TrackState, Workspace } from "../types";
 
 const baseTrack = (id: string): TrackState => ({
   meta: { id, name: "Track", color: "#0ea5e9", templateId: "custom", createdAt: Date.now() },
   currentPhase: 1,
   startDate: "2026-07-01",
-  dsaStartWeek: 1,
   streakHistory: [],
   lastDailyRoutineCheck: "",
   lastTasksResetDate: "",
@@ -74,5 +74,46 @@ describe("updateWorkspace config-change detection", () => {
 
     const after = await fetchWorkspace();
     expect(after.tracks[track.meta.id].configVersion).toBe(0);
+  });
+});
+
+describe("legacy rotationConfig -> rotations migration", () => {
+  it("splits an already-synced legacy rotationConfig into pattern + interleave rotations on load", async () => {
+    const track = baseTrack("track_test_legacy_rotation");
+    const legacyTrack = {
+      ...track,
+      rotationConfig: {
+        weeks: [{ pattern: "Two Pointers", problems: "3Sum" }, { pattern: "Sliding Window", problems: "Min Window" }],
+        appliesToScheduleType: "math",
+      },
+      dsaStartWeek: 3,
+    };
+    const workspace: Workspace = { activeTrackId: track.meta.id, tracks: { [track.meta.id]: legacyTrack as unknown as TrackState } };
+    await db.workspace.put({ id: "current", data: workspace });
+
+    const loaded = await fetchWorkspace();
+    const migrated = loaded.tracks[track.meta.id];
+
+    expect(migrated.rotations).toHaveLength(2);
+    const pattern = migrated.rotations!.find((r) => r.id === "legacy_pattern_rotation");
+    expect(pattern?.daysOfWeek).toEqual(["Mon", "Wed", "Fri"]);
+    expect(pattern?.startWeek).toBe(3);
+    expect(pattern?.items.map((i) => i.title)).toEqual(["Two Pointers", "Sliding Window"]);
+    const interleave = migrated.rotations!.find((r) => r.id === "legacy_math_interleave");
+    expect(interleave?.daysOfWeek).toEqual(["Tue", "Thu", "Sat"]);
+
+    expect((migrated as unknown as { rotationConfig?: unknown }).rotationConfig).toBeUndefined();
+    expect((migrated as unknown as { dsaStartWeek?: unknown }).dsaStartWeek).toBeUndefined();
+
+    // The migration persists so it only runs once.
+    const reloaded = await fetchWorkspace();
+    expect(reloaded.tracks[track.meta.id].rotations).toHaveLength(2);
+  });
+
+  it("leaves tracks without a legacy rotationConfig untouched", async () => {
+    const track = baseTrack("track_test_no_legacy_rotation");
+    await createTrack(track);
+    const loaded = await fetchWorkspace();
+    expect(loaded.tracks[track.meta.id].rotations).toBeUndefined();
   });
 });

@@ -8,7 +8,6 @@ import type { AppState, TrackMeta, TrackState, Workspace } from "../types";
 const baseTrackFields = (overrides: Partial<AppState> = {}): AppState => ({
   currentPhase: 1,
   startDate: "2026-07-01",
-  dsaStartWeek: 1,
   streakHistory: [],
   lastDailyRoutineCheck: "",
   lastTasksResetDate: "",

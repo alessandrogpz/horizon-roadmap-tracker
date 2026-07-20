@@ -1,4 +1,4 @@
-import type { FocusType, Material, Phase, PortfolioProject, RotationConfig, WeekDay } from "../types";
+import type { FocusType, Material, Phase, PortfolioProject, WeekDay } from "../types";
 
 /**
  * A TrackTemplate is only an initial data seed for a new Track. Once
@@ -18,5 +18,4 @@ export interface TrackTemplate {
   defaultFocusTypes: Record<string, FocusType>;
   defaultMaterials?: Omit<Material, "id">[];
   defaultPortfolio?: Omit<PortfolioProject, "id">[];
-  rotationConfig?: RotationConfig;
 }
