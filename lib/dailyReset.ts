@@ -1,6 +1,7 @@
-import type { RevisionItem, TrackState } from "./types";
+import type { TrackState } from "./types";
 import { getWeekNum, parseYMD, DAYS_SHORT } from "./dates";
 import { DEFAULT_WEEK_SCHEDULE } from "./constants";
+import { computeAutoRevisionItem, isAutoRevisionItem } from "./rotation";
 
 /**
  * When a new day starts: snapshot yesterday's completions into weeklyCompletions,
@@ -57,52 +58,16 @@ export function applyDailyResetIfNeeded(loadedData: TrackState, todayStr: string
   if (rotation) {
     const startWeek = loadedData.dsaStartWeek || 1;
     const currentWeekNum = getWeekNum(loadedData.startDate);
-    const len = rotation.weeks.length;
-    const rotationIdx = len > 0 ? (((currentWeekNum - startWeek) % len) + len) % len : 0;
-    const currentPattern = rotation.weeks[rotationIdx];
-
-    // Compute rotation days dynamically from schedule
     const schedule = loadedData.weekSchedule || DEFAULT_WEEK_SCHEDULE;
-    const rotationDayNames = schedule.filter((d) => d.type === rotation.appliesToScheduleType).map((d) => d.name);
-
-    const isAutoItem = (item: RevisionItem | undefined) =>
-      !!item && (item.id?.startsWith("rev_") || item.id?.startsWith("dsa_") || item.id === "math_revision");
 
     const ALL_WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     ALL_WEEKDAYS.forEach((dayKey) => {
       const items = resetDailyRevisionItems[dayKey] || [];
-      if (currentPattern && rotationDayNames.includes(dayKey)) {
-        // Rotation day: populate with the auto-rotated pattern
-        const autoIdx = items.findIndex((it) => it.id === "dsa_auto");
-        const autoItem: RevisionItem = {
-          id: "dsa_auto",
-          title: currentPattern.pattern,
-          description: currentPattern.problems,
-          completed: false
-        };
-        if (autoIdx >= 0) {
-          items[autoIdx] = autoItem;
-        } else if (items.length > 0 && isAutoItem(items[0])) {
-          items[0] = autoItem;
-        } else {
-          items.unshift(autoItem);
-        }
-      } else if (currentPattern) {
-        // Non-rotation day: populate with the interleaved math revision item
-        const mathIdx = items.findIndex((it) => it.id === "math_revision" || it.id === "dsa_auto");
-        const mathItem: RevisionItem = {
-          id: "math_revision",
-          title: "Linear Algebra",
-          description: "Practice vector spaces, transforms, and equations",
-          completed: false
-        };
-        if (mathIdx >= 0) {
-          items[mathIdx] = mathItem;
-        } else if (items.length > 0 && isAutoItem(items[0])) {
-          items[0] = mathItem;
-        } else {
-          items.unshift(mathItem);
-        }
+      const autoItem = computeAutoRevisionItem(rotation, schedule, currentWeekNum, startWeek, dayKey);
+      if (autoItem) {
+        const autoIdx = items.findIndex((it) => isAutoRevisionItem(it));
+        if (autoIdx >= 0) items[autoIdx] = autoItem;
+        else items.unshift(autoItem);
       }
       resetDailyRevisionItems[dayKey] = items;
     });
