@@ -8,7 +8,7 @@ import {
   setGoogleClientId,
   syncWithGoogleDrive,
 } from "@/lib/googleDrive";
-import { fetchWorkspace } from "@/lib/api";
+import { fetchWorkspace, visibleTracks } from "@/lib/api";
 import type { Workspace } from "@/lib/types";
 
 interface ConnectExistingAccountProps {
@@ -39,7 +39,7 @@ export default function ConnectExistingAccount({ onConnected, onBack }: ConnectE
         throw new Error(res.error || "Sync failed");
       }
       const workspace = await fetchWorkspace();
-      if (Object.keys(workspace.tracks).length > 0) {
+      if (visibleTracks(workspace).length > 0) {
         onConnected(workspace);
       } else {
         setStatus("empty");

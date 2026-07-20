@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { RotationDef, TrackState } from "@/lib/types";
 import { getWeekNum } from "@/lib/dates";
 import { renderMarkdownToHtml } from "@/lib/markdown";
@@ -44,6 +44,16 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
   const [planTab, setPlanTab] = useState<"write" | "preview">("preview");
   const [planSaveStatus, setPlanSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const planSaveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+  // The debounced autosave below fires up to 800ms after the keystroke that
+  // scheduled it — read the latest data through a ref rather than closing
+  // over the `data` prop directly, so a save that lands after some other
+  // change happened in between doesn't clobber it with a stale snapshot.
+  const dataRef = React.useRef(data);
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
 
   if (!isNew && !existing) return null;
 
@@ -141,10 +151,11 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
     if (planSaveTimeoutRef.current) clearTimeout(planSaveTimeoutRef.current);
     setPlanSaveStatus("saving");
     planSaveTimeoutRef.current = setTimeout(() => {
-      const nextRotations = (data.rotations || []).map((r) =>
+      const latestData = dataRef.current;
+      const nextRotations = (latestData.rotations || []).map((r) =>
         r.id === existing.id ? { ...r, explanation: newContent } : r
       );
-      applyChange({ ...data, rotations: nextRotations });
+      applyChange({ ...latestData, rotations: nextRotations });
       setPlanSaveStatus("saved");
       setTimeout(() => setPlanSaveStatus("idle"), 2000);
     }, 800);
@@ -436,12 +447,30 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
             </div>
 
             <div className="flex justify-between items-center border-t border-white/5 pt-4 shrink-0">
-              <button
-                onClick={handleDelete}
-                className="btn px-4 py-2 text-[0.8rem] !bg-transparent !text-red-400 !border-red-400/20 hover:!border-red-400/50"
-              >
-                Delete Rotation
-              </button>
+              {confirmingDelete ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-[0.8rem] text-red-400">Delete this rotation?</span>
+                  <button
+                    onClick={handleDelete}
+                    className="btn px-3 py-1.5 text-[0.8rem] !bg-red-500/15 !text-red-400 !border-red-500/40"
+                  >
+                    Confirm
+                  </button>
+                  <button
+                    onClick={() => setConfirmingDelete(false)}
+                    className="btn px-3 py-1.5 text-[0.8rem] !bg-transparent !text-zinc-400 !border-white/10"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmingDelete(true)}
+                  className="btn px-4 py-2 text-[0.8rem] !bg-transparent !text-red-400 !border-red-400/20 hover:!border-red-400/50"
+                >
+                  Delete Rotation
+                </button>
+              )}
               <div className="flex gap-2">
                 <button
                   onClick={openPlan}

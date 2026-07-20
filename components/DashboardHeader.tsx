@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import type { TrackState, Workspace } from "@/lib/types";
 import { daysSince } from "@/lib/dates";
+import { visibleTracks } from "@/lib/api";
 import TrackSwitcher from "@/components/TrackSwitcher";
 import TrackSettingsModal from "@/components/TrackSettingsModal";
 
@@ -18,6 +19,8 @@ interface DashboardHeaderProps {
   onSwitchTrack: (trackId: string) => void;
   onNewTrack: () => void;
   onEditTrack: (fields: { name: string; color: string; startDate: string; totalDays: number }) => void;
+  onDeleteTrack: () => void;
+  canDeleteTrack: boolean;
 }
 
 const getRelativeTimeString = (timestamp: number | undefined) => {
@@ -31,7 +34,7 @@ const getRelativeTimeString = (timestamp: number | undefined) => {
   return new Date(timestamp).toLocaleDateString();
 };
 
-export default function DashboardHeader({ data, workspace, syncStatus, syncError, onSync, onOpenCloudMenu, onSwitchTrack, onNewTrack, onEditTrack }: DashboardHeaderProps) {
+export default function DashboardHeader({ data, workspace, syncStatus, syncError, onSync, onOpenCloudMenu, onSwitchTrack, onNewTrack, onEditTrack, onDeleteTrack, canDeleteTrack }: DashboardHeaderProps) {
   const [showTrackSettings, setShowTrackSettings] = useState(false);
   const daysPassed = data.startDate && data.isSynced ? daysSince(data.startDate) : 0;
   const daysInPhase: number | string = data.isSynced
@@ -65,7 +68,7 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
         <div className="flex items-center gap-1.5">
           <span className="text-zinc-500">Track:</span>
           <TrackSwitcher
-            tracks={Object.values(workspace.tracks)}
+            tracks={visibleTracks(workspace)}
             activeTrackId={workspace.activeTrackId}
             onSwitch={onSwitchTrack}
             onNewTrack={onNewTrack}
@@ -149,6 +152,8 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
           startDate={data.startDate}
           totalDays={totalDays}
           onSave={onEditTrack}
+          onDelete={onDeleteTrack}
+          canDelete={canDeleteTrack}
           onClose={() => setShowTrackSettings(false)}
         />
       )}

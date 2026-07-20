@@ -2,9 +2,10 @@
 
 import React, { useState } from "react";
 import type { TrackState, WeekDay } from "@/lib/types";
-import { getDateForDayName, todayYMD } from "@/lib/dates";
+import { getDateForDayName, getWeekNum, parseYMD, todayYMD } from "@/lib/dates";
 import { rebuildStreakHistory, completedItemTitle } from "@/lib/streak";
 import { DEFAULT_WEEK_SCHEDULE, DEFAULT_FOCUS_TYPES } from "@/lib/constants";
+import { computeRotationItemsForDay, isRotationItem } from "@/lib/rotation";
 import FocusTypeEditor from "@/components/shared/FocusTypeEditor";
 
 interface ScheduleDayModalProps {
@@ -43,6 +44,19 @@ export default function ScheduleDayModal({
   const targetDateStr = getDateForDay(day.name);
   const isTargetToday = targetDateStr === todayYMD();
 
+  // Rotation-managed items are recomputed live for the viewed week (same
+  // source as WeeklyPlan's display) rather than read from storage, so they
+  // always show the correct current item and can't be edited/deleted here —
+  // any edit made in this modal to a rotation item would otherwise be
+  // silently overwritten the next time the dashboard recomputes it.
+  const rotations = data.rotations || [];
+  const viewedWeekNum = getWeekNum(data.startDate, parseYMD(targetDateStr));
+  const { revisions: rotationRevisions, focus: rotationFocus } = rotations.length > 0
+    ? computeRotationItemsForDay(rotations, viewedWeekNum, day.name)
+    : { revisions: [], focus: [] };
+  const manualRevisionItems = (data.dailyRevisionItems?.[day.name] || []).filter((it) => !isRotationItem(it));
+  const manualFocusTasks = (data.dailyTasks?.[day.name] || []).filter((it) => !isRotationItem(it));
+
   const applyChange = (newData: TrackState) => {
     setData(newData);
     saveDailyChanges(newData);
@@ -54,6 +68,39 @@ export default function ScheduleDayModal({
     } catch (err) {
       console.error("Failed to save edits inside schedule modal", err);
     }
+  };
+
+  /** Completion for a rotation item lives entirely in weeklyCompletions —
+   *  there's no persisted item record to keep in sync, since the item
+   *  itself is always recomputed from the rotation definition. */
+  const toggleRotationItemCompletion = (itemId: string, itemTitle: string, itemDesc: string, isRevision: boolean, currentCompleted: boolean) => {
+    const newCompleted = !currentCompleted;
+    const newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
+    const newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
+    const targetComps = newWeeklyCompletions[targetDateStr] || { tasks: [], revisions: [] };
+    const compKey = isRevision ? "revisions" : "tasks";
+
+    if (newCompleted) {
+      const dateItems = newCompletedItemsHistory[targetDateStr] || [];
+      if (!dateItems.some((it) => completedItemTitle(it) === itemTitle)) {
+        newCompletedItemsHistory[targetDateStr] = [...dateItems, { title: itemTitle, description: itemDesc || "" }];
+      }
+      if (!targetComps[compKey].includes(itemId)) {
+        targetComps[compKey] = [...targetComps[compKey], itemId];
+      }
+    } else {
+      const dateItems = newCompletedItemsHistory[targetDateStr] || [];
+      newCompletedItemsHistory[targetDateStr] = dateItems.filter((it) => completedItemTitle(it) !== itemTitle);
+      targetComps[compKey] = targetComps[compKey].filter((id: string) => id !== itemId);
+    }
+    newWeeklyCompletions[targetDateStr] = targetComps;
+
+    applyChange({
+      ...data,
+      streakHistory: rebuildStreakHistory(newCompletedItemsHistory),
+      completedItemsHistory: newCompletedItemsHistory,
+      weeklyCompletions: newWeeklyCompletions,
+    });
   };
 
   return (
@@ -141,7 +188,35 @@ export default function ScheduleDayModal({
                 {isTargetToday ? "TODAY'S " : ""}REVISION CHECKLIST:
               </strong>
               <div className="flex flex-col gap-2">
-                {(data.dailyRevisionItems?.[day.name] || []).map((item, index) => (
+                {/* Rotation-managed items: read-only here (checkbox only) —
+                    edit the rotation itself via its pill on the dashboard. */}
+                {rotationRevisions.map((item) => {
+                  const completed = (data.weeklyCompletions?.[targetDateStr]?.revisions || []).includes(item.id);
+                  return (
+                    <div
+                      key={item.id}
+                      className="flex flex-col gap-1 bg-accent/[0.04] px-3 py-[0.6rem] rounded-md border border-dashed border-accent/20"
+                    >
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          className="checkbox-custom"
+                          checked={completed}
+                          onChange={() => toggleRotationItemCompletion(item.id, item.title, item.description || "", true, completed)}
+                        />
+                        <span className={`flex-1 text-[0.85rem] font-semibold ${completed ? "text-zinc-500 line-through" : "text-white"}`}>
+                          {item.title}
+                        </span>
+                        <span className="text-[0.65rem] text-accent/70 uppercase tracking-[0.05em] shrink-0">Rotation</span>
+                      </div>
+                      {item.description && (
+                        <span className="text-[0.8rem] text-zinc-400 ml-7">{item.description}</span>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {manualRevisionItems.map((item, index) => (
                   <div
                     key={item.id || index}
                     className="flex flex-col gap-1.5 bg-black/15 px-3 py-[0.6rem] rounded-md border border-white/5"
@@ -152,7 +227,7 @@ export default function ScheduleDayModal({
                         className="checkbox-custom"
                         checked={(data.weeklyCompletions?.[targetDateStr]?.revisions || []).includes(item.id)}
                         onChange={(e) => {
-                          const updatedItems = (data.dailyRevisionItems?.[day.name] || []).map((it) => {
+                          const updatedItems = manualRevisionItems.map((it) => {
                             if (it.id === item.id) {
                               return { ...it, completed: e.target.checked };
                             }
@@ -197,7 +272,7 @@ export default function ScheduleDayModal({
                         type="text"
                         value={item.title}
                         onChange={(e) => {
-                          const updatedItems = (data.dailyRevisionItems?.[day.name] || []).map((it) => {
+                          const updatedItems = manualRevisionItems.map((it) => {
                             if (it.id === item.id) {
                               return { ...it, title: e.target.value };
                             }
@@ -217,7 +292,7 @@ export default function ScheduleDayModal({
                       />
                       <button
                         onClick={() => {
-                          const updatedItems = (data.dailyRevisionItems?.[day.name] || []).filter((it) => it.id !== item.id);
+                          const updatedItems = manualRevisionItems.filter((it) => it.id !== item.id);
 
                           // Sync streak history for the actual date of this day
                           const newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
@@ -254,7 +329,7 @@ export default function ScheduleDayModal({
                       type="text"
                       value={item.description || ""}
                       onChange={(e) => {
-                        const updatedItems = (data.dailyRevisionItems?.[day.name] || []).map((it) => {
+                        const updatedItems = manualRevisionItems.map((it) => {
                           if (it.id === item.id) {
                             return { ...it, description: e.target.value };
                           }
@@ -330,7 +405,30 @@ export default function ScheduleDayModal({
                 {isTargetToday ? "TODAY'S " : ""}FOCUS CHECKLIST:
               </strong>
               <div className="flex flex-col gap-2">
-                {(data.dailyTasks?.[day.name] || []).map((task, index) => (
+                {/* Rotation-managed items: read-only here (checkbox only) —
+                    edit the rotation itself via its pill on the dashboard. */}
+                {rotationFocus.map((task) => {
+                  const completed = (data.weeklyCompletions?.[targetDateStr]?.tasks || []).includes(task.id);
+                  return (
+                    <div
+                      key={task.id}
+                      className="flex items-center gap-3 bg-accent/[0.04] px-[0.6rem] py-1.5 rounded-md border border-dashed border-accent/20"
+                    >
+                      <input
+                        type="checkbox"
+                        className="checkbox-custom"
+                        checked={completed}
+                        onChange={() => toggleRotationItemCompletion(task.id, task.title, "", false, completed)}
+                      />
+                      <span className={`flex-1 text-[0.85rem] ${completed ? "text-zinc-500 line-through" : "text-white"}`}>
+                        {task.title}
+                      </span>
+                      <span className="text-[0.65rem] text-accent/70 uppercase tracking-[0.05em] shrink-0">Rotation</span>
+                    </div>
+                  );
+                })}
+
+                {manualFocusTasks.map((task, index) => (
                   <div
                     key={task.id || index}
                     className="flex items-center gap-3 bg-black/15 px-[0.6rem] py-1.5 rounded-md border border-white/5"
@@ -340,7 +438,7 @@ export default function ScheduleDayModal({
                       className="checkbox-custom"
                       checked={(data.weeklyCompletions?.[targetDateStr]?.tasks || []).includes(task.id)}
                       onChange={(e) => {
-                        const updatedTasks = (data.dailyTasks?.[day.name] || []).map((t) => {
+                        const updatedTasks = manualFocusTasks.map((t) => {
                           if (t.id === task.id) {
                             return { ...t, completed: e.target.checked };
                           }
@@ -385,7 +483,7 @@ export default function ScheduleDayModal({
                       type="text"
                       value={task.title}
                       onChange={(e) => {
-                        const updatedTasks = (data.dailyTasks?.[day.name] || []).map((t) => {
+                        const updatedTasks = manualFocusTasks.map((t) => {
                           if (t.id === task.id) {
                             return { ...t, title: e.target.value };
                           }
@@ -405,7 +503,7 @@ export default function ScheduleDayModal({
                     />
                     <button
                       onClick={() => {
-                        const updatedTasks = (data.dailyTasks?.[day.name] || []).filter((t) => t.id !== task.id);
+                        const updatedTasks = manualFocusTasks.filter((t) => t.id !== task.id);
 
                         // Sync streak history for the actual date of this day
                         const newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };

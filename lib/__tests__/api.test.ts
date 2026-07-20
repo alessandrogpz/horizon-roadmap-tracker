@@ -75,6 +75,38 @@ describe("updateWorkspace config-change detection", () => {
     const after = await fetchWorkspace();
     expect(after.tracks[track.meta.id].configVersion).toBe(0);
   });
+
+  it("detects a rename/color change (meta), so it can't be silently lost in a merge", async () => {
+    const track = baseTrack("track_test_meta_edit");
+    await createTrack(track);
+
+    const before = await fetchWorkspace();
+    const editedTrack: TrackState = {
+      ...before.tracks[track.meta.id],
+      meta: { ...before.tracks[track.meta.id].meta, name: "Renamed Track", color: "#ff0000" },
+    };
+    await updateWorkspace({ ...before, tracks: { ...before.tracks, [track.meta.id]: editedTrack } });
+
+    const after = await fetchWorkspace();
+    expect(after.tracks[track.meta.id].meta.name).toBe("Renamed Track");
+    expect(after.tracks[track.meta.id].configVersion).toBe(1);
+  });
+
+  it("detects archiving a track (meta.archived), so soft-deletes propagate through sync", async () => {
+    const track = baseTrack("track_test_archive_edit");
+    await createTrack(track);
+
+    const before = await fetchWorkspace();
+    const archivedTrack: TrackState = {
+      ...before.tracks[track.meta.id],
+      meta: { ...before.tracks[track.meta.id].meta, archived: true },
+    };
+    await updateWorkspace({ ...before, tracks: { ...before.tracks, [track.meta.id]: archivedTrack } });
+
+    const after = await fetchWorkspace();
+    expect(after.tracks[track.meta.id].meta.archived).toBe(true);
+    expect(after.tracks[track.meta.id].configVersion).toBe(1);
+  });
 });
 
 describe("legacy rotationConfig -> rotations migration", () => {
