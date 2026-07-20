@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import {
   DndContext,
   closestCenter,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   KeyboardSensor,
   useSensor,
   useSensors,
@@ -149,7 +150,13 @@ export default function Home() {
   }
 
   const panelSensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    // Mouse: small movement on the handle is enough — desktop users expect
+    // an immediate, precise drag start from a dedicated icon.
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
+    // Touch: press-and-hold (SortablePanel wires this to the whole panel,
+    // not just the handle) — a delay means a quick tap or scroll swipe is
+    // never mistaken for a drag.
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
