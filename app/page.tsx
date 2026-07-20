@@ -274,9 +274,31 @@ export default function Home() {
     }
   };
 
-  const handleEditTrackIdentity = async (fields: { name: string; color: string }) => {
+  const handleEditTrackIdentity = async (fields: { name: string; color: string; startDate: string; totalDays: number }) => {
     if (!data) return;
-    await persist({ ...data, meta: { ...data.meta, ...fields } }, "track identity");
+
+    // Rescale every phase's recommendedByDay threshold proportionally so the
+    // timeline stays internally consistent with the new total duration.
+    const lastThresholdPhase = [...data.phases].reverse().find((p) => p.recommendedByDay !== undefined);
+    const oldTotal = lastThresholdPhase?.recommendedByDay ?? 365;
+    const ratio = oldTotal > 0 ? fields.totalDays / oldTotal : 1;
+    const rescaledPhases = data.phases.map((p) =>
+      p.recommendedByDay !== undefined ? { ...p, recommendedByDay: Math.max(1, Math.round(p.recommendedByDay * ratio)) } : p
+    );
+    // No phase had a threshold at all yet — seed the last one so the new total takes effect.
+    const updatedPhases = rescaledPhases.some((p) => p.recommendedByDay !== undefined)
+      ? rescaledPhases
+      : rescaledPhases.map((p, i) => (i === rescaledPhases.length - 1 ? { ...p, recommendedByDay: fields.totalDays } : p));
+
+    await persist(
+      {
+        ...data,
+        meta: { ...data.meta, name: fields.name, color: fields.color },
+        startDate: fields.startDate,
+        phases: updatedPhases,
+      },
+      "track identity"
+    );
   };
 
   const handleSaveRhythm = async (weekSchedule: WeekDay[], focusTypes: Record<string, FocusType>) => {
