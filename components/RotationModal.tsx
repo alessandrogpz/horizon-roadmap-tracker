@@ -165,8 +165,8 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`glass-panel w-full flex flex-col gap-6 p-8 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.5)] border border-accent-muted relative rounded-lg ${
-          mode === "plan" ? "max-w-[900px]" : "max-w-[600px]"
+        className={`glass-panel w-full max-h-[90vh] flex flex-col gap-6 p-8 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.5)] border border-accent-muted relative rounded-lg overflow-hidden ${
+          mode === "plan" ? "max-w-[900px] h-[80vh]" : "max-w-[600px]"
         }`}
       >
         <button
@@ -178,7 +178,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
 
         {mode === "plan" && existing ? (
           <>
-            <div className="pr-8">
+            <div className="pr-8 shrink-0">
               <h2 className="text-[1.4rem] font-bold text-white mb-1">
                 {existing.label}: Full Plan
               </h2>
@@ -187,8 +187,8 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
               </p>
             </div>
 
-            <div className="glass-panel block !p-0 !border-white/10">
-              <div className="flex items-center justify-between border-b border-white/5 px-6 pt-4">
+            <div className="glass-panel !p-0 !border-white/10 flex-1 min-h-0 flex flex-col overflow-hidden">
+              <div className="flex items-center justify-between border-b border-white/5 px-6 pt-4 shrink-0">
                 <div className="flex gap-1">
                   <button
                     className={`px-4 py-2 text-[0.8rem] font-semibold uppercase tracking-[0.05em] border-b-2 -mb-px cursor-pointer bg-transparent ${
@@ -213,29 +213,31 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                 </span>
               </div>
 
-              {planTab === "write" ? (
-                <textarea
-                  value={planContent}
-                  onChange={(e) => handlePlanChange(e.target.value)}
-                  placeholder="Write this rotation's full plan using Markdown..."
-                  className="notes-editor-textarea min-h-[400px] px-8 py-6"
-                />
-              ) : planContent ? (
-                <div
-                  className="notes-preview-pane px-8 py-6"
-                  dangerouslySetInnerHTML={{ __html: renderMarkdownToHtml(planContent, "<p>Nothing written yet.</p>") }}
-                />
-              ) : (
-                <div className="px-8 py-16 text-center">
-                  <p className="text-zinc-400 text-[0.9rem] mb-4">You haven&apos;t written a plan for this rotation yet.</p>
-                  <button onClick={() => setPlanTab("write")} className="btn px-5 py-2 text-[0.85rem]">
-                    Start Writing
-                  </button>
-                </div>
-              )}
+              <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
+                {planTab === "write" ? (
+                  <textarea
+                    value={planContent}
+                    onChange={(e) => handlePlanChange(e.target.value)}
+                    placeholder="Write this rotation's full plan using Markdown..."
+                    className="notes-editor-textarea px-8 py-6"
+                  />
+                ) : planContent ? (
+                  <div
+                    className="notes-preview-pane px-8 py-6"
+                    dangerouslySetInnerHTML={{ __html: renderMarkdownToHtml(planContent, "<p>Nothing written yet.</p>") }}
+                  />
+                ) : (
+                  <div className="px-8 py-16 text-center">
+                    <p className="text-zinc-400 text-[0.9rem] mb-4">You haven&apos;t written a plan for this rotation yet.</p>
+                    <button onClick={() => setPlanTab("write")} className="btn px-5 py-2 text-[0.85rem]">
+                      Start Writing
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="flex justify-between items-center border-t border-white/5 pt-4">
+            <div className="flex justify-between items-center border-t border-white/5 pt-4 shrink-0">
               <button
                 onClick={() => setMode("view")}
                 className="btn px-4 py-2 text-[0.8rem] !bg-transparent !text-zinc-400 !border-white/10 hover:!text-white"
@@ -249,7 +251,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
           </>
         ) : mode === "edit" ? (
           <>
-            <div className="pr-8">
+            <div className="pr-8 shrink-0">
               <h2 className="text-[1.4rem] font-bold text-white mb-1">
                 {isNew ? "New Rotation" : "Edit Rotation"}
               </h2>
@@ -258,7 +260,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
               </p>
             </div>
 
-            <div className="flex flex-col gap-4 max-h-[400px] overflow-y-auto pr-1">
+            <div className="flex flex-col gap-4 flex-1 min-h-0 overflow-y-auto pr-1">
               <label className="flex flex-col gap-1.5">
                 <span className="text-[0.75rem] text-zinc-400 uppercase tracking-[0.05em] font-semibold">Label</span>
                 <input
@@ -366,7 +368,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
               </label>
             </div>
 
-            <div className="flex justify-between items-center border-t border-white/5 pt-4">
+            <div className="flex justify-between items-center border-t border-white/5 pt-4 shrink-0">
               {existing ? (
                 <button
                   onClick={() => setMode("view")}
@@ -388,7 +390,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
           </>
         ) : (
           <>
-            <div className="pr-8">
+            <div className="pr-8 shrink-0">
               <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold uppercase font-mono tracking-[0.05em]">
                 {len}-Week Cycle
               </span>
@@ -400,7 +402,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
               </p>
             </div>
 
-            <div className="flex flex-col gap-[0.6rem] max-h-[350px] overflow-y-auto pr-2">
+            <div className="flex flex-col gap-[0.6rem] flex-1 min-h-0 overflow-y-auto pr-2">
               {existing?.items.map((item, idx) => {
                 const isActive = idx === activeIndex;
                 return (
@@ -433,7 +435,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
               })}
             </div>
 
-            <div className="flex justify-between items-center border-t border-white/5 pt-4">
+            <div className="flex justify-between items-center border-t border-white/5 pt-4 shrink-0">
               <button
                 onClick={handleDelete}
                 className="btn px-4 py-2 text-[0.8rem] !bg-transparent !text-red-400 !border-red-400/20 hover:!border-red-400/50"
