@@ -16,7 +16,7 @@ interface DashboardHeaderProps {
   onSync: (e: React.MouseEvent) => void;
   onSwitchTrack: (trackId: string) => void;
   onNewTrack: () => void;
-  onEditTrack: (fields: { name: string; color: string }) => void;
+  onEditTrack: (fields: { name: string; color: string; startDate: string; totalDays: number }) => void;
 }
 
 const getRelativeTimeString = (timestamp: number | undefined) => {
@@ -136,6 +136,8 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
         <TrackSettingsModal
           name={data.meta.name}
           color={data.meta.color}
+          startDate={data.startDate}
+          totalDays={totalDays}
           onSave={onEditTrack}
           onClose={() => setShowTrackSettings(false)}
         />
