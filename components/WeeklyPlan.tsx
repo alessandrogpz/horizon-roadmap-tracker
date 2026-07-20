@@ -5,6 +5,7 @@ import type { TrackState, WeekDay } from "@/lib/types";
 import { getDateForDayName, getWeekNum } from "@/lib/dates";
 import { rebuildStreakHistory, completedItemTitle } from "@/lib/streak";
 import { DEFAULT_WEEK_SCHEDULE, DEFAULT_FOCUS_TYPES } from "@/lib/constants";
+import { computeAutoRevisionItem, isAutoRevisionItem } from "@/lib/rotation";
 
 interface WeeklyPlanProps {
   data: TrackState;
@@ -28,22 +29,20 @@ export default function WeeklyPlan({
   onRotationClick,
   applyChange,
 }: WeeklyPlanProps) {
-  const weekLabel = (() => {
-    if (!data.isSynced) return "Week --";
+  const viewedWeekNum = (() => {
     const targetDate = new Date();
     targetDate.setDate(targetDate.getDate() + weekOffset * 7);
-    return `Week ${getWeekNum(data.startDate, targetDate)}`;
+    return getWeekNum(data.startDate, targetDate);
   })();
+
+  const weekLabel = data.isSynced ? `Week ${viewedWeekNum}` : "Week --";
 
   const rotation = data.rotationConfig;
   const weeklyAlgorithm = (() => {
     if (!rotation) return "";
     if (!data.isSynced) return "Algorithm (Placeholder)";
-    const targetDate = new Date();
-    targetDate.setDate(targetDate.getDate() + weekOffset * 7);
-    const wn = getWeekNum(data.startDate, targetDate);
     const len = rotation.weeks.length;
-    const idx = len > 0 ? (((wn - (data.dsaStartWeek || 1)) % len) + len) % len : 0;
+    const idx = len > 0 ? (((viewedWeekNum - (data.dsaStartWeek || 1)) % len) + len) % len : 0;
     return rotation.weeks[idx]?.pattern || "";
   })();
 
@@ -115,6 +114,7 @@ export default function WeeklyPlan({
                 todayStr={todayStr}
                 dayOfWeek={dayOfWeek}
                 weekOffset={weekOffset}
+                viewedWeekNum={viewedWeekNum}
                 onDayClick={onDayClick}
                 applyChange={applyChange}
               />
@@ -144,16 +144,33 @@ interface DayCardProps {
   todayStr: string;
   dayOfWeek: number;
   weekOffset: number;
+  viewedWeekNum: number;
   onDayClick: (day: WeekDay) => void;
   applyChange: (newData: TrackState) => void;
 }
 
-function DayCard({ dayItem, idx, data, todayStr, dayOfWeek, weekOffset, onDayClick, applyChange }: DayCardProps) {
+function DayCard({ dayItem, idx, data, todayStr, dayOfWeek, weekOffset, viewedWeekNum, onDayClick, applyChange }: DayCardProps) {
   const isCurrentWeek = weekOffset === 0;
   const isToday = isCurrentWeek && idx === (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
   const dayKey = dayItem.name;
   const dayDateStr = getDateForDayName(dayKey, weekOffset);
-  const revisionItems = data.dailyRevisionItems?.[dayKey] || [];
+  const storedRevisionItems = data.dailyRevisionItems?.[dayKey] || [];
+  // The auto-rotation entry (if any) reflects whatever week is actually
+  // currently active — recompute it for the week being *viewed* so
+  // navigating weeks previews the correct upcoming/past pattern instead of
+  // repeating this week's. Manually added revision items pass through as-is.
+  const revisionItems = (() => {
+    if (!data.rotationConfig) return storedRevisionItems;
+    const previewAutoItem = computeAutoRevisionItem(
+      data.rotationConfig,
+      data.weekSchedule || DEFAULT_WEEK_SCHEDULE,
+      viewedWeekNum,
+      data.dsaStartWeek || 1,
+      dayKey
+    );
+    const manualItems = storedRevisionItems.filter((it) => !isAutoRevisionItem(it));
+    return previewAutoItem ? [previewAutoItem, ...manualItems] : manualItems;
+  })();
   const focusTasks = data.dailyTasks?.[dayKey] || [];
 
   // Determine completion: for today use live data, for other days use weeklyCompletions
