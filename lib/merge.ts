@@ -1,4 +1,4 @@
-import type { AppState, CompletedItem, DayCompletions, Material, PortfolioProject } from "./types";
+import type { AppState, CompletedItem, DayCompletions, Material, PortfolioProject, TrackState, Workspace } from "./types";
 import { completedItemTitle, rebuildStreakHistory } from "./streak";
 
 const isUrl = (s: string | undefined): boolean =>
@@ -57,8 +57,8 @@ export const mergePortfolio = (localPort: PortfolioProject[] = [], remotePort: P
   return Array.from(byId.values());
 };
 
-export interface MergeOutcome {
-  data: AppState;
+export interface MergeOutcome<T = AppState> {
+  data: T;
   log: string[];
 }
 
@@ -69,8 +69,12 @@ export interface MergeOutcome {
  * the lastUpdatedDates edit counters: the higher counter wins the day; on ties,
  * deletions win over additions, otherwise a union is taken. Structural config
  * follows the higher configVersion. Pure function — no I/O.
+ *
+ * Generic over T (AppState, or TrackState which is AppState plus track
+ * identity) so mergeWorkspace below can reuse this exact per-track merge
+ * primitive without duplicating it.
  */
-export function mergeAppState(localData: AppState, remoteData: AppState): MergeOutcome {
+export function mergeAppState<T extends AppState>(localData: T, remoteData: T): MergeOutcome<T> {
   const log: string[] = [];
 
   const mergedWeeklyCompletions: Record<string, DayCompletions> = { ...(localData.weeklyCompletions || {}) };
@@ -183,5 +187,60 @@ export function mergeAppState(localData: AppState, remoteData: AppState): MergeO
     }
   }
 
-  return { data: finalData, log };
+  return { data: finalData as T, log };
+}
+
+export interface WorkspaceMergeOutcome {
+  data: Workspace;
+  log: string[];
+}
+
+/**
+ * Extends the per-track merge to a whole Workspace: runs mergeAppState once
+ * per track present on both sides. A track present on only one side always
+ * survives the merge as-is — it's treated as "not yet synced there," never
+ * as "deleted there." (Real cross-device deletion would need an explicit
+ * tombstone via TrackMeta.archived; not implemented here.)
+ */
+export function mergeWorkspace(local: Workspace, remote: Workspace): WorkspaceMergeOutcome {
+  const log: string[] = [];
+  const localTracks = local.tracks || {};
+  const remoteTracks = remote.tracks || {};
+  const allTrackIds = Array.from(new Set([...Object.keys(localTracks), ...Object.keys(remoteTracks)]));
+  const mergedTracks: Record<string, TrackState> = {};
+
+  allTrackIds.forEach((id) => {
+    const l = localTracks[id];
+    const r = remoteTracks[id];
+    if (l && r) {
+      const { data, log: trackLog } = mergeAppState(l, r);
+      mergedTracks[id] = data;
+      log.push(`Track "${l.meta.name}": ${trackLog.join(" ")}`);
+    } else if (l) {
+      mergedTracks[id] = l;
+      log.push(`Track "${l.meta.name}": local-only, kept as-is.`);
+    } else if (r) {
+      mergedTracks[id] = r;
+      log.push(`Track "${r.meta.name}": adopted from remote (new track).`);
+    }
+  });
+
+  const activeTrackId =
+    local.activeTrackId && mergedTracks[local.activeTrackId]
+      ? local.activeTrackId
+      : remote.activeTrackId && mergedTracks[remote.activeTrackId]
+        ? remote.activeTrackId
+        : Object.keys(mergedTracks)[0] || "";
+
+  return {
+    data: {
+      activeTrackId,
+      tracks: mergedTracks,
+      panelColumns: local.panelColumns || remote.panelColumns,
+      isSynced: true,
+      hasUnsyncedChanges: false,
+      lastSyncTime: Date.now(),
+    },
+    log,
+  };
 }
