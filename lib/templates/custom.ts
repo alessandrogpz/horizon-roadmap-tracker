@@ -19,9 +19,9 @@ const buildPhases = (durationDays: number): Phase[] => {
   }));
 };
 
-export const blankTemplate: TrackTemplate = {
-  id: "blank",
-  label: "Blank",
+export const customTemplate: TrackTemplate = {
+  id: "custom",
+  label: "Custom",
   description: "Start from a clean slate — a simple, fully editable skeleton for any goal not covered by the other templates.",
   defaultColor: "#0ea5e9",
   defaultDurationDays: 90,

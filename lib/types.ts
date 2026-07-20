@@ -150,10 +150,13 @@ export interface TrackMeta {
   archived?: boolean;
 }
 
-/** Generalizes the DSA/math rotation into an optional, template-owned feature. */
+/** Generalizes the DSA/math rotation into an optional, per-track feature.
+ *  Which week of the cycle a track is on is tracked by the track's own
+ *  `dsaStartWeek` field (below) — the single source of truth, so a manual
+ *  pattern change (RotationModal) and the automatic daily rotation always
+ *  agree instead of drifting apart. */
 export interface RotationConfig {
   weeks: { pattern: string; problems: string }[];
-  startWeek: number;
   /** Which weekSchedule day `type` this rotation populates (e.g. "math"). */
   appliesToScheduleType: string;
 }
@@ -170,6 +173,9 @@ export interface RotationConfig {
 export interface TrackState extends Omit<AppState, "hasUnsyncedChanges" | "lastSyncTime" | "isReset"> {
   meta: TrackMeta;
   rotationConfig?: RotationConfig;
+  /** Free-form markdown — this track's own full roadmap/plan, private to it
+   *  and fully editable. Never a shared/shipped file: every track has its own. */
+  roadmapContent?: string;
 }
 
 /** Dashboard panel keys, grouped by column. The two columns can hold a

@@ -14,7 +14,7 @@ interface RotationModalProps {
 export default function RotationModal({ data, onClose, applyChange }: RotationModalProps) {
   const rotation = data.rotationConfig;
   const currentWeekNum = getWeekNum(data.startDate);
-  const dsaStartWeek = data.dsaStartWeek || rotation?.startWeek || 1;
+  const dsaStartWeek = data.dsaStartWeek || 1;
   const weeks = rotation?.weeks || [];
   const len = weeks.length;
   const activeIndex = len > 0 ? (((currentWeekNum - dsaStartWeek) % len) + len) % len : 0;
@@ -112,11 +112,11 @@ export default function RotationModal({ data, onClose, applyChange }: RotationMo
         {/* Links and Actions */}
         <div className="flex justify-between items-center border-t border-white/5 pt-4 mt-2">
           <a
-            href="/dsa"
+            href="/roadmap"
             onClick={onClose}
             className="btn px-4 py-2 text-[0.8rem] no-underline inline-block"
           >
-            Go to DSA Page
+            Go to Full Roadmap
           </a>
           <button
             onClick={onClose}

@@ -55,7 +55,7 @@ export function applyDailyResetIfNeeded(loadedData: TrackState, todayStr: string
   // rotationConfig (fitness, learning, blank) simply skip this whole block.
   const rotation = loadedData.rotationConfig;
   if (rotation) {
-    const startWeek = rotation.startWeek || 1;
+    const startWeek = loadedData.dsaStartWeek || 1;
     const currentWeekNum = getWeekNum(loadedData.startDate);
     const len = rotation.weeks.length;
     const rotationIdx = len > 0 ? (((currentWeekNum - startWeek) % len) + len) % len : 0;
