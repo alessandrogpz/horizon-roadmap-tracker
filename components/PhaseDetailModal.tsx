@@ -29,7 +29,7 @@ function ReadOnlyDetailSection({ title, items }: { title: string; items: PhaseDe
       <div className="flex flex-col gap-3">
         {items.map((f, idx) => (
           <div key={idx} className="text-[0.85rem] leading-normal">
-            <div className="text-white font-semibold">• {f.item}</div>
+            <div className="text-white font-semibold">{f.item}</div>
             {f.desc && <div className="text-zinc-400 pl-4">{f.desc}</div>}
           </div>
         ))}
@@ -274,7 +274,7 @@ export default function PhaseDetailModal({
               <p className="text-zinc-400 text-[0.9rem] mt-1">{phase.description}</p>
             </div>
 
-            {/* Tasks (read-only, checkboxes still interactive) */}
+            {/* Tasks (read-only — plain list, no checkboxes) */}
             {phase.tasks.length > 0 && (
               <div>
                 <h4 className="text-[0.8rem] text-accent uppercase tracking-[0.05em] mb-2 border-b border-white/5 pb-1 font-bold">
@@ -282,17 +282,12 @@ export default function PhaseDetailModal({
                 </h4>
                 <div className="flex flex-col gap-2">
                   {phase.tasks.map((task) => (
-                    <label key={task.id} className="flex items-center gap-2.5 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="checkbox-custom"
-                        checked={task.completed}
-                        onChange={(e) => updateTask(task.id, { completed: e.target.checked })}
-                      />
-                      <span className={`text-[0.85rem] ${task.completed ? "text-zinc-500 line-through" : "text-foreground"}`}>
-                        {task.title}
-                      </span>
-                    </label>
+                    <div
+                      key={task.id}
+                      className={`text-[0.85rem] ${task.completed ? "text-zinc-500 line-through" : "text-foreground"}`}
+                    >
+                      {task.title}
+                    </div>
                   ))}
                 </div>
               </div>

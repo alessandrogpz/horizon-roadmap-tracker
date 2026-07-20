@@ -2,20 +2,27 @@
 
 import React, { useState } from "react";
 
-interface TrackSettingsModalProps {
+interface TrackSettingsFields {
   name: string;
   color: string;
-  onSave: (fields: { name: string; color: string }) => void;
+  startDate: string;
+  totalDays: number;
+}
+
+interface TrackSettingsModalProps extends TrackSettingsFields {
+  onSave: (fields: TrackSettingsFields) => void;
   onClose: () => void;
 }
 
-export default function TrackSettingsModal({ name, color, onSave, onClose }: TrackSettingsModalProps) {
+export default function TrackSettingsModal({ name, color, startDate, totalDays, onSave, onClose }: TrackSettingsModalProps) {
   const [draftName, setDraftName] = useState(name);
   const [draftColor, setDraftColor] = useState(color);
+  const [draftStartDate, setDraftStartDate] = useState(startDate);
+  const [draftTotalDays, setDraftTotalDays] = useState(totalDays);
 
   const handleSave = () => {
-    if (!draftName.trim()) return;
-    onSave({ name: draftName.trim(), color: draftColor });
+    if (!draftName.trim() || !draftStartDate || draftTotalDays < 1) return;
+    onSave({ name: draftName.trim(), color: draftColor, startDate: draftStartDate, totalDays: draftTotalDays });
     onClose();
   };
 
@@ -64,6 +71,31 @@ export default function TrackSettingsModal({ name, color, onSave, onClose }: Tra
           />
         </div>
 
+        <div className="flex gap-3">
+          <div className="flex-1 flex flex-col gap-1.5">
+            <label className="text-[0.8rem] text-zinc-400">Start date</label>
+            <input
+              type="date"
+              value={draftStartDate}
+              onChange={(e) => setDraftStartDate(e.target.value)}
+              className="bg-black/25 border border-card-border rounded-md text-white text-[0.9rem] outline-none px-3 py-2 font-[inherit] w-full"
+            />
+          </div>
+          <div className="flex-1 flex flex-col gap-1.5">
+            <label className="text-[0.8rem] text-zinc-400">Total days</label>
+            <input
+              type="number"
+              min={1}
+              value={draftTotalDays}
+              onChange={(e) => setDraftTotalDays(Math.max(1, Number(e.target.value) || 1))}
+              className="bg-black/25 border border-card-border rounded-md text-white text-[0.9rem] outline-none px-3 py-2 font-[inherit] w-full"
+            />
+          </div>
+        </div>
+        <p className="text-[0.75rem] text-zinc-500 -mt-3">
+          Changing total days rescales your phase timeline proportionally.
+        </p>
+
         <div className="flex justify-end gap-3">
           <button
             onClick={onClose}
@@ -73,7 +105,7 @@ export default function TrackSettingsModal({ name, color, onSave, onClose }: Tra
           </button>
           <button
             onClick={handleSave}
-            disabled={!draftName.trim()}
+            disabled={!draftName.trim() || !draftStartDate || draftTotalDays < 1}
             className="btn px-5 py-2 text-[0.85rem] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Save
