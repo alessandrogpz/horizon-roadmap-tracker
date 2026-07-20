@@ -2,8 +2,7 @@ import fs from "fs";
 import path from "path";
 import { describe, it, expect } from "vitest";
 import { mergeWorkspace } from "../merge";
-import { wrapLegacyAppState } from "../localDb";
-import { LEGACY_TRACK_ID } from "../templates";
+import { wrapLegacyAppState, LEGACY_TRACK_ID } from "../localDb";
 import type { AppState, TrackMeta, TrackState, Workspace } from "../types";
 
 const baseTrackFields = (overrides: Partial<AppState> = {}): AppState => ({

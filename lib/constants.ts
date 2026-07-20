@@ -18,7 +18,7 @@ export const DEFAULT_FOCUS_TYPES: Record<string, FocusType> = {
   free: { label: "Free", color: "#a1a1aa" },
 };
 
-// 10-week DSA pattern rotation (matches DSA_Study_Guide.md ordering)
+// 10-week DSA pattern rotation — personal data, see lib/legacyPersonalData.ts
 export const DSA_PATTERN_WEEKS = [
   { pattern: "Hash Map Patterns", problems: "Two Sum, Group Anagrams, Top K Frequent Elements, Longest Consecutive Sequence" },
   { pattern: "Two Pointers", problems: "Valid Palindrome, Two Sum II, 3Sum, Container With Most Water, Trapping Rain Water" },

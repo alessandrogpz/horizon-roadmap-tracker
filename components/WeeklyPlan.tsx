@@ -43,7 +43,7 @@ export default function WeeklyPlan({
     targetDate.setDate(targetDate.getDate() + weekOffset * 7);
     const wn = getWeekNum(data.startDate, targetDate);
     const len = rotation.weeks.length;
-    const idx = len > 0 ? (((wn - (rotation.startWeek || 1)) % len) + len) % len : 0;
+    const idx = len > 0 ? (((wn - (data.dsaStartWeek || 1)) % len) + len) % len : 0;
     return rotation.weeks[idx]?.pattern || "";
   })();
 

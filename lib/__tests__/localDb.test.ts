@@ -1,8 +1,7 @@
 import "fake-indexeddb/auto";
 import Dexie from "dexie";
 import { describe, it, expect } from "vitest";
-import { ProductivityDb, wrapLegacyAppState } from "../localDb";
-import { LEGACY_TRACK_ID } from "../templates";
+import { ProductivityDb, wrapLegacyAppState, LEGACY_TRACK_ID } from "../localDb";
 import type { AppState } from "../types";
 
 const uniqueDbName = () => `TestProductivityDb_${Date.now()}_${Math.random().toString(36).slice(2)}`;
@@ -80,6 +79,12 @@ describe("Dexie v1 -> v2 multi-track migration", () => {
     void _h;
     void _l;
     expect(migratedTrack).toMatchObject(expectedTrackFields);
+
+    // The rotation feature and roadmap doc are seeded for this one personal
+    // track, decoupled from the general template system.
+    expect(migratedTrack.rotationConfig?.weeks.length).toBeGreaterThan(0);
+    expect(migratedTrack.rotationConfig?.appliesToScheduleType).toBe("math");
+    expect(migratedTrack.roadmapContent?.length).toBeGreaterThan(0);
 
     // Workspace-level bookkeeping carries over too.
     expect(workspaceRecord!.data.isSynced).toBe(true);

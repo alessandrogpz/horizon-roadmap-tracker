@@ -1,6 +1,9 @@
 import Dexie, { type Table } from "dexie";
 import type { AppState, TrackState, Workspace } from "./types";
-import { LEGACY_TRACK_ID } from "./templates";
+import { LEGACY_TRACK_ID, LEGACY_ROADMAP_CONTENT } from "./legacyPersonalData";
+import { DSA_PATTERN_WEEKS } from "./constants";
+
+export { LEGACY_TRACK_ID };
 
 export interface AppStateRecord {
   id: string;
@@ -40,6 +43,17 @@ export function wrapLegacyAppState(legacy: AppState): Workspace {
       templateId: "engine-graphics",
       createdAt: Date.now(),
     },
+    // The rotation feature itself (weekly DSA/math pattern cycling) is kept
+    // — just decoupled from the general template system, since it's this
+    // one personal track's own data, not something offered to other users.
+    rotationConfig: {
+      weeks: DSA_PATTERN_WEEKS,
+      appliesToScheduleType: "math",
+    },
+    // Seeded once from the project's former engine_dev_roadmap.md, so this
+    // content isn't lost now that every track's roadmap lives in its own
+    // private, editable field instead of a shipped file.
+    roadmapContent: LEGACY_ROADMAP_CONTENT,
   };
 
   return {

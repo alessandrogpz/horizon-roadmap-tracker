@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Horizon: Roadmap Tracker',
     short_name: 'Horizon',
-    description: 'Personal roadmap and consistency engine. Active Track: Game Engine Development',
+    description: 'Personal roadmap and consistency engine for the goals you\'re working toward.',
     start_url: '/',
     id: '/',
     scope: '/',
@@ -42,14 +42,9 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     shortcuts: [
       {
-        name: 'Roadmap Timeline',
+        name: 'Full Roadmap',
         url: '/roadmap',
-        description: 'View the 12-month graphics developer path'
-      },
-      {
-        name: 'DSA Guide',
-        url: '/dsa',
-        description: 'Open the Data Structures & Algorithms guide'
+        description: 'View your active track\'s full roadmap'
       }
     ]
   };

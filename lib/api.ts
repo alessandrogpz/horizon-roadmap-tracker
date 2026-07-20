@@ -1,7 +1,7 @@
 import { db } from "./localDb";
 import type { GitStats, Material, PortfolioProject, TrackId, TrackState, Workspace } from "./types";
 import { LEGACY_PATH_TO_REPO, MATERIAL_REPO_MAP, PORTFOLIO_REPO_MAP } from "./migrationConfig";
-import { LEGACY_TRACK_ID } from "./templates";
+import { LEGACY_TRACK_ID } from "./localDb";
 
 /**
  * migrationConfig.ts's repo maps (m1, p1, ...) were only ever meaningful for
@@ -101,6 +101,7 @@ const applyTrackBookkeeping = (
     "currentPhaseStartDate",
     "dsaStartWeek",
     "weekSchedule",
+    "roadmapContent",
   ] as const;
 
   let configChanged = false;

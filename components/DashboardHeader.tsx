@@ -68,21 +68,16 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
           />
         </div>
 
-        {/* The Master Curriculum / DSA guide are content specific to the Game
-            Engine & Graphics template — never shown for other tracks. */}
-        {data.meta.templateId === "engine-graphics" && (
-          <>
-            <span className="text-card-border">|</span>
-            {data.isSynced ? (
-              <a href="/roadmap" className="link-title !text-accent no-underline font-semibold inline-flex items-center gap-1">
-                Full Roadmap
-              </a>
-            ) : (
-              <span className="text-zinc-600 font-semibold cursor-not-allowed" title="Connect Google Drive to unlock roadmap">
-                Full Roadmap (Locked)
-              </span>
-            )}
-          </>
+        {/* Every track has its own private, editable roadmap doc. */}
+        <span className="text-card-border">|</span>
+        {data.isSynced ? (
+          <a href="/roadmap" className="link-title !text-accent no-underline font-semibold inline-flex items-center gap-1">
+            Full Roadmap
+          </a>
+        ) : (
+          <span className="text-zinc-600 font-semibold cursor-not-allowed" title="Connect Google Drive to unlock roadmap">
+            Full Roadmap (Locked)
+          </span>
         )}
 
         <span className="text-card-border">|</span>
