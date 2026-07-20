@@ -164,6 +164,9 @@ export interface RotationDef {
   /** Which daily list the computed item is written into. */
   target: "revision" | "focus";
   startWeek: number;
+  /** Free-form markdown — the reasoning/full plan behind this rotation,
+   *  private to it and fully editable. Optional; shown at /roadmap?rotation=<id>. */
+  explanation?: string;
 }
 
 /**
