@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import type { RotationDef, TrackState } from "@/lib/types";
 import { getWeekNum } from "@/lib/dates";
 
@@ -32,6 +33,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
   );
   const [daysOfWeek, setDaysOfWeek] = useState<string[]>(existing?.daysOfWeek || []);
   const [target, setTarget] = useState<"revision" | "focus">(existing?.target || "revision");
+  const [explanation, setExplanation] = useState(existing?.explanation || "");
 
   if (!isNew && !existing) return null;
 
@@ -62,6 +64,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
       daysOfWeek,
       target,
       startWeek: existing?.startWeek ?? currentWeekNum,
+      explanation: explanation.trim() || undefined,
     };
 
     const nextRotations = existing
@@ -228,6 +231,19 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                   ))}
                 </div>
               </div>
+
+              <label className="flex flex-col gap-1.5">
+                <span className="text-[0.75rem] text-zinc-400 uppercase tracking-[0.05em] font-semibold">
+                  Explanation (optional)
+                </span>
+                <textarea
+                  value={explanation}
+                  onChange={(e) => setExplanation(e.target.value)}
+                  placeholder="Why this rotation, what it covers, how to use it — written as Markdown. Viewable/editable in full any time via the Full Plan link."
+                  rows={4}
+                  className="bg-white/[0.03] border border-white/10 rounded-md px-3 py-2 text-[0.8rem] text-white leading-snug focus:outline-none focus:border-accent resize-y"
+                />
+              </label>
             </div>
 
             <div className="flex justify-between items-center border-t border-white/5 pt-4">
@@ -305,6 +321,13 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                 Delete Rotation
               </button>
               <div className="flex gap-2">
+                <Link
+                  href={`/roadmap?rotation=${existing?.id}`}
+                  onClick={onClose}
+                  className="btn px-4 py-2 text-[0.8rem] !bg-transparent !text-zinc-400 !border-white/10 hover:!text-white no-underline inline-flex items-center"
+                >
+                  Full Plan
+                </Link>
                 <button
                   onClick={() => setIsEditing(true)}
                   className="btn px-4 py-2 text-[0.8rem] !bg-transparent !text-zinc-400 !border-white/10 hover:!text-white"
