@@ -14,6 +14,7 @@ interface DashboardHeaderProps {
   syncStatus: SyncStatus;
   syncError: string;
   onSync: (e: React.MouseEvent) => void;
+  onOpenCloudMenu: () => void;
   onSwitchTrack: (trackId: string) => void;
   onNewTrack: () => void;
   onEditTrack: (fields: { name: string; color: string; startDate: string; totalDays: number }) => void;
@@ -30,7 +31,7 @@ const getRelativeTimeString = (timestamp: number | undefined) => {
   return new Date(timestamp).toLocaleDateString();
 };
 
-export default function DashboardHeader({ data, workspace, syncStatus, syncError, onSync, onSwitchTrack, onNewTrack, onEditTrack }: DashboardHeaderProps) {
+export default function DashboardHeader({ data, workspace, syncStatus, syncError, onSync, onOpenCloudMenu, onSwitchTrack, onNewTrack, onEditTrack }: DashboardHeaderProps) {
   const [showTrackSettings, setShowTrackSettings] = useState(false);
   const daysPassed = data.startDate && data.isSynced ? daysSince(data.startDate) : 0;
   const daysInPhase: number | string = data.isSynced
@@ -99,7 +100,7 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
           className={`flex items-center gap-2 text-zinc-400 select-none w-fit py-1 px-2 -mx-2 rounded transition-colors duration-200 ${
             syncStatus === "syncing" ? "cursor-not-allowed" : "cursor-pointer hover:bg-white/5"
           }`}
-          title={syncStatus === "error" ? syncError : "Click to sync with Google Drive (Shift+Click to manage connection)"}
+          title={syncStatus === "error" ? syncError : "Click to sync with Google Drive"}
         >
           <div className={`w-2 h-2 rounded-full transition-all duration-300 shrink-0 ${dotColor}`} />
           <span className="font-medium">
@@ -111,6 +112,15 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
           <span className="text-zinc-700">•</span>
           <span className="text-zinc-500">{getRelativeTimeString(workspace.lastSyncTime)}</span>
         </div>
+
+        <button
+          onClick={onOpenCloudMenu}
+          className="flex items-center justify-center w-7 h-7 rounded-md bg-transparent border border-white/10 text-zinc-400 cursor-pointer hover:text-white hover:border-white/25 shrink-0"
+          title="Cloud connection & backup"
+          aria-label="Cloud connection & backup"
+        >
+          ⋯
+        </button>
       </div>
 
       {/* Line 2: Compact phase day + progress */}
