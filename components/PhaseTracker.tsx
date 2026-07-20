@@ -3,10 +3,22 @@
 import React from "react";
 import type { Phase } from "@/lib/types";
 
-export default function PhaseTracker({ phases, currentPhase, onPhaseClick }: { phases: Phase[], currentPhase: number, onPhaseClick: (phase: Phase) => void }) {
+interface PhaseTrackerProps {
+  phases: Phase[];
+  currentPhase: number;
+  onPhaseClick: (phase: Phase) => void;
+  onAddPhase: () => void;
+}
+
+export default function PhaseTracker({ phases, currentPhase, onPhaseClick, onAddPhase }: PhaseTrackerProps) {
   return (
     <div className="glass-panel p-6 flex flex-col gap-6">
-      <h2 className="section-title">Roadmap Timeline</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="section-title !mb-0">Roadmap Timeline</h2>
+        <button onClick={onAddPhase} className="btn px-2.5 py-1 text-xs">
+          [+ Add Phase]
+        </button>
+      </div>
       <div className="relative flex flex-col gap-5">
 
         {/* Timeline Line */}

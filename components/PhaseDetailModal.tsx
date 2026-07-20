@@ -1,35 +1,80 @@
 "use client";
 
-import React from "react";
-import type { Phase, PhaseDetailItem } from "@/lib/types";
+import React, { useState } from "react";
+import type { Phase, PhaseDetailItem, TaskItem } from "@/lib/types";
 
 interface PhaseDetailModalProps {
   phase: Phase;
   currentPhaseId: number;
   onClose: () => void;
   onActivatePhase: (id: number) => void;
+  onChange: (updatedPhase: Phase) => void;
+  onDelete: (id: number) => void;
+  canDelete: boolean;
 }
 
-// Placeholder state stores these sections as plain strings; render those as a single item
+// Placeholder state stores these sections as plain strings; normalize to array form for editing.
 const asItems = (v: PhaseDetailItem[] | string | undefined): PhaseDetailItem[] => {
   if (!v) return [];
   return Array.isArray(v) ? v : [{ item: v, desc: "" }];
 };
 
-function DetailSection({ title, items }: { title: string; items: PhaseDetailItem[] }) {
+function EditableDetailSection({
+  title,
+  items,
+  onChange,
+}: {
+  title: string;
+  items: PhaseDetailItem[];
+  onChange: (items: PhaseDetailItem[]) => void;
+}) {
   return (
     <div>
       <h4 className="text-[0.8rem] text-accent uppercase tracking-[0.05em] mb-2 border-b border-white/5 pb-1 font-bold">
         {title}
       </h4>
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2">
         {items.map((f, idx) => (
-          <div key={idx} className="text-[0.85rem] leading-normal">
-            <div className="text-white font-semibold">• {f.item}</div>
-            <div className="text-zinc-400 pl-4">{f.desc}</div>
+          <div key={idx} className="flex flex-col gap-1 bg-black/15 border border-white/5 rounded-md p-2.5">
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={f.item}
+                onChange={(e) => {
+                  const next = [...items];
+                  next[idx] = { ...next[idx], item: e.target.value };
+                  onChange(next);
+                }}
+                placeholder="Item"
+                className="flex-1 bg-transparent border-none text-white text-[0.85rem] font-semibold outline-none"
+              />
+              <button
+                onClick={() => onChange(items.filter((_, i) => i !== idx))}
+                className="bg-transparent border-none text-red-500 cursor-pointer text-[0.85rem]"
+              >
+                ✕
+              </button>
+            </div>
+            <input
+              type="text"
+              value={f.desc}
+              onChange={(e) => {
+                const next = [...items];
+                next[idx] = { ...next[idx], desc: e.target.value };
+                onChange(next);
+              }}
+              placeholder="Description (optional)"
+              className="bg-transparent border-none border-t border-dashed border-white/10 text-zinc-400 text-[0.8rem] outline-none pt-1"
+            />
           </div>
         ))}
       </div>
+      <button
+        onClick={() => onChange([...items, { item: "", desc: "" }])}
+        className="text-accent bg-transparent border-none cursor-pointer text-[0.75rem] font-mono underline mt-2"
+      >
+        + Add
+      </button>
     </div>
   );
 }
@@ -38,11 +83,31 @@ export default function PhaseDetailModal({
   phase,
   currentPhaseId,
   onClose,
-  onActivatePhase
+  onActivatePhase,
+  onChange,
+  onDelete,
+  canDelete,
 }: PhaseDetailModalProps) {
   const { detailedInfo } = phase;
   const isActive = phase.id === currentPhaseId;
-  const algoItems = asItems(detailedInfo.algoDS);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+  const updateDetail = (field: keyof Phase["detailedInfo"], items: PhaseDetailItem[]) => {
+    onChange({ ...phase, detailedInfo: { ...detailedInfo, [field]: items } });
+  };
+
+  const updateTask = (taskId: string, fields: Partial<TaskItem>) => {
+    onChange({ ...phase, tasks: phase.tasks.map((t) => (t.id === taskId ? { ...t, ...fields } : t)) });
+  };
+
+  const removeTask = (taskId: string) => {
+    onChange({ ...phase, tasks: phase.tasks.filter((t) => t.id !== taskId) });
+  };
+
+  const addTask = (title: string) => {
+    if (!title.trim()) return;
+    onChange({ ...phase, tasks: [...phase.tasks, { id: `t_${Date.now()}`, title: title.trim(), completed: false }] });
+  };
 
   return (
     <div
@@ -62,43 +127,79 @@ export default function PhaseDetailModal({
         </button>
 
         {/* Modal Header */}
-        <div>
+        <div className="flex flex-col gap-2 pr-8">
           <div className="flex items-center gap-4">
-            <h2 className="text-[1.4rem] font-bold text-accent">{phase.title}</h2>
+            <input
+              type="text"
+              value={phase.title}
+              onChange={(e) => onChange({ ...phase, title: e.target.value })}
+              className="flex-1 bg-transparent border-none text-[1.4rem] font-bold text-accent outline-none"
+            />
             {isActive ? (
-              <span className="text-xs bg-success/15 text-success px-2 py-0.5 rounded font-semibold">
+              <span className="text-xs bg-success/15 text-success px-2 py-0.5 rounded font-semibold shrink-0">
                 ACTIVE FOCUS
               </span>
             ) : null}
           </div>
-          <p className="text-zinc-400 text-[0.9rem] mt-1">{phase.description}</p>
+          <textarea
+            value={phase.description}
+            onChange={(e) => onChange({ ...phase, description: e.target.value })}
+            placeholder="What is this phase about?"
+            className="bg-transparent border-none border-b border-dashed border-white/10 text-zinc-400 text-[0.9rem] outline-none pb-1.5 resize-none"
+            rows={2}
+          />
+        </div>
+
+        {/* Tasks */}
+        <div>
+          <h4 className="text-[0.8rem] text-accent uppercase tracking-[0.05em] mb-2 border-b border-white/5 pb-1 font-bold">
+            Tasks
+          </h4>
+          <div className="flex flex-col gap-2">
+            {phase.tasks.map((task) => (
+              <div key={task.id} className="flex items-center gap-2 bg-black/15 border border-white/5 rounded-md px-2.5 py-1.5">
+                <input
+                  type="checkbox"
+                  className="checkbox-custom"
+                  checked={task.completed}
+                  onChange={(e) => updateTask(task.id, { completed: e.target.checked })}
+                />
+                <input
+                  type="text"
+                  value={task.title}
+                  onChange={(e) => updateTask(task.id, { title: e.target.value })}
+                  className="flex-1 bg-transparent border-none text-white text-[0.85rem] outline-none"
+                />
+                <button onClick={() => removeTask(task.id)} className="bg-transparent border-none text-red-500 cursor-pointer text-[0.85rem]">
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+          <input
+            type="text"
+            placeholder="Add a task and press Enter..."
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && e.currentTarget.value.trim()) {
+                addTask(e.currentTarget.value);
+                e.currentTarget.value = "";
+              }
+            }}
+            className="mt-2 w-full bg-black/25 border border-dashed border-white/10 rounded-md px-2.5 py-1.5 text-white text-[0.85rem] outline-none"
+          />
         </div>
 
         {/* Detailed Sections */}
         <div className="flex flex-col gap-5">
-          <DetailSection title="Core Focus" items={asItems(detailedInfo.focus)} />
-          <DetailSection title="Math Integration" items={asItems(detailedInfo.math)} />
-          {algoItems.length > 0 && <DetailSection title="Algorithms & Data Structures" items={algoItems} />}
-
-          {/* Expected Deliverable Block (Highlighted) */}
-          <div>
-            <h4 className="text-[0.8rem] text-accent uppercase tracking-[0.05em] mb-2 border-b border-white/5 pb-1 font-bold">
-              Deliverable Goal
-            </h4>
-            <div className="flex flex-col gap-3">
-              {asItems(detailedInfo.deliverable).map((d, idx) => (
-                <div key={idx} className="text-[0.85rem] leading-normal p-3 bg-accent/5 rounded-md border-l-[3px] border-accent">
-                  <div className="text-white font-semibold">{d.item}</div>
-                  <div className="text-zinc-300 mt-1">{d.desc}</div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <EditableDetailSection title="Core Focus" items={asItems(detailedInfo.focus)} onChange={(items) => updateDetail("focus", items)} />
+          <EditableDetailSection title="Math Integration" items={asItems(detailedInfo.math)} onChange={(items) => updateDetail("math", items)} />
+          <EditableDetailSection title="Algorithms & Data Structures" items={asItems(detailedInfo.algoDS)} onChange={(items) => updateDetail("algoDS", items)} />
+          <EditableDetailSection title="Deliverable Goal" items={asItems(detailedInfo.deliverable)} onChange={(items) => updateDetail("deliverable", items)} />
         </div>
 
         {/* Modal Footer */}
-        <div className="flex justify-between items-center mt-2">
-          <div>
+        <div className="flex justify-between items-center mt-2 border-t border-white/5 pt-4">
+          <div className="flex items-center gap-3">
             {!isActive && (
               <button
                 onClick={() => {
@@ -110,9 +211,38 @@ export default function PhaseDetailModal({
                 Set as Active Phase
               </button>
             )}
+            {confirmingDelete ? (
+              <div className="flex items-center gap-2">
+                <span className="text-[0.8rem] text-red-400">Delete this phase?</span>
+                <button
+                  onClick={() => {
+                    onDelete(phase.id);
+                    onClose();
+                  }}
+                  className="btn px-3 py-1.5 text-[0.8rem] !bg-red-500/15 !text-red-400 !border-red-500/40"
+                >
+                  Confirm
+                </button>
+                <button
+                  onClick={() => setConfirmingDelete(false)}
+                  className="btn px-3 py-1.5 text-[0.8rem] !bg-transparent !text-zinc-400 !border-white/10"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              canDelete && (
+                <button
+                  onClick={() => setConfirmingDelete(true)}
+                  className="text-red-500 bg-transparent border-none cursor-pointer text-[0.8rem]"
+                >
+                  Delete Phase
+                </button>
+              )
+            )}
           </div>
           <button onClick={onClose} className="btn px-5 py-2 text-[0.85rem]">
-            Close
+            Done
           </button>
         </div>
       </div>
