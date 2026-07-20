@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
 import type { RotationDef, TrackState } from "@/lib/types";
 import { getWeekNum } from "@/lib/dates";
+import { renderMarkdownToHtml } from "@/lib/markdown";
 
 interface RotationModalProps {
   data: TrackState;
@@ -21,12 +21,14 @@ interface DraftItem {
   description: string;
 }
 
+type ModalMode = "view" | "edit" | "plan";
+
 export default function RotationModal({ data, rotationId, onClose, applyChange }: RotationModalProps) {
   const isNew = rotationId === null;
   const existing = rotationId ? (data.rotations || []).find((r) => r.id === rotationId) : undefined;
   const currentWeekNum = getWeekNum(data.startDate);
 
-  const [isEditing, setIsEditing] = useState(isNew);
+  const [mode, setMode] = useState<ModalMode>(isNew ? "edit" : "view");
   const [label, setLabel] = useState(existing?.label || "");
   const [items, setItems] = useState<DraftItem[]>(
     existing?.items.map((it) => ({ title: it.title, description: it.description || "" })) || [{ title: "", description: "" }]
@@ -35,7 +37,33 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
   const [target, setTarget] = useState<"revision" | "focus">(existing?.target || "revision");
   const [explanation, setExplanation] = useState(existing?.explanation || "");
 
+  // The full-plan editor is a separate always-live autosave surface (like
+  // /roadmap), independent from the batched edit form above — entering it
+  // re-seeds from the current saved value so it never shows stale content.
+  const [planContent, setPlanContent] = useState("");
+  const [planTab, setPlanTab] = useState<"write" | "preview">("preview");
+  const [planSaveStatus, setPlanSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const planSaveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
   if (!isNew && !existing) return null;
+
+  const openEdit = () => {
+    if (existing) {
+      setLabel(existing.label);
+      setItems(existing.items.map((it) => ({ title: it.title, description: it.description || "" })));
+      setDaysOfWeek(existing.daysOfWeek);
+      setTarget(existing.target);
+      setExplanation(existing.explanation || "");
+    }
+    setMode("edit");
+  };
+
+  const openPlan = () => {
+    const current = existing?.explanation || "";
+    setPlanContent(current);
+    setPlanTab(current ? "preview" : "write");
+    setMode("plan");
+  };
 
   const toggleDay = (day: string) => {
     setDaysOfWeek((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]));
@@ -74,7 +102,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
     applyChange({ ...data, rotations: nextRotations });
 
     if (isNew) onClose();
-    else setIsEditing(false);
+    else setMode("view");
   };
 
   const handleDelete = () => {
@@ -108,6 +136,25 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
     applyChange({ ...data, rotations: nextRotations });
   };
 
+  const persistPlan = (newContent: string) => {
+    if (!existing) return;
+    if (planSaveTimeoutRef.current) clearTimeout(planSaveTimeoutRef.current);
+    setPlanSaveStatus("saving");
+    planSaveTimeoutRef.current = setTimeout(() => {
+      const nextRotations = (data.rotations || []).map((r) =>
+        r.id === existing.id ? { ...r, explanation: newContent } : r
+      );
+      applyChange({ ...data, rotations: nextRotations });
+      setPlanSaveStatus("saved");
+      setTimeout(() => setPlanSaveStatus("idle"), 2000);
+    }, 800);
+  };
+
+  const handlePlanChange = (value: string) => {
+    setPlanContent(value);
+    persistPlan(value);
+  };
+
   const len = existing?.items.length || 0;
   const activeIndex = len > 0 ? (((currentWeekNum - (existing?.startWeek ?? 0)) % len) + len) % len : 0;
 
@@ -118,7 +165,9 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="glass-panel max-w-[600px] w-full flex flex-col gap-6 p-8 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.5)] border border-accent-muted relative rounded-lg"
+        className={`glass-panel w-full flex flex-col gap-6 p-8 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.5)] border border-accent-muted relative rounded-lg ${
+          mode === "plan" ? "max-w-[900px]" : "max-w-[600px]"
+        }`}
       >
         <button
           onClick={onClose}
@@ -127,7 +176,78 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
           ✕
         </button>
 
-        {isEditing ? (
+        {mode === "plan" && existing ? (
+          <>
+            <div className="pr-8">
+              <h2 className="text-[1.4rem] font-bold text-white mb-1">
+                {existing.label}: Full Plan
+              </h2>
+              <p className="text-[0.85rem] text-zinc-400 m-0">
+                This rotation&apos;s own private plan — autosaves.
+              </p>
+            </div>
+
+            <div className="glass-panel block !p-0 !border-white/10">
+              <div className="flex items-center justify-between border-b border-white/5 px-6 pt-4">
+                <div className="flex gap-1">
+                  <button
+                    className={`px-4 py-2 text-[0.8rem] font-semibold uppercase tracking-[0.05em] border-b-2 -mb-px cursor-pointer bg-transparent ${
+                      planTab === "write" ? "text-accent border-accent" : "text-zinc-500 border-transparent hover:text-white"
+                    }`}
+                    onClick={() => setPlanTab("write")}
+                  >
+                    Write
+                  </button>
+                  <button
+                    className={`px-4 py-2 text-[0.8rem] font-semibold uppercase tracking-[0.05em] border-b-2 -mb-px cursor-pointer bg-transparent ${
+                      planTab === "preview" ? "text-accent border-accent" : "text-zinc-500 border-transparent hover:text-white"
+                    }`}
+                    onClick={() => setPlanTab("preview")}
+                  >
+                    Preview
+                  </button>
+                </div>
+                <span className="text-[0.7rem] font-mono text-zinc-500 pb-2">
+                  {planSaveStatus === "saving" && "Saving..."}
+                  {planSaveStatus === "saved" && "Saved ✓"}
+                </span>
+              </div>
+
+              {planTab === "write" ? (
+                <textarea
+                  value={planContent}
+                  onChange={(e) => handlePlanChange(e.target.value)}
+                  placeholder="Write this rotation's full plan using Markdown..."
+                  className="notes-editor-textarea min-h-[400px] px-8 py-6"
+                />
+              ) : planContent ? (
+                <div
+                  className="notes-preview-pane px-8 py-6"
+                  dangerouslySetInnerHTML={{ __html: renderMarkdownToHtml(planContent, "<p>Nothing written yet.</p>") }}
+                />
+              ) : (
+                <div className="px-8 py-16 text-center">
+                  <p className="text-zinc-400 text-[0.9rem] mb-4">You haven&apos;t written a plan for this rotation yet.</p>
+                  <button onClick={() => setPlanTab("write")} className="btn px-5 py-2 text-[0.85rem]">
+                    Start Writing
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-between items-center border-t border-white/5 pt-4">
+              <button
+                onClick={() => setMode("view")}
+                className="btn px-4 py-2 text-[0.8rem] !bg-transparent !text-zinc-400 !border-white/10 hover:!text-white"
+              >
+                &larr; Back to Rotation
+              </button>
+              <button onClick={onClose} className="btn px-4 py-2 text-[0.8rem]">
+                Close
+              </button>
+            </div>
+          </>
+        ) : mode === "edit" ? (
           <>
             <div className="pr-8">
               <h2 className="text-[1.4rem] font-bold text-white mb-1">
@@ -239,7 +359,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                 <textarea
                   value={explanation}
                   onChange={(e) => setExplanation(e.target.value)}
-                  placeholder="Why this rotation, what it covers, how to use it — written as Markdown. Viewable/editable in full any time via the Full Plan link."
+                  placeholder="Why this rotation, what it covers, how to use it — written as Markdown. Viewable/editable in full any time via the Full Plan button."
                   rows={4}
                   className="bg-white/[0.03] border border-white/10 rounded-md px-3 py-2 text-[0.8rem] text-white leading-snug focus:outline-none focus:border-accent resize-y"
                 />
@@ -249,7 +369,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
             <div className="flex justify-between items-center border-t border-white/5 pt-4">
               {existing ? (
                 <button
-                  onClick={() => setIsEditing(false)}
+                  onClick={() => setMode("view")}
                   className="btn px-4 py-2 text-[0.8rem] !bg-transparent !text-zinc-400 !border-white/10 hover:!text-white"
                 >
                   Cancel
@@ -321,15 +441,14 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                 Delete Rotation
               </button>
               <div className="flex gap-2">
-                <Link
-                  href={`/roadmap?rotation=${existing?.id}`}
-                  onClick={onClose}
-                  className="btn px-4 py-2 text-[0.8rem] !bg-transparent !text-zinc-400 !border-white/10 hover:!text-white no-underline inline-flex items-center"
+                <button
+                  onClick={openPlan}
+                  className="btn px-4 py-2 text-[0.8rem] !bg-transparent !text-zinc-400 !border-white/10 hover:!text-white"
                 >
                   Full Plan
-                </Link>
+                </button>
                 <button
-                  onClick={() => setIsEditing(true)}
+                  onClick={openEdit}
                   className="btn px-4 py-2 text-[0.8rem] !bg-transparent !text-zinc-400 !border-white/10 hover:!text-white"
                 >
                   Edit
