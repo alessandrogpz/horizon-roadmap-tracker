@@ -23,7 +23,7 @@ import {
   clearGoogleAccessToken,
   loadGoogleGisScript
 } from "@/lib/googleDrive";
-import type { Material, PanelColumns, Phase, TrackState, WeekDay, Workspace } from "@/lib/types";
+import type { FocusType, Material, PanelColumns, Phase, PortfolioProject, TrackState, WeekDay, Workspace } from "@/lib/types";
 import { todayYMD, daysSince } from "@/lib/dates";
 import { applyDailyResetIfNeeded } from "@/lib/dailyReset";
 import { addCompletion, removeCompletion } from "@/lib/streak";
@@ -38,6 +38,7 @@ import DashboardHeader, { type SyncStatus } from "@/components/DashboardHeader";
 import DriveConnectModal, { type DriveModalMode } from "@/components/DriveConnectModal";
 import WeeklyPlan from "@/components/WeeklyPlan";
 import RotationModal from "@/components/RotationModal";
+import WeeklyRhythmModal from "@/components/WeeklyRhythmModal";
 import SortablePanel from "@/components/SortablePanel";
 
 type PanelColumnId = "left" | "right";
@@ -112,6 +113,7 @@ export default function Home() {
   const [dayOfWeek, setDayOfWeek] = useState(0);
   const [selectedScheduleDay, setSelectedScheduleDay] = useState<WeekDay | null>(null);
   const [showRotationModal, setShowRotationModal] = useState(false);
+  const [showRhythmEditor, setShowRhythmEditor] = useState(false);
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedPhase, setSelectedPhase] = useState<Phase | null>(null);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
@@ -272,6 +274,16 @@ export default function Home() {
     }
   };
 
+  const handleEditTrackIdentity = async (fields: { name: string; color: string }) => {
+    if (!data) return;
+    await persist({ ...data, meta: { ...data.meta, ...fields } }, "track identity");
+  };
+
+  const handleSaveRhythm = async (weekSchedule: WeekDay[], focusTypes: Record<string, FocusType>) => {
+    if (!data) return;
+    await persist({ ...data, weekSchedule, focusTypes }, "weekly rhythm");
+  };
+
   useEffect(() => {
     // Client-only initialization and service worker registration for PWA
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
@@ -405,10 +417,63 @@ export default function Home() {
     await persist({ ...data, portfolio: updatedPortfolio, ...streakFields }, "portfolio toggle");
   };
 
+  const handleAddPortfolioProject = async (newProject: Omit<PortfolioProject, "id">) => {
+    if (!data) return;
+
+    // Prefix with the track id so ids stay globally unique across tracks,
+    // matching handleAddMaterial's convention.
+    const projectWithId = { id: `p_${data.meta.id}_${Date.now()}`, ...newProject };
+    await persist({ ...data, portfolio: [...(data.portfolio || []), projectWithId] }, "portfolio add");
+  };
+
+  const handleEditPortfolioProject = async (projectId: string, fields: Partial<PortfolioProject>) => {
+    if (!data) return;
+
+    const updatedPortfolio = data.portfolio.map((p) => (p.id === projectId ? { ...p, ...fields } : p));
+    await persist({ ...data, portfolio: updatedPortfolio }, "portfolio edit");
+  };
+
+  const handleDeletePortfolioProject = async (projectId: string) => {
+    if (!data) return;
+
+    await persist({ ...data, portfolio: data.portfolio.filter((p) => p.id !== projectId) }, "portfolio delete");
+  };
+
   const handlePhaseChange = async (newPhaseId: number) => {
     if (!data) return;
 
     await persist({ ...data, currentPhase: newPhaseId, currentPhaseStartDate: todayYMD() }, "phase change");
+  };
+
+  const handlePhaseUpdate = async (updatedPhase: Phase) => {
+    if (!data) return;
+
+    const updatedPhases = data.phases.map((p) => (p.id === updatedPhase.id ? updatedPhase : p));
+    setSelectedPhase(updatedPhase);
+    await persist({ ...data, phases: updatedPhases }, "phase update");
+  };
+
+  const handleDeletePhase = async (phaseId: number) => {
+    if (!data || data.phases.length <= 1) return;
+
+    const updatedPhases = data.phases.filter((p) => p.id !== phaseId);
+    const newCurrentPhase = data.currentPhase === phaseId ? updatedPhases[0].id : data.currentPhase;
+    await persist({ ...data, phases: updatedPhases, currentPhase: newCurrentPhase }, "phase delete");
+  };
+
+  const handleAddPhase = async () => {
+    if (!data) return;
+
+    const nextId = Math.max(0, ...data.phases.map((p) => p.id)) + 1;
+    const newPhase: Phase = {
+      id: nextId,
+      title: `Phase ${nextId}`,
+      description: "Describe what this phase is about.",
+      tasks: [],
+      detailedInfo: { focus: "", deliverable: "", math: "" },
+    };
+    await persist({ ...data, phases: [...data.phases, newPhase] }, "phase add");
+    setSelectedPhase(newPhase);
   };
 
   if (loading) {
@@ -464,7 +529,14 @@ export default function Home() {
         applyChange={applyChange}
       />
     ),
-    phaseTracker: <PhaseTracker phases={data.phases} currentPhase={data.currentPhase} onPhaseClick={setSelectedPhase} />,
+    phaseTracker: (
+      <PhaseTracker
+        phases={data.phases}
+        currentPhase={data.currentPhase}
+        onPhaseClick={setSelectedPhase}
+        onAddPhase={handleAddPhase}
+      />
+    ),
     streakGraph: (
       <StreakGraph
         streakHistory={data.streakHistory}
@@ -473,7 +545,15 @@ export default function Home() {
       />
     ),
     pomodoroTimer: <PomodoroTimer />,
-    portfolioTracker: <PortfolioTracker portfolio={data.portfolio} onToggle={handlePortfolioToggle} />,
+    portfolioTracker: (
+      <PortfolioTracker
+        portfolio={data.portfolio}
+        onToggle={handlePortfolioToggle}
+        onAddProject={handleAddPortfolioProject}
+        onEditProject={handleEditPortfolioProject}
+        onDeleteProject={handleDeletePortfolioProject}
+      />
+    ),
     materialsTracker: (
       <MaterialsTracker
         materials={data.materials || []}
@@ -484,6 +564,10 @@ export default function Home() {
         onOpenLink={handleOpenLink}
       />
     ),
+  };
+
+  const PANEL_EDIT_HANDLERS: Record<string, (() => void) | undefined> = {
+    weeklyPlan: () => setShowRhythmEditor(true),
   };
 
   return (
@@ -503,6 +587,7 @@ export default function Home() {
             onSync={handleSyncWorkspace}
             onSwitchTrack={handleSwitchTrack}
             onNewTrack={() => router.push("/onboarding?mode=add")}
+            onEditTrack={handleEditTrackIdentity}
           />
 
           {/* Phase recommendation alert */}
@@ -524,7 +609,7 @@ export default function Home() {
         <SortableContext items={panelColumns.left} strategy={verticalListSortingStrategy}>
           <div className="flex flex-col gap-8">
             {panelColumns.left.map((id) => (
-              <SortablePanel key={id} id={id}>{PANELS[id]}</SortablePanel>
+              <SortablePanel key={id} id={id} onEdit={PANEL_EDIT_HANDLERS[id]}>{PANELS[id]}</SortablePanel>
             ))}
           </div>
         </SortableContext>
@@ -532,7 +617,7 @@ export default function Home() {
         <SortableContext items={panelColumns.right} strategy={verticalListSortingStrategy}>
           <div className="flex flex-col gap-8">
             {panelColumns.right.map((id) => (
-              <SortablePanel key={id} id={id}>{PANELS[id]}</SortablePanel>
+              <SortablePanel key={id} id={id} onEdit={PANEL_EDIT_HANDLERS[id]}>{PANELS[id]}</SortablePanel>
             ))}
           </div>
         </SortableContext>
@@ -544,6 +629,9 @@ export default function Home() {
           currentPhaseId={data.currentPhase}
           onClose={() => setSelectedPhase(null)}
           onActivatePhase={handlePhaseChange}
+          onChange={handlePhaseUpdate}
+          onDelete={handleDeletePhase}
+          canDelete={data.phases.length > 1}
         />
       )}
       {selectedScheduleDay && (
@@ -562,6 +650,14 @@ export default function Home() {
           data={data}
           onClose={() => setShowRotationModal(false)}
           applyChange={applyChange}
+        />
+      )}
+      {showRhythmEditor && (
+        <WeeklyRhythmModal
+          weekSchedule={data.weekSchedule || []}
+          focusTypes={data.focusTypes || {}}
+          onSave={handleSaveRhythm}
+          onClose={() => setShowRhythmEditor(false)}
         />
       )}
       {driveModalMode && (
