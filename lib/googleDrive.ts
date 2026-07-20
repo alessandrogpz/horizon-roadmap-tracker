@@ -171,17 +171,23 @@ export const syncWithGoogleDrive = async (): Promise<SyncResult> => {
       logs.push("Found existing remote backup file.");
 
       const contentRes = await driveFetch(token, `https://www.googleapis.com/drive/v3/files/${remoteFileId}?alt=media`);
-      if (contentRes.ok) {
-        const rawRemote = await contentRes.json();
-        if (isLegacyDriveShape(rawRemote)) {
-          // Old-shape backup (pre-multi-track). Transparently upgrade it in
-          // memory before merging — no manual action, no duplicate tracks.
-          remoteData = wrapLegacyAppState(rawRemote);
-          logs.push("Fetched remote backup data (upgraded from legacy single-track format).");
-        } else {
-          remoteData = rawRemote as Workspace;
-          logs.push("Fetched remote backup data.");
-        }
+      if (!contentRes.ok) {
+        // The file exists but we couldn't read it (network blip, transient
+        // Drive error, etc). Abort rather than silently treating this as
+        // "no remote data" — that path uploads local-only data over the
+        // existing backup below, which would discard whatever's actually on
+        // Drive without ever merging it.
+        throw new Error(`Failed to download remote backup (HTTP ${contentRes.status}). Sync aborted to avoid overwriting your Drive data.`);
+      }
+      const rawRemote = await contentRes.json();
+      if (isLegacyDriveShape(rawRemote)) {
+        // Old-shape backup (pre-multi-track). Transparently upgrade it in
+        // memory before merging — no manual action, no duplicate tracks.
+        remoteData = wrapLegacyAppState(rawRemote);
+        logs.push("Fetched remote backup data (upgraded from legacy single-track format).");
+      } else {
+        remoteData = rawRemote as Workspace;
+        logs.push("Fetched remote backup data.");
       }
     } else {
       logs.push("No remote backup found. Creating a new one...");

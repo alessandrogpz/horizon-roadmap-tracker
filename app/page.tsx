@@ -14,7 +14,7 @@ import {
   type DragOverEvent,
 } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import { fetchWorkspace, updateWorkspace, openLinkOnSystem } from "@/lib/api";
+import { fetchWorkspace, updateWorkspace, openLinkOnSystem, visibleTracks } from "@/lib/api";
 import {
   isGoogleAuthenticated,
   getGoogleClientId,
@@ -134,7 +134,7 @@ export default function Home() {
   // No tracks yet: send the user through the onboarding wizard instead of
   // rendering an empty/placeholder dashboard.
   useEffect(() => {
-    if (workspace && Object.keys(workspace.tracks).length === 0) {
+    if (workspace && visibleTracks(workspace).length === 0) {
       router.replace("/onboarding");
     }
   }, [workspace, router]);
@@ -279,6 +279,29 @@ export default function Home() {
     }
   };
 
+  /** Soft-delete: flips meta.archived rather than removing the track record,
+   *  so the deletion is an ordinary field change that propagates correctly
+   *  through the normal sync/merge path (see visibleTracks' doc comment). */
+  const handleDeleteTrack = async () => {
+    if (!workspace || !data) return;
+    const remaining = visibleTracks(workspace).filter((t) => t.meta.id !== data.meta.id);
+    if (remaining.length === 0) return;
+
+    const archivedTrack: TrackState = { ...data, meta: { ...data.meta, archived: true } };
+    const newActiveTrackId = workspace.activeTrackId === data.meta.id ? remaining[0].meta.id : workspace.activeTrackId;
+    const newWorkspace: Workspace = {
+      ...workspace,
+      tracks: { ...workspace.tracks, [archivedTrack.meta.id]: archivedTrack },
+      activeTrackId: newActiveTrackId,
+    };
+    setWorkspace(newWorkspace);
+    try {
+      await updateWorkspace(newWorkspace);
+    } catch (err) {
+      console.error("Failed to archive track", err);
+    }
+  };
+
   const handleEditTrackIdentity = async (fields: { name: string; color: string; startDate: string; totalDays: number }) => {
     if (!data) return;
 
@@ -330,16 +353,23 @@ export default function Home() {
         setTodayStr(currentTodayStr);
         setDayOfWeek(new Date().getDay());
 
-        if (Object.keys(loadedWorkspace.tracks).length === 0) {
+        const visible = visibleTracks(loadedWorkspace);
+        if (visible.length === 0) {
           setWorkspace(loadedWorkspace);
           return;
         }
 
-        const activeTrack = loadedWorkspace.tracks[loadedWorkspace.activeTrackId];
+        // The active track may have been archived from another device since
+        // this one last synced — fall back to the first visible track rather
+        // than rendering an archived one.
+        const activeIsVisible = !loadedWorkspace.tracks[loadedWorkspace.activeTrackId]?.meta.archived;
+        const effectiveWorkspace = activeIsVisible ? loadedWorkspace : { ...loadedWorkspace, activeTrackId: visible[0].meta.id };
+
+        const activeTrack = effectiveWorkspace.tracks[effectiveWorkspace.activeTrackId];
         const { data: resetTrackData, changed } = applyDailyResetIfNeeded(activeTrack, currentTodayStr);
-        const finalWorkspace = withTrack(loadedWorkspace, resetTrackData);
+        const finalWorkspace = withTrack(effectiveWorkspace, resetTrackData);
         setWorkspace(finalWorkspace);
-        if (changed) {
+        if (changed || !activeIsVisible) {
           try {
             await updateWorkspace({ ...finalWorkspace, isReset: true });
           } catch (err) {
@@ -512,7 +542,7 @@ export default function Home() {
     );
   }
 
-  if (workspace && Object.keys(workspace.tracks).length === 0) {
+  if (workspace && visibleTracks(workspace).length === 0) {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-4 bg-background text-foreground">
         <span className="animate-spin text-[2rem]">↻</span>
@@ -616,6 +646,8 @@ export default function Home() {
             onSwitchTrack={handleSwitchTrack}
             onNewTrack={() => router.push("/onboarding?mode=add")}
             onEditTrack={handleEditTrackIdentity}
+            onDeleteTrack={handleDeleteTrack}
+            canDeleteTrack={visibleTracks(workspace).length > 1}
           />
 
           {/* Phase recommendation alert */}

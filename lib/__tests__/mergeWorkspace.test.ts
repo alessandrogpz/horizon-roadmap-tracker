@@ -103,6 +103,25 @@ describe("mergeWorkspace", () => {
     expect(Object.keys(data.tracks)).toContain(data.activeTrackId);
   });
 
+  it("propagates an archived (soft-deleted) track through the merge when its side has the newer config", () => {
+    const local = workspace([track({ id: "track_a", archived: true }, { configVersion: 2 })]);
+    const remote = workspace([track({ id: "track_a" }, { configVersion: 1 })]);
+
+    const { data } = mergeWorkspace(local, remote);
+    expect(data.tracks.track_a.meta.archived).toBe(true);
+  });
+
+  it("un-archiving (or never-archived) wins the same way when it has the newer config", () => {
+    const local = workspace([track({ id: "track_a" }, { configVersion: 1 })]);
+    const remote = workspace([track({ id: "track_a", archived: true }, { configVersion: 1 })]);
+    // Equal configVersion: local's structural config is kept (configBase
+    // falls back to local when remote isn't strictly newer) — so local
+    // (not archived) should win here, not remote.
+
+    const { data } = mergeWorkspace(local, remote);
+    expect(data.tracks.track_a.meta.archived).toBeFalsy();
+  });
+
   it("marks the merged workspace as synced with no unsynced changes", () => {
     const local = workspace([track()]);
     const remote = workspace([track()]);

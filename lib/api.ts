@@ -142,6 +142,7 @@ const applyTrackBookkeeping = (
   // Targeted comparison of user-editable config fields only.
   const stableJSON = (v: unknown) => JSON.stringify(v);
   const CONFIG_COMPARE_FIELDS = [
+    "meta",
     "materials",
     "portfolio",
     "currentPhase",
@@ -251,17 +252,14 @@ export const createTrack = async (track: TrackState): Promise<void> => {
   await db.workspace.put({ id: "current", data: nextWorkspace });
 };
 
-export const deleteTrack = async (trackId: TrackId): Promise<void> => {
-  const ws = await fetchWorkspace();
-  const remainingIds = Object.keys(ws.tracks).filter((id) => id !== trackId);
-  if (remainingIds.length === 0) {
-    throw new Error("Cannot delete the last remaining track.");
-  }
-  const tracks = { ...ws.tracks };
-  delete tracks[trackId];
-  const activeTrackId = ws.activeTrackId === trackId ? remainingIds[0] : ws.activeTrackId;
-  await db.workspace.put({ id: "current", data: { ...ws, tracks, activeTrackId } });
-};
+/** Tracks a user actually sees — excludes archived (soft-deleted) ones.
+ *  Archiving instead of hard-deleting means the deletion itself is just an
+ *  ordinary track field change that flows through the normal sync/merge
+ *  path, so it propagates correctly across devices instead of a device
+ *  that still has the track re-creating it on the next merge (mergeWorkspace
+ *  treats "missing on one side" as "not yet synced there," not "deleted"). */
+export const visibleTracks = (workspace: Workspace): TrackState[] =>
+  Object.values(workspace.tracks).filter((t) => !t.meta.archived);
 
 export const openLinkOnSystem = async (link: string) => {
   const res = await fetch("/api/open", {

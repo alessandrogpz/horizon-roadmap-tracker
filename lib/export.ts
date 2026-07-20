@@ -11,7 +11,7 @@ export interface BackupBundle {
   notes: Record<string, string>;
 }
 
-async function buildBackupBundle(): Promise<BackupBundle> {
+export async function buildBackupBundle(): Promise<BackupBundle> {
   const workspace = await fetchWorkspace();
   const noteRecords = await db.notes.toArray();
   const notes: Record<string, string> = {};
@@ -37,31 +37,18 @@ function triggerDownload(blob: Blob, filename: string) {
 }
 
 /** Turns arbitrary user text into a safe, lowercase filename fragment. */
-function slugify(text: string, fallback: string): string {
+export function slugify(text: string, fallback: string): string {
   const slug = text.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
   return slug || fallback;
 }
 
 /**
- * A single JSON file with everything the app syncs: every track (phases,
- * schedule, materials, portfolio, rotations, each rotation's full-plan
- * explanation, each track's own roadmap) plus every material's note.
- * Human-readable, no new format to learn — the same shape already synced
- * to Drive as database.json, with notes folded in.
+ * Builds the {path -> file content} map for the .zip export: database.json
+ * (the full bundle) plus every roadmap, rotation plan, and material note
+ * broken out as its own readable .md file. Pure — no I/O, easy to test
+ * independently of the actual zip encoding and browser download.
  */
-export async function exportSingleFile(): Promise<void> {
-  const bundle = await buildBackupBundle();
-  const json = JSON.stringify(bundle, null, 2);
-  triggerDownload(new Blob([json], { type: "application/json" }), `horizon-backup-${dateStamp()}.json`);
-}
-
-/**
- * A .zip with database.json (the same full bundle) plus every roadmap,
- * rotation plan, and material note broken out as its own readable .md file
- * — for browsing/reading individual documents without touching the JSON.
- */
-export async function exportZipBundle(): Promise<void> {
-  const bundle = await buildBackupBundle();
+export function buildZipFiles(bundle: BackupBundle): Record<string, Uint8Array> {
   const files: Record<string, Uint8Array> = {
     "database.json": strToU8(JSON.stringify(bundle, null, 2)),
   };
@@ -92,6 +79,30 @@ export async function exportZipBundle(): Promise<void> {
     });
   });
 
+  return files;
+}
+
+/**
+ * A single JSON file with everything the app syncs: every track (phases,
+ * schedule, materials, portfolio, rotations, each rotation's full-plan
+ * explanation, each track's own roadmap) plus every material's note.
+ * Human-readable, no new format to learn — the same shape already synced
+ * to Drive as database.json, with notes folded in.
+ */
+export async function exportSingleFile(): Promise<void> {
+  const bundle = await buildBackupBundle();
+  const json = JSON.stringify(bundle, null, 2);
+  triggerDownload(new Blob([json], { type: "application/json" }), `horizon-backup-${dateStamp()}.json`);
+}
+
+/**
+ * A .zip with database.json (the same full bundle) plus every roadmap,
+ * rotation plan, and material note broken out as its own readable .md file
+ * — for browsing/reading individual documents without touching the JSON.
+ */
+export async function exportZipBundle(): Promise<void> {
+  const bundle = await buildBackupBundle();
+  const files = buildZipFiles(bundle);
   const zipped = zipSync(files, { level: 6 });
   triggerDownload(new Blob([zipped as BlobPart], { type: "application/zip" }), `horizon-backup-${dateStamp()}.zip`);
 }
