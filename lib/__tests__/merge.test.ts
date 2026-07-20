@@ -6,7 +6,6 @@ import type { AppState, Material } from "../types";
 const baseState = (overrides: Partial<AppState> = {}): AppState => ({
   currentPhase: 1,
   startDate: "2026-07-01",
-  dsaStartWeek: 1,
   streakHistory: [],
   lastDailyRoutineCheck: "",
   lastTasksResetDate: "",

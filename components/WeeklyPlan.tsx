@@ -5,7 +5,7 @@ import type { TrackState, WeekDay } from "@/lib/types";
 import { getDateForDayName, getWeekNum } from "@/lib/dates";
 import { rebuildStreakHistory, completedItemTitle } from "@/lib/streak";
 import { DEFAULT_WEEK_SCHEDULE, DEFAULT_FOCUS_TYPES } from "@/lib/constants";
-import { computeAutoRevisionItem, isAutoRevisionItem } from "@/lib/rotation";
+import { computeRotationItemsForDay, isRotationItem } from "@/lib/rotation";
 
 interface WeeklyPlanProps {
   data: TrackState;
@@ -14,7 +14,8 @@ interface WeeklyPlanProps {
   weekOffset: number;
   setWeekOffset: (offset: number) => void;
   onDayClick: (day: WeekDay) => void;
-  onRotationClick: () => void;
+  /** null opens the "create a new rotation" flow; a string opens that rotation for viewing/editing. */
+  onRotationClick: (rotationId: string | null) => void;
   /** Applies an optimistic state update and schedules a debounced save. */
   applyChange: (newData: TrackState) => void;
 }
@@ -37,14 +38,7 @@ export default function WeeklyPlan({
 
   const weekLabel = data.isSynced ? `Week ${viewedWeekNum}` : "Week --";
 
-  const rotation = data.rotationConfig;
-  const weeklyAlgorithm = (() => {
-    if (!rotation) return "";
-    if (!data.isSynced) return "Algorithm (Placeholder)";
-    const len = rotation.weeks.length;
-    const idx = len > 0 ? (((viewedWeekNum - (data.dsaStartWeek || 1)) % len) + len) % len : 0;
-    return rotation.weeks[idx]?.pattern || "";
-  })();
+  const rotations = data.rotations || [];
 
   return (
     <div className="glass-panel border-l-4 border-accent-muted px-6 py-5">
@@ -81,25 +75,40 @@ export default function WeeklyPlan({
             </div>
           </div>
 
-          {/* Bottom Row: Algorithm Focus — only for tracks with an opted-in rotation */}
-          {rotation && (
-            <div>
-              <div
-                onClick={() => { if (data.isSynced) onRotationClick(); }}
-                className={`inline-flex items-center gap-2 bg-accent/[0.08] border border-dashed border-accent/30 px-3 py-1.5 rounded-md transition-all duration-200 whitespace-nowrap ${
-                  data.isSynced ? "cursor-pointer hover:bg-accent/15 hover:border-accent/50" : "cursor-default"
-                }`}
-                title={data.isSynced ? "View full rotation plan" : "Connect Google Drive to unlock"}
+          {/* Bottom row: one pill per rotation, plus a button to add another */}
+          <div className="flex flex-wrap items-center gap-2">
+            {rotations.map((rotation) => {
+              const len = rotation.items.length;
+              const idx = len > 0 ? (((viewedWeekNum - rotation.startWeek) % len) + len) % len : 0;
+              const current = data.isSynced ? (rotation.items[idx]?.title || "") : "(Placeholder)";
+              return (
+                <div
+                  key={rotation.id}
+                  onClick={() => { if (data.isSynced) onRotationClick(rotation.id); }}
+                  className={`inline-flex items-center gap-2 bg-accent/[0.08] border border-dashed border-accent/30 px-3 py-1.5 rounded-md transition-all duration-200 whitespace-nowrap ${
+                    data.isSynced ? "cursor-pointer hover:bg-accent/15 hover:border-accent/50" : "cursor-default"
+                  }`}
+                  title={data.isSynced ? "View full rotation cycle" : "Connect Google Drive to unlock"}
+                >
+                  <span className="text-[0.7rem] text-zinc-400 uppercase tracking-[0.05em] font-semibold">
+                    {rotation.label}:
+                  </span>
+                  <span className="text-[0.85rem] text-accent font-bold font-mono">
+                    {current}
+                  </span>
+                </div>
+              );
+            })}
+
+            {data.isSynced && (
+              <button
+                onClick={() => onRotationClick(null)}
+                className="inline-flex items-center gap-1 border border-dashed border-white/15 px-3 py-1.5 rounded-md text-[0.7rem] text-zinc-500 uppercase tracking-[0.05em] font-semibold cursor-pointer transition-all duration-200 hover:text-white hover:border-white/30"
               >
-                <span className="text-[0.7rem] text-zinc-400 uppercase tracking-[0.05em] font-semibold">
-                  Weekly Algorithm:
-                </span>
-                <span className="text-[0.85rem] text-accent font-bold font-mono">
-                  {weeklyAlgorithm}
-                </span>
-              </div>
-            </div>
-          )}
+                + New Rotation
+              </button>
+            )}
+          </div>
         </div>
 
         {/* 7-column grid (scrolls horizontally on small screens) */}
@@ -155,23 +164,23 @@ function DayCard({ dayItem, idx, data, todayStr, dayOfWeek, weekOffset, viewedWe
   const dayKey = dayItem.name;
   const dayDateStr = getDateForDayName(dayKey, weekOffset);
   const storedRevisionItems = data.dailyRevisionItems?.[dayKey] || [];
-  // The auto-rotation entry (if any) reflects whatever week is actually
-  // currently active — recompute it for the week being *viewed* so
-  // navigating weeks previews the correct upcoming/past pattern instead of
-  // repeating this week's. Manually added revision items pass through as-is.
-  const revisionItems = (() => {
-    if (!data.rotationConfig) return storedRevisionItems;
-    const previewAutoItem = computeAutoRevisionItem(
-      data.rotationConfig,
-      data.weekSchedule || DEFAULT_WEEK_SCHEDULE,
-      viewedWeekNum,
-      data.dsaStartWeek || 1,
-      dayKey
-    );
-    const manualItems = storedRevisionItems.filter((it) => !isAutoRevisionItem(it));
-    return previewAutoItem ? [previewAutoItem, ...manualItems] : manualItems;
-  })();
-  const focusTasks = data.dailyTasks?.[dayKey] || [];
+  const storedFocusTasks = data.dailyTasks?.[dayKey] || [];
+
+  // Rotation-sourced items reflect whichever week is actually currently
+  // active in storage — recompute them for the week being *viewed* so
+  // navigating weeks previews the correct upcoming/past content instead of
+  // repeating this week's. Manually added items pass through as-is.
+  const rotations = data.rotations || [];
+  const { revisions: rotationRevisions, focus: rotationFocus } = rotations.length > 0
+    ? computeRotationItemsForDay(rotations, viewedWeekNum, dayKey)
+    : { revisions: [], focus: [] };
+
+  const revisionItems = rotations.length > 0
+    ? [...rotationRevisions, ...storedRevisionItems.filter((it) => !isRotationItem(it))]
+    : storedRevisionItems;
+  const focusTasks = rotations.length > 0
+    ? [...rotationFocus, ...storedFocusTasks.filter((it) => !isRotationItem(it))]
+    : storedFocusTasks;
 
   // Determine completion: for today use live data, for other days use weeklyCompletions
   const weeklyCompletions = data.weeklyCompletions || {};

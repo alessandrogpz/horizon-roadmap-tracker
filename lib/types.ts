@@ -84,7 +84,6 @@ export interface AppState {
   currentPhase: number;
   startDate: DateStr;
   currentPhaseStartDate?: DateStr;
-  dsaStartWeek: number;
   streakHistory: DateStr[];
   lastDailyRoutineCheck: string;
   lastTasksResetDate: DateStr | "";
@@ -150,15 +149,21 @@ export interface TrackMeta {
   archived?: boolean;
 }
 
-/** Generalizes the DSA/math rotation into an optional, per-track feature.
- *  Which week of the cycle a track is on is tracked by the track's own
- *  `dsaStartWeek` field (below) — the single source of truth, so a manual
- *  pattern change (RotationModal) and the automatic daily rotation always
- *  agree instead of drifting apart. */
-export interface RotationConfig {
-  weeks: { pattern: string; problems: string }[];
-  /** Which weekSchedule day `type` this rotation populates (e.g. "math"). */
-  appliesToScheduleType: string;
+/** One independently-configured recurring item rotation, e.g. a 10-week
+ *  algorithm-pattern rotation on Mon/Wed/Fri, or a reading rotation on
+ *  Tue/Thu. A track can have any number of these side by side. The cycle
+ *  advances once per curriculum week; `startWeek` anchors which item is
+ *  "current" and is the single source of truth a manual pattern change
+ *  (RotationModal) writes to, so it never drifts from the daily reset. */
+export interface RotationDef {
+  id: string;
+  label: string;
+  items: { title: string; description?: string }[];
+  /** Which days this rotation's current item appears on. Subset of "Mon".."Sun". */
+  daysOfWeek: string[];
+  /** Which daily list the computed item is written into. */
+  target: "revision" | "focus";
+  startWeek: number;
 }
 
 /**
@@ -172,7 +177,7 @@ export interface RotationConfig {
  */
 export interface TrackState extends Omit<AppState, "hasUnsyncedChanges" | "lastSyncTime" | "isReset"> {
   meta: TrackMeta;
-  rotationConfig?: RotationConfig;
+  rotations?: RotationDef[];
   /** Free-form markdown — this track's own full roadmap/plan, private to it
    *  and fully editable. Never a shared/shipped file: every track has its own. */
   roadmapContent?: string;

@@ -31,9 +31,3 @@ export const DSA_PATTERN_WEEKS = [
   { pattern: "DP Basics", problems: "Climbing Stairs, House Robber, Coin Change, Longest Increasing Subsequence, Unique Paths" },
   { pattern: "Graphs & Union-Find", problems: "Number of Islands, Clone Graph, Course Schedule, Redundant Connection" },
 ];
-
-/** Index into DSA_PATTERN_WEEKS for a given curriculum week. */
-export function dsaPatternIndex(weekNum: number, dsaStartWeek: number = 1): number {
-  const len = DSA_PATTERN_WEEKS.length;
-  return (((weekNum - dsaStartWeek) % len) + len) % len;
-}

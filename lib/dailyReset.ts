@@ -1,12 +1,11 @@
 import type { TrackState } from "./types";
 import { getWeekNum, parseYMD, DAYS_SHORT } from "./dates";
-import { DEFAULT_WEEK_SCHEDULE } from "./constants";
-import { computeAutoRevisionItem, isAutoRevisionItem } from "./rotation";
+import { computeRotationItemsForDay, isRotationItem } from "./rotation";
 
 /**
  * When a new day starts: snapshot yesterday's completions into weeklyCompletions,
- * uncheck all tasks, and (for tracks that opt into one via rotationConfig)
- * rotate the auto revision items for the new week.
+ * uncheck all tasks, and (for tracks with any configured rotations) refresh
+ * each rotation's item for the new week.
  * Pure — returns the updated track (or the input unchanged if no reset is due).
  */
 export function applyDailyResetIfNeeded(loadedData: TrackState, todayStr: string): { data: TrackState; changed: boolean } {
@@ -51,25 +50,23 @@ export function applyDailyResetIfNeeded(loadedData: TrackState, todayStr: string
     });
   }
 
-  // Auto-rotation: only for tracks that opt into one (e.g. the Game Engine
-  // & Graphics template's DSA/math interleaving). Tracks without a
-  // rotationConfig (fitness, learning, blank) simply skip this whole block.
-  const rotation = loadedData.rotationConfig;
-  if (rotation) {
-    const startWeek = loadedData.dsaStartWeek || 1;
+  // Rotations: each independently-configured recurring item list (e.g. an
+  // algorithm rotation on Mon/Wed/Fri, a reading rotation on Tue/Thu) writes
+  // its current item into either the day's Revision or Focus list, on
+  // whichever days it's set to run. Tracks with none simply skip this.
+  const rotations = loadedData.rotations || [];
+  if (rotations.length > 0) {
     const currentWeekNum = getWeekNum(loadedData.startDate);
-    const schedule = loadedData.weekSchedule || DEFAULT_WEEK_SCHEDULE;
+    const ALL_WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-    const ALL_WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     ALL_WEEKDAYS.forEach((dayKey) => {
-      const items = resetDailyRevisionItems[dayKey] || [];
-      const autoItem = computeAutoRevisionItem(rotation, schedule, currentWeekNum, startWeek, dayKey);
-      if (autoItem) {
-        const autoIdx = items.findIndex((it) => isAutoRevisionItem(it));
-        if (autoIdx >= 0) items[autoIdx] = autoItem;
-        else items.unshift(autoItem);
-      }
-      resetDailyRevisionItems[dayKey] = items;
+      const { revisions, focus } = computeRotationItemsForDay(rotations, currentWeekNum, dayKey);
+
+      const manualRevisions = (resetDailyRevisionItems[dayKey] || []).filter((it) => !isRotationItem(it));
+      resetDailyRevisionItems[dayKey] = [...revisions, ...manualRevisions];
+
+      const manualFocus = (resetDailyTasks[dayKey] || []).filter((it) => !isRotationItem(it));
+      resetDailyTasks[dayKey] = [...focus, ...manualFocus];
     });
   }
 
