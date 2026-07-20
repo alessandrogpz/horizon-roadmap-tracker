@@ -1,104 +1,16 @@
 import { db } from "./localDb";
-import type { AppState, GitStats, Material, PortfolioProject } from "./types";
+import type { GitStats, Material, PortfolioProject, TrackId, TrackState, Workspace } from "./types";
 import { LEGACY_PATH_TO_REPO, MATERIAL_REPO_MAP, PORTFOLIO_REPO_MAP } from "./migrationConfig";
+import { LEGACY_TRACK_ID } from "./templates";
 
-const DEFAULT_SKETCH_STATE: AppState = {
-  currentPhase: 1,
-  startDate: "2026-07-01",
-  dsaStartWeek: 1,
-  streakHistory: [],
-  lastDailyRoutineCheck: "",
-  lastTasksResetDate: "",
-  dailyFocus: {
-    math: "",
-    leetcode: "",
-    revision: ""
-  },
-  dailyTasks: {
-    Mon: [{ id: "mon_1", title: "Placeholder Study Task", completed: false }],
-    Tue: [{ id: "tue_1", title: "Placeholder Study Task", completed: false }],
-    Wed: [{ id: "wed_1", title: "Placeholder Study Task", completed: false }],
-    Thu: [{ id: "thu_1", title: "Placeholder Study Task", completed: false }],
-    Fri: [{ id: "fri_1", title: "Placeholder Study Task", completed: false }],
-    Sat: [{ id: "sat_1", title: "Placeholder Study Task", completed: false }],
-    Sun: []
-  },
-  dailyRevisionItems: {
-    Mon: [{ id: "dsa_auto", title: "Placeholder DSA Pattern", description: "Placeholder problems", completed: false }],
-    Tue: [{ id: "math_revision", title: "Placeholder Math Review", description: "Placeholder details", completed: false }],
-    Wed: [{ id: "dsa_auto", title: "Placeholder DSA Pattern", description: "Placeholder problems", completed: false }],
-    Thu: [{ id: "math_revision", title: "Placeholder Math Review", description: "Placeholder details", completed: false }],
-    Fri: [{ id: "dsa_auto", title: "Placeholder DSA Pattern", description: "Placeholder problems", completed: false }],
-    Sat: [{ id: "math_revision", title: "Placeholder Math Review", description: "Placeholder details", completed: false }],
-    Sun: []
-  },
-  phases: [
-    {
-      id: 1,
-      title: "Phase 01 (Placeholder)",
-      description: "Connect Google Drive to load your personalized curriculum details.",
-      tasks: [
-        { id: "p1_t1", title: "Task Placeholder 1", completed: false },
-        { id: "p1_t2", title: "Task Placeholder 2", completed: false }
-      ],
-      detailedInfo: {
-        focus: "Placeholder Focus",
-        deliverable: "Placeholder Deliverable",
-        math: "Placeholder Math",
-        algoDS: "Placeholder DSA"
-      }
-    },
-    {
-      id: 2,
-      title: "Phase 02 (Placeholder)",
-      description: "Connect Google Drive to load your personalized curriculum details.",
-      tasks: [],
-      detailedInfo: {
-        focus: "Placeholder Focus",
-        deliverable: "Placeholder Deliverable",
-        math: "Placeholder Math",
-        algoDS: "Placeholder DSA"
-      }
-    },
-    {
-      id: 3,
-      title: "Phase 03 (Placeholder)",
-      description: "Connect Google Drive to load your personalized curriculum details.",
-      tasks: [],
-      detailedInfo: {
-        focus: "Placeholder Focus",
-        deliverable: "Placeholder Deliverable",
-        math: "Placeholder Math",
-        algoDS: "Placeholder DSA"
-      }
-    },
-    {
-      id: 4,
-      title: "Phase 04 (Placeholder)",
-      description: "Connect Google Drive to load your personalized curriculum details.",
-      tasks: [],
-      detailedInfo: {
-        focus: "Placeholder Focus",
-        deliverable: "Placeholder Deliverable",
-        math: "Placeholder Math",
-        algoDS: "Placeholder DSA"
-      }
-    }
-  ],
-  portfolio: [
-    { id: "port_1", title: "Sample Portfolio Project", completed: false, localPath: "owner/repo" }
-  ],
-  materials: [
-    { id: "m1", title: "Sample Reference Material / Book", category: "Math", type: "Book", status: "Not Started", currentPage: 0, totalPages: 100, currentSubject: "Sample Subject", link: "https://example.com", localPath: "" }
-  ],
-  dailyStudyPoints: {},
-  completedItemsHistory: {},
-  weeklyCompletions: {},
-  studyStreak: []
-};
-
-const migrateLocalPaths = (state: AppState) => {
-  if (!state) return { state, modified: false };
+/**
+ * migrationConfig.ts's repo maps (m1, p1, ...) were only ever meaningful for
+ * the one track created by the pre-multi-track app, so this must never run
+ * against any other track — a new track's own material could reuse the id
+ * "m1" and must not be silently rewritten.
+ */
+const migrateLocalPaths = (track: TrackState): { track: TrackState; modified: boolean } => {
+  if (track.meta.id !== LEGACY_TRACK_ID) return { track, modified: false };
   let modified = false;
 
   const migrateEntry = <T extends { id: string; localPath?: string; repoUrl?: string }>(
@@ -119,141 +31,185 @@ const migrateLocalPaths = (state: AppState) => {
     return updated;
   };
 
-  if (state.portfolio) {
-    state.portfolio = state.portfolio.map((proj: PortfolioProject) => migrateEntry(proj, PORTFOLIO_REPO_MAP));
+  const next: TrackState = { ...track };
+  if (next.portfolio) {
+    next.portfolio = next.portfolio.map((proj: PortfolioProject) => migrateEntry(proj, PORTFOLIO_REPO_MAP));
+  }
+  if (next.materials) {
+    next.materials = next.materials.map((mat: Material) => migrateEntry(mat, MATERIAL_REPO_MAP));
   }
 
-  if (state.materials) {
-    state.materials = state.materials.map((mat: Material) => migrateEntry(mat, MATERIAL_REPO_MAP));
-  }
-
-  return { state, modified };
+  return { track: next, modified };
 };
 
-export const fetchAppState = async (): Promise<AppState> => {
+/** Per-track edit-counter/config-version bookkeeping — the same algorithm the
+ *  app has always used, just scoped to one track's slice instead of the
+ *  whole saved record. Drives lib/merge.ts's day-level and structural merge. */
+const applyTrackBookkeeping = (
+  oldTrack: TrackState | undefined,
+  newTrack: TrackState,
+  isReset: boolean
+): { track: TrackState; changed: boolean } => {
+  const oldData: Partial<TrackState> = oldTrack || {};
+  const lastUpdatedDates: Record<string, number> = { ...(newTrack.lastUpdatedDates || {}) };
+
+  const oldComps = oldData.weeklyCompletions || {};
+  const newComps = newTrack.weeklyCompletions || {};
+  const allDates = Array.from(new Set([...Object.keys(oldComps), ...Object.keys(newComps)]));
+
+  let hasChanges = false;
+  allDates.forEach((date) => {
+    const oldVal = oldComps[date] || { tasks: [], revisions: [] };
+    const newVal = newComps[date] || { tasks: [], revisions: [] };
+    const tasksChanged = JSON.stringify(oldVal.tasks) !== JSON.stringify(newVal.tasks);
+    const revsChanged = JSON.stringify(oldVal.revisions) !== JSON.stringify(newVal.revisions);
+    if (tasksChanged || revsChanged) {
+      lastUpdatedDates[date] = (oldData.lastUpdatedDates?.[date] || 0) + 1;
+      hasChanges = true;
+    }
+  });
+
+  const oldHist = oldData.completedItemsHistory || {};
+  const newHist = newTrack.completedItemsHistory || {};
+  const allHistDates = Array.from(new Set([...Object.keys(oldHist), ...Object.keys(newHist)]));
+  allHistDates.forEach((date) => {
+    const oldItems = oldHist[date] || [];
+    const newItems = newHist[date] || [];
+    if (JSON.stringify(oldItems) !== JSON.stringify(newItems)) {
+      lastUpdatedDates[date] = (oldData.lastUpdatedDates?.[date] || 0) + 1;
+      hasChanges = true;
+    }
+  });
+
+  const track: TrackState = { ...newTrack, lastUpdatedDates };
+
+  if (isReset) {
+    // System-initiated daily reset: don't bump configVersion, so this save
+    // doesn't accidentally win version conflicts against other devices.
+    track.configVersion = oldData.configVersion || 0;
+    return { track, changed: hasChanges };
+  }
+
+  // Targeted comparison of user-editable config fields only. Sorted JSON so
+  // array order differences don't create false positives.
+  const sortedJSON = (v: unknown) => JSON.stringify(v, Object.keys(v || {}).sort());
+  const CONFIG_COMPARE_FIELDS = [
+    "materials",
+    "portfolio",
+    "currentPhase",
+    "startDate",
+    "currentPhaseStartDate",
+    "dsaStartWeek",
+    "weekSchedule",
+  ] as const;
+
+  let configChanged = false;
+  for (const field of CONFIG_COMPARE_FIELDS) {
+    if (sortedJSON(oldData[field]) !== sortedJSON(newTrack[field])) {
+      configChanged = true;
+      break;
+    }
+  }
+
+  track.configVersion = configChanged ? (oldData.configVersion || 0) + 1 : (oldData.configVersion || 0);
+
+  return { track, changed: configChanged || hasChanges };
+};
+
+/** Fresh install: an empty workspace, which app/page.tsx treats as "redirect to onboarding". */
+const buildEmptyWorkspace = (): Workspace => ({ activeTrackId: "", tracks: {} });
+
+export const fetchWorkspace = async (): Promise<Workspace> => {
   try {
-    // 1. Try to load from IndexedDB
-    const record = await db.appState.get("current");
+    const record = await db.workspace.get("current");
     if (record) {
-      const { state, modified } = migrateLocalPaths(record.data);
+      let modified = false;
+      const tracks: Record<TrackId, TrackState> = {};
+      Object.entries(record.data.tracks).forEach(([id, t]) => {
+        const { track, modified: trackModified } = migrateLocalPaths(t);
+        tracks[id] = track;
+        if (trackModified) modified = true;
+      });
+      const data: Workspace = { ...record.data, tracks };
       if (modified) {
-        await db.appState.put({ id: "current", data: state });
+        await db.workspace.put({ id: "current", data });
       }
-      return state;
+      return data;
     }
 
-    // 2. If empty, save the default mock sketch template to IndexedDB
-    console.log("IndexedDB is empty, initializing default sketch template...");
-    const { state: migratedDefault } = migrateLocalPaths({ ...DEFAULT_SKETCH_STATE });
-    await db.appState.put({ id: "current", data: migratedDefault });
-    return migratedDefault;
+    const empty = buildEmptyWorkspace();
+    await db.workspace.put({ id: "current", data: empty });
+    return empty;
   } catch (error) {
-    console.error("fetchAppState local error:", error);
+    console.error("fetchWorkspace local error:", error);
     throw error;
   }
 };
 
-export const updateAppState = async (newState: AppState) => {
+export const updateWorkspace = async (newWorkspace: Workspace): Promise<{ success: true }> => {
   try {
-    const record = await db.appState.get("current");
-    const oldData: Partial<AppState> = record?.data || {};
-    
-    const lastUpdatedDates: Record<string, number> = { ...(newState.lastUpdatedDates || {}) };
-    
-    // Compare weeklyCompletions to see if any date changed
-    const oldComps = oldData.weeklyCompletions || {};
-    const newComps = newState.weeklyCompletions || {};
-    const allDates = Array.from(new Set([
-      ...Object.keys(oldComps),
-      ...Object.keys(newComps)
-    ]));
-    
-    let hasChanges = false;
-    allDates.forEach((date) => {
-      const oldVal = oldComps[date] || { tasks: [], revisions: [] };
-      const newVal = newComps[date] || { tasks: [], revisions: [] };
-      
-      const tasksChanged = JSON.stringify(oldVal.tasks) !== JSON.stringify(newVal.tasks);
-      const revsChanged = JSON.stringify(oldVal.revisions) !== JSON.stringify(newVal.revisions);
-      
-      if (tasksChanged || revsChanged) {
-        lastUpdatedDates[date] = (oldData.lastUpdatedDates?.[date] || 0) + 1;
-        hasChanges = true;
-      }
-    });
-    
-    // Compare completedItemsHistory
-    const oldHist = oldData.completedItemsHistory || {};
-    const newHist = newState.completedItemsHistory || {};
-    const allHistDates = Array.from(new Set([
-      ...Object.keys(oldHist),
-      ...Object.keys(newHist)
-    ]));
-    
-    allHistDates.forEach((date) => {
-      const oldItems = oldHist[date] || [];
-      const newItems = newHist[date] || [];
-      
-      if (JSON.stringify(oldItems) !== JSON.stringify(newItems)) {
-        lastUpdatedDates[date] = (oldData.lastUpdatedDates?.[date] || 0) + 1;
-        hasChanges = true;
-      }
-    });
-    
-    newState.lastUpdatedDates = lastUpdatedDates;
+    const record = await db.workspace.get("current");
+    const oldWorkspace = record?.data;
+    const isReset = !!newWorkspace.isReset;
 
-    // If this is a system-initiated daily reset, do NOT change configVersion
-    // so we don't accidentally win version conflicts against other devices
-    const isReset = !!newState.isReset;
+    let anyChanged = false;
+    const tracks: Record<TrackId, TrackState> = {};
+    Object.entries(newWorkspace.tracks).forEach(([id, track]) => {
+      const { track: bookkept, changed } = applyTrackBookkeeping(oldWorkspace?.tracks?.[id], track, isReset);
+      tracks[id] = bookkept;
+      if (changed) anyChanged = true;
+    });
+
+    const finalWorkspace: Workspace = { ...newWorkspace, tracks };
+    delete finalWorkspace.isReset;
+
     if (isReset) {
-      delete newState.isReset;
-      newState.configVersion = oldData.configVersion || 0;
-      if (newState.hasUnsyncedChanges === undefined) {
-        newState.hasUnsyncedChanges = oldData.hasUnsyncedChanges ?? false;
-      }
-    } else {
-      // Targeted comparison of user-editable config fields only
-      // Use sorted JSON so array order differences don't create false positives
-      const sortedJSON = (v: unknown) => JSON.stringify(v, Object.keys(v || {}).sort());
-      const CONFIG_COMPARE_FIELDS = [
-        "materials",
-        "portfolio",
-        "currentPhase",
-        "startDate",
-        "currentPhaseStartDate",
-        "dsaStartWeek",
-        "weekSchedule",
-      ] as const;
-
-      let configChanged = false;
-      for (const field of CONFIG_COMPARE_FIELDS) {
-        const oldVal = oldData[field];
-        const newVal = newState[field];
-        if (sortedJSON(oldVal) !== sortedJSON(newVal)) {
-          configChanged = true;
-          break;
-        }
-      }
-
-      if (configChanged || hasChanges) {
-        newState.hasUnsyncedChanges = true;
-      } else if (newState.hasUnsyncedChanges === undefined) {
-        newState.hasUnsyncedChanges = oldData.hasUnsyncedChanges ?? false;
-      }
-
-      if (configChanged) {
-        newState.configVersion = (oldData.configVersion || 0) + 1;
-      } else {
-        newState.configVersion = oldData.configVersion || 0;
-      }
+      finalWorkspace.hasUnsyncedChanges = newWorkspace.hasUnsyncedChanges ?? oldWorkspace?.hasUnsyncedChanges ?? false;
+    } else if (anyChanged) {
+      finalWorkspace.hasUnsyncedChanges = true;
+    } else if (finalWorkspace.hasUnsyncedChanges === undefined) {
+      finalWorkspace.hasUnsyncedChanges = oldWorkspace?.hasUnsyncedChanges ?? false;
     }
 
-    await db.appState.put({ id: "current", data: newState });
+    await db.workspace.put({ id: "current", data: finalWorkspace });
     return { success: true };
   } catch (error) {
-    console.error("updateAppState local error:", error);
+    console.error("updateWorkspace local error:", error);
     throw error;
   }
+};
+
+export const fetchTrackState = async (trackId: TrackId): Promise<TrackState | null> => {
+  const ws = await fetchWorkspace();
+  return ws.tracks[trackId] ?? null;
+};
+
+export const setActiveTrack = async (trackId: TrackId): Promise<void> => {
+  const ws = await fetchWorkspace();
+  if (!ws.tracks[trackId]) return;
+  await db.workspace.put({ id: "current", data: { ...ws, activeTrackId: trackId } });
+};
+
+export const createTrack = async (track: TrackState): Promise<void> => {
+  const ws = await fetchWorkspace();
+  const nextWorkspace: Workspace = {
+    ...ws,
+    tracks: { ...ws.tracks, [track.meta.id]: track },
+    activeTrackId: track.meta.id,
+  };
+  await db.workspace.put({ id: "current", data: nextWorkspace });
+};
+
+export const deleteTrack = async (trackId: TrackId): Promise<void> => {
+  const ws = await fetchWorkspace();
+  const remainingIds = Object.keys(ws.tracks).filter((id) => id !== trackId);
+  if (remainingIds.length === 0) {
+    throw new Error("Cannot delete the last remaining track.");
+  }
+  const tracks = { ...ws.tracks };
+  delete tracks[trackId];
+  const activeTrackId = ws.activeTrackId === trackId ? remainingIds[0] : ws.activeTrackId;
+  await db.workspace.put({ id: "current", data: { ...ws, tracks, activeTrackId } });
 };
 
 export const openLinkOnSystem = async (link: string) => {

@@ -1,7 +1,19 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import { fetchAppState, updateAppState, openLinkOnSystem } from "@/lib/api";
+import { useRouter } from "next/navigation";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragOverEvent,
+} from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy, arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { fetchWorkspace, updateWorkspace, openLinkOnSystem } from "@/lib/api";
 import {
   isGoogleAuthenticated,
   getGoogleClientId,
@@ -11,7 +23,7 @@ import {
   clearGoogleAccessToken,
   loadGoogleGisScript
 } from "@/lib/googleDrive";
-import type { AppState, Material, Phase, WeekDay } from "@/lib/types";
+import type { Material, PanelColumns, Phase, TrackState, WeekDay, Workspace } from "@/lib/types";
 import { todayYMD, daysSince } from "@/lib/dates";
 import { applyDailyResetIfNeeded } from "@/lib/dailyReset";
 import { addCompletion, removeCompletion } from "@/lib/streak";
@@ -26,21 +38,51 @@ import DashboardHeader, { type SyncStatus } from "@/components/DashboardHeader";
 import DriveConnectModal, { type DriveModalMode } from "@/components/DriveConnectModal";
 import WeeklyPlan from "@/components/WeeklyPlan";
 import RotationModal from "@/components/RotationModal";
+import SortablePanel from "@/components/SortablePanel";
+
+type PanelColumnId = "left" | "right";
+
+const DEFAULT_PANEL_COLUMNS: PanelColumns = {
+  left: ["weeklyPlan", "phaseTracker", "streakGraph", "pomodoroTimer"],
+  right: ["portfolioTracker", "materialsTracker"],
+};
+
+const findPanelColumn = (columns: PanelColumns, id: string): PanelColumnId | null => {
+  if (columns.left.includes(id)) return "left";
+  if (columns.right.includes(id)) return "right";
+  if (id === "left" || id === "right") return id;
+  return null;
+};
 
 export default function Home() {
-  const [data, setData] = useState<AppState | null>(null);
+  const router = useRouter();
+  const [workspace, setWorkspace] = useState<Workspace | null>(null);
+  const workspaceRef = useRef<Workspace | null>(null);
   const [loading, setLoading] = useState(true);
   const [initError, setInitError] = useState("");
   const [todayStr, setTodayStr] = useState("");
   const dailySaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const saveDailyChanges = (newData: AppState) => {
+  useEffect(() => {
+    workspaceRef.current = workspace;
+  }, [workspace]);
+
+  const data: TrackState | null = workspace ? workspace.tracks[workspace.activeTrackId] || null : null;
+
+  const withTrack = (ws: Workspace, trackData: TrackState): Workspace => ({
+    ...ws,
+    tracks: { ...ws.tracks, [ws.activeTrackId]: trackData },
+  });
+
+  const saveDailyChanges = (newTrackData: TrackState) => {
     if (dailySaveTimeoutRef.current) {
       clearTimeout(dailySaveTimeoutRef.current);
     }
     dailySaveTimeoutRef.current = setTimeout(async () => {
       try {
-        await updateAppState(newData);
+        const ws = workspaceRef.current;
+        if (!ws) return;
+        await updateWorkspace(withTrack(ws, newTrackData));
       } catch (err) {
         console.error("Failed to auto-save daily changes", err);
       }
@@ -48,9 +90,23 @@ export default function Home() {
   };
 
   /** Optimistic UI update + debounced persistence, used by the weekly plan and modals. */
-  const applyChange = (newData: AppState) => {
-    setData(newData);
-    saveDailyChanges(newData);
+  const applyChange = (newTrackData: TrackState) => {
+    if (!workspace) return;
+    setWorkspace(withTrack(workspace, newTrackData));
+    saveDailyChanges(newTrackData);
+  };
+
+  /** Optimistic-only UI update (no save), for ScheduleDayModal's setData prop. */
+  const setTrackData = (newTrackData: TrackState) => {
+    if (!workspace) return;
+    setWorkspace(withTrack(workspace, newTrackData));
+  };
+
+  /** Immediate (non-debounced) persistence, for ScheduleDayModal's blur-save. */
+  const updateTrackState = async (newTrackData: TrackState) => {
+    const ws = workspaceRef.current;
+    if (!ws) return;
+    return updateWorkspace(withTrack(ws, newTrackData));
   };
 
   const [dayOfWeek, setDayOfWeek] = useState(0);
@@ -71,6 +127,82 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
+  // No tracks yet: send the user through the onboarding wizard instead of
+  // rendering an empty/placeholder dashboard.
+  useEffect(() => {
+    if (workspace && Object.keys(workspace.tracks).length === 0) {
+      router.replace("/onboarding");
+    }
+  }, [workspace, router]);
+
+  // Local, draggable copy of the panel order. It mirrors workspace.panelColumns
+  // (a dashboard-layout preference shared across tracks) but must also hold
+  // ahead-of-persistence state during an active drag gesture, so it's synced
+  // from the loaded workspace during render rather than via an effect.
+  const [panelColumns, setPanelColumns] = useState<PanelColumns>(DEFAULT_PANEL_COLUMNS);
+  const [lastSyncedPanelColumns, setLastSyncedPanelColumns] = useState<PanelColumns | undefined>(undefined);
+  if (workspace?.panelColumns && workspace.panelColumns !== lastSyncedPanelColumns) {
+    setLastSyncedPanelColumns(workspace.panelColumns);
+    setPanelColumns(workspace.panelColumns);
+  }
+
+  const panelSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const persistPanelColumns = async (next: PanelColumns) => {
+    const ws = workspaceRef.current;
+    if (!ws) return;
+    const newWorkspace = { ...ws, panelColumns: next };
+    setWorkspace(newWorkspace);
+    try {
+      await updateWorkspace({ ...newWorkspace, isReset: true });
+    } catch (err) {
+      console.error("Failed to save panel order", err);
+    }
+  };
+
+  const handlePanelDragOver = (e: DragOverEvent) => {
+    const { active, over } = e;
+    if (!over) return;
+    const activeCol = findPanelColumn(panelColumns, String(active.id));
+    const overCol = findPanelColumn(panelColumns, String(over.id));
+    if (!activeCol || !overCol || activeCol === overCol) return;
+
+    setPanelColumns((prev) => {
+      const activeItems = [...prev[activeCol]];
+      const overItems = [...prev[overCol]];
+      const activeIndex = activeItems.indexOf(String(active.id));
+      if (activeIndex === -1) return prev;
+      let overIndex = overItems.indexOf(String(over.id));
+      if (overIndex === -1) overIndex = overItems.length;
+      activeItems.splice(activeIndex, 1);
+      overItems.splice(overIndex, 0, String(active.id));
+      return { ...prev, [activeCol]: activeItems, [overCol]: overItems };
+    });
+  };
+
+  const handlePanelDragEnd = (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over) return;
+    const activeCol = findPanelColumn(panelColumns, String(active.id));
+    const overCol = findPanelColumn(panelColumns, String(over.id));
+    if (!activeCol) return;
+
+    if (activeCol === overCol && active.id !== over.id) {
+      const items = panelColumns[activeCol];
+      const oldIndex = items.indexOf(String(active.id));
+      const newIndex = items.indexOf(String(over.id));
+      const next = { ...panelColumns, [activeCol]: arrayMove(items, oldIndex, newIndex) };
+      setPanelColumns(next);
+      persistPanelColumns(next);
+    } else {
+      // Cross-column move was already applied live by handlePanelDragOver — persist as-is.
+      persistPanelColumns(panelColumns);
+    }
+  };
+
   const runSync = async (clientId: string) => {
     setSyncStatus("syncing");
     setSyncError("");
@@ -89,8 +221,8 @@ export default function Home() {
         setSyncStatus("success");
         setTimeout(() => setSyncStatus("idle"), 3000);
         // Refresh local UI state and assert isSynced flag is true
-        const loadedData = await fetchAppState();
-        setData(loadedData);
+        const loadedWorkspace = await fetchWorkspace();
+        setWorkspace(loadedWorkspace);
       } else {
         throw new Error(res.error || "Unknown sync error");
       }
@@ -130,6 +262,16 @@ export default function Home() {
     setDriveModalMode(null);
   };
 
+  const handleSwitchTrack = async (trackId: string) => {
+    if (!workspace || !workspace.tracks[trackId]) return;
+    setWorkspace({ ...workspace, activeTrackId: trackId });
+    try {
+      await updateWorkspace({ ...workspace, activeTrackId: trackId, isReset: true });
+    } catch (err) {
+      console.error("Failed to persist active track switch", err);
+    }
+  };
+
   useEffect(() => {
     // Client-only initialization and service worker registration for PWA
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
@@ -144,15 +286,23 @@ export default function Home() {
 
     const currentTodayStr = todayYMD();
 
-    fetchAppState()
-      .then(async (loadedData) => {
+    fetchWorkspace()
+      .then(async (loadedWorkspace) => {
         setTodayStr(currentTodayStr);
         setDayOfWeek(new Date().getDay());
-        const { data: finalData, changed } = applyDailyResetIfNeeded(loadedData, currentTodayStr);
-        setData(finalData);
+
+        if (Object.keys(loadedWorkspace.tracks).length === 0) {
+          setWorkspace(loadedWorkspace);
+          return;
+        }
+
+        const activeTrack = loadedWorkspace.tracks[loadedWorkspace.activeTrackId];
+        const { data: resetTrackData, changed } = applyDailyResetIfNeeded(activeTrack, currentTodayStr);
+        const finalWorkspace = withTrack(loadedWorkspace, resetTrackData);
+        setWorkspace(finalWorkspace);
         if (changed) {
           try {
-            await updateAppState({ ...finalData, isReset: true });
+            await updateWorkspace({ ...finalWorkspace, isReset: true });
           } catch (err) {
             console.error("Failed to auto-reset daily tasks on date change:", err);
           }
@@ -165,10 +315,12 @@ export default function Home() {
       .finally(() => setLoading(false));
   }, []);
 
-  const persist = async (newData: AppState, context: string) => {
-    setData(newData);
+  const persist = async (newTrackData: TrackState, context: string) => {
+    if (!workspace) return;
+    const newWorkspace = withTrack(workspace, newTrackData);
+    setWorkspace(newWorkspace);
     try {
-      await updateAppState(newData);
+      await updateWorkspace(newWorkspace);
     } catch (err) {
       console.error(`Failed to sync ${context}`, err);
     }
@@ -209,7 +361,10 @@ export default function Home() {
   const handleAddMaterial = async (newMaterial: Omit<Material, "id">) => {
     if (!data) return;
 
-    const materialWithId = { id: `m_${Date.now()}`, ...newMaterial };
+    // Prefix with the track id so material ids stay globally unique across
+    // tracks — notes sync matches files by note_<materialId>.md in one
+    // shared Drive appDataFolder.
+    const materialWithId = { id: `m_${data.meta.id}_${Date.now()}`, ...newMaterial };
     await persist({ ...data, materials: [...(data.materials || []), materialWithId] }, "material add");
   };
 
@@ -265,7 +420,16 @@ export default function Home() {
     );
   }
 
-  if (initError || !data) {
+  if (workspace && Object.keys(workspace.tracks).length === 0) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center gap-4 bg-background text-foreground">
+        <span className="animate-spin text-[2rem]">↻</span>
+        <p>Setting up your workspace...</p>
+      </div>
+    );
+  }
+
+  if (initError || !data || !workspace) {
     return (
       <div className="flex h-screen flex-col items-center justify-center p-8 bg-background text-foreground font-mono text-center">
         <h2 className="text-warning mb-4 uppercase tracking-[0.05em] text-2xl font-bold">Initialization Failed</h2>
@@ -281,67 +445,98 @@ export default function Home() {
   }
 
   const daysPassed = data.startDate && data.isSynced ? daysSince(data.startDate) : 0;
-  const recommendedPhase = daysPassed <= 90 ? 1 : daysPassed <= 210 ? 2 : daysPassed <= 300 ? 3 : 4;
+  const phasesWithThresholds = data.phases.filter((p) => p.recommendedByDay !== undefined);
+  const recommendedPhase = phasesWithThresholds.length > 0
+    ? (phasesWithThresholds.find((p) => daysPassed <= (p.recommendedByDay as number))?.id
+        ?? phasesWithThresholds[phasesWithThresholds.length - 1].id)
+    : data.currentPhase;
+
+  const PANELS: Record<string, React.ReactNode> = {
+    weeklyPlan: (
+      <WeeklyPlan
+        data={data}
+        todayStr={todayStr}
+        dayOfWeek={dayOfWeek}
+        weekOffset={weekOffset}
+        setWeekOffset={setWeekOffset}
+        onDayClick={setSelectedScheduleDay}
+        onRotationClick={() => setShowRotationModal(true)}
+        applyChange={applyChange}
+      />
+    ),
+    phaseTracker: <PhaseTracker phases={data.phases} currentPhase={data.currentPhase} onPhaseClick={setSelectedPhase} />,
+    streakGraph: (
+      <StreakGraph
+        streakHistory={data.streakHistory}
+        completedItemsHistory={data.completedItemsHistory || {}}
+        startDate={data.startDate}
+      />
+    ),
+    pomodoroTimer: <PomodoroTimer />,
+    portfolioTracker: <PortfolioTracker portfolio={data.portfolio} onToggle={handlePortfolioToggle} />,
+    materialsTracker: (
+      <MaterialsTracker
+        materials={data.materials || []}
+        onStatusChange={handleMaterialChange}
+        onProgressChange={handleMaterialProgressChange}
+        onAddMaterial={handleAddMaterial}
+        onDeleteMaterial={handleDeleteMaterial}
+        onOpenLink={handleOpenLink}
+      />
+    ),
+  };
 
   return (
     <main className="container">
-      <div className="flex flex-col gap-8">
-        <DashboardHeader
-          data={data}
-          syncStatus={syncStatus}
-          syncError={syncError}
-          onSync={handleSyncWorkspace}
-        />
+      <DndContext
+        sensors={panelSensors}
+        collisionDetection={closestCenter}
+        onDragOver={handlePanelDragOver}
+        onDragEnd={handlePanelDragEnd}
+      >
+        <div className="col-span-full flex flex-col gap-3">
+          <DashboardHeader
+            data={data}
+            workspace={workspace}
+            syncStatus={syncStatus}
+            syncError={syncError}
+            onSync={handleSyncWorkspace}
+            onSwitchTrack={handleSwitchTrack}
+            onNewTrack={() => router.push("/onboarding?mode=add")}
+          />
 
-        {/* Phase recommendation alert */}
-        {data.currentPhase !== recommendedPhase && (
-          <div className="glass-panel border-l-4 !border-l-warning flex justify-between items-center px-6 py-4">
-            <span className="text-[0.9rem] text-gray-100">
-              Schedule suggestion: Time to transition to Phase {recommendedPhase} (Day {daysPassed})
-            </span>
-            <button
-              onClick={() => handlePhaseChange(recommendedPhase)}
-              className="btn px-3 py-1 text-[0.85rem] !bg-amber-600"
-            >
-              Switch Now
-            </button>
+          {/* Phase recommendation alert */}
+          {data.currentPhase !== recommendedPhase && (
+            <div className="glass-panel border-l-4 !border-l-warning flex justify-between items-center px-6 py-4">
+              <span className="text-[0.9rem] text-gray-100">
+                Schedule suggestion: Time to transition to Phase {recommendedPhase} (Day {daysPassed})
+              </span>
+              <button
+                onClick={() => handlePhaseChange(recommendedPhase)}
+                className="btn px-3 py-1 text-[0.85rem] !bg-amber-600"
+              >
+                Switch Now
+              </button>
+            </div>
+          )}
+        </div>
+
+        <SortableContext items={panelColumns.left} strategy={verticalListSortingStrategy}>
+          <div className="flex flex-col gap-8">
+            {panelColumns.left.map((id) => (
+              <SortablePanel key={id} id={id}>{PANELS[id]}</SortablePanel>
+            ))}
           </div>
-        )}
+        </SortableContext>
 
-        <WeeklyPlan
-          data={data}
-          todayStr={todayStr}
-          dayOfWeek={dayOfWeek}
-          weekOffset={weekOffset}
-          setWeekOffset={setWeekOffset}
-          onDayClick={setSelectedScheduleDay}
-          onRotationClick={() => setShowRotationModal(true)}
-          applyChange={applyChange}
-        />
-
-        <PhaseTracker phases={data.phases} currentPhase={data.currentPhase} onPhaseClick={setSelectedPhase} />
-
-        <StreakGraph
-          streakHistory={data.streakHistory}
-          completedItemsHistory={data.completedItemsHistory || {}}
-          startDate={data.startDate}
-        />
-
-        <PomodoroTimer />
-      </div>
-
-      <div className="flex flex-col gap-8">
-        <PortfolioTracker portfolio={data.portfolio} onToggle={handlePortfolioToggle} />
-
-        <MaterialsTracker
-          materials={data.materials || []}
-          onStatusChange={handleMaterialChange}
-          onProgressChange={handleMaterialProgressChange}
-          onAddMaterial={handleAddMaterial}
-          onDeleteMaterial={handleDeleteMaterial}
-          onOpenLink={handleOpenLink}
-        />
-      </div>
+        <SortableContext items={panelColumns.right} strategy={verticalListSortingStrategy}>
+          <div className="flex flex-col gap-8">
+            {panelColumns.right.map((id) => (
+              <SortablePanel key={id} id={id}>{PANELS[id]}</SortablePanel>
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
 
       {selectedPhase && (
         <PhaseDetailModal
@@ -355,10 +550,10 @@ export default function Home() {
         <ScheduleDayModal
           day={selectedScheduleDay}
           data={data}
-          setData={setData}
+          setData={setTrackData}
           saveDailyChanges={saveDailyChanges}
           onClose={() => setSelectedScheduleDay(null)}
-          updateAppState={updateAppState}
+          updateTrackState={updateTrackState}
           weekOffset={weekOffset}
         />
       )}

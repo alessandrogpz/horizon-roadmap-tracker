@@ -29,6 +29,10 @@ export interface Phase {
   description: string;
   tasks: TaskItem[];
   detailedInfo: PhaseDetailedInfo;
+  /** Optional: cumulative day-count-from-track-start by which this phase is recommended.
+   *  Drives the "time to switch phase" banner; tracks/templates that don't set this
+   *  on any phase simply never show that banner. */
+  recommendedByDay?: number;
 }
 
 export interface Material {
@@ -123,4 +127,69 @@ export interface SyncResult {
   error?: string;
   /** Token missing/expired — caller should re-authenticate and retry. */
   authRequired?: boolean;
+}
+
+// --- Multi-track workspace model ---------------------------------------
+// A Workspace holds many independent Tracks (roadmaps) side by side, e.g.
+// a programming track and a fitness track. Each Track owns its own phases,
+// schedule, materials, portfolio, and streak data — everything that used
+// to live directly on AppState. Templates only ever seed a Track's initial
+// data; nothing in the app gates editability on where a track came from.
+
+export type TrackId = string;
+
+export interface TrackMeta {
+  id: TrackId;
+  name: string;
+  color: string;
+  /** Provenance only (e.g. "Seeded from: Fitness Template") — never gates editability. */
+  templateId: string;
+  createdAt: number;
+  /** Tombstone for future cross-device deletion support; a track missing on one
+   *  side of a merge is never treated as deleted unless explicitly archived. */
+  archived?: boolean;
+}
+
+/** Generalizes the DSA/math rotation into an optional, template-owned feature. */
+export interface RotationConfig {
+  weeks: { pattern: string; problems: string }[];
+  startWeek: number;
+  /** Which weekSchedule day `type` this rotation populates (e.g. "math"). */
+  appliesToScheduleType: string;
+}
+
+/**
+ * Everything today's AppState holds, plus track identity. `isSynced` stays
+ * per-track (mirrored from Workspace.isSynced) so existing per-track UI
+ * checks — WeeklyPlan's date/label placeholders, the phase-recommendation
+ * gate in app/page.tsx — keep working unchanged. `hasUnsyncedChanges` and
+ * `lastSyncTime` are genuinely workspace-only bookkeeping (one Drive round
+ * trip covers every track), so DashboardHeader reads those off Workspace
+ * instead of the active track.
+ */
+export interface TrackState extends Omit<AppState, "hasUnsyncedChanges" | "lastSyncTime" | "isReset"> {
+  meta: TrackMeta;
+  rotationConfig?: RotationConfig;
+}
+
+/** Dashboard panel keys, grouped by column. The two columns can hold a
+ *  different number of panels (they're independently-sized flex columns,
+ *  not a fixed grid), so drag-and-drop uses dnd-kit's multi-container
+ *  pattern rather than a single flat order. Shared across all tracks. */
+export interface PanelColumns {
+  left: string[];
+  right: string[];
+}
+
+export interface Workspace {
+  activeTrackId: TrackId;
+  tracks: Record<TrackId, TrackState>;
+  panelColumns?: PanelColumns;
+
+  // Sync bookkeeping — one Drive round trip covers the whole workspace.
+  isSynced?: boolean;
+  hasUnsyncedChanges?: boolean;
+  lastSyncTime?: number;
+  /** Transient flag set by the daily reset so the save path skips version bumps. */
+  isReset?: boolean;
 }

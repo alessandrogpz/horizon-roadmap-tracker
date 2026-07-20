@@ -1,13 +1,13 @@
 "use client";
 
 import React from "react";
-import type { AppState, WeekDay } from "@/lib/types";
+import type { TrackState, WeekDay } from "@/lib/types";
 import { getDateForDayName, getWeekNum } from "@/lib/dates";
 import { rebuildStreakHistory, completedItemTitle } from "@/lib/streak";
-import { DEFAULT_WEEK_SCHEDULE, DEFAULT_FOCUS_TYPES, DSA_PATTERN_WEEKS, dsaPatternIndex } from "@/lib/constants";
+import { DEFAULT_WEEK_SCHEDULE, DEFAULT_FOCUS_TYPES } from "@/lib/constants";
 
 interface WeeklyPlanProps {
-  data: AppState;
+  data: TrackState;
   todayStr: string;
   dayOfWeek: number;
   weekOffset: number;
@@ -15,7 +15,7 @@ interface WeeklyPlanProps {
   onDayClick: (day: WeekDay) => void;
   onRotationClick: () => void;
   /** Applies an optimistic state update and schedules a debounced save. */
-  applyChange: (newData: AppState) => void;
+  applyChange: (newData: TrackState) => void;
 }
 
 export default function WeeklyPlan({
@@ -35,16 +35,20 @@ export default function WeeklyPlan({
     return `Week ${getWeekNum(data.startDate, targetDate)}`;
   })();
 
+  const rotation = data.rotationConfig;
   const weeklyAlgorithm = (() => {
+    if (!rotation) return "";
     if (!data.isSynced) return "Algorithm (Placeholder)";
     const targetDate = new Date();
     targetDate.setDate(targetDate.getDate() + weekOffset * 7);
     const wn = getWeekNum(data.startDate, targetDate);
-    return DSA_PATTERN_WEEKS[dsaPatternIndex(wn, data.dsaStartWeek || 1)].pattern;
+    const len = rotation.weeks.length;
+    const idx = len > 0 ? (((wn - (rotation.startWeek || 1)) % len) + len) % len : 0;
+    return rotation.weeks[idx]?.pattern || "";
   })();
 
   return (
-    <div className="glass-panel border-l-4 !border-l-accent px-6 py-5">
+    <div className="glass-panel border-l-4 border-accent-muted px-6 py-5">
       <div className="flex flex-col gap-3">
         {/* Header */}
         <div className="flex flex-col gap-3 pb-3 border-b border-white/5">
@@ -78,23 +82,25 @@ export default function WeeklyPlan({
             </div>
           </div>
 
-          {/* Bottom Row: Algorithm Focus */}
-          <div>
-            <div
-              onClick={() => { if (data.isSynced) onRotationClick(); }}
-              className={`inline-flex items-center gap-2 bg-accent/[0.08] border border-dashed border-accent/30 px-3 py-1.5 rounded-md transition-all duration-200 whitespace-nowrap ${
-                data.isSynced ? "cursor-pointer hover:bg-accent/15 hover:border-accent/50" : "cursor-default"
-              }`}
-              title={data.isSynced ? "View full 10-week Algorithm plan" : "Connect Google Drive to unlock"}
-            >
-              <span className="text-[0.7rem] text-zinc-400 uppercase tracking-[0.05em] font-semibold">
-                Weekly Algorithm:
-              </span>
-              <span className="text-[0.85rem] text-accent font-bold font-mono">
-                {weeklyAlgorithm}
-              </span>
+          {/* Bottom Row: Algorithm Focus — only for tracks with an opted-in rotation */}
+          {rotation && (
+            <div>
+              <div
+                onClick={() => { if (data.isSynced) onRotationClick(); }}
+                className={`inline-flex items-center gap-2 bg-accent/[0.08] border border-dashed border-accent/30 px-3 py-1.5 rounded-md transition-all duration-200 whitespace-nowrap ${
+                  data.isSynced ? "cursor-pointer hover:bg-accent/15 hover:border-accent/50" : "cursor-default"
+                }`}
+                title={data.isSynced ? "View full rotation plan" : "Connect Google Drive to unlock"}
+              >
+                <span className="text-[0.7rem] text-zinc-400 uppercase tracking-[0.05em] font-semibold">
+                  Weekly Algorithm:
+                </span>
+                <span className="text-[0.85rem] text-accent font-bold font-mono">
+                  {weeklyAlgorithm}
+                </span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* 7-column grid (scrolls horizontally on small screens) */}
@@ -134,12 +140,12 @@ function WeekNavButton({ label, onClick }: { label: string; onClick: () => void 
 interface DayCardProps {
   dayItem: WeekDay;
   idx: number;
-  data: AppState;
+  data: TrackState;
   todayStr: string;
   dayOfWeek: number;
   weekOffset: number;
   onDayClick: (day: WeekDay) => void;
-  applyChange: (newData: AppState) => void;
+  applyChange: (newData: TrackState) => void;
 }
 
 function DayCard({ dayItem, idx, data, todayStr, dayOfWeek, weekOffset, onDayClick, applyChange }: DayCardProps) {

@@ -128,7 +128,7 @@ export default function StreakGraph({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="glass-panel max-w-[400px] w-full p-6 border !border-accent rounded-lg relative flex flex-col gap-4 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.5),0_10px_10px_-5px_rgba(0,0,0,0.4)]"
+            className="glass-panel max-w-[400px] w-full p-6 border border-accent-muted rounded-lg relative flex flex-col gap-4 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.5),0_10px_10px_-5px_rgba(0,0,0,0.4)]"
           >
             {/* Close Button */}
             <button

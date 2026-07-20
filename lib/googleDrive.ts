@@ -1,6 +1,12 @@
-import { db } from "./localDb";
-import type { AppState, SyncResult } from "./types";
-import { mergeAppState } from "./merge";
+import { db, wrapLegacyAppState } from "./localDb";
+import type { AppState, SyncResult, Workspace } from "./types";
+import { mergeWorkspace } from "./merge";
+
+/** True for a database.json written by a pre-multi-track version of the app
+ *  (a flat AppState with no `tracks` key). */
+function isLegacyDriveShape(json: unknown): json is AppState {
+  return !!json && typeof json === "object" && !("tracks" in json) && "dailyTasks" in json;
+}
 
 let CLIENT_ID = "";
 
@@ -142,14 +148,14 @@ export const syncWithGoogleDrive = async (): Promise<SyncResult> => {
   logs.push("Sync started: Connecting to Google Drive...");
 
   try {
-    const localRecord = await db.appState.get("current");
+    const localRecord = await db.workspace.get("current");
     if (!localRecord) {
       return { success: false, log: logs, error: "No local data to sync" };
     }
-    const localData: AppState = localRecord.data;
+    const localData: Workspace = localRecord.data;
 
     let remoteFileId = "";
-    let remoteData: AppState | null = null;
+    let remoteData: Workspace | null = null;
 
     const q = "name='database.json' and trashed=false";
     const searchUrl = `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=${encodeURIComponent(q)}`;
@@ -166,8 +172,16 @@ export const syncWithGoogleDrive = async (): Promise<SyncResult> => {
 
       const contentRes = await driveFetch(token, `https://www.googleapis.com/drive/v3/files/${remoteFileId}?alt=media`);
       if (contentRes.ok) {
-        remoteData = await contentRes.json();
-        logs.push("Fetched remote backup data.");
+        const rawRemote = await contentRes.json();
+        if (isLegacyDriveShape(rawRemote)) {
+          // Old-shape backup (pre-multi-track). Transparently upgrade it in
+          // memory before merging — no manual action, no duplicate tracks.
+          remoteData = wrapLegacyAppState(rawRemote);
+          logs.push("Fetched remote backup data (upgraded from legacy single-track format).");
+        } else {
+          remoteData = rawRemote as Workspace;
+          logs.push("Fetched remote backup data.");
+        }
       }
     } else {
       logs.push("No remote backup found. Creating a new one...");
@@ -177,15 +191,15 @@ export const syncWithGoogleDrive = async (): Promise<SyncResult> => {
       if (!localData.isSynced) {
         logs.push("Local database is unsynced. Overwriting completely with remote backup data.");
         const finalData = { ...remoteData, isSynced: true };
-        await db.appState.put({ id: "current", data: finalData });
+        await db.workspace.put({ id: "current", data: finalData });
         logs.push("Local database initialized with remote backup.");
         localRecord.data = finalData;
       } else {
         logs.push("Merging progress and streaks using day-level timestamps...");
-        const { data: finalData, log: mergeLog } = mergeAppState(localData, remoteData);
+        const { data: finalData, log: mergeLog } = mergeWorkspace(localData, remoteData);
         logs.push(...mergeLog);
 
-        await db.appState.put({ id: "current", data: finalData });
+        await db.workspace.put({ id: "current", data: finalData });
         logs.push("Local database successfully updated with merged state.");
         localRecord.data = finalData;
       }
@@ -193,7 +207,7 @@ export const syncWithGoogleDrive = async (): Promise<SyncResult> => {
       localRecord.data.isSynced = true;
       localRecord.data.hasUnsyncedChanges = false;
       localRecord.data.lastSyncTime = Date.now();
-      await db.appState.put({ id: "current", data: localRecord.data });
+      await db.workspace.put({ id: "current", data: localRecord.data });
     }
 
     const stringifiedData = JSON.stringify(localRecord.data, null, 2);

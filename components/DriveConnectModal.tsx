@@ -30,7 +30,7 @@ export default function DriveConnectModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="glass-panel max-w-[460px] w-full flex flex-col gap-5 p-8 border !border-accent relative rounded-lg"
+        className="glass-panel max-w-[460px] w-full flex flex-col gap-5 p-8 border border-accent-muted relative rounded-lg"
       >
         <button
           onClick={onClose}
