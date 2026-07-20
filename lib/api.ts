@@ -90,9 +90,8 @@ const applyTrackBookkeeping = (
     return { track, changed: hasChanges };
   }
 
-  // Targeted comparison of user-editable config fields only. Sorted JSON so
-  // array order differences don't create false positives.
-  const sortedJSON = (v: unknown) => JSON.stringify(v, Object.keys(v || {}).sort());
+  // Targeted comparison of user-editable config fields only.
+  const stableJSON = (v: unknown) => JSON.stringify(v);
   const CONFIG_COMPARE_FIELDS = [
     "materials",
     "portfolio",
@@ -102,11 +101,12 @@ const applyTrackBookkeeping = (
     "dsaStartWeek",
     "weekSchedule",
     "roadmapContent",
+    "phases",
   ] as const;
 
   let configChanged = false;
   for (const field of CONFIG_COMPARE_FIELDS) {
-    if (sortedJSON(oldData[field]) !== sortedJSON(newTrack[field])) {
+    if (stableJSON(oldData[field]) !== stableJSON(newTrack[field])) {
       configChanged = true;
       break;
     }
