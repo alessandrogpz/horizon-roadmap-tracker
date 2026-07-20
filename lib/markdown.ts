@@ -75,7 +75,10 @@ export function renderMarkdownToHtml(markdown: string, emptyMessage: string = "<
     processedLine = processedLine.replace(/__([^_]+)__/g, "<strong>$1</strong>");
     processedLine = processedLine.replace(/_([^_]+)_/g, "<em>$1</em>");
     processedLine = processedLine.replace(/`([^`]+)`/g, "<code>$1</code>");
-    processedLine = processedLine.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color: var(--accent); text-decoration: underline;">$1</a>');
+    processedLine = processedLine.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, text: string, url: string) => {
+      const safeUrl = isSafeUrl(url) ? url : "#";
+      return `<a href="${safeUrl}" style="color: var(--accent); text-decoration: underline;">${text}</a>`;
+    });
 
     const trimmed = processedLine.trim();
 
@@ -143,5 +146,19 @@ export function renderMarkdownToHtml(markdown: string, emptyMessage: string = "<
 }
 
 function escapeHtml(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// Only these link schemes (plus relative/anchor links) are rendered as real
+// hrefs — blocks javascript:/data: etc. Runs on the already-HTML-escaped
+// text, so this is a second, independent layer on top of quote-escaping
+// (which alone stops attribute breakout, but not a plain javascript: URI).
+const SAFE_URL_SCHEME = /^(https?:|mailto:|tel:|#|\/)/i;
+function isSafeUrl(url: string): boolean {
+  return SAFE_URL_SCHEME.test(url.trim());
 }

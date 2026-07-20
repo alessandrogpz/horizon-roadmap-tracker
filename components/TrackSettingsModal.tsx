@@ -11,14 +11,17 @@ interface TrackSettingsFields {
 
 interface TrackSettingsModalProps extends TrackSettingsFields {
   onSave: (fields: TrackSettingsFields) => void;
+  onDelete: () => void;
+  canDelete: boolean;
   onClose: () => void;
 }
 
-export default function TrackSettingsModal({ name, color, startDate, totalDays, onSave, onClose }: TrackSettingsModalProps) {
+export default function TrackSettingsModal({ name, color, startDate, totalDays, onSave, onDelete, canDelete, onClose }: TrackSettingsModalProps) {
   const [draftName, setDraftName] = useState(name);
   const [draftColor, setDraftColor] = useState(color);
   const [draftStartDate, setDraftStartDate] = useState(startDate);
   const [draftTotalDays, setDraftTotalDays] = useState(totalDays);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const handleSave = () => {
     if (!draftName.trim() || !draftStartDate || draftTotalDays < 1) return;
@@ -96,20 +99,54 @@ export default function TrackSettingsModal({ name, color, startDate, totalDays, 
           Changing total days rescales your phase timeline proportionally.
         </p>
 
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="btn px-4 py-2 text-[0.85rem] !bg-transparent !text-zinc-400 !border-white/10 hover:!text-white"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={!draftName.trim() || !draftStartDate || draftTotalDays < 1}
-            className="btn px-5 py-2 text-[0.85rem] disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Save
-          </button>
+        <div className="border-t border-white/5 pt-4 flex justify-between items-center">
+          {confirmingDelete ? (
+            <div className="flex items-center gap-2">
+              <span className="text-[0.8rem] text-red-400">Delete this track?</span>
+              <button
+                onClick={() => {
+                  onDelete();
+                  onClose();
+                }}
+                className="btn px-3 py-1.5 text-[0.8rem] !bg-red-500/15 !text-red-400 !border-red-500/40"
+              >
+                Confirm
+              </button>
+              <button
+                onClick={() => setConfirmingDelete(false)}
+                className="btn px-3 py-1.5 text-[0.8rem] !bg-transparent !text-zinc-400 !border-white/10"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : canDelete ? (
+            <button
+              onClick={() => setConfirmingDelete(true)}
+              className="text-red-500 bg-transparent border-none cursor-pointer text-[0.8rem]"
+            >
+              Delete Track
+            </button>
+          ) : (
+            <span className="text-[0.75rem] text-zinc-600" title="You need at least one track">
+              Can&apos;t delete your only track
+            </span>
+          )}
+
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="btn px-4 py-2 text-[0.85rem] !bg-transparent !text-zinc-400 !border-white/10 hover:!text-white"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={!draftName.trim() || !draftStartDate || draftTotalDays < 1}
+              className="btn px-5 py-2 text-[0.85rem] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Save
+            </button>
+          </div>
         </div>
       </div>
     </div>
