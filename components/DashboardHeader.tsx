@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import type { TrackState, Workspace } from "@/lib/types";
 import { daysSince } from "@/lib/dates";
 import TrackSwitcher from "@/components/TrackSwitcher";
+import TrackSettingsModal from "@/components/TrackSettingsModal";
 
 export type SyncStatus = "idle" | "syncing" | "success" | "error";
 
@@ -15,6 +16,7 @@ interface DashboardHeaderProps {
   onSync: (e: React.MouseEvent) => void;
   onSwitchTrack: (trackId: string) => void;
   onNewTrack: () => void;
+  onEditTrack: (fields: { name: string; color: string }) => void;
 }
 
 const getRelativeTimeString = (timestamp: number | undefined) => {
@@ -28,7 +30,8 @@ const getRelativeTimeString = (timestamp: number | undefined) => {
   return new Date(timestamp).toLocaleDateString();
 };
 
-export default function DashboardHeader({ data, workspace, syncStatus, syncError, onSync, onSwitchTrack, onNewTrack }: DashboardHeaderProps) {
+export default function DashboardHeader({ data, workspace, syncStatus, syncError, onSync, onSwitchTrack, onNewTrack, onEditTrack }: DashboardHeaderProps) {
+  const [showTrackSettings, setShowTrackSettings] = useState(false);
   const daysPassed = data.startDate && data.isSynced ? daysSince(data.startDate) : 0;
   const daysInPhase: number | string = data.isSynced
     ? daysSince(data.currentPhaseStartDate || data.startDate)
@@ -66,6 +69,14 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
             onSwitch={onSwitchTrack}
             onNewTrack={onNewTrack}
           />
+          <button
+            onClick={() => setShowTrackSettings(true)}
+            className="bg-transparent border-none text-zinc-600 hover:text-white cursor-pointer text-[0.8rem] p-0"
+            title="Edit track name/color"
+            aria-label="Edit track"
+          >
+            ✎
+          </button>
         </div>
 
         {/* Every track has its own private, editable roadmap doc. */}
@@ -120,6 +131,15 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
           </div>
         </div>
       </div>
+
+      {showTrackSettings && (
+        <TrackSettingsModal
+          name={data.meta.name}
+          color={data.meta.color}
+          onSave={onEditTrack}
+          onClose={() => setShowTrackSettings(false)}
+        />
+      )}
     </header>
   );
 }
