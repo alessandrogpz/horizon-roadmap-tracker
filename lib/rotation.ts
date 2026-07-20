@@ -1,35 +1,60 @@
-import type { RevisionItem, RotationConfig, WeekDay } from "./types";
+import type { RevisionItem, RotationDef, TaskItem } from "./types";
 
-/** True if this revision item is one of the app's own auto-generated
- *  rotation entries (as opposed to one the user added manually). */
-export function isAutoRevisionItem(item: RevisionItem | undefined): boolean {
-  return !!item && (item.id === "dsa_auto" || item.id === "math_revision");
+/** True if this item was written by a rotation (as opposed to one the user
+ *  added manually) — every rotation-generated item's id is namespaced. Also
+ *  recognizes the pre-multi-rotation ids ("dsa_auto"/"math_revision") so
+ *  already-synced data cleanly supersedes instead of leaving a stale
+ *  duplicate the first time a day recomputes after this upgrade. */
+export function isRotationItem(item: { id: string } | undefined): boolean {
+  return !!item && (item.id.startsWith("rotation_") || item.id === "dsa_auto" || item.id === "math_revision");
+}
+
+export function rotationItemId(rotation: RotationDef): string {
+  return `rotation_${rotation.id}`;
 }
 
 /**
- * Computes what the rotation-driven revision item would be for `dayName`
- * in curriculum week `weekNum`, given a track's rotation config and weekly
- * schedule. Pure — reads no stored state, so it can preview any past or
- * future week, not just whichever one was last written by the daily reset.
- * Returns null on rest days (Sun) or when there's nothing to rotate.
+ * Computes what `rotation`'s current item would be for `dayName` in
+ * curriculum week `weekNum` — null if this rotation doesn't run on that day
+ * or has no items. Pure — reads no stored state, so it can preview any past
+ * or future week, not just whichever one was last written by the daily
+ * reset.
  */
-export function computeAutoRevisionItem(
-  rotation: RotationConfig,
-  weekSchedule: WeekDay[],
+export function computeRotationItem(
+  rotation: RotationDef,
   weekNum: number,
-  dsaStartWeek: number,
   dayName: string
 ): RevisionItem | null {
-  if (dayName === "Sun") return null;
-  const len = rotation.weeks.length;
+  if (!rotation.daysOfWeek.includes(dayName)) return null;
+  const len = rotation.items.length;
   if (len === 0) return null;
 
-  const idx = (((weekNum - dsaStartWeek) % len) + len) % len;
-  const pattern = rotation.weeks[idx];
-  if (!pattern) return null;
+  const idx = (((weekNum - rotation.startWeek) % len) + len) % len;
+  const item = rotation.items[idx];
+  if (!item) return null;
 
-  const isRotationDay = weekSchedule.some((d) => d.name === dayName && d.type === rotation.appliesToScheduleType);
-  return isRotationDay
-    ? { id: "dsa_auto", title: pattern.pattern, description: pattern.problems, completed: false }
-    : { id: "math_revision", title: "Linear Algebra", description: "Practice vector spaces, transforms, and equations", completed: false };
+  return { id: rotationItemId(rotation), title: item.title, description: item.description, completed: false };
+}
+
+/** Computes every applicable rotation's item for `dayName` in week
+ *  `weekNum`, split by target bucket (revision vs. focus). */
+export function computeRotationItemsForDay(
+  rotations: RotationDef[],
+  weekNum: number,
+  dayName: string
+): { revisions: RevisionItem[]; focus: TaskItem[] } {
+  const revisions: RevisionItem[] = [];
+  const focus: TaskItem[] = [];
+
+  for (const rotation of rotations) {
+    const item = computeRotationItem(rotation, weekNum, dayName);
+    if (!item) continue;
+    if (rotation.target === "focus") {
+      focus.push({ id: item.id, title: item.title, completed: false });
+    } else {
+      revisions.push(item);
+    }
+  }
+
+  return { revisions, focus };
 }

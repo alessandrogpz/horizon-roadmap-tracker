@@ -113,7 +113,8 @@ export default function Home() {
 
   const [dayOfWeek, setDayOfWeek] = useState(0);
   const [selectedScheduleDay, setSelectedScheduleDay] = useState<WeekDay | null>(null);
-  const [showRotationModal, setShowRotationModal] = useState(false);
+  // null = closed. { rotationId: null } = create new. { rotationId: "<id>" } = view/edit that one.
+  const [rotationModal, setRotationModal] = useState<{ rotationId: string | null } | null>(null);
   const [showRhythmEditor, setShowRhythmEditor] = useState(false);
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedPhase, setSelectedPhase] = useState<Phase | null>(null);
@@ -554,7 +555,7 @@ export default function Home() {
         weekOffset={weekOffset}
         setWeekOffset={setWeekOffset}
         onDayClick={setSelectedScheduleDay}
-        onRotationClick={() => setShowRotationModal(true)}
+        onRotationClick={(rotationId) => setRotationModal({ rotationId })}
         applyChange={applyChange}
       />
     ),
@@ -674,10 +675,11 @@ export default function Home() {
           weekOffset={weekOffset}
         />
       )}
-      {showRotationModal && (
+      {rotationModal && (
         <RotationModal
           data={data}
-          onClose={() => setShowRotationModal(false)}
+          rotationId={rotationModal.rotationId}
+          onClose={() => setRotationModal(null)}
           applyChange={applyChange}
         />
       )}

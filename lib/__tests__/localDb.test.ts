@@ -6,7 +6,10 @@ import type { AppState } from "../types";
 
 const uniqueDbName = () => `TestProductivityDb_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
-const realisticLegacyState: AppState = {
+// dsaStartWeek predates the multi-rotation model — realistic v1 data
+// genuinely had it, so it's typed as an intentional excess field here to
+// simulate that old shape without a cast at every call site below.
+const realisticLegacyState: AppState & { dsaStartWeek: number } = {
   currentPhase: 2,
   startDate: "2026-06-05",
   currentPhaseStartDate: "2026-07-10",
@@ -74,16 +77,25 @@ describe("Dexie v1 -> v2 multi-track migration", () => {
       createdAt: expect.any(Number),
     });
 
-    // Every original AppState field (other than the workspace-only ones) round-trips exactly.
-    const { hasUnsyncedChanges: _h, lastSyncTime: _l, ...expectedTrackFields } = realisticLegacyState;
+    // Every original AppState field (other than the workspace-only ones, and
+    // dsaStartWeek which is consumed into the migrated rotation's startWeek
+    // instead of round-tripping as a dead field) carries over exactly.
+    const { hasUnsyncedChanges: _h, lastSyncTime: _l, dsaStartWeek: _d, ...expectedTrackFields } = realisticLegacyState;
     void _h;
     void _l;
+    void _d;
     expect(migratedTrack).toMatchObject(expectedTrackFields);
 
     // The rotation feature and roadmap doc are seeded for this one personal
-    // track, decoupled from the general template system.
-    expect(migratedTrack.rotationConfig?.weeks.length).toBeGreaterThan(0);
-    expect(migratedTrack.rotationConfig?.appliesToScheduleType).toBe("math");
+    // track, decoupled from the general template system. The legacy
+    // dsaStartWeek (6) carries over as the pattern rotation's startWeek.
+    expect(migratedTrack.rotations).toHaveLength(2);
+    const patternRotation = migratedTrack.rotations!.find((r) => r.id === "legacy_pattern_rotation");
+    expect(patternRotation?.items.length).toBeGreaterThan(0);
+    expect(patternRotation?.daysOfWeek).toEqual(["Mon", "Wed", "Fri"]);
+    expect(patternRotation?.startWeek).toBe(6);
+    const interleaveRotation = migratedTrack.rotations!.find((r) => r.id === "legacy_math_interleave");
+    expect(interleaveRotation?.daysOfWeek).toEqual(["Tue", "Thu", "Sat"]);
     expect(migratedTrack.roadmapContent?.length).toBeGreaterThan(0);
 
     // Workspace-level bookkeeping carries over too.

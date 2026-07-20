@@ -28,11 +28,21 @@ export interface WorkspaceRecord {
  *  instead of forking into duplicates. */
 export function wrapLegacyAppState(legacy: AppState): Workspace {
   // hasUnsyncedChanges/lastSyncTime/isReset are workspace-level bookkeeping,
-  // not part of TrackState — strip them out of the spread below.
-  const { hasUnsyncedChanges: _hasUnsyncedChanges, lastSyncTime: _lastSyncTime, isReset: _isReset, ...rest } = legacy;
+  // not part of TrackState — strip them out of the spread below. The old
+  // dsaStartWeek field predates the multi-rotation model; pull it out too
+  // so it can seed the migrated rotation's startWeek instead of round-tripping
+  // as a dead field.
+  const {
+    hasUnsyncedChanges: _hasUnsyncedChanges,
+    lastSyncTime: _lastSyncTime,
+    isReset: _isReset,
+    dsaStartWeek: legacyDsaStartWeek,
+    ...rest
+  } = legacy as AppState & { dsaStartWeek?: number };
   void _hasUnsyncedChanges;
   void _lastSyncTime;
   void _isReset;
+  const startWeek = legacyDsaStartWeek || 1;
 
   const track: TrackState = {
     ...rest,
@@ -46,10 +56,27 @@ export function wrapLegacyAppState(legacy: AppState): Workspace {
     // The rotation feature itself (weekly DSA/math pattern cycling) is kept
     // — just decoupled from the general template system, since it's this
     // one personal track's own data, not something offered to other users.
-    rotationConfig: {
-      weeks: DSA_PATTERN_WEEKS,
-      appliesToScheduleType: "math",
-    },
+    // Split into the two rotations the old single rotationConfig implied:
+    // the pattern itself on the "math"-type days, and a static filler on
+    // the rest, matching DEFAULT_WEEK_SCHEDULE's default Mon/Wed/Fri split.
+    rotations: [
+      {
+        id: "legacy_pattern_rotation",
+        label: "Weekly Algorithm",
+        items: DSA_PATTERN_WEEKS.map((w) => ({ title: w.pattern, description: w.problems })),
+        daysOfWeek: ["Mon", "Wed", "Fri"],
+        target: "revision",
+        startWeek,
+      },
+      {
+        id: "legacy_math_interleave",
+        label: "Linear Algebra",
+        items: [{ title: "Linear Algebra", description: "Practice vector spaces, transforms, and equations" }],
+        daysOfWeek: ["Tue", "Thu", "Sat"],
+        target: "revision",
+        startWeek: 1,
+      },
+    ],
     // Seeded once from the project's former engine_dev_roadmap.md, so this
     // content isn't lost now that every track's roadmap lives in its own
     // private, editable field instead of a shipped file.

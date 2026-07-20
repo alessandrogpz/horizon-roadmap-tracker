@@ -1,7 +1,8 @@
 import { db } from "./localDb";
-import type { GitStats, Material, PortfolioProject, TrackId, TrackState, Workspace } from "./types";
+import type { GitStats, Material, PortfolioProject, RotationDef, TrackId, TrackState, Workspace } from "./types";
 import { LEGACY_PATH_TO_REPO, MATERIAL_REPO_MAP, PORTFOLIO_REPO_MAP } from "./migrationConfig";
 import { LEGACY_TRACK_ID } from "./localDb";
+import { DEFAULT_WEEK_SCHEDULE } from "./constants";
 
 /**
  * migrationConfig.ts's repo maps (m1, p1, ...) were only ever meaningful for
@@ -40,6 +41,54 @@ const migrateLocalPaths = (track: TrackState): { track: TrackState; modified: bo
   }
 
   return { track: next, modified };
+};
+
+/**
+ * One-time upgrade of the pre-multi-rotation shape (a single rotationConfig
+ * + dsaStartWeek, both retired from TrackState) into the general `rotations`
+ * list. Only ever touches data synced before this feature existed — every
+ * track created since is seeded with `rotations` (or nothing) directly.
+ * Splits the old single pattern-vs-interleave rotation into the two
+ * rotations it implied, using whatever weekSchedule the track actually has.
+ */
+const migrateLegacyRotation = (track: TrackState): { track: TrackState; modified: boolean } => {
+  const legacy = track as TrackState & {
+    rotationConfig?: { weeks: { pattern: string; problems: string }[]; appliesToScheduleType: string };
+    dsaStartWeek?: number;
+  };
+  if (!legacy.rotationConfig) return { track, modified: false };
+
+  const startWeek = legacy.dsaStartWeek || 1;
+  const schedule = track.weekSchedule || DEFAULT_WEEK_SCHEDULE;
+  const ALL_WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const patternDays = schedule.filter((d) => d.type === legacy.rotationConfig!.appliesToScheduleType).map((d) => d.name);
+  const interleaveDays = ALL_WEEKDAYS.filter((d) => !patternDays.includes(d));
+
+  const rotations: RotationDef[] = [
+    {
+      id: "legacy_pattern_rotation",
+      label: "Weekly Algorithm",
+      items: legacy.rotationConfig.weeks.map((w) => ({ title: w.pattern, description: w.problems })),
+      daysOfWeek: patternDays,
+      target: "revision",
+      startWeek,
+    },
+  ];
+  if (interleaveDays.length > 0) {
+    rotations.push({
+      id: "legacy_math_interleave",
+      label: "Linear Algebra",
+      items: [{ title: "Linear Algebra", description: "Practice vector spaces, transforms, and equations" }],
+      daysOfWeek: interleaveDays,
+      target: "revision",
+      startWeek: 1,
+    });
+  }
+
+  const next = { ...legacy, rotations };
+  delete next.rotationConfig;
+  delete next.dsaStartWeek;
+  return { track: next, modified: true };
 };
 
 /** Per-track edit-counter/config-version bookkeeping — the same algorithm the
@@ -98,7 +147,7 @@ const applyTrackBookkeeping = (
     "currentPhase",
     "startDate",
     "currentPhaseStartDate",
-    "dsaStartWeek",
+    "rotations",
     "weekSchedule",
     "roadmapContent",
     "phases",
@@ -127,9 +176,10 @@ export const fetchWorkspace = async (): Promise<Workspace> => {
       let modified = false;
       const tracks: Record<TrackId, TrackState> = {};
       Object.entries(record.data.tracks).forEach(([id, t]) => {
-        const { track, modified: trackModified } = migrateLocalPaths(t);
+        const { track: pathsTrack, modified: pathsModified } = migrateLocalPaths(t);
+        const { track, modified: rotationModified } = migrateLegacyRotation(pathsTrack);
         tracks[id] = track;
-        if (trackModified) modified = true;
+        if (pathsModified || rotationModified) modified = true;
       });
       const data: Workspace = { ...record.data, tracks };
       if (modified) {
