@@ -12,8 +12,15 @@ interface SortablePanelProps {
   onEdit?: () => void;
 }
 
-/** Wraps a dashboard panel with a hover-revealed drag handle so it can be
- *  reordered — within its column or across into the other one — via dnd-kit. */
+/** Wraps a dashboard panel so it can be reordered — within its column or
+ *  across into the other one — via dnd-kit.
+ *
+ *  Desktop (mouse): only the small handle icon starts a drag, so clicking
+ *  buttons/checkboxes/links elsewhere on the panel behaves normally.
+ *  Touch: press-and-hold anywhere on the panel also starts a drag (the
+ *  handle still works too) — reaching for a small icon is much harder on a
+ *  phone, and TouchSensor's delay means a quick tap/scroll is never
+ *  mistaken for a drag. */
 export default function SortablePanel({ id, children, onEdit }: SortablePanelProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
@@ -24,7 +31,12 @@ export default function SortablePanel({ id, children, onEdit }: SortablePanelPro
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="relative group">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="relative group"
+      onTouchStart={listeners?.onTouchStart as React.TouchEventHandler<HTMLDivElement> | undefined}
+    >
       <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-150">
         {onEdit && (
           <button
