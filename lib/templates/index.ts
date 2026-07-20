@@ -1,18 +1,20 @@
 import type { FocusType, Material, Phase, PortfolioProject, TrackId, TrackState, WeekDay } from "../types";
-import { engineGraphicsTemplate, LEGACY_TRACK_ID } from "./engineGraphics";
 import { fitnessTemplate } from "./fitness";
 import { learningTemplate } from "./learning";
-import { blankTemplate } from "./blank";
+import { workTemplate } from "./work";
+import { customTemplate } from "./custom";
 import type { TrackTemplate } from "./types";
 
 export type { TrackTemplate } from "./types";
-export { LEGACY_TRACK_ID };
 
+// The Game Engine & Graphics curriculum is Alessandro's own personal track
+// (see lib/legacyPersonalData.ts) — deliberately not offered here as a
+// template for other users to pick.
 export const TEMPLATES: Record<string, TrackTemplate> = {
-  [engineGraphicsTemplate.id]: engineGraphicsTemplate,
-  [fitnessTemplate.id]: fitnessTemplate,
   [learningTemplate.id]: learningTemplate,
-  [blankTemplate.id]: blankTemplate,
+  [fitnessTemplate.id]: fitnessTemplate,
+  [workTemplate.id]: workTemplate,
+  [customTemplate.id]: customTemplate,
 };
 
 export const TEMPLATE_LIST: TrackTemplate[] = Object.values(TEMPLATES);
@@ -26,6 +28,7 @@ export interface SeedAnswers {
   focusTypes: Record<string, FocusType>;
   materials?: Omit<Material, "id">[];
   portfolio?: Omit<PortfolioProject, "id">[];
+  roadmapContent?: string;
 }
 
 function generateTrackId(): TrackId {
@@ -70,7 +73,7 @@ export function seedTrackFromTemplate(template: TrackTemplate, answers: SeedAnsw
     currentPhase: answers.phases[0]?.id ?? 1,
     startDate: answers.startDate,
     currentPhaseStartDate: answers.startDate,
-    dsaStartWeek: template.rotationConfig?.startWeek ?? 1,
+    dsaStartWeek: 1,
     streakHistory: [],
     lastDailyRoutineCheck: "",
     lastTasksResetDate: "",
@@ -87,6 +90,7 @@ export function seedTrackFromTemplate(template: TrackTemplate, answers: SeedAnsw
     weekSchedule: answers.weekSchedule,
     focusTypes: answers.focusTypes,
     rotationConfig: template.rotationConfig,
+    roadmapContent: answers.roadmapContent || "",
     isSynced: true,
     configVersion: 0,
     lastUpdatedDates: {},

@@ -1,6 +1,23 @@
-# 12-Month Engine Developer Curriculum & Syllabus
+// Personal migration data for the one track that existed before multi-track
+// support — Alessandro's own Game Engine & Graphics curriculum. Deliberately
+// kept out of lib/templates/: it's not offered to other users creating a
+// track, it's only ever used to migrate this app's original single-track
+// data (pre-existing Dexie "appState" row / old-shape Drive database.json)
+// into a proper track, without losing any of it.
 
-This document serves as our shared reference roadmap for all four study phases. It outlines topics, resources, milestones, and diagnostic tool integrations in chronological order.
+/** Deterministic id assigned to the pre-multi-track track by the Dexie
+ *  v1->v2 migration (lib/localDb.ts) and, on the Drive side, by the legacy
+ *  database.json shape upgrade (lib/googleDrive.ts). Both must use this
+ *  exact same constant so local and remote data resolve to the same track
+ *  instead of forking into duplicates. */
+export const LEGACY_TRACK_ID = "track_legacy_engine_graphics";
+
+/** Seeded once, as the migrated track's initial roadmapContent, from the
+ *  project's former engine_dev_roadmap.md (now retired as a shipped file —
+ *  every track's roadmap lives in its own private, editable field instead). */
+export const LEGACY_ROADMAP_CONTENT = `# 12-Month Engine Developer Curriculum & Syllabus
+
+This document serves as a reference roadmap for all four study phases. It outlines topics, resources, milestones, and diagnostic tool integrations in chronological order.
 
 ---
 
@@ -52,10 +69,10 @@ This document serves as our shared reference roadmap for all four study phases. 
 #### 4. Algorithms & Data Structures
 **Topics**:
 - Cache Locality & Memory Layout (Months 1–3): Array of Structures (AoS) vs. Structure of Arrays (SoA) layout efficiency, Memory Alignment & Padding (matching compiler alignment to hardware bounds), Fixed-size pools (avoiding runtime allocation overhead).
-- LeetCode Focus: **Problem-Solving Patterns**. Master the reusable templates for: Two Pointers, Sliding Window, Hash Maps, Stack/Monotonic Stack, and Advanced Binary Search. Study by technique, not by category. See the [DSA Patterns Guide](/dsa) for specific problems.
+- LeetCode Focus: **Problem-Solving Patterns**. Master the reusable templates for: Two Pointers, Sliding Window, Hash Maps, Stack/Monotonic Stack, and Advanced Binary Search. Study by technique, not by category — see the Weekly Algorithm rotation on the dashboard for specific problems.
 
 #### 5. Diagnostic & Git Milestones
-- **GitHub Launch**: Create the public repository for `ray-tracer`.
+- **GitHub Launch**: Create the public repository for \`ray-tracer\`.
 - **Visual README**: Embed progressive renders in the README (e.g., flat circle -> shaded sphere -> fully rendered scene with reflections).
 
 ---
@@ -96,7 +113,7 @@ This document serves as our shared reference roadmap for all four study phases. 
 **Topics**:
 - Hierarchies & Scene Management (Months 4–7): Scene Graphs using trees or Directed Acyclic Graphs (DAGs) to propagate transformations (parent-to-child matrix multiplications).
 - Traversal Loops: Iterative Depth-First Search (DFS) and Breadth-First Search (BFS) with custom Stacks to traverse the scene graph for rendering.
-- LeetCode Focus: **Problem-Solving Patterns**. Master the reusable templates for: Heap/Priority Queue, Trees/DFS/BFS, Interval Problems, and DP Basics. See the [DSA Patterns Guide](/dsa) for specific problems.
+- LeetCode Focus: **Problem-Solving Patterns**. Master the reusable templates for: Heap/Priority Queue, Trees/DFS/BFS, Interval Problems, and DP Basics — see the Weekly Algorithm rotation on the dashboard for specific problems.
 
 #### 5. Diagnostic & Tool Integrations
 - **Dear ImGui**: Integrate ImGui panel to control:
@@ -188,8 +205,5 @@ This document serves as our shared reference roadmap for all four study phases. 
 
 ## Interview Prep: DSA Patterns
 
-The complete DSA problem-solving patterns guide with specific LeetCode problems is maintained separately.
-
-**See the full guide here: [DSA Patterns Guide](/dsa)**
-
-The app automatically rotates through these patterns on a 10-week cycle via the daily revision items on DSA days (Tue/Thu/Fri/Sat). Each week focuses on one pattern with 4-5 recommended problems.
+The app automatically rotates through these patterns on a 10-week cycle via the daily revision items on DSA days (Tue/Thu/Fri/Sat), shown as the Weekly Algorithm indicator on the dashboard. Each week focuses on one pattern with 4-5 recommended problems.
+`;
