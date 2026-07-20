@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { fetchAppState } from "@/lib/api";
+import { fetchWorkspace } from "@/lib/api";
 import { renderMarkdownToHtml } from "@/lib/markdown";
 
 export default function RoadmapPage() {
@@ -11,8 +11,9 @@ export default function RoadmapPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchAppState()
-      .then(async (data) => {
+    fetchWorkspace()
+      .then(async (workspace) => {
+        const data = workspace.tracks[workspace.activeTrackId];
         if (data && data.isSynced) {
           setSynced(true);
           const res = await fetch("/api/roadmap");
@@ -57,7 +58,6 @@ export default function RoadmapPage() {
         />
       ) : (
         <div className="glass-panel p-12 text-center rounded-lg !border !border-dashed !border-red-500/30 !bg-red-500/[0.02]">
-          <div className="text-[2rem] mb-4">🔒</div>
           <h2 className="text-[1.2rem] font-semibold text-red-400 mb-2">Roadmap Locked</h2>
           <p className="text-zinc-400 text-[0.9rem] max-w-[450px] mx-auto mb-6">
             The master curriculum is private. Please connect your Google Drive account on the main dashboard to unlock and load your personalized developer roadmap.

@@ -5,6 +5,10 @@
   --foreground: #e4e4e7;
   --accent: #0ea5e9;
   --accent-hover: #38bdf8;
+  /* Quieter accent tier for structural borders (modals, panel accents) —
+     keeps the saturated --accent reserved for interactive/status signals
+     (sync dot, today's highlight, active phase dot, primary buttons). */
+  --accent-muted: rgba(14, 165, 233, 0.35);
   --card-bg: #121214;
   --card-border: rgba(255, 255, 255, 0.08);
   --success: #10b981;
@@ -23,10 +27,16 @@
   --color-foreground: var(--foreground);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
+  --color-accent-muted: var(--accent-muted);
   --color-card: var(--card-bg);
   --color-card-border: var(--card-border);
   --color-success: var(--success);
   --color-warning: var(--warning);
+  /* Body copy is sans; font-mono stays JetBrains Mono for data/numeric/code-like
+     elements (dates, progress counters, streak grid, git stats, pattern names) —
+     the codebase already applies font-mono deliberately on exactly those. */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
 }
 
 /* Tailwind's preflight removes list markers; markdown previews need them */
@@ -44,7 +54,7 @@
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-jetbrains-mono), monospace;
+  font-family: var(--font-sans);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -222,6 +232,13 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--accent);
+}
+
+/* Structural accent borders (modals, panel accent stripes) use the quieter
+   muted tier — the saturated accent stays reserved for interactive/status
+   signals so it doesn't compete for attention everywhere at once. */
+.border-accent-muted {
+  border-color: var(--accent-muted);
 }
 
 .link-title {

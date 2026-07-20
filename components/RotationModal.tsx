@@ -1,25 +1,28 @@
 "use client";
 
 import React from "react";
-import type { AppState } from "@/lib/types";
+import type { TrackState } from "@/lib/types";
 import { getWeekNum } from "@/lib/dates";
-import { DSA_PATTERN_WEEKS, dsaPatternIndex } from "@/lib/constants";
 
 interface RotationModalProps {
-  data: AppState;
+  data: TrackState;
   onClose: () => void;
   /** Applies an optimistic state update and schedules a debounced save. */
-  applyChange: (newData: AppState) => void;
+  applyChange: (newData: TrackState) => void;
 }
 
 export default function RotationModal({ data, onClose, applyChange }: RotationModalProps) {
+  const rotation = data.rotationConfig;
   const currentWeekNum = getWeekNum(data.startDate);
-  const dsaStartWeek = data.dsaStartWeek || 1;
-  const activeIndex = dsaPatternIndex(currentWeekNum, dsaStartWeek);
+  const dsaStartWeek = data.dsaStartWeek || rotation?.startWeek || 1;
+  const weeks = rotation?.weeks || [];
+  const len = weeks.length;
+  const activeIndex = len > 0 ? (((currentWeekNum - dsaStartWeek) % len) + len) % len : 0;
 
   const selectPattern = (idx: number) => {
     const newDsaStartWeek = currentWeekNum - idx;
-    const currentPattern = DSA_PATTERN_WEEKS[idx];
+    const currentPattern = weeks[idx];
+    if (!currentPattern) return;
 
     // Update existing auto-revision items to match the newly selected pattern immediately
     const updatedRevisionItems = { ...(data.dailyRevisionItems || {}) };
@@ -50,7 +53,7 @@ export default function RotationModal({ data, onClose, applyChange }: RotationMo
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="glass-panel max-w-[600px] w-full flex flex-col gap-6 p-8 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.5)] border !border-accent relative rounded-lg"
+        className="glass-panel max-w-[600px] w-full flex flex-col gap-6 p-8 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.5)] border border-accent-muted relative rounded-lg"
       >
         {/* Close Button */}
         <button
@@ -63,10 +66,10 @@ export default function RotationModal({ data, onClose, applyChange }: RotationMo
         {/* Modal Header */}
         <div>
           <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold uppercase font-mono tracking-[0.05em]">
-            10-Week Rotation Cycle
+            {len}-Week Rotation Cycle
           </span>
           <h2 className="text-[1.4rem] font-bold text-white mt-2 mb-1">
-            DSA Pattern Rotation
+            Pattern Rotation
           </h2>
           <p className="text-[0.85rem] text-zinc-400 m-0">
             Currently on Week {currentWeekNum} of curriculum.
@@ -75,7 +78,7 @@ export default function RotationModal({ data, onClose, applyChange }: RotationMo
 
         {/* Rotation list */}
         <div className="flex flex-col gap-[0.6rem] max-h-[350px] overflow-y-auto pr-2">
-          {DSA_PATTERN_WEEKS.map((patternItem, idx) => {
+          {weeks.map((patternItem, idx) => {
             const isActive = idx === activeIndex;
 
             return (
