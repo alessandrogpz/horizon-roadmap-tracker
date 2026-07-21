@@ -47,6 +47,8 @@ export interface Material {
   link: string;
   localPath?: string;
   repoUrl?: string;
+  /** Bumped on every local edit; drives last-write-wins merging in lib/merge.ts. */
+  updatedAt?: number;
 }
 
 export interface PortfolioProject {
