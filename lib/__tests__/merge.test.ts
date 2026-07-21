@@ -166,13 +166,32 @@ describe("mergeMaterials", () => {
     expect(merged.map((m) => m.id).sort()).toEqual(["m1", "m2"]);
   });
 
-  it("adopts remote scalar fields on conflict", () => {
+  it("adopts remote scalar fields on conflict when neither side has an updatedAt (legacy fallback)", () => {
     const merged = mergeMaterials(
       [material({ status: "In Progress", currentPage: 10 })],
       [material({ status: "Completed", currentPage: 50 })]
     );
     expect(merged[0].status).toBe("Completed");
     expect(merged[0].currentPage).toBe(50);
+  });
+
+  it("keeps a more recent local edit instead of reverting to a stale remote value", () => {
+    // Regression test: editing totalPages/currentSubject locally and syncing
+    // used to silently revert to the remote (older) values because the merge
+    // favored remote fields regardless of which side was actually newer.
+    const local = [material({ totalPages: 320, currentSubject: "Linear Algebra", updatedAt: 2000 })];
+    const remote = [material({ totalPages: 250, currentSubject: "Calculus", updatedAt: 1000 })];
+    const merged = mergeMaterials(local, remote);
+    expect(merged[0].totalPages).toBe(320);
+    expect(merged[0].currentSubject).toBe("Linear Algebra");
+  });
+
+  it("adopts the remote edit when it is newer than the local record", () => {
+    const local = [material({ totalPages: 250, currentSubject: "Calculus", updatedAt: 1000 })];
+    const remote = [material({ totalPages: 320, currentSubject: "Linear Algebra", updatedAt: 2000 })];
+    const merged = mergeMaterials(local, remote);
+    expect(merged[0].totalPages).toBe(320);
+    expect(merged[0].currentSubject).toBe("Linear Algebra");
   });
 });
 

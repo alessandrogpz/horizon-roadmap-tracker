@@ -400,7 +400,7 @@ export default function Home() {
 
     const updatedMaterials = data.materials.map((m) => {
       if (m.id !== materialId) return m;
-      return { ...m, status: newStatus };
+      return { ...m, status: newStatus, updatedAt: Date.now() };
     });
 
     const matTitle = data.materials.find((m) => m.id === materialId)?.title || "Study Material";
@@ -421,7 +421,7 @@ export default function Home() {
 
     const updatedMaterials = data.materials.map((m) => {
       if (m.id !== materialId) return m;
-      return { ...m, ...fields };
+      return { ...m, ...fields, updatedAt: Date.now() };
     });
 
     await persist({ ...data, materials: updatedMaterials }, "material progress");
@@ -433,7 +433,7 @@ export default function Home() {
     // Prefix with the track id so material ids stay globally unique across
     // tracks — notes sync matches files by note_<materialId>.md in one
     // shared Drive appDataFolder.
-    const materialWithId = { id: `m_${data.meta.id}_${Date.now()}`, ...newMaterial };
+    const materialWithId = { id: `m_${data.meta.id}_${Date.now()}`, ...newMaterial, updatedAt: Date.now() };
     await persist({ ...data, materials: [...(data.materials || []), materialWithId] }, "material add");
   };
 

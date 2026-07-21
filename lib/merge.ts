@@ -5,8 +5,15 @@ const isUrl = (s: string | undefined): boolean =>
   typeof s === "string" && (s.startsWith("http://") || s.startsWith("https://"));
 
 /**
- * Per-material merge: always prefer a real URL (http/https) over a local path.
- * This ensures link edits on any device win regardless of inflated configVersion.
+ * Per-material merge: whichever side was edited more recently (per-item
+ * `updatedAt`) wins the whole record, so an edit on one device can never be
+ * silently reverted by a stale value from the other. A real URL (http/https)
+ * always beats a local path for the `link` field regardless of recency, since
+ * that reflects genuinely better data rather than a race.
+ *
+ * Legacy materials with no `updatedAt` on either side (never touched by an
+ * updatedAt-aware edit) fall back to the old field-by-field, remote-favoring
+ * merge so existing data doesn't change behavior.
  */
 export const mergeMaterials = (localMats: Material[] = [], remoteMats: Material[] = []): Material[] => {
   const byId = new Map<string, Material>();
@@ -15,13 +22,26 @@ export const mergeMaterials = (localMats: Material[] = [], remoteMats: Material[
     const lm = byId.get(rm.id);
     if (!lm) {
       byId.set(rm.id, { ...rm });
+      return;
+    }
+
+    const preferRemoteLink = isUrl(rm.link) && !isUrl(lm.link);
+    const preferLocalLink = isUrl(lm.link) && !isUrl(rm.link);
+    const preferredLink = preferLocalLink ? lm.link : (preferRemoteLink ? rm.link : undefined);
+
+    const localTime = lm.updatedAt || 0;
+    const remoteTime = rm.updatedAt || 0;
+
+    if (localTime !== remoteTime) {
+      const winner = localTime > remoteTime ? lm : rm;
+      byId.set(rm.id, {
+        ...winner,
+        link: preferredLink ?? winner.link,
+        localPath: rm.localPath || lm.localPath,
+      });
     } else {
-      // Prefer real URL over local path for link field
-      const preferRemoteLink = isUrl(rm.link) && !isUrl(lm.link);
-      const preferLocalLink = isUrl(lm.link) && !isUrl(rm.link);
       byId.set(rm.id, {
         ...lm,
-        // Adopt all remote scalar fields unless local clearly has a better link
         title: rm.title || lm.title,
         category: rm.category || lm.category,
         type: rm.type || lm.type,
@@ -29,8 +49,9 @@ export const mergeMaterials = (localMats: Material[] = [], remoteMats: Material[
         totalPages: rm.totalPages || lm.totalPages,
         currentPage: rm.currentPage ?? lm.currentPage,
         currentSubject: rm.currentSubject || lm.currentSubject,
-        link: preferLocalLink ? lm.link : (preferRemoteLink ? rm.link : (rm.link || lm.link)),
+        link: preferredLink ?? (rm.link || lm.link),
         localPath: rm.localPath || lm.localPath,
+        updatedAt: rm.updatedAt || lm.updatedAt,
       });
     }
   });
