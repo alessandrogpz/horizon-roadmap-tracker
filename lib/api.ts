@@ -3,6 +3,30 @@ import type { GitStats, Material, PortfolioProject, RotationDef, TrackId, TrackS
 import { LEGACY_PATH_TO_REPO, MATERIAL_REPO_MAP, PORTFOLIO_REPO_MAP } from "./migrationConfig";
 import { LEGACY_TRACK_ID } from "./localDb";
 import { DEFAULT_WEEK_SCHEDULE } from "./constants";
+import { completedItemTitle } from "./streak";
+
+/** Stamps `now` onto `${prefix}${id}` for every id whose presence in `newIds`
+ *  differs from `oldIds`, so a later per-item merge (lib/merge.ts) knows
+ *  exactly which items changed on this device and when. */
+const stampChangedIds = (
+  existing: Record<string, number>,
+  oldIds: string[],
+  newIds: string[],
+  prefix: string,
+  now: number
+): { map: Record<string, number>; changed: boolean } => {
+  const allIds = new Set([...oldIds, ...newIds]);
+  let changed = false;
+  let map = existing;
+  allIds.forEach((id) => {
+    if (oldIds.includes(id) !== newIds.includes(id)) {
+      if (map === existing) map = { ...existing };
+      map[`${prefix}${id}`] = now;
+      changed = true;
+    }
+  });
+  return { map, changed };
+};
 
 /**
  * migrationConfig.ts's repo maps (m1, p1, ...) were only ever meaningful for
@@ -93,15 +117,16 @@ const migrateLegacyRotation = (track: TrackState): { track: TrackState; modified
 
 /** Per-track edit-counter/config-version bookkeeping — the same algorithm the
  *  app has always used, just scoped to one track's slice instead of the
- *  whole saved record. Drives lib/merge.ts's day-level and structural merge. */
+ *  whole saved record. Drives lib/merge.ts's per-item and structural merge. */
 const applyTrackBookkeeping = (
   oldTrack: TrackState | undefined,
   newTrack: TrackState,
   isReset: boolean
 ): { track: TrackState; changed: boolean } => {
   const oldData: Partial<TrackState> = oldTrack || {};
-  const lastUpdatedDates: Record<string, number> = { ...(newTrack.lastUpdatedDates || {}) };
+  const now = Date.now();
 
+  const itemUpdatedAt: Record<string, Record<string, number>> = { ...(oldData.itemUpdatedAt || {}) };
   const oldComps = oldData.weeklyCompletions || {};
   const newComps = newTrack.weeklyCompletions || {};
   const allDates = Array.from(new Set([...Object.keys(oldComps), ...Object.keys(newComps)]));
@@ -110,27 +135,33 @@ const applyTrackBookkeeping = (
   allDates.forEach((date) => {
     const oldVal = oldComps[date] || { tasks: [], revisions: [] };
     const newVal = newComps[date] || { tasks: [], revisions: [] };
-    const tasksChanged = JSON.stringify(oldVal.tasks) !== JSON.stringify(newVal.tasks);
-    const revsChanged = JSON.stringify(oldVal.revisions) !== JSON.stringify(newVal.revisions);
+    const { map: afterTasks, changed: tasksChanged } = stampChangedIds(
+      itemUpdatedAt[date] || {}, oldVal.tasks || [], newVal.tasks || [], "t:", now
+    );
+    const { map: afterRevs, changed: revsChanged } = stampChangedIds(
+      afterTasks, oldVal.revisions || [], newVal.revisions || [], "r:", now
+    );
     if (tasksChanged || revsChanged) {
-      lastUpdatedDates[date] = (oldData.lastUpdatedDates?.[date] || 0) + 1;
+      itemUpdatedAt[date] = afterRevs;
       hasChanges = true;
     }
   });
 
+  const historyUpdatedAt: Record<string, Record<string, number>> = { ...(oldData.historyUpdatedAt || {}) };
   const oldHist = oldData.completedItemsHistory || {};
   const newHist = newTrack.completedItemsHistory || {};
   const allHistDates = Array.from(new Set([...Object.keys(oldHist), ...Object.keys(newHist)]));
   allHistDates.forEach((date) => {
-    const oldItems = oldHist[date] || [];
-    const newItems = newHist[date] || [];
-    if (JSON.stringify(oldItems) !== JSON.stringify(newItems)) {
-      lastUpdatedDates[date] = (oldData.lastUpdatedDates?.[date] || 0) + 1;
+    const oldTitles = (oldHist[date] || []).map(completedItemTitle);
+    const newTitles = (newHist[date] || []).map(completedItemTitle);
+    const { map, changed } = stampChangedIds(historyUpdatedAt[date] || {}, oldTitles, newTitles, "", now);
+    if (changed) {
+      historyUpdatedAt[date] = map;
       hasChanges = true;
     }
   });
 
-  const track: TrackState = { ...newTrack, lastUpdatedDates };
+  const track: TrackState = { ...newTrack, itemUpdatedAt, historyUpdatedAt };
 
   if (isReset) {
     // System-initiated daily reset: don't bump configVersion, so this save

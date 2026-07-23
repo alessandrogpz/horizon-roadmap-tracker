@@ -25,7 +25,8 @@ const baseTrack = (id: string): TrackState => ({
   studyStreak: [],
   isSynced: true,
   configVersion: 0,
-  lastUpdatedDates: {},
+  itemUpdatedAt: {},
+  historyUpdatedAt: {},
 });
 
 describe("updateWorkspace config-change detection", () => {

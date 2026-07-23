@@ -21,7 +21,8 @@ const baseState = (overrides: Partial<AppState> = {}): AppState => ({
   studyStreak: [],
   isSynced: true,
   configVersion: 0,
-  lastUpdatedDates: {},
+  itemUpdatedAt: {},
+  historyUpdatedAt: {},
   ...overrides,
 });
 
@@ -38,42 +39,56 @@ const material = (overrides: Partial<Material> = {}): Material => ({
   ...overrides,
 });
 
-describe("mergeAppState day-level progress merge", () => {
-  it("adopts remote day when remote edit counter is higher", () => {
+describe("mergeAppState per-item progress merge", () => {
+  it("keeps both devices' completions when they check different items on the same day (no whole-day clobber)", () => {
+    // Regression test: this is the exact cross-device scenario that used to
+    // lose data — desktop checks item "a", phone (never having pulled
+    // desktop's change) independently checks item "b" on the same day.
+    // Whole-day LWW would let whichever side merges second wipe out the
+    // other's checkbox; per-item LWW must keep both.
     const local = baseState({
-      lastUpdatedDates: { "2026-07-10": 1 },
+      itemUpdatedAt: { "2026-07-10": { "t:a": 1000 } },
       weeklyCompletions: { "2026-07-10": { tasks: ["a"], revisions: [] } },
-      completedItemsHistory: { "2026-07-10": [{ title: "A" }] },
     });
     const remote = baseState({
-      lastUpdatedDates: { "2026-07-10": 3 },
-      weeklyCompletions: { "2026-07-10": { tasks: ["b"], revisions: ["r1"] } },
-      completedItemsHistory: { "2026-07-10": [{ title: "B" }] },
-    });
-
-    const { data } = mergeAppState(local, remote);
-    expect(data.weeklyCompletions["2026-07-10"]).toEqual({ tasks: ["b"], revisions: ["r1"] });
-    expect(data.completedItemsHistory["2026-07-10"]).toEqual([{ title: "B" }]);
-  });
-
-  it("keeps local day when local edit counter is higher", () => {
-    const local = baseState({
-      lastUpdatedDates: { "2026-07-10": 5 },
-      weeklyCompletions: { "2026-07-10": { tasks: ["a"], revisions: [] } },
-      completedItemsHistory: { "2026-07-10": [{ title: "A" }] },
-    });
-    const remote = baseState({
-      lastUpdatedDates: { "2026-07-10": 2 },
+      itemUpdatedAt: { "2026-07-10": { "t:b": 2000 } },
       weeklyCompletions: { "2026-07-10": { tasks: ["b"], revisions: [] } },
-      completedItemsHistory: { "2026-07-10": [{ title: "B" }] },
     });
 
     const { data } = mergeAppState(local, remote);
-    expect(data.weeklyCompletions["2026-07-10"]).toEqual({ tasks: ["a"], revisions: [] });
-    expect(data.completedItemsHistory["2026-07-10"]).toEqual([{ title: "A" }]);
+    expect(data.weeklyCompletions["2026-07-10"].tasks.sort()).toEqual(["a", "b"]);
   });
 
-  it("unions completions on equal counters", () => {
+  it("uses the newer per-item timestamp when both sides toggled the same item", () => {
+    const local = baseState({
+      itemUpdatedAt: { "2026-07-10": { "t:a": 5000 } },
+      weeklyCompletions: { "2026-07-10": { tasks: ["a"], revisions: [] } },
+    });
+    const remote = baseState({
+      // Remote unchecked "a" more recently than local checked it: remote wins.
+      itemUpdatedAt: { "2026-07-10": { "t:a": 9000 } },
+      weeklyCompletions: { "2026-07-10": { tasks: [], revisions: [] } },
+    });
+
+    const { data } = mergeAppState(local, remote);
+    expect(data.weeklyCompletions["2026-07-10"].tasks).toEqual([]);
+  });
+
+  it("keeps a locally-newer item edit instead of reverting to a stale remote value", () => {
+    const local = baseState({
+      itemUpdatedAt: { "2026-07-10": { "t:a": 9000 } },
+      weeklyCompletions: { "2026-07-10": { tasks: ["a"], revisions: [] } },
+    });
+    const remote = baseState({
+      itemUpdatedAt: { "2026-07-10": { "t:a": 5000 } },
+      weeklyCompletions: { "2026-07-10": { tasks: [], revisions: [] } },
+    });
+
+    const { data } = mergeAppState(local, remote);
+    expect(data.weeklyCompletions["2026-07-10"].tasks).toEqual(["a"]);
+  });
+
+  it("unions completions when neither side has a timestamp (legacy fallback)", () => {
     const local = baseState({
       weeklyCompletions: { "2026-07-10": { tasks: ["a"], revisions: [] } },
       completedItemsHistory: { "2026-07-10": [{ title: "A" }] },
@@ -88,19 +103,20 @@ describe("mergeAppState day-level progress merge", () => {
     expect(data.completedItemsHistory["2026-07-10"].length).toBe(2);
   });
 
-  it("lets deletions win over additions on equal counters", () => {
+  it("lets a newer-timestamped removal win over an older addition, while an untouched item still unions in", () => {
     const local = baseState({
+      itemUpdatedAt: { "2026-07-10": { "t:a": 1000 } },
       weeklyCompletions: { "2026-07-10": { tasks: ["a", "b"], revisions: [] } },
-      completedItemsHistory: { "2026-07-10": [{ title: "A" }, { title: "B" }] },
     });
     const remote = baseState({
-      weeklyCompletions: { "2026-07-10": { tasks: ["a"], revisions: [] } },
-      completedItemsHistory: { "2026-07-10": [{ title: "A" }] },
+      // Remote unchecked "a" after local checked it, so remote wins that item.
+      // "b" was never toggled on either side, so it has no timestamp and unions in.
+      itemUpdatedAt: { "2026-07-10": { "t:a": 2000 } },
+      weeklyCompletions: { "2026-07-10": { tasks: [], revisions: [] } },
     });
 
     const { data } = mergeAppState(local, remote);
-    expect(data.weeklyCompletions["2026-07-10"]).toEqual({ tasks: ["a"], revisions: [] });
-    expect(data.completedItemsHistory["2026-07-10"]).toEqual([{ title: "A" }]);
+    expect(data.weeklyCompletions["2026-07-10"].tasks.sort()).toEqual(["b"]);
   });
 
   it("rebuilds streakHistory from merged accomplishments without duplicates", () => {
