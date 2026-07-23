@@ -13,7 +13,12 @@ export function applyDailyResetIfNeeded(loadedData: TrackState, todayStr: string
     return { data: loadedData, changed: false };
   }
 
-  // Snapshot yesterday's completions into weeklyCompletions before resetting
+  // Snapshot yesterday's completions into weeklyCompletions before resetting.
+  // dailyTasks/dailyRevisionItems' `completed` flags are this device's own
+  // local copy and can lag behind weeklyCompletions[prevDateStr] (e.g. another
+  // device already synced completions for that day that this device never
+  // pulled into its live dailyTasks) — union rather than overwrite so this
+  // reset can never erase a completion this device just doesn't know about.
   const prevWeeklyCompletions = { ...(loadedData.weeklyCompletions || {}) };
   const prevDateStr = loadedData.lastTasksResetDate;
   if (prevDateStr) {
@@ -22,9 +27,10 @@ export function applyDailyResetIfNeeded(loadedData: TrackState, todayStr: string
     // Only save task/revision IDs for that specific day
     const dayTasks = loadedData.dailyTasks?.[prevDayName] || [];
     const dayRevisions = loadedData.dailyRevisionItems?.[prevDayName] || [];
+    const existing = prevWeeklyCompletions[prevDateStr] || { tasks: [], revisions: [] };
     prevWeeklyCompletions[prevDateStr] = {
-      tasks: dayTasks.filter((t) => t.completed).map((t) => t.id),
-      revisions: dayRevisions.filter((it) => it.completed).map((it) => it.id),
+      tasks: Array.from(new Set([...existing.tasks, ...dayTasks.filter((t) => t.completed).map((t) => t.id)])),
+      revisions: Array.from(new Set([...existing.revisions, ...dayRevisions.filter((it) => it.completed).map((it) => it.id)])),
     };
   }
 

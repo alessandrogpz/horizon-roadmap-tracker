@@ -82,6 +82,7 @@ export default function Home() {
     }
     dailySaveTimeoutRef.current = setTimeout(async () => {
       try {
+        dailySaveTimeoutRef.current = null;
         const ws = workspaceRef.current;
         if (!ws) return;
         await updateWorkspace(withTrack(ws, newTrackData));
@@ -90,6 +91,37 @@ export default function Home() {
       }
     }, 1000);
   };
+
+  /** Persists workspaceRef.current immediately, bypassing the debounce, so a
+   *  checkbox toggle made just before closing the tab or hitting Sync is
+   *  never left stranded in the pending timeout — workspaceRef.current
+   *  already reflects it via applyChange's synchronous setWorkspace. */
+  const flushPendingSave = async () => {
+    if (!dailySaveTimeoutRef.current) return;
+    clearTimeout(dailySaveTimeoutRef.current);
+    dailySaveTimeoutRef.current = null;
+    const ws = workspaceRef.current;
+    if (!ws) return;
+    try {
+      await updateWorkspace(ws);
+    } catch (err) {
+      console.error("Failed to flush pending changes", err);
+    }
+  };
+
+  // Flush any pending debounced save when the tab is backgrounded or closed,
+  // so a checkbox checked right before closing the app isn't silently lost.
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") flushPendingSave();
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pagehide", flushPendingSave);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pagehide", flushPendingSave);
+    };
+  }, []);
 
   /** Optimistic UI update + debounced persistence, used by the weekly plan and modals. */
   const applyChange = (newTrackData: TrackState) => {
@@ -217,6 +249,11 @@ export default function Home() {
     setSyncStatus("syncing");
     setSyncError("");
     try {
+      // Make sure any just-made edit (e.g. a checkbox toggled seconds ago)
+      // has actually landed in Dexie before syncWithGoogleDrive reads it —
+      // otherwise this sync can push a snapshot that's missing the very
+      // change the user just made and clicked Sync to send.
+      await flushPendingSave();
       if (!isGoogleAuthenticated()) {
         await authenticateGoogleDrive(clientId);
       }

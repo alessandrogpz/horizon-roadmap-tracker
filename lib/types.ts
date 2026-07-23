@@ -107,8 +107,15 @@ export interface AppState {
   hasUnsyncedChanges?: boolean;
   lastSyncTime?: number;
   configVersion?: number;
-  /** Per-date monotonically increasing edit counters used for day-level merging. */
-  lastUpdatedDates?: Record<DateStr, number>;
+  /** Per-date map of `t:<taskId>`/`r:<revisionId>` -> last-toggle timestamp (ms).
+   *  Drives per-item last-write-wins merging of weeklyCompletions in lib/merge.ts,
+   *  so two devices completing different checkboxes on the same day both survive
+   *  a merge instead of one device's whole day silently clobbering the other's. */
+  itemUpdatedAt?: Record<DateStr, Record<string, number>>;
+  /** Per-date map of accomplishment title -> last-toggle timestamp (ms), the
+   *  same per-item last-write-wins scheme as itemUpdatedAt but for
+   *  completedItemsHistory (which also records material/portfolio completions). */
+  historyUpdatedAt?: Record<DateStr, Record<string, number>>;
   /** Transient flag set by the daily reset so the save path skips version bumps. */
   isReset?: boolean;
 }

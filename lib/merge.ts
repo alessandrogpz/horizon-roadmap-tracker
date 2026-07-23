@@ -83,13 +83,84 @@ export interface MergeOutcome<T = AppState> {
   log: string[];
 }
 
+/** Whether an item should end up present after merging two sides' timestamps.
+ *  Newer timestamp wins outright; with no timestamp on either side (legacy
+ *  data predating itemUpdatedAt/historyUpdatedAt) or an exact tie, presence
+ *  on either side wins so neither device's completion is silently dropped. */
+const lwwPresent = (localTs: number, remoteTs: number, localPresent: boolean, remotePresent: boolean): boolean => {
+  if (localTs !== remoteTs) return localTs > remoteTs ? localPresent : remotePresent;
+  return localPresent || remotePresent;
+};
+
+/**
+ * Per-item last-write-wins merge of a completion id set for one day (tasks or
+ * revisions), keyed by `${prefix}${id}` in the timestamp maps. Two devices
+ * completing different items on the same day both survive the merge, since
+ * the decision is made per item rather than for the whole day at once.
+ */
+const mergeCompletionIds = (
+  localIds: string[],
+  remoteIds: string[],
+  localTs: Record<string, number>,
+  remoteTs: Record<string, number>,
+  prefix: string
+): { ids: string[]; ts: Record<string, number> } => {
+  const allIds = new Set(localIds);
+  remoteIds.forEach((id) => allIds.add(id));
+  Object.keys(localTs).forEach((k) => k.startsWith(prefix) && allIds.add(k.slice(prefix.length)));
+  Object.keys(remoteTs).forEach((k) => k.startsWith(prefix) && allIds.add(k.slice(prefix.length)));
+
+  const ids: string[] = [];
+  const ts: Record<string, number> = {};
+  allIds.forEach((id) => {
+    const key = `${prefix}${id}`;
+    const lt = localTs[key] || 0;
+    const rt = remoteTs[key] || 0;
+    if (lwwPresent(lt, rt, localIds.includes(id), remoteIds.includes(id))) ids.push(id);
+    if (lt || rt) ts[key] = Math.max(lt, rt);
+  });
+  return { ids, ts };
+};
+
+/** Same per-item LWW as mergeCompletionIds, but for completedItemsHistory
+ *  (keyed by accomplishment title, which also covers material/portfolio
+ *  completions that never have a weeklyCompletions id at all). */
+const mergeHistoryItems = (
+  localItems: CompletedItem[],
+  remoteItems: CompletedItem[],
+  localTs: Record<string, number>,
+  remoteTs: Record<string, number>
+): { items: CompletedItem[]; ts: Record<string, number> } => {
+  const localTitles = localItems.map(completedItemTitle);
+  const remoteTitles = remoteItems.map(completedItemTitle);
+  const allTitles = new Set([...localTitles, ...remoteTitles, ...Object.keys(localTs), ...Object.keys(remoteTs)]);
+
+  const items: CompletedItem[] = [];
+  const ts: Record<string, number> = {};
+  allTitles.forEach((title) => {
+    const lt = localTs[title] || 0;
+    const rt = remoteTs[title] || 0;
+    const localPresent = localTitles.includes(title);
+    const remotePresent = remoteTitles.includes(title);
+    if (lwwPresent(lt, rt, localPresent, remotePresent)) {
+      const source = localPresent
+        ? localItems.find((it) => completedItemTitle(it) === title)
+        : remoteItems.find((it) => completedItemTitle(it) === title);
+      items.push(source ?? title);
+    }
+    if (lt || rt) ts[title] = Math.max(lt, rt);
+  });
+  return { items, ts };
+};
+
 /**
  * Merge the local state with a remote (Google Drive) backup.
  *
- * Progress (weeklyCompletions / completedItemsHistory) is merged per-day using
- * the lastUpdatedDates edit counters: the higher counter wins the day; on ties,
- * deletions win over additions, otherwise a union is taken. Structural config
- * follows the higher configVersion. Pure function — no I/O.
+ * Progress (weeklyCompletions / completedItemsHistory) is merged per-item
+ * using itemUpdatedAt/historyUpdatedAt last-toggle timestamps, so two devices
+ * that complete different items on the same day both keep their change —
+ * neither side's whole day clobbers the other's. Structural config follows
+ * the higher configVersion. Pure function — no I/O.
  *
  * Generic over T (AppState, or TrackState which is AppState plus track
  * identity) so mergeWorkspace below can reuse this exact per-track merge
@@ -98,72 +169,44 @@ export interface MergeOutcome<T = AppState> {
 export function mergeAppState<T extends AppState>(localData: T, remoteData: T): MergeOutcome<T> {
   const log: string[] = [];
 
-  const mergedWeeklyCompletions: Record<string, DayCompletions> = { ...(localData.weeklyCompletions || {}) };
-  const mergedCompletedItemsHistory: Record<string, CompletedItem[]> = { ...(localData.completedItemsHistory || {}) };
-
-  const localUpdated = localData.lastUpdatedDates || {};
-  const remoteUpdated = remoteData.lastUpdatedDates || {};
-  const mergedUpdated = { ...localUpdated, ...remoteUpdated };
-
-  const allDates = Array.from(new Set([
-    ...Object.keys(localUpdated),
-    ...Object.keys(remoteUpdated),
+  const mergedWeeklyCompletions: Record<string, DayCompletions> = {};
+  const mergedItemUpdatedAt: Record<string, Record<string, number>> = {};
+  const compDates = Array.from(new Set([
     ...Object.keys(localData.weeklyCompletions || {}),
     ...Object.keys(remoteData.weeklyCompletions || {}),
-    ...Object.keys(localData.completedItemsHistory || {}),
-    ...Object.keys(remoteData.completedItemsHistory || {})
+    ...Object.keys(localData.itemUpdatedAt || {}),
+    ...Object.keys(remoteData.itemUpdatedAt || {}),
   ]));
+  compDates.forEach((date) => {
+    const localComps = localData.weeklyCompletions?.[date] || { tasks: [], revisions: [] };
+    const remoteComps = remoteData.weeklyCompletions?.[date] || { tasks: [], revisions: [] };
+    const localTs = localData.itemUpdatedAt?.[date] || {};
+    const remoteTs = remoteData.itemUpdatedAt?.[date] || {};
 
-  allDates.forEach((date) => {
-    const localTime = localUpdated[date] || 0;
-    const remoteTime = remoteUpdated[date] || 0;
+    const tasksResult = mergeCompletionIds(localComps.tasks || [], remoteComps.tasks || [], localTs, remoteTs, "t:");
+    const revsResult = mergeCompletionIds(localComps.revisions || [], remoteComps.revisions || [], localTs, remoteTs, "r:");
 
-    if (remoteTime > localTime) {
-      // Remote is newer: adopt remote completions and achievements for this day
-      if (remoteData.weeklyCompletions?.[date]) {
-        mergedWeeklyCompletions[date] = remoteData.weeklyCompletions[date];
-      } else {
-        delete mergedWeeklyCompletions[date];
-      }
+    mergedWeeklyCompletions[date] = { tasks: tasksResult.ids, revisions: revsResult.ids };
+    mergedItemUpdatedAt[date] = { ...tasksResult.ts, ...revsResult.ts };
+  });
 
-      if (remoteData.completedItemsHistory?.[date]) {
-        mergedCompletedItemsHistory[date] = remoteData.completedItemsHistory[date];
-      } else {
-        delete mergedCompletedItemsHistory[date];
-      }
-    } else if (localTime > remoteTime) {
-      // Local is newer: keep local completions (already in the merged maps)
-    } else {
-      // Equal versions: deletion wins over addition
-      const remoteTaskCount = (remoteData.weeklyCompletions?.[date]?.tasks || []).length;
-      const localTaskCount = (mergedWeeklyCompletions[date]?.tasks || []).length;
-      const remoteRevCount = (remoteData.weeklyCompletions?.[date]?.revisions || []).length;
-      const localRevCount = (mergedWeeklyCompletions[date]?.revisions || []).length;
-
-      if (remoteTaskCount < localTaskCount || remoteRevCount < localRevCount) {
-        // Remote deleted something, adopt remote
-        mergedWeeklyCompletions[date] = remoteData.weeklyCompletions?.[date] || { tasks: [], revisions: [] };
-        mergedCompletedItemsHistory[date] = remoteData.completedItemsHistory?.[date] || [];
-      } else {
-        // Standard union merge for additions
-        const remoteComps = remoteData.weeklyCompletions?.[date] || { tasks: [], revisions: [] };
-        const localComps = mergedWeeklyCompletions[date] || { tasks: [], revisions: [] };
-        mergedWeeklyCompletions[date] = {
-          tasks: Array.from(new Set([...(localComps.tasks || []), ...(remoteComps.tasks || [])])),
-          revisions: Array.from(new Set([...(localComps.revisions || []), ...(remoteComps.revisions || [])])),
-        };
-
-        const localItems = mergedCompletedItemsHistory[date] || [];
-        const remoteItems = remoteData.completedItemsHistory?.[date] || [];
-        const mergedItems = [...localItems];
-        remoteItems.forEach((rIt) => {
-          const rTitle = completedItemTitle(rIt);
-          const exists = mergedItems.some((lIt) => completedItemTitle(lIt) === rTitle);
-          if (!exists) mergedItems.push(rIt);
-        });
-        mergedCompletedItemsHistory[date] = mergedItems;
-      }
-    }
+  const mergedCompletedItemsHistory: Record<string, CompletedItem[]> = {};
+  const mergedHistoryUpdatedAt: Record<string, Record<string, number>> = {};
+  const histDates = Array.from(new Set([
+    ...Object.keys(localData.completedItemsHistory || {}),
+    ...Object.keys(remoteData.completedItemsHistory || {}),
+    ...Object.keys(localData.historyUpdatedAt || {}),
+    ...Object.keys(remoteData.historyUpdatedAt || {}),
+  ]));
+  histDates.forEach((date) => {
+    const { items, ts } = mergeHistoryItems(
+      localData.completedItemsHistory?.[date] || [],
+      remoteData.completedItemsHistory?.[date] || [],
+      localData.historyUpdatedAt?.[date] || {},
+      remoteData.historyUpdatedAt?.[date] || {}
+    );
+    mergedCompletedItemsHistory[date] = items;
+    mergedHistoryUpdatedAt[date] = ts;
   });
 
   const localConfigVer = localData.configVersion || 0;
@@ -181,7 +224,8 @@ export function mergeAppState<T extends AppState>(localData: T, remoteData: T): 
     weeklyCompletions: mergedWeeklyCompletions,
     streakHistory: rebuildStreakHistory(mergedCompletedItemsHistory),
     completedItemsHistory: mergedCompletedItemsHistory,
-    lastUpdatedDates: mergedUpdated,
+    itemUpdatedAt: mergedItemUpdatedAt,
+    historyUpdatedAt: mergedHistoryUpdatedAt,
     hasUnsyncedChanges: false,
     lastSyncTime: Date.now(),
     isSynced: true,

@@ -38,7 +38,8 @@ const realisticLegacyState: AppState & { dsaStartWeek: number } = {
   hasUnsyncedChanges: false,
   lastSyncTime: 1753000000000,
   configVersion: 3,
-  lastUpdatedDates: { "2026-06-09": 1 },
+  itemUpdatedAt: {},
+  historyUpdatedAt: { "2026-06-09": { "Data Oriented Design": 1750000000000 } },
 };
 
 describe("Dexie v1 -> v2 multi-track migration", () => {
