@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Inter } from "next/font/google";
 import "./globals.css";
+import packageJson from "../package.json";
 
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains-mono" });
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -22,7 +23,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${jetbrainsMono.variable} ${inter.variable} ${inter.className}`} suppressHydrationWarning>{children}</body>
+      <body className={`${jetbrainsMono.variable} ${inter.variable} ${inter.className}`} suppressHydrationWarning>
+        {children}
+        <span className="fixed bottom-2 right-2.5 text-[0.65rem] text-zinc-700 font-mono pointer-events-none select-none z-10">
+          v{packageJson.version}
+        </span>
+      </body>
     </html>
   );
 }

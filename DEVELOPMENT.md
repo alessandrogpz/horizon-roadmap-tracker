@@ -15,7 +15,7 @@ Short-lived feature branches can branch off `development` and merge back into it
 
 ## Workflow
 
-1. Do work on `development`, commit, push to `origin/development` — this deploys to the Vercel preview URL.
+1. Do work on `development`. Before committing, bump the version in `package.json` (and `package-lock.json`'s two matching root `version` fields) per [Versioning](#versioning) below, and add a `CHANGELOG.md` entry. Commit, push to `origin/development` — this deploys to the Vercel preview URL.
 2. Verify the preview build (manually exercise the feature; for touch/mobile-only behavior, test on an actual phone since browser automation tooling is mouse-only and can't simulate real touch/long-press gestures).
 3. When ready to ship, merge `development` into `main` and push. Before merging:
    - Confirm a clean fast-forward is possible: `git merge-base --is-ancestor origin/main origin/development`
@@ -30,6 +30,25 @@ Short-lived feature branches can branch off `development` and merge back into it
 4. Push `main` only after all of the above pass clean.
 
 Never force-push either branch. Never skip the pre-push checks on `main` — it's production.
+
+## Versioning
+
+`package.json`'s `version` field is the single source of truth — the small
+`v0.x.y` badge in the app's bottom-right corner reads from it directly, so it
+never needs updating separately. Follows [SemVer](https://semver.org/),
+pre-1.0:
+
+- Stay on major `0` until the app is considered beta-ready — under SemVer,
+  `0.x.y` itself signals "not yet stable," so there's no need for `-alpha`/
+  `-beta` suffixes on top of it.
+- Bump **minor** (`0.X.0`) for a meaningful feature or user-facing change.
+- Bump **patch** (`0.1.X`) for bug fixes and small tweaks.
+- Reserve `1.0.0` for a deliberate "this is beta-ready" decision, not an
+  automatic bump.
+
+Bump the version in both `package.json` and `package-lock.json` (the two root
+`"version"` fields near the top) together, and add a `CHANGELOG.md` entry, as
+part of committing the change — not as a separate cleanup pass later.
 
 ## Testing against real data
 
