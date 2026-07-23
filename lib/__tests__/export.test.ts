@@ -24,7 +24,8 @@ const baseTrack = (id: string, overrides: Partial<TrackState> = {}): TrackState 
   studyStreak: [],
   isSynced: true,
   configVersion: 0,
-  lastUpdatedDates: {},
+  itemUpdatedAt: {},
+  historyUpdatedAt: {},
   ...overrides,
 });
 

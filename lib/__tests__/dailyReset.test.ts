@@ -37,7 +37,8 @@ const baseTrack = (overrides: Partial<TrackState> = {}): TrackState => ({
   studyStreak: [],
   isSynced: true,
   configVersion: 0,
-  lastUpdatedDates: {},
+  itemUpdatedAt: {},
+  historyUpdatedAt: {},
   ...overrides,
 });
 
@@ -92,6 +93,24 @@ describe("applyDailyResetIfNeeded — task/phase resets", () => {
     const { data } = applyDailyResetIfNeeded(track, TODAY);
     expect(data.weeklyCompletions[yesterday].tasks).toEqual(["task_done"]);
     expect(data.weeklyCompletions[yesterday].revisions).toEqual(["rev_done"]);
+  });
+
+  it("unions with an existing weeklyCompletions entry for the previous day instead of overwriting it", () => {
+    // Regression test: this device's own dailyTasks/dailyRevisionItems can lag
+    // behind weeklyCompletions[prevDateStr] — e.g. another device already
+    // synced a completion for that day that never made it into this device's
+    // live dailyTasks list. The reset must never erase that already-recorded
+    // completion just because this device's own copy doesn't know about it.
+    const prevDayName = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][new Date(yesterday + "T00:00:00").getDay()];
+    const track = baseTrack({
+      lastTasksResetDate: yesterday,
+      dailyTasks: { [prevDayName]: [{ id: "task_local", title: "Local", completed: true }] },
+      dailyRevisionItems: {},
+      weeklyCompletions: { [yesterday]: { tasks: ["task_remote_only"], revisions: ["rev_remote_only"] } },
+    });
+    const { data } = applyDailyResetIfNeeded(track, TODAY);
+    expect(data.weeklyCompletions[yesterday].tasks.sort()).toEqual(["task_local", "task_remote_only"]);
+    expect(data.weeklyCompletions[yesterday].revisions).toEqual(["rev_remote_only"]);
   });
 });
 

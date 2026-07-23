@@ -23,7 +23,8 @@ const baseTrackFields = (overrides: Partial<AppState> = {}): AppState => ({
   studyStreak: [],
   isSynced: true,
   configVersion: 0,
-  lastUpdatedDates: {},
+  itemUpdatedAt: {},
+  historyUpdatedAt: {},
   ...overrides,
 });
 
@@ -48,24 +49,24 @@ const workspace = (tracks: TrackState[], overrides: Partial<Workspace> = {}): Wo
 });
 
 describe("mergeWorkspace", () => {
-  it("merges a track present on both sides using the per-track day-level merge", () => {
+  it("merges a track present on both sides using the per-track per-item merge", () => {
     const local = workspace([
       track({ id: "track_a" }, {
         configVersion: 1,
-        lastUpdatedDates: { "2026-07-10": 1 },
+        itemUpdatedAt: { "2026-07-10": { "t:a": 1000 } },
         weeklyCompletions: { "2026-07-10": { tasks: ["a"], revisions: [] } },
       }),
     ]);
     const remote = workspace([
       track({ id: "track_a" }, {
         configVersion: 1,
-        lastUpdatedDates: { "2026-07-10": 3 },
+        itemUpdatedAt: { "2026-07-10": { "t:b": 2000 } },
         weeklyCompletions: { "2026-07-10": { tasks: ["b"], revisions: [] } },
       }),
     ]);
 
     const { data, log } = mergeWorkspace(local, remote);
-    expect(data.tracks.track_a.weeklyCompletions["2026-07-10"]).toEqual({ tasks: ["b"], revisions: [] });
+    expect(data.tracks.track_a.weeklyCompletions["2026-07-10"].tasks.sort()).toEqual(["a", "b"]);
     expect(log.join(" ")).toContain('Track "Track A"');
   });
 

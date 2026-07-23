@@ -91,6 +91,7 @@ export function seedTrackFromTemplate(template: TrackTemplate, answers: SeedAnsw
     roadmapContent: answers.roadmapContent || "",
     isSynced: true,
     configVersion: 0,
-    lastUpdatedDates: {},
+    itemUpdatedAt: {},
+    historyUpdatedAt: {},
   };
 }
