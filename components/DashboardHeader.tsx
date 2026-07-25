@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import type { TrackState, Workspace } from "@/lib/types";
-import { daysSince } from "@/lib/dates";
+import { daysSince, todayYMD } from "@/lib/dates";
+import { currentStreakLength } from "@/lib/streak";
 import { visibleTracks } from "@/lib/api";
+import { Pencil, Ellipsis, Cloud, Map, Flame } from "lucide-react";
 import TrackSwitcher from "@/components/TrackSwitcher";
 import TrackSettingsModal from "@/components/TrackSettingsModal";
 
@@ -42,7 +44,86 @@ function LastSyncedLabel({ timestamp }: { timestamp: number | undefined }) {
     const interval = setInterval(() => setTick((t) => t + 1), 15000);
     return () => clearInterval(interval);
   }, []);
-  return <span className="text-zinc-500">{getRelativeTimeString(timestamp)}</span>;
+  return <span className="text-muted-foreground">{getRelativeTimeString(timestamp)}</span>;
+}
+
+const prefersReducedMotion = () =>
+  typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+/** Animates a number up to `value` on mount / when it changes. A small, cheap
+ *  micro-interaction for the hero metrics. */
+function CountUp({ value, className }: { value: number; className?: string }) {
+  const [display, setDisplay] = useState(value);
+  const fromRef = useRef(value);
+  useEffect(() => {
+    const from = fromRef.current;
+    const to = value;
+    fromRef.current = value;
+    if (from === to || prefersReducedMotion()) {
+      setDisplay(to);
+      return;
+    }
+    const duration = 600;
+    const start = performance.now();
+    let raf = 0;
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
+      setDisplay(Math.round(from + (to - from) * eased));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value]);
+  return <span className={className}>{display}</span>;
+}
+
+/** Circular progress ring — the hero's focal "Day X of Y" element. */
+function ProgressRing({ pct, size = 60 }: { pct: number; size?: number }) {
+  const stroke = 5;
+  const r = (size - stroke) / 2;
+  const circ = 2 * Math.PI * r;
+  const clamped = Math.max(0, Math.min(100, pct));
+  return (
+    <svg width={size} height={size} className="shrink-0 -rotate-90" aria-hidden="true">
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--card-border)" strokeWidth={stroke} />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        fill="none"
+        stroke="var(--accent)"
+        strokeWidth={stroke}
+        strokeLinecap="round"
+        strokeDasharray={circ}
+        strokeDashoffset={circ * (1 - clamped / 100)}
+        style={{ transition: "stroke-dashoffset 0.6s cubic-bezier(0.16,1,0.3,1)" }}
+      />
+    </svg>
+  );
+}
+
+/** One hero stat tile — elevated surface, muted label, large mono value. */
+function StatTile({
+  label,
+  icon,
+  children,
+  className = "",
+}: {
+  label: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`flex items-center gap-3 rounded-[10px] border border-card-border bg-card/60 px-4 py-3 ${className}`}>
+      {icon}
+      <div className="flex flex-col">
+        <span className="text-[0.65rem] uppercase tracking-[0.08em] text-muted-foreground font-semibold">{label}</span>
+        {children}
+      </div>
+    </div>
+  );
 }
 
 export default function DashboardHeader({ data, workspace, syncStatus, syncError, onSync, onOpenCloudMenu, onSwitchTrack, onNewTrack, onEditTrack, onDeleteTrack, canDeleteTrack }: DashboardHeaderProps) {
@@ -57,6 +138,9 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
   // 365 for tracks/templates that don't set one.
   const lastThresholdPhase = [...data.phases].reverse().find((p) => p.recommendedByDay !== undefined);
   const totalDays = lastThresholdPhase?.recommendedByDay ?? 365;
+  const progressPct = totalDays > 0 ? (daysPassed / totalDays) * 100 : 0;
+
+  const streak = data.isSynced ? currentStreakLength(data.streakHistory, todayYMD()) : 0;
 
   const dotColor = syncStatus === "syncing"
     ? "bg-accent shadow-[0_0_8px_var(--accent)]"
@@ -67,17 +151,17 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
         : "bg-emerald-500 shadow-[0_0_8px_#10b981]";
 
   return (
-    <header className="main-header w-full flex flex-col gap-2.5 border-b border-card-border pb-5">
+    <header className="main-header w-full flex flex-col gap-4 border-b border-card-border pb-5">
       {/* Line 1: Identity + track + roadmap link + sync status, all inline */}
       <div className="flex items-center gap-3 flex-wrap text-[0.85rem]">
-        <h1 className="text-[1.3rem] font-bold text-white m-0 flex items-center gap-2 tracking-[-0.01em] shrink-0">
-          <span className="text-accent">&gt;_</span> Horizon
+        <h1 className="text-[1.3rem] font-bold text-foreground m-0 flex items-center gap-2 tracking-[-0.01em] shrink-0">
+          <span className="text-accent font-mono">&gt;_</span> Horizon
         </h1>
 
         <span className="text-card-border">|</span>
 
         <div className="flex items-center gap-1.5">
-          <span className="text-zinc-500">Track:</span>
+          <span className="text-muted-foreground">Track:</span>
           <TrackSwitcher
             tracks={visibleTracks(workspace)}
             activeTrackId={workspace.activeTrackId}
@@ -86,23 +170,23 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
           />
           <button
             onClick={() => setShowTrackSettings(true)}
-            className="bg-transparent border-none text-zinc-600 hover:text-white cursor-pointer text-[0.8rem] p-0"
+            className="flex items-center text-muted-foreground hover:text-foreground cursor-pointer p-1 transition-colors"
             title="Edit track name/color"
             aria-label="Edit track"
           >
-            ✎
+            <Pencil size={13} strokeWidth={2} />
           </button>
         </div>
 
         {/* Every track has its own private, editable roadmap doc. */}
         <span className="text-card-border">|</span>
         {data.isSynced ? (
-          <a href="/roadmap" className="link-title !text-accent no-underline font-semibold inline-flex items-center gap-1">
-            Full Roadmap
+          <a href="/roadmap" className="link-title !text-accent no-underline font-semibold inline-flex items-center gap-1.5">
+            <Map size={14} strokeWidth={2} /> Full Roadmap
           </a>
         ) : (
-          <span className="text-zinc-600 font-semibold cursor-not-allowed" title="Connect Google Drive to unlock roadmap">
-            Full Roadmap (Locked)
+          <span className="text-muted-foreground/70 font-semibold cursor-not-allowed inline-flex items-center gap-1.5" title="Connect Google Drive to unlock roadmap">
+            <Map size={14} strokeWidth={2} /> Full Roadmap (Locked)
           </span>
         )}
 
@@ -111,8 +195,8 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
         {/* Cloud status, clickable to sync */}
         <div
           onClick={onSync}
-          className={`flex items-center gap-2 text-zinc-400 select-none w-fit py-1 px-2 -mx-2 rounded transition-colors duration-200 ${
-            syncStatus === "syncing" ? "cursor-not-allowed" : "cursor-pointer hover:bg-white/5"
+          className={`flex items-center gap-2 text-muted-foreground select-none w-fit py-1 px-2 -mx-2 rounded transition-colors duration-200 ${
+            syncStatus === "syncing" ? "cursor-not-allowed" : "cursor-pointer hover:bg-surface-hover"
           }`}
           title={syncStatus === "error" ? syncError : "Click to sync with Google Drive"}
         >
@@ -120,38 +204,66 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
           <span className="font-medium">
             {syncStatus === "syncing" && "Syncing..."}
             {syncStatus === "error" && "Sync Error (retry)"}
-            {syncStatus === "success" && "Synced ✓"}
+            {syncStatus === "success" && "Synced"}
             {syncStatus === "idle" && (workspace.hasUnsyncedChanges ? "Unsynced (Click to Sync)" : "Synced with Cloud")}
           </span>
-          <span className="text-zinc-700">•</span>
+          <span className="text-card-border">•</span>
           <LastSyncedLabel timestamp={workspace.lastSyncTime} />
         </div>
 
         <button
           onClick={onOpenCloudMenu}
-          className="flex items-center justify-center w-7 h-7 rounded-md bg-transparent border border-white/10 text-zinc-400 cursor-pointer hover:text-white hover:border-white/25 shrink-0"
+          className="flex items-center justify-center w-7 h-7 rounded-md bg-transparent border border-card-border text-muted-foreground cursor-pointer hover:text-foreground hover:border-card-border-hover shrink-0 transition-colors"
           title="Cloud connection & backup"
           aria-label="Cloud connection & backup"
         >
-          ⋯
+          <Ellipsis size={15} strokeWidth={2} />
         </button>
       </div>
 
-      {/* Line 2: Compact phase day + progress */}
-      <div className="flex items-center gap-4 flex-wrap text-[0.85rem] text-zinc-400">
-        <div>
-          <span className="text-zinc-500 mr-1.5">Phase Day:</span>
-          <span className="text-white font-semibold font-mono">{daysInPhase}</span>
-        </div>
-        <span className="text-card-border">|</span>
-        <div className="flex items-center gap-3 min-w-[250px] flex-1 max-w-[400px]">
-          <span className="text-zinc-500">Progress:</span>
-          <span className="text-white font-semibold font-mono shrink-0">{daysPassed}/{totalDays}</span>
-          <div className="flex-1 h-1.5 bg-white/[0.08] rounded-[3px] overflow-hidden">
-            <div
-              className="h-full bg-accent transition-[width] duration-300"
-              style={{ width: `${Math.min(100, (daysPassed / totalDays) * 100)}%` }}
-            />
+      {/* Hero metrics — the "am I on track?" glance, up front. */}
+      <div className="flex items-stretch gap-3 flex-wrap">
+        <StatTile
+          label="Current Streak"
+          icon={<Flame size={20} strokeWidth={2} className="text-warning shrink-0" />}
+        >
+          <div className="flex items-baseline gap-1.5">
+            <CountUp value={streak} className="text-[1.5rem] font-bold font-mono text-foreground leading-none" />
+            <span className="text-[0.8rem] text-muted-foreground">{streak === 1 ? "day" : "days"}</span>
+          </div>
+        </StatTile>
+
+        <StatTile
+          label="Timeline"
+          icon={
+            <div className="relative shrink-0 grid place-items-center" style={{ width: 60, height: 60 }}>
+              <ProgressRing pct={progressPct} />
+              <span className="absolute inset-0 grid place-items-center text-[0.6rem] font-mono font-semibold text-accent">
+                {Math.round(Math.min(100, progressPct))}%
+              </span>
+            </div>
+          }
+        >
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-[1.5rem] font-bold font-mono text-foreground leading-none">{daysPassed}</span>
+            <span className="text-[0.8rem] text-muted-foreground">/ {totalDays} days</span>
+          </div>
+        </StatTile>
+
+        <StatTile label="Phase Day">
+          <span className="text-[1.5rem] font-bold font-mono text-foreground leading-none">{daysInPhase}</span>
+        </StatTile>
+
+        <div className="flex items-center gap-2.5 rounded-[10px] border border-card-border bg-card/60 px-4 py-3 flex-1 min-w-[200px]">
+          <Cloud size={18} strokeWidth={2} className="text-muted-foreground shrink-0" />
+          <div className="flex flex-col flex-1 gap-1.5">
+            <span className="text-[0.65rem] uppercase tracking-[0.08em] text-muted-foreground font-semibold">Progress</span>
+            <div className="h-1.5 bg-surface-hover rounded-full overflow-hidden">
+              <div
+                className="h-full bg-accent rounded-full transition-[width] duration-500"
+                style={{ width: `${Math.min(100, progressPct)}%` }}
+              />
+            </div>
           </div>
         </div>
       </div>

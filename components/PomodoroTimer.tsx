@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { Timer } from "lucide-react";
 
 export default function PomodoroTimer() {
   const [minutes, setMinutes] = useState(25);
@@ -98,7 +99,10 @@ export default function PomodoroTimer() {
 
   return (
     <div className="glass-panel p-6 flex flex-col gap-4">
-      <h2 className="section-title">Focus Timer</h2>
+      <h2 className="section-title">
+        <Timer size={14} strokeWidth={2.5} className="section-icon" />
+        Focus Timer
+      </h2>
 
       <div className="flex flex-col items-center gap-4 py-2">
         {/* Clock Display */}
