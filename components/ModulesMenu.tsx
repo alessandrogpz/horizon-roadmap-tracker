@@ -44,7 +44,24 @@ export default function ModulesMenu({
   onToggle: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  // Which edge the popover aligns to, chosen on open so it always lands fully
+  // inside the viewport: open rightward (left-0) by default, but flip to
+  // right-aligned when the trigger sits too close to the right edge for a
+  // 256px-wide (w-64) menu to fit.
+  const [alignRight, setAlignRight] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  const MENU_WIDTH = 256; // w-64
+  const EDGE_MARGIN = 8;
+
+  const handleToggle = () => {
+    if (!open && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setAlignRight(rect.left + MENU_WIDTH > window.innerWidth - EDGE_MARGIN);
+    }
+    setOpen((o) => !o);
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -65,7 +82,8 @@ export default function ModulesMenu({
   return (
     <div className="relative" ref={ref}>
       <button
-        onClick={() => setOpen((o) => !o)}
+        ref={triggerRef}
+        onClick={handleToggle}
         className="flex items-center gap-1.5 h-7 px-2 rounded-md bg-transparent border border-card-border text-muted-foreground cursor-pointer hover:text-foreground hover:border-card-border-hover transition-colors text-[0.8rem] font-medium"
         title="Show or hide dashboard modules"
         aria-haspopup="menu"
@@ -77,7 +95,7 @@ export default function ModulesMenu({
 
       {open && (
         <div
-          className="!absolute left-0 mt-2 w-64 z-50 glass-surface p-1.5 flex flex-col"
+          className={`!absolute ${alignRight ? "right-0" : "left-0"} mt-2 w-64 max-w-[calc(100vw-1rem)] z-50 glass-surface p-1.5 flex flex-col`}
           role="menu"
         >
           <div className="px-2.5 py-1.5 flex items-center justify-between gap-2">
