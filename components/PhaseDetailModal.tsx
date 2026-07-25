@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { X } from "lucide-react";
 import type { Phase, PhaseDetailItem, TaskItem } from "@/lib/types";
 
 interface PhaseDetailModalProps {
@@ -69,9 +70,10 @@ function EditableDetailSection({
               />
               <button
                 onClick={() => onChange(items.filter((_, i) => i !== idx))}
-                className="bg-transparent border-none text-red-500 cursor-pointer text-[0.85rem]"
+                className="flex items-center bg-transparent border-none text-red-500 cursor-pointer"
+                aria-label="Remove"
               >
-                ✕
+                <X size={14} strokeWidth={2} />
               </button>
             </div>
             <input
@@ -143,9 +145,10 @@ export default function PhaseDetailModal({
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 bg-transparent border-none text-zinc-400 text-[1.2rem] cursor-pointer font-[inherit]"
+          className="absolute top-6 right-6 flex items-center bg-transparent border-none text-zinc-400 hover:text-white cursor-pointer transition-colors"
+          aria-label="Close"
         >
-          ✕
+          <X size={18} strokeWidth={2} />
         </button>
 
         {isEditing ? (
@@ -194,8 +197,8 @@ export default function PhaseDetailModal({
                       onChange={(e) => updateTask(task.id, { title: e.target.value })}
                       className="flex-1 bg-transparent border-none text-white text-[0.85rem] outline-none"
                     />
-                    <button onClick={() => removeTask(task.id)} className="bg-transparent border-none text-red-500 cursor-pointer text-[0.85rem]">
-                      ✕
+                    <button onClick={() => removeTask(task.id)} className="flex items-center bg-transparent border-none text-red-500 cursor-pointer" aria-label="Remove task">
+                      <X size={14} strokeWidth={2} />
                     </button>
                   </div>
                 ))}

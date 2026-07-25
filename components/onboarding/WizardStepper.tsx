@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { Check } from "lucide-react";
 
 interface WizardStepperProps {
   steps: readonly string[];
@@ -22,7 +23,7 @@ export default function WizardStepper({ steps, currentIndex }: WizardStepperProp
                     : "bg-white/[0.06] text-zinc-500 border border-white/10"
               }`}
             >
-              {idx < currentIndex ? "✓" : idx + 1}
+              {idx < currentIndex ? <Check size={13} strokeWidth={3} /> : idx + 1}
             </div>
             <span className={`text-[0.75rem] hidden sm:inline ${idx === currentIndex ? "text-white font-semibold" : "text-zinc-500"}`}>
               {step}

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { X } from "lucide-react";
 
 interface TrackSettingsFields {
   name: string;
@@ -40,9 +41,10 @@ export default function TrackSettingsModal({ name, color, startDate, totalDays, 
       >
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 bg-transparent border-none text-zinc-400 text-[1.2rem] cursor-pointer"
+          className="absolute top-6 right-6 flex items-center bg-transparent border-none text-zinc-400 hover:text-white cursor-pointer transition-colors"
+          aria-label="Close"
         >
-          ✕
+          <X size={18} strokeWidth={2} />
         </button>
 
         <div>

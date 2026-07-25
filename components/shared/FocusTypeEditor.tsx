@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { X } from "lucide-react";
 import type { FocusType, WeekDay } from "@/lib/types";
 
 interface FocusTypeEditorProps {
@@ -71,7 +72,7 @@ export default function FocusTypeEditor({ focusTypes, weekSchedule, onChange }: 
               }`}
               title="Delete Focus Type"
             >
-              ✕
+              <X size={14} strokeWidth={2} />
             </button>
           </div>
         ))}
