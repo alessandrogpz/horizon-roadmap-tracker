@@ -255,9 +255,9 @@
  "phases": [
   {
    "id": 1,
-   "title": "Phase 1: Months 1-3 (ends Sep 5, 2026)",
+   "title": "Phase 1: Months 1-3",
    "description": "Language Fundamentals & Software Rendering",
-   "recommendedByDay": 92,
+   "recommendedByDay": 88,
    "tasks": [
     {
      "id": "t3",
@@ -339,9 +339,9 @@
   },
   {
    "id": 2,
-   "title": "Phase 2: Months 4-6 (ends Dec 8, 2026)",
+   "title": "Phase 2: Months 4-6",
    "description": "Real-Time Rendering, End to End",
-   "recommendedByDay": 186,
+   "recommendedByDay": 182,
    "tasks": [
     {
      "id": "t2_1",
@@ -459,9 +459,9 @@
   },
   {
    "id": 3,
-   "title": "Phase 3: Months 7-11 (ends May 5, 2027)",
+   "title": "Phase 3: Months 7-11",
    "description": "Engine Architecture & Optimization",
-   "recommendedByDay": 334,
+   "recommendedByDay": 330,
    "tasks": [
     {
      "id": "t3_gregory",
@@ -614,9 +614,9 @@
   },
   {
    "id": 4,
-   "title": "Phase 4: Months 12-13 (ends Jul 6, 2027)",
+   "title": "Phase 4: Months 12-13",
    "description": "Explicit GPU Control — Vulkan",
-   "recommendedByDay": 396,
+   "recommendedByDay": 392,
    "tasks": [
     {
      "id": "t4_1",

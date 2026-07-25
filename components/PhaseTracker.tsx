@@ -2,16 +2,19 @@
 
 import React from "react";
 import { Milestone } from "lucide-react";
+import { dateForDay, formatDayMonthYear } from "@/lib/dates";
 import type { Phase } from "@/lib/types";
 
 interface PhaseTrackerProps {
   phases: Phase[];
   currentPhase: number;
+  /** Track start, needed to turn each phase's recommendedByDay into a date. */
+  startDate: string;
   onPhaseClick: (phase: Phase) => void;
   onAddPhase: () => void;
 }
 
-export default function PhaseTracker({ phases, currentPhase, onPhaseClick, onAddPhase }: PhaseTrackerProps) {
+export default function PhaseTracker({ phases, currentPhase, startDate, onPhaseClick, onAddPhase }: PhaseTrackerProps) {
   return (
     <div className="glass-panel p-6 flex flex-col gap-6">
       <div className="flex justify-between items-center">
@@ -62,6 +65,16 @@ export default function PhaseTracker({ phases, currentPhase, onPhaseClick, onAdd
               <p className="text-[0.8rem] text-muted-foreground m-0">
                 {phase.description}
               </p>
+
+              {/* Deadline, deliberately faint — reads as metadata under the
+                  description rather than competing with it. Only shown when the
+                  phase actually carries a threshold. */}
+              {phase.recommendedByDay !== undefined && startDate && (
+                <p className="text-[0.7rem] font-mono text-muted-foreground/60 m-0">
+                  Ends {formatDayMonthYear(dateForDay(startDate, phase.recommendedByDay))}
+                  <span className="opacity-70"> · day {phase.recommendedByDay}</span>
+                </p>
+              )}
             </div>
           );
         })}

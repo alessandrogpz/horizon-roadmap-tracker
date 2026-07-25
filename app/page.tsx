@@ -666,6 +666,7 @@ export default function Home() {
       <PhaseTracker
         phases={data.phases}
         currentPhase={data.currentPhase}
+        startDate={data.startDate}
         onPhaseClick={setSelectedPhase}
         onAddPhase={handleAddPhase}
       />
@@ -780,6 +781,7 @@ export default function Home() {
         <PhaseDetailModal
           phase={selectedPhase}
           currentPhaseId={data.currentPhase}
+          startDate={data.startDate}
           onClose={() => setSelectedPhase(null)}
           onActivatePhase={handlePhaseChange}
           onChange={handlePhaseUpdate}
