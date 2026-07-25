@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { X } from "lucide-react";
 import type { TrackState, WeekDay } from "@/lib/types";
 import { getDateForDayName, getWeekNum, parseYMD, todayYMD } from "@/lib/dates";
 import { rebuildStreakHistory, completedItemTitle } from "@/lib/streak";
@@ -115,9 +116,10 @@ export default function ScheduleDayModal({
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 bg-transparent border-none text-zinc-400 text-[1.2rem] cursor-pointer font-[inherit]"
+          className="absolute top-6 right-6 flex items-center bg-transparent border-none text-zinc-400 hover:text-white cursor-pointer transition-colors"
+          aria-label="Close"
         >
-          ✕
+          <X size={18} strokeWidth={2} />
         </button>
 
         {/* Modal Header */}
@@ -318,9 +320,10 @@ export default function ScheduleDayModal({
                             weeklyCompletions: newWeeklyCompletions
                           });
                         }}
-                        className="bg-transparent border-none text-red-500 cursor-pointer text-[0.9rem]"
+                        className="flex items-center bg-transparent border-none text-red-500 cursor-pointer"
+                        aria-label="Remove item"
                       >
-                        ✕
+                        <X size={14} strokeWidth={2} />
                       </button>
                     </div>
 
@@ -529,9 +532,10 @@ export default function ScheduleDayModal({
                           weeklyCompletions: newWeeklyCompletions
                         });
                       }}
-                      className="bg-transparent border-none text-red-500 cursor-pointer text-[0.9rem]"
+                      className="flex items-center bg-transparent border-none text-red-500 cursor-pointer"
+                      aria-label="Remove item"
                     >
-                      ✕
+                      <X size={14} strokeWidth={2} />
                     </button>
                   </div>
                 ))}

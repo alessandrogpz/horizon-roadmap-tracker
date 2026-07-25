@@ -7,6 +7,17 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.2.1] - 2026-07-25
+
+### Changed
+- Completed the lucide line-icon sweep across the modals and onboarding
+  wizard: every remaining unicode close (`✕`) and check (`✓`) glyph is now a
+  lucide icon, matching the dashboard. Covers the phase/schedule/rotation/
+  track-settings/drive/rhythm modals, the onboarding steps, the wizard
+  stepper's completed-step check, and the roadmap/rotation "Saved" labels.
+  Close/remove buttons also gained `aria-label`s. (The checkbox tick remains a
+  styled CSS pseudo-element by design.)
+
 ## [0.2.0] - 2026-07-25
 
 ### Changed

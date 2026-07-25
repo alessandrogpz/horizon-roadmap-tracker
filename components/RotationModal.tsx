@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { Check, X } from "lucide-react";
 import type { RotationDef, TrackState } from "@/lib/types";
 import { getWeekNum } from "@/lib/dates";
 import { renderMarkdownToHtml } from "@/lib/markdown";
@@ -182,9 +183,10 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
       >
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 bg-transparent border-none text-zinc-400 text-[1.2rem] cursor-pointer"
+          className="absolute top-6 right-6 flex items-center bg-transparent border-none text-zinc-400 hover:text-white cursor-pointer transition-colors"
+          aria-label="Close"
         >
-          ✕
+          <X size={18} strokeWidth={2} />
         </button>
 
         {mode === "plan" && existing ? (
@@ -218,9 +220,9 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                     Preview
                   </button>
                 </div>
-                <span className="text-[0.7rem] font-mono text-zinc-500 pb-2">
+                <span className="text-[0.7rem] font-mono text-zinc-500 pb-2 inline-flex items-center gap-1">
                   {planSaveStatus === "saving" && "Saving..."}
-                  {planSaveStatus === "saved" && "Saved ✓"}
+                  {planSaveStatus === "saved" && (<><Check size={12} strokeWidth={2.5} /> Saved</>)}
                 </span>
               </div>
 
@@ -347,10 +349,10 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                         />
                         <button
                           onClick={() => removeItem(idx)}
-                          className="text-[0.75rem] text-red-400 cursor-pointer bg-transparent border-none px-1"
+                          className="flex items-center text-red-400 cursor-pointer bg-transparent border-none px-1"
                           title="Remove item"
                         >
-                          ✕
+                          <X size={14} strokeWidth={2} />
                         </button>
                       </div>
                       <input

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { Check } from "lucide-react";
 import Link from "next/link";
 import { fetchWorkspace, updateWorkspace } from "@/lib/api";
 import { renderMarkdownToHtml } from "@/lib/markdown";
@@ -116,9 +117,9 @@ export default function RoadmapPage() {
                 Preview
               </button>
             </div>
-            <span className="text-[0.7rem] font-mono text-zinc-500">
+            <span className="text-[0.7rem] font-mono text-zinc-500 inline-flex items-center gap-1">
               {saveStatus === "saving" && "Saving..."}
-              {saveStatus === "saved" && "Saved ✓"}
+              {saveStatus === "saved" && (<><Check size={12} strokeWidth={2.5} /> Saved</>)}
               {saveStatus === "idle" && "This track's own private roadmap — autosaves"}
             </span>
           </div>

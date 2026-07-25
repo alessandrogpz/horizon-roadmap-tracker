@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { X } from "lucide-react";
 import type { Material } from "@/lib/types";
 
 interface MaterialsSeedStepProps {
@@ -50,9 +51,10 @@ export default function MaterialsSeedStep({ materials, onChange }: MaterialsSeed
             />
             <button
               onClick={() => removeMaterial(idx)}
-              className="bg-transparent border-none text-red-500 cursor-pointer text-[0.85rem]"
+              className="flex items-center bg-transparent border-none text-red-500 cursor-pointer"
+              aria-label="Remove material"
             >
-              ✕
+              <X size={14} strokeWidth={2} />
             </button>
           </div>
         ))}
