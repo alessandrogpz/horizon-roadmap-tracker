@@ -7,6 +7,18 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.4.2] - 2026-07-25
+
+### Fixed
+- **Modules menu now stays fully on-screen.** After 0.4.1 the popover always
+  opened rightward from its trigger, so when the *Modules* button sat near the
+  right edge of the window the menu ran off-screen and clipped the module
+  labels. It now measures the trigger on open and aligns to whichever edge
+  keeps the whole menu inside the viewport (right-aligned when the trigger is
+  near the right edge, left-aligned otherwise), and is capped at the viewport
+  width for very narrow screens. Still overlaps content without shifting the
+  layout.
+
 ## [0.4.1] - 2026-07-25
 
 ### Fixed
