@@ -1,951 +1,1114 @@
 {
-  "currentPhase": 1,
-  "startDate": "2026-06-05",
-  "dsaStartWeek": 6,
-  "streakHistory": [
-    "2026-06-05",
-    "2026-06-06",
-    "2026-06-08",
-    "2026-06-08",
-    "2026-06-08",
-    "2026-06-09",
-    "2026-06-10",
-    "2026-06-10",
-    "2026-06-11",
-    "2026-06-11",
-    "2026-06-11",
-    "2026-06-11",
-    "2026-06-12",
-    "2026-06-12",
-    "2026-06-12",
-    "2026-06-13",
-    "2026-06-13",
-    "2026-06-15",
-    "2026-06-15",
-    "2026-06-15",
-    "2026-06-15",
-    "2026-06-15",
-    "2026-06-16",
-    "2026-06-17",
-    "2026-06-17",
-    "2026-06-18",
-    "2026-06-19",
-    "2026-06-19",
-    "2026-06-19",
-    "2026-06-20",
-    "2026-06-20",
-    "2026-06-21",
-    "2026-06-22",
-    "2026-06-22",
-    "2026-06-22",
-    "2026-06-22",
-    "2026-06-23",
-    "2026-06-24",
-    "2026-06-24",
-    "2026-06-24",
-    "2026-06-25",
-    "2026-06-25",
-    "2026-06-26",
-    "2026-06-27",
-    "2026-06-27",
-    "2026-06-28",
-    "2026-06-29",
-    "2026-06-29",
-    "2026-06-29",
-    "2026-06-30",
-    "2026-07-01",
-    "2026-07-02",
-    "2026-07-03",
-    "2026-07-03",
-    "2026-07-04",
-    "2026-07-05",
-    "2026-07-06",
-    "2026-07-07",
-    "2026-07-08",
-    "2026-07-09",
-    "2026-07-09",
-    "2026-07-10",
-    "2026-07-10",
-    "2026-07-10",
-    "2026-07-13",
-    "2026-07-15",
-    "2026-07-15",
-    "2026-07-14",
-    "2026-07-14",
-    "2026-07-14",
-    "2026-07-14",
-    "2026-07-14",
-    "2026-07-17"
+ "currentPhase": 1,
+ "startDate": "2026-06-05",
+ "dsaStartWeek": 6,
+ "streakHistory": [
+  "2026-06-05",
+  "2026-06-06",
+  "2026-06-08",
+  "2026-06-08",
+  "2026-06-08",
+  "2026-06-09",
+  "2026-06-10",
+  "2026-06-10",
+  "2026-06-11",
+  "2026-06-11",
+  "2026-06-11",
+  "2026-06-11",
+  "2026-06-12",
+  "2026-06-12",
+  "2026-06-12",
+  "2026-06-13",
+  "2026-06-13",
+  "2026-06-15",
+  "2026-06-15",
+  "2026-06-15",
+  "2026-06-15",
+  "2026-06-15",
+  "2026-06-16",
+  "2026-06-17",
+  "2026-06-17",
+  "2026-06-18",
+  "2026-06-19",
+  "2026-06-19",
+  "2026-06-19",
+  "2026-06-20",
+  "2026-06-20",
+  "2026-06-21",
+  "2026-06-22",
+  "2026-06-22",
+  "2026-06-22",
+  "2026-06-22",
+  "2026-06-23",
+  "2026-06-24",
+  "2026-06-24",
+  "2026-06-24",
+  "2026-06-25",
+  "2026-06-25",
+  "2026-06-26",
+  "2026-06-27",
+  "2026-06-27",
+  "2026-06-28",
+  "2026-06-29",
+  "2026-06-29",
+  "2026-06-29",
+  "2026-06-30",
+  "2026-07-01",
+  "2026-07-02",
+  "2026-07-03",
+  "2026-07-03",
+  "2026-07-04",
+  "2026-07-05",
+  "2026-07-06",
+  "2026-07-07",
+  "2026-07-08",
+  "2026-07-09",
+  "2026-07-09",
+  "2026-07-10",
+  "2026-07-10",
+  "2026-07-10",
+  "2026-07-13",
+  "2026-07-15",
+  "2026-07-15",
+  "2026-07-14",
+  "2026-07-14",
+  "2026-07-14",
+  "2026-07-14",
+  "2026-07-14",
+  "2026-07-17"
+ ],
+ "lastDailyRoutineCheck": "2026-06-08",
+ "lastTasksResetDate": "",
+ "dailyFocus": {
+  "math": "",
+  "leetcode": "",
+  "implementation": "",
+  "reflection": ""
+ },
+ "dailyTasks": {
+  "Mon": [
+   {
+    "id": "mon_1",
+    "title": "Mathematics",
+    "completed": false
+   },
+   {
+    "id": "mon_2",
+    "title": "C++ Book",
+    "completed": false
+   },
+   {
+    "id": "mon_4",
+    "title": "Ray Tracer",
+    "completed": false
+   }
   ],
-  "lastDailyRoutineCheck": "2026-06-08",
-  "lastTasksResetDate": "",
-  "dailyFocus": {
-    "math": "",
-    "leetcode": "",
-    "implementation": "",
-    "reflection": ""
-  },
-  "dailyTasks": {
-    "Mon": [
-      {
-        "id": "mon_1",
-        "title": "Mathematics",
-        "completed": false
-      },
-      {
-        "id": "mon_2",
-        "title": "C++ Book",
-        "completed": false
-      },
-      {
-        "id": "mon_4",
-        "title": "Ray Tracer",
-        "completed": false
-      }
+  "Tue": [
+   {
+    "id": "tue_1",
+    "title": "DSA Pattern Study",
+    "completed": false
+   },
+   {
+    "id": "tue_2",
+    "title": "C++ Book",
+    "completed": false
+   },
+   {
+    "id": "tue_5",
+    "title": "LearnOpenGL",
+    "completed": false
+   }
+  ],
+  "Wed": [
+   {
+    "id": "wed_1",
+    "title": "Mathematics",
+    "completed": false
+   },
+   {
+    "id": "wed_2",
+    "title": "C++ Book",
+    "completed": false
+   },
+   {
+    "id": "wed_4",
+    "title": "Ray Tracer",
+    "completed": false
+   }
+  ],
+  "Thu": [
+   {
+    "id": "thu_1",
+    "title": "DSA Pattern Study",
+    "completed": false
+   },
+   {
+    "id": "thu_2",
+    "title": "C++ Book",
+    "completed": false
+   },
+   {
+    "id": "thu_5",
+    "title": "LearnOpenGL",
+    "completed": false
+   }
+  ],
+  "Fri": [
+   {
+    "id": "fri_1",
+    "title": "Mathematics",
+    "completed": false
+   },
+   {
+    "id": "fri_2",
+    "title": "C++ Book",
+    "completed": false
+   },
+   {
+    "id": "fri_3",
+    "title": "Ray Tracer",
+    "completed": false
+   }
+  ],
+  "Sat": [
+   {
+    "id": "sat_1",
+    "title": "Data Structure Implementation",
+    "completed": false
+   },
+   {
+    "id": "sat_2",
+    "title": "C++ Book",
+    "completed": false
+   },
+   {
+    "id": "sat_4",
+    "title": "LearnOpenGL",
+    "completed": false
+   }
+  ],
+  "Sun": [
+   {
+    "id": "sun_1",
+    "title": "Review week's problems",
+    "completed": false
+   },
+   {
+    "id": "sun_2",
+    "title": "Catch up on readings",
+    "completed": false
+   }
+  ]
+ },
+ "dailyRevisionItems": {
+  "Mon": [
+   {
+    "id": "dsa_auto",
+    "title": "Two Pointers",
+    "description": "Valid Palindrome, Two Sum II, 3Sum, Container With Most Water, Trapping Rain Water",
+    "completed": false
+   }
+  ],
+  "Tue": [
+   {
+    "id": "math_revision",
+    "title": "Linear Algebra",
+    "description": "Practice vector spaces, transforms, and equations",
+    "completed": false
+   }
+  ],
+  "Wed": [
+   {
+    "id": "dsa_auto",
+    "title": "Two Pointers",
+    "description": "Valid Palindrome, Two Sum II, 3Sum, Container With Most Water, Trapping Rain Water",
+    "completed": false
+   }
+  ],
+  "Thu": [
+   {
+    "id": "math_revision",
+    "title": "Linear Algebra",
+    "description": "Practice vector spaces, transforms, and equations",
+    "completed": false
+   }
+  ],
+  "Fri": [
+   {
+    "id": "dsa_auto",
+    "title": "Two Pointers",
+    "description": "Valid Palindrome, Two Sum II, 3Sum, Container With Most Water, Trapping Rain Water",
+    "completed": false
+   }
+  ],
+  "Sat": [
+   {
+    "id": "math_revision",
+    "title": "Linear Algebra",
+    "description": "Practice vector spaces, transforms, and equations",
+    "completed": false
+   }
+  ],
+  "Sun": []
+ },
+ "phases": [
+  {
+   "id": 1,
+   "title": "Phase 1: Months 1-3 (ends Sep 5, 2026)",
+   "description": "Language Fundamentals & Software Rendering",
+   "recommendedByDay": 92,
+   "tasks": [
+    {
+     "id": "t3",
+     "title": "C++ Book (PPP) — ch 1-10 core; 17-21 may carry",
+     "completed": false
+    },
+    {
+     "id": "t4",
+     "title": "Ray Tracer Challenge",
+     "completed": false
+    },
+    {
+     "id": "t5",
+     "title": "Linear Algebra (Lengyel Vol 1)",
+     "completed": false
+    },
+    {
+     "id": "t6",
+     "title": "LearnOpenGL (start)",
+     "completed": false
+    },
+    {
+     "id": "t1_readme",
+     "title": "Ray tracer README with progressive renders",
+     "completed": false
+    },
+    {
+     "id": "t1_consol",
+     "title": "Consolidation week 13 — no new material",
+     "completed": false
+    }
+   ],
+   "detailedInfo": {
+    "focus": [
+     {
+      "item": "Programming: Principles and Practice Using C++",
+      "desc": "Pointers, references, manual memory allocation, and STL containers. Prioritise ch 8-10 — the ray tracer depends on them; ch 17-21 may carry into Phase 2."
+     },
+     {
+      "item": "Lengyel Vol 1: Mathematics",
+      "desc": "Vector spaces, matrix multiplication, transforms, and the local/world/view/projection coordinate chain."
+     },
+     {
+      "item": "Ray Tracer Challenge",
+      "desc": "Canvas, ray casting, shading, sphere intersections, shadows, reflection and refraction."
+     },
+     {
+      "item": "LearnOpenGL (start)",
+      "desc": "Window setup, coordinate systems, and the first rendering shaders. Completed in Phase 2."
+     },
+     {
+      "item": "Portfolio milestone",
+      "desc": "Public ray-tracer repo with progressive renders embedded in the README — flat circle, shaded sphere, full reflective scene."
+     }
     ],
-    "Tue": [
-      {
-        "id": "tue_1",
-        "title": "DSA Pattern Study",
-        "completed": false
-      },
-      {
-        "id": "tue_2",
-        "title": "C++ Book",
-        "completed": false
-      },
-      {
-        "id": "tue_5",
-        "title": "LearnOpenGL",
-        "completed": false
-      }
+    "math": [
+     {
+      "item": "Linear Algebra Foundations",
+      "desc": "Vector and matrix math, and coordinate spaces (local, world, view, projection)."
+     }
     ],
-    "Wed": [
-      {
-        "id": "wed_1",
-        "title": "Mathematics",
-        "completed": false
-      },
-      {
-        "id": "wed_2",
-        "title": "C++ Book",
-        "completed": false
-      },
-      {
-        "id": "wed_4",
-        "title": "Ray Tracer",
-        "completed": false
-      }
+    "algoDS": [
+     {
+      "item": "Cache Locality & Memory Layout",
+      "desc": "Array of Structures (AoS) vs. Structure of Arrays (SoA), memory alignment and padding, and fixed-size pools to avoid heap overhead."
+     },
+     {
+      "item": "LeetCode Focus",
+      "desc": "Pattern templates: Two Pointers, Sliding Window, Hash Maps, Stack/Monotonic Stack, Advanced Binary Search."
+     }
     ],
-    "Thu": [
-      {
-        "id": "thu_1",
-        "title": "DSA Pattern Study",
-        "completed": false
-      },
-      {
-        "id": "thu_2",
-        "title": "C++ Book",
-        "completed": false
-      },
-      {
-        "id": "thu_5",
-        "title": "LearnOpenGL",
-        "completed": false
-      }
-    ],
-    "Fri": [
-      {
-        "id": "fri_1",
-        "title": "Mathematics",
-        "completed": false
-      },
-      {
-        "id": "fri_2",
-        "title": "C++ Book",
-        "completed": false
-      },
-      {
-        "id": "fri_3",
-        "title": "Ray Tracer",
-        "completed": false
-      }
-    ],
-    "Sat": [
-      {
-        "id": "sat_1",
-        "title": "Data Structure Implementation",
-        "completed": false
-      },
-      {
-        "id": "sat_2",
-        "title": "C++ Book",
-        "completed": false
-      },
-      {
-        "id": "sat_4",
-        "title": "LearnOpenGL",
-        "completed": false
-      }
-    ],
-    "Sun": [
-      {
-        "id": "sun_1",
-        "title": "Review week's problems",
-        "completed": false
-      },
-      {
-        "id": "sun_2",
-        "title": "Catch up on readings",
-        "completed": false
-      }
+    "deliverable": [
+     {
+      "item": "CPU Ray Tracer",
+      "desc": "A standalone CPU-bound C++ renderer shading spheres with shadows and reflections, shipped with a visual README."
+     }
     ]
+   }
   },
-  "dailyRevisionItems": {
-    "Mon": [
-      {
-        "id": "dsa_auto",
-        "title": "Two Pointers",
-        "description": "Valid Palindrome, Two Sum II, 3Sum, Container With Most Water, Trapping Rain Water",
-        "completed": false
-      }
-    ],
-    "Tue": [
-      {
-        "id": "math_revision",
-        "title": "Linear Algebra",
-        "description": "Practice vector spaces, transforms, and equations",
-        "completed": false
-      }
-    ],
-    "Wed": [
-      {
-        "id": "dsa_auto",
-        "title": "Two Pointers",
-        "description": "Valid Palindrome, Two Sum II, 3Sum, Container With Most Water, Trapping Rain Water",
-        "completed": false
-      }
-    ],
-    "Thu": [
-      {
-        "id": "math_revision",
-        "title": "Linear Algebra",
-        "description": "Practice vector spaces, transforms, and equations",
-        "completed": false
-      }
-    ],
-    "Fri": [
-      {
-        "id": "dsa_auto",
-        "title": "Two Pointers",
-        "description": "Valid Palindrome, Two Sum II, 3Sum, Container With Most Water, Trapping Rain Water",
-        "completed": false
-      }
-    ],
-    "Sat": [
-      {
-        "id": "math_revision",
-        "title": "Linear Algebra",
-        "description": "Practice vector spaces, transforms, and equations",
-        "completed": false
-      }
-    ],
-    "Sun": []
-  },
-  "phases": [
+  {
+   "id": 2,
+   "title": "Phase 2: Months 4-6 (ends Dec 8, 2026)",
+   "description": "Real-Time Rendering, End to End",
+   "recommendedByDay": 186,
+   "tasks": [
     {
-      "id": 1,
-      "title": "Phase 1: Months 1-3",
-      "description": "Language Fundamentals & Software Rendering",
-      "tasks": [
-        {
-          "id": "t3",
-          "title": "C++ Book (PPP)",
-          "completed": false
-        },
-        {
-          "id": "t4",
-          "title": "Ray Tracer Challenge",
-          "completed": false
-        },
-        {
-          "id": "t5",
-          "title": "Linear Algebra",
-          "completed": false
-        },
-        {
-          "id": "t6",
-          "title": "LearnOpenGL",
-          "completed": false
-        }
-      ],
-      "detailedInfo": {
-        "focus": [
-          {
-            "item": "Foundations of game engine development: Mathematics",
-            "desc": "Study vector spaces, matrix multiplication, and baseline linear algebra."
-          },
-          {
-            "item": "Programming: Principles and Practice Using C++",
-            "desc": "Master pointers, references, manual memory allocation, and STL containers."
-          },
-          {
-            "item": "Ray Tracer Challenge",
-            "desc": "Implement basic canvas, ray casting, shading, and sphere intersections."
-          },
-          {
-            "item": "LearnOpenGL",
-            "desc": "Start with window setups, coordinate systems, and basic rendering shaders."
-          }
-        ],
-        "deliverable": [
-          {
-            "item": "CPU Software Ray Tracer",
-            "desc": "A standalone, CPU-bound C++ rendering application capable of shading spheres, shadows, and reflections."
-          }
-        ],
-        "math": [
-          {
-            "item": "Linear Algebra Foundations",
-            "desc": "Vector/matrix math and coordinate spaces (local, world, view, projection)."
-          }
-        ],
-        "algoDS": [
-          {
-            "item": "Cache Locality & Memory Layout",
-            "desc": "Array of Structures (AoS) vs. Structure of Arrays (SoA), Memory Alignment & Padding (alignas), and Fixed-size pools to avoid heap overhead."
-          },
-          {
-            "item": "LeetCode Focus",
-            "desc": "Master the core problem-solving pattern templates: Two Pointers, Sliding Window, Hash Maps, Stack/Monotonic Stack, and Advanced Binary Search."
-          }
-        ]
-      }
+     "id": "t2_1",
+     "title": "LearnOpenGL — complete, through advanced lighting",
+     "completed": false
     },
     {
-      "id": 2,
-      "title": "Phase 2: Months 4-7",
-      "description": "Hardware Rasterization & Modern OpenGL",
-      "tasks": [
-        {
-          "id": "t2_1",
-          "title": "LearnOpenGL",
-          "completed": false
-        },
-        {
-          "id": "t2_2",
-          "title": "Calculus 1 (Stewart)",
-          "completed": false
-        },
-        {
-          "id": "t2_3",
-          "title": "OpenGL Mini-Engine",
-          "completed": false
-        },
-        {
-          "id": "t2_lengyel2",
-          "title": "Foundations of game engine development: Rendering",
-          "completed": false
-        },
-        {
-          "id": "t2_imgui",
-          "title": "Integrate Dear ImGui control panel",
-          "completed": false
-        },
-        {
-          "id": "t2_rdoc",
-          "title": "Learn basic RenderDoc shader & texture frame debugging",
-          "completed": false
-        },
-        {
-          "id": "t2_draw",
-          "title": "Implement debug line/wireframe drawer",
-          "completed": false
-        }
-      ],
-      "detailedInfo": {
-        "focus": [
-          {
-            "item": "LearnOpenGL",
-            "desc": "Study Core Profile features, texturing, lighting equations, and shader languages (GLSL)."
-          },
-          {
-            "item": "CMU 15-462 Computer Graphics",
-            "desc": "Leverage lectures to match graphics theories directly with active code."
-          },
-          {
-            "item": "Stewart's Calculus 1",
-            "desc": "Go over differentiation rules and differentiation applications."
-          },
-          {
-            "item": "Foundations of game engine development: Rendering",
-            "desc": "Study lighting models, shading math, shadow algorithms, and environment maps."
-          },
-          {
-            "item": "Dear ImGui Integration",
-            "desc": "Build real-time interactive parameters, light controllers, and camera toggles."
-          },
-          {
-            "item": "RenderDoc Frame Capture",
-            "desc": "Analyze bound pipelines, uniform states, and step through shader variables."
-          },
-          {
-            "item": "3D Debug Line Drawing",
-            "desc": "Draw line arrays, coordinate axes, and bounding boxes in 3D world space."
-          }
-        ],
-        "deliverable": [
-          {
-            "item": "OpenGL Scene Viewer",
-            "desc": "A 3D mesh renderer loading files via Assimp, custom scene graphs, real-time lighting (Blinn-Phong), and shadow mapping."
-          }
-        ],
-        "math": [
-          {
-            "item": "Calculus 1 (Limits & Derivatives)",
-            "desc": "Calculate change over time, surface normals of complex geometry, and ray differentials for texture filtering."
-          }
-        ],
-        "algoDS": [
-          {
-            "item": "Hierarchies & Scene Management",
-            "desc": "Scene Graphs using trees or Directed Acyclic Graphs (DAGs) to propagate spatial transformations parent-to-child."
-          },
-          {
-            "item": "Traversal Loops",
-            "desc": "Iterative Depth-First Search (DFS) and Breadth-First Search (BFS) using custom Stacks to traverse scene graphs."
-          },
-          {
-            "item": "LeetCode Focus",
-            "desc": "Master the core problem-solving pattern templates: Heap/Priority Queue, Trees/DFS/BFS, Interval Problems, and DP Basics."
-          }
-        ]
-      }
+     "id": "t2_ppp",
+     "title": "Finish PPP ch 17-21 (carry-over)",
+     "completed": false
     },
     {
-      "id": 3,
-      "title": "Phase 3: Months 8-10",
-      "description": "Spatial Architectures & Optimization",
-      "tasks": [
-        {
-          "id": "t3_1",
-          "title": "OpenGL Mini-Engine",
-          "completed": false
-        },
-        {
-          "id": "t3_2",
-          "title": "Calculus 2 (Stewart)",
-          "completed": false
-        },
-        {
-          "id": "t3_prof",
-          "title": "Integrate real-time frame/CPU profiling",
-          "completed": false
-        }
-      ],
-      "detailedInfo": {
-        "focus": [
-          {
-            "item": "CMU 15-462 (Advanced)",
-            "desc": "Focus on spatial partitioning data structures and geometry processing chapters."
-          },
-          {
-            "item": "Stewart's Calculus 2",
-            "desc": "Review integrations and partial derivatives chapters."
-          },
-          {
-            "item": "Performance Profiling (Tracy)",
-            "desc": "Integrate Tracy Profiler to identify CPU/GPU frame boundary bottlenecks."
-          }
-        ],
-        "deliverable": [
-          {
-            "item": "Optimized Mini-Engine",
-            "desc": "Integrate View Frustum Culling, spatial partitioning (Octree/BVH), and post-processing pipelines (Bloom/HDR)."
-          }
-        ],
-        "math": [
-          {
-            "item": "Calculus 2 (Integration & Partial Derivatives)",
-            "desc": "Numerical integration for physics physics loops. Partial derivatives for texture coordinate (u, v) gradients across triangles."
-          }
-        ],
-        "algoDS": [
-          {
-            "item": "Spatial Partitioning",
-            "desc": "Bounding Volume Hierarchies (BVH) nesting shapes in Axis-Aligned Bounding Boxes (AABBs), Quadtrees (2D) & Octrees (3D) for frustum culling, and kD-Trees."
-          },
-          {
-            "item": "Algorithms",
-            "desc": "Ray-AABB intersection testing and hierarchical tree traversal."
-          },
-          {
-            "item": "LeetCode Focus",
-            "desc": "Implement a custom BVH from scratch in your Ray Tracer or Engine repository."
-          },
-          {
-            "item": "Interview Patterns",
-            "desc": "Graphs & Advanced DP: Topological Sort, Union-Find, 2D DP (grids/strings). Continue practicing medium/hard problems across all previous patterns."
-          }
-        ]
-      }
+     "id": "t2_2",
+     "title": "Calculus 1 (Stewart)",
+     "completed": false
     },
     {
-      "id": 4,
-      "title": "Phase 4: Months 11-12",
-      "description": "Low-Level Graphics (Vulkan Transition)",
-      "tasks": [
-        {
-          "id": "t4_1",
-          "title": "Vulkan Tutorial",
-          "completed": false
-        },
-        {
-          "id": "t4_2",
-          "title": "Vector & Multivariable Calculus (Stewart)",
-          "completed": false
-        },
-        {
-          "id": "t4_3",
-          "title": "Vulkan Renderer",
-          "completed": false
-        },
-        {
-          "id": "t4_rdoc",
-          "title": "Diagnose Vulkan device queues & pipeline states with RenderDoc",
-          "completed": false
-        }
-      ],
-      "detailedInfo": {
-        "focus": [
-          {
-            "item": "Official Vulkan Tutorial",
-            "desc": "Work through swapchain setups, command buffers, memory allocation, and custom render passes."
-          },
-          {
-            "item": "Multivariable & Vector Calculus",
-            "desc": "Complete Stewart's vector calculus and numerical methods chapters."
-          },
-          {
-            "item": "Vulkan RenderDoc Diagnostics",
-            "desc": "Verify device queues, descriptor layouts, and memory barriers under Vulkan."
-          }
-        ],
-        "deliverable": [
-          {
-            "item": "Vulkan Mesh Renderer",
-            "desc": "A basic Vulkan renderer setting up explicit pipelines and device buffers to draw textured meshes."
-          }
-        ],
-        "math": [
-          {
-            "item": "Vector & Multivariable Calculus",
-            "desc": "Gradients for Signed Distance Fields (SDFs). Double and line integrals to solve the PBR Rendering Equation. Monte Carlo numerical integrations."
-          }
-        ],
-        "algoDS": [
-          {
-            "item": "Mesh Representation & Sorting",
-            "desc": "Half-Edge data structure for mesh representations (polygon mesh adjacencies lookup for geometry processing)."
-          },
-          {
-            "item": "Sorting Pipelines",
-            "desc": "Radix Sort or Merge Sort for depth-sorting transparent geometry from back-to-front every frame."
-          },
-          {
-            "item": "LeetCode Focus",
-            "desc": "Standard sorting algorithm mechanics and advanced Graph problems (Adjacency Lists)."
-          },
-          {
-            "item": "Interview Patterns",
-            "desc": "Trie, Backtracking, Advanced Graphs: Word Search II, Design Add/Search Words, advanced graph traversal. Full pattern review at hard difficulty."
-          }
-        ]
-      }
+     "id": "t2_3",
+     "title": "OpenGL Scene Viewer",
+     "completed": false
+    },
+    {
+     "id": "t2_scene",
+     "title": "Scene graph with iterative DFS/BFS traversal",
+     "completed": false
+    },
+    {
+     "id": "t2_imgui",
+     "title": "Integrate Dear ImGui control panel",
+     "completed": false
+    },
+    {
+     "id": "t2_rdoc",
+     "title": "Learn basic RenderDoc frame debugging",
+     "completed": false
+    },
+    {
+     "id": "t2_draw",
+     "title": "Implement debug line/wireframe drawer",
+     "completed": false
+    },
+    {
+     "id": "t2_demo",
+     "title": "Demo video + README stills (portfolio)",
+     "completed": false
+    },
+    {
+     "id": "t2_consol",
+     "title": "Consolidation week — no new material",
+     "completed": false
     }
-  ],
-  "portfolio": [
-    {
-      "id": "p1",
-      "title": "CPU Ray Tracer",
-      "completed": false,
-      "localPath": "https://github.com/alessandrogpz/ray-tracer"
-    },
-    {
-      "id": "p2",
-      "title": "OpenGL Mini-Engine",
-      "completed": false
-    },
-    {
-      "id": "p3",
-      "title": "Vulkan Mesh Renderer",
-      "completed": false
-    }
-  ],
-  "materials": [
-    {
-      "id": "m1",
-      "title": "Foundations of game engine development: Mathematics",
-      "category": "Mathematics",
-      "type": "Book",
-      "status": "In Progress",
-      "currentPage": 87,
-      "totalPages": 183,
-      "currentSubject": "2.7.2 Rotation With Quaternions",
-      "link": "/mnt/Storage4TB/Bookshelf/Game Engine/Foundations of Game Engine Development, Volume 1 Mathematics by Eric Lengyel.pdf",
-      "localPath": "https://github.com/alessandrogpz/linear-algebra"
-    },
-    {
-      "id": "m2",
-      "title": "Programming Principles and Practice Using C++",
-      "category": "Programming Languages",
-      "type": "Book",
-      "status": "In Progress",
-      "currentPage": 111,
-      "totalPages": 639,
-      "currentSubject": "Chapter 4: Errors! - Review",
-      "link": "",
-      "localPath": "https://github.com/alessandrogpz/CCCP-3rd"
-    },
-    {
-      "id": "m4",
-      "title": "Ray Tracer Challenge",
-      "category": "Computer Graphics",
-      "type": "Book",
-      "status": "In Progress",
-      "currentPage": 109,
-      "totalPages": 264,
-      "currentSubject": "Chapter 8: Shadows",
-      "link": "/mnt/Storage4TB/Bookshelf/Graphics Programming/Ray Tracer Challenge _ A Test-driven Guide to Your First 3d Renderer (9781680506792).pdf",
-      "localPath": "https://github.com/alessandrogpz/ray-tracer"
-    },
-    {
-      "id": "m5",
-      "title": "LearnOpenGL",
-      "category": "Computer Graphics",
-      "type": "Website",
-      "status": "In Progress",
-      "currentPage": 0,
-      "totalPages": 50,
-      "currentSubject": "Understand \"Hello Triangle\" deeply",
-      "link": "https://learnopengl.com",
-      "localPath": "https://github.com/alessandrogpz/learn-opengl"
-    },
-    {
-      "id": "m6",
-      "title": "CMU 15-462/662 Computer Graphics",
-      "category": "Computer Graphics",
-      "type": "Course",
-      "status": "In Progress",
-      "currentPage": 0,
-      "totalPages": 24,
-      "currentSubject": "",
-      "link": "https://www.youtube.com/playlist?list=PL9_jI1bdZmz2dy17USgL26wI5_I2n873T"
-    },
-    {
-      "id": "m7",
-      "title": "Foundations of game engine development: Rendering",
-      "category": "Computer Graphics",
-      "type": "Book",
-      "status": "Not Started",
-      "currentPage": 0,
-      "totalPages": 380,
-      "currentSubject": "",
-      "link": "/mnt/Storage4TB/Bookshelf/Game Engine/Foundations of Game Engine Development Volume 2 Rendering by Eric Lengyel.pdf"
-    }
-  ],
-  "dailyStudyPoints": {
-    "math": "",
-    "leetcode": "",
-    "implementation": "",
-    "reflection": ""
-  },
-  "completedItemsHistory": {
-    "2026-06-09": [
-      {
-        "title": "Data Oriented Design"
-      }
+   ],
+   "detailedInfo": {
+    "focus": [
+     {
+      "item": "LearnOpenGL (complete)",
+      "desc": "Core profile, GLSL, texturing, Blinn-Phong lighting, Assimp model loading, framebuffers, cubemaps, instancing, shadow mapping and normal mapping."
+     },
+     {
+      "item": "PPP ch 17-21 (carry-over)",
+      "desc": "Templates, RAII, STL algorithms and lambdas — applied immediately as RAII wrappers around OpenGL buffer, texture and shader handles."
+     },
+     {
+      "item": "Dear ImGui Integration",
+      "desc": "Live controls for light positions, material colours, shader and texture switching, and camera FOV."
+     },
+     {
+      "item": "RenderDoc Frame Capture",
+      "desc": "Inspect bound pipelines and uniforms, step through shader variables. Target skill: diagnose a black screen from the capture alone."
+     },
+     {
+      "item": "3D Debug Drawer",
+      "desc": "Wireframe vectors, coordinate axes, and bounding boxes in world space. Relied on heavily in Phase 3."
+     },
+     {
+      "item": "Portfolio milestone",
+      "desc": "Screen-captured demo video plus README stills showing a lit, shadowed model with the ImGui panel visible."
+     }
     ],
-    "2026-06-10": [
-      {
-        "title": "Linear Algebra",
-        "description": ""
-      },
-      {
-        "title": "Mathematics (Linear Algebra)"
-      }
+    "math": [
+     {
+      "item": "Calculus 1 (Limits & Derivatives)",
+      "desc": "Differentiation rules and the chain rule."
+     },
+     {
+      "item": "Direct application: the TBN basis",
+      "desc": "Derive the tangent/bitangent frame for normal mapping from partial derivatives of position with respect to UV — by hand, before using LearnOpenGL's code."
+     },
+     {
+      "item": "Secondary application: shadow frustum fitting",
+      "desc": "Fitting a shadow map frustum tightly to a scene is a constrained min/max optimization problem."
+     }
     ],
-    "2026-06-11": [
-      {
-        "title": "Implementation of a Data Structure",
-        "description": ""
-      },
-      {
-        "title": "C++ Book"
-      },
-      {
-        "title": "LearnOpenGL"
-      },
-      {
-        "title": "Data Oriented Design"
-      }
+    "algoDS": [
+     {
+      "item": "Scene Graph",
+      "desc": "A tree of nodes propagating transforms parent-to-child. Built here because the viewer needs it; promoted to an engine subsystem in Phase 3."
+     },
+     {
+      "item": "Iterative Traversal",
+      "desc": "Depth-first and breadth-first traversal with an explicit stack rather than recursion, so deep hierarchies cannot blow the call stack mid-frame."
+     },
+     {
+      "item": "LeetCode Focus",
+      "desc": "Heap/Priority Queue, Trees/DFS/BFS, Interval Problems, DP Basics. Do the tree patterns in the same weeks as the scene graph — same skill."
+     }
     ],
-    "2026-06-12": [
-      {
-        "title": "C++ Book"
-      },
-      {
-        "title": "Linear Algebra",
-        "description": ""
-      },
-      {
-        "title": "Mathematics (Linear Algebra)"
-      }
-    ],
-    "2026-06-13": [
-      {
-        "title": "Mathematics (Linear Algebra)"
-      },
-      {
-        "title": "C++ Book"
-      }
-    ],
-    "2026-06-15": [
-      {
-        "title": "Linear Algebra",
-        "description": ""
-      },
-      {
-        "title": "Mathematics (Linear Algebra)"
-      },
-      {
-        "title": "Ray Tracer"
-      },
-      {
-        "title": "C++ Book"
-      },
-      {
-        "title": "Data Oriented Design"
-      }
-    ],
-    "2026-06-16": [
-      {
-        "title": "Mathematics (Linear Algebra)"
-      }
-    ],
-    "2026-06-17": [
-      {
-        "title": "Linear Algebra",
-        "description": ""
-      },
-      {
-        "title": "Mathematics (Linear Algebra)"
-      }
-    ],
-    "2026-06-18": [
-      {
-        "title": "Mathematics (Linear Algebra)"
-      }
-    ],
-    "2026-06-19": [
-      {
-        "title": "Linear Algebra",
-        "description": ""
-      },
-      {
-        "title": "C++ Book"
-      },
-      {
-        "title": "Mathematics (Linear Algebra)"
-      }
-    ],
-    "2026-06-20": [
-      {
-        "title": "C++ Book"
-      },
-      {
-        "title": "Data Oriented Design"
-      }
-    ],
-    "2026-06-21": [
-      {
-        "title": "Data Oriented Design (Concurrency)"
-      }
-    ],
-    "2026-06-22": [
-      {
-        "title": "Linear Algebra",
-        "description": "Translation"
-      },
-      {
-        "title": "Mathematics (Linear Algebra)"
-      },
-      {
-        "title": "C++ Book"
-      },
-      {
-        "title": "Ray Tracer"
-      }
-    ],
-    "2026-06-23": [
-      {
-        "title": "Mathematics (Linear Algebra)"
-      }
-    ],
-    "2026-06-24": [
-      {
-        "title": "Linear Algebra",
-        "description": ""
-      },
-      {
-        "title": "Mathematics (Linear Algebra)"
-      },
-      {
-        "title": "C++ Book"
-      }
-    ],
-    "2026-06-25": [
-      {
-        "title": "C++ Book"
-      },
-      {
-        "title": "Ray Tracer"
-      }
-    ],
-    "2026-06-26": [
-      {
-        "title": "Ray Tracer"
-      }
-    ],
-    "2026-06-27": [
-      {
-        "title": "Ray Tracer Challenge"
-      },
-      {
-        "title": "Data Oriented Design"
-      }
-    ],
-    "2026-06-28": [
-      {
-        "title": "Ray Tracer"
-      }
-    ],
-    "2026-06-29": [
-      {
-        "title": "Linear Algebra",
-        "description": ""
-      },
-      {
-        "title": "C++ Book"
-      },
-      {
-        "title": "Ray Tracer"
-      }
-    ],
-    "2026-06-30": [
-      {
-        "title": "Mathematics"
-      }
-    ],
-    "2026-07-01": [
-      {
-        "title": "Linear Algebra",
-        "description": ""
-      }
-    ],
-    "2026-07-02": [
-      {
-        "title": "Mathematics"
-      }
-    ],
-    "2026-07-03": [
-      {
-        "title": "Linear Algebra",
-        "description": ""
-      },
-      {
-        "title": "Mathematics"
-      }
-    ],
-    "2026-07-04": [
-      {
-        "title": "Mathematics"
-      }
-    ],
-    "2026-07-05": [
-      {
-        "title": "C++ Book"
-      }
-    ],
-    "2026-07-06": [
-      {
-        "title": "C++ Book"
-      }
-    ],
-    "2026-07-07": [
-      {
-        "title": "C++ Book"
-      }
-    ],
-    "2026-07-08": [
-      {
-        "title": "C++ Book"
-      }
-    ],
-    "2026-07-09": [
-      {
-        "title": "Hash Map Patterns",
-        "description": "Two Sum, Group Anagrams, Top K Frequent Elements, Longest Consecutive Sequence"
-      },
-      {
-        "title": "DSA Pattern Study"
-      }
-    ],
-    "2026-07-10": [
-      {
-        "title": "Hash Map Patterns",
-        "description": "Two Sum, Group Anagrams, Top K Frequent Elements, Longest Consecutive Sequence"
-      },
-      {
-        "title": "DSA Practice"
-      },
-      {
-        "title": "C++ Book"
-      }
-    ],
-    "2026-07-13": [
-      {
-        "title": "C++ Book"
-      }
-    ],
-    "2026-07-14": [
-      {
-        "title": "Two Pointers",
-        "description": "Valid Palindrome, Two Sum II, 3Sum, Container With Most Water, Trapping Rain Water"
-      },
-      {
-        "title": "DSA Pattern Study"
-      },
-      {
-        "title": "C++ Book"
-      }
-    ],
-    "2026-07-15": [
-      {
-        "title": "Two Pointers",
-        "description": "Valid Palindrome, Two Sum II, 3Sum, Container With Most Water, Trapping Rain Water"
-      },
-      {
-        "title": "Mathematics"
-      }
-    ],
-    "2026-07-17": [
-      {
-        "title": "Two Pointers",
-        "description": "Valid Palindrome, Two Sum II, 3Sum, Container With Most Water, Trapping Rain Water"
-      }
+    "deliverable": [
+     {
+      "item": "OpenGL Scene Viewer",
+      "desc": "A real-time 3D renderer loading meshes via Assimp, with a scene graph, free-fly camera, Blinn-Phong lighting, shadow mapping and an ImGui control panel."
+     }
     ]
+   }
   },
-  "weeklyCompletions": {},
-  "studyStreak": []
+  {
+   "id": 3,
+   "title": "Phase 3: Months 7-11 (ends May 5, 2027)",
+   "description": "Engine Architecture & Optimization",
+   "recommendedByDay": 334,
+   "tasks": [
+    {
+     "id": "t3_gregory",
+     "title": "Game Engine Architecture (Gregory) ch 5, 7, 14",
+     "completed": false
+    },
+    {
+     "id": "t3_alloc",
+     "title": "Arena + pool allocator, with before/after measurements",
+     "completed": false
+    },
+    {
+     "id": "t3_lengyel2",
+     "title": "Lengyel Vol 2: Rendering — deepening pass",
+     "completed": false
+    },
+    {
+     "id": "t3_assetdb",
+     "title": "SQLite asset database + offline bake step",
+     "completed": false
+    },
+    {
+     "id": "t3_1",
+     "title": "Optimized engine (continues the scene viewer)",
+     "completed": false
+    },
+    {
+     "id": "t3_deferred",
+     "title": "Deferred rendering (G-buffer) rewrite",
+     "completed": false
+    },
+    {
+     "id": "t3_bvh",
+     "title": "Implement BVH from scratch + frustum culling",
+     "completed": false
+    },
+    {
+     "id": "t3_post",
+     "title": "Post-processing: SSAO, bloom, HDR tone mapping",
+     "completed": false
+    },
+    {
+     "id": "t3_2",
+     "title": "Calculus 2 (Stewart) + begin multivariable",
+     "completed": false
+    },
+    {
+     "id": "t3_prof",
+     "title": "Integrate Tracy / real-time frame profiling",
+     "completed": false
+    },
+    {
+     "id": "t3_framedb",
+     "title": "Frame-timing SQLite DB + aggregate queries",
+     "completed": false
+    },
+    {
+     "id": "t3_case",
+     "title": "Performance case study writeup (portfolio)",
+     "completed": false
+    },
+    {
+     "id": "t3_consol",
+     "title": "Consolidation week — no new material",
+     "completed": false
+    }
+   ],
+   "detailedInfo": {
+    "focus": [
+     {
+      "item": "HALF A — Architecture (months 7-9)",
+      "desc": "Where the artifact stops being a renderer and starts being an engine."
+     },
+     {
+      "item": "Game Engine Architecture (Gregory)",
+      "desc": "Ch 5 subsystem lifecycles and the main loop, ch 7 arena/stack/pool allocators, ch 14 the render subsystem."
+     },
+     {
+      "item": "Required artifact: custom allocators",
+      "desc": "Replace new/delete in the mesh and texture load paths with an arena plus a pool allocator. Measure load time and peak allocation count before and after. No measurement means the chapter is not done."
+     },
+     {
+      "item": "Lengyel Vol 2: Rendering (deepening pass)",
+      "desc": "Read only the chapters whose techniques already exist in your renderer — shading equations, shadow algorithms, environment mapping. It is a derivation reference, not a tutorial."
+     },
+     {
+      "item": "Asset pipeline (relational vs. non-relational)",
+      "desc": "SQLite as an offline, editor-side asset database — materials, meshes and textures plus a join table for mesh-material reuse. Compare a relational adjacency list against nested JSON for the scene hierarchy. A bake step emits a flat binary; the runtime loads that and never opens the database."
+     },
+     {
+      "item": "HALF B — Optimization (months 10-11)",
+      "desc": "Make it fast, and prove it with numbers."
+     },
+     {
+      "item": "Deferred rendering",
+      "desc": "G-buffer layout and decoupling the light pass from geometry. An architectural rewrite of the render path, not a feature — budget accordingly."
+     },
+     {
+      "item": "Screen-space effects",
+      "desc": "SSAO, bloom, HDR tone mapping, and cascaded or perspective shadow maps."
+     },
+     {
+      "item": "Tracy Profiler",
+      "desc": "CPU/GPU frame boundary tracking, plus ImGui toggles for BVH and frustum culling overlays with live culled-geometry counts."
+     },
+     {
+      "item": "Frame-timing database",
+      "desc": "Pipe captures into SQLite (frame number, CPU time, GPU time, draw calls) and write real aggregates — slowest frames, average by scene, percentiles."
+     },
+     {
+      "item": "Portfolio milestone",
+      "desc": "A written performance case study: before/after frame times, what the profiler showed, what changed, what it bought. The numbers come straight out of the frame-timing database. The single most valuable artifact in the plan for hiring."
+     }
+    ],
+    "math": [
+     {
+      "item": "Calculus 2 (Integration & Series)",
+      "desc": "Integration techniques, numerical approximation, and infinite series. Applied to physics integration loops (Euler and Verlet)."
+     },
+     {
+      "item": "Begin multivariable early",
+      "desc": "Partial derivatives and gradients started here on purpose, so Phase 4 is not learning Vulkan and multivariable calculus at the same time."
+     }
+    ],
+    "algoDS": [
+     {
+      "item": "Spatial Partitioning",
+      "desc": "Bounding volume hierarchies (BVH) over axis-aligned bounding boxes (AABBs), plus quadtrees and octrees for view culling."
+     },
+     {
+      "item": "Advanced Partitioning",
+      "desc": "kD-trees for spatial nearest-neighbour queries."
+     },
+     {
+      "item": "Implement a BVH from scratch",
+      "desc": "Build it in the engine and drive view frustum culling with it. Verify culled-geometry counts using the Phase 2 debug drawer."
+     },
+     {
+      "item": "Interview Patterns",
+      "desc": "Graphs & Advanced DP: topological sort, union-find, 2D DP on grids and strings. Continue medium/hard practice across all earlier patterns."
+     }
+    ],
+    "deliverable": [
+     {
+      "item": "Optimized Engine + Asset Pipeline",
+      "desc": "The scene viewer promoted to an engine: subsystem lifecycle, custom allocators, a baked asset pipeline, deferred rendering, BVH frustum culling, post-processing, and a profiler-backed performance case study."
+     }
+    ]
+   }
+  },
+  {
+   "id": 4,
+   "title": "Phase 4: Months 12-13 (ends Jul 6, 2027)",
+   "description": "Explicit GPU Control — Vulkan",
+   "recommendedByDay": 396,
+   "tasks": [
+    {
+     "id": "t4_1",
+     "title": "Vulkan Tutorial (Overvoorde)",
+     "completed": false
+    },
+    {
+     "id": "t4_3",
+     "title": "Vulkan Mesh Renderer",
+     "completed": false
+    },
+    {
+     "id": "t4_rdoc",
+     "title": "Diagnose Vulkan queues & pipeline state in RenderDoc",
+     "completed": false
+    },
+    {
+     "id": "t4_2",
+     "title": "Finish multivariable + probability/Monte Carlo basics",
+     "completed": false
+    },
+    {
+     "id": "t4_halfedge",
+     "title": "Half-edge mesh structure (index-based)",
+     "completed": false
+    },
+    {
+     "id": "t4_sort",
+     "title": "Radix/merge sort for transparent depth sorting",
+     "completed": false
+    },
+    {
+     "id": "t4_writeup",
+     "title": "OpenGL vs Vulkan writeup + full portfolio pass",
+     "completed": false
+    },
+    {
+     "id": "t4_consol",
+     "title": "Consolidation week — no new material",
+     "completed": false
+    }
+   ],
+   "detailedInfo": {
+    "focus": [
+     {
+      "item": "Vulkan only — nothing else competes",
+      "desc": "Scope matches what two months can actually produce: a correct, explicit, textured mesh renderer. PBR and IBL are not in this phase."
+     },
+     {
+      "item": "Official Vulkan Tutorial",
+      "desc": "Instances, validation layers, physical and logical devices, swapchains, render passes, framebuffers and command pools."
+     },
+     {
+      "item": "Pipelines & memory",
+      "desc": "Graphics pipelines, descriptor sets, push constants, vertex/index and staging buffers, device memory allocation, texture images, image views, samplers and depth buffering."
+     },
+     {
+      "item": "Synchronization",
+      "desc": "Semaphores, fences, and pipeline barriers — the part that actually decides whether a Vulkan renderer is correct."
+     },
+     {
+      "item": "RenderDoc Vulkan Diagnostics",
+      "desc": "Analyse memory allocations, verify descriptor layouts, debug image layout transitions, and inspect device queues."
+     },
+     {
+      "item": "Portfolio milestone",
+      "desc": "A written OpenGL-vs-Vulkan comparison, plus a full portfolio pass: three repos, each with a README, media, and a clear statement of what it demonstrates."
+     }
+    ],
+    "math": [
+     {
+      "item": "Multivariable Calculus (finish)",
+      "desc": "Double and triple integrals, gradients, curl and divergence. Begun in Phase 3 so it is not competing with Vulkan here."
+     },
+     {
+      "item": "Probability & Monte Carlo basics",
+      "desc": "Random variables, expectation, variance, estimator bias and importance sampling. Previously missing from the plan entirely — nothing in physically based rendering makes sense without it."
+     },
+     {
+      "item": "The Rendering Equation",
+      "desc": "Derived and understood here, using the integration and probability above. Implemented later — see Beyond the Horizon."
+     }
+    ],
+    "algoDS": [
+     {
+      "item": "Mesh Representation",
+      "desc": "Half-edge structure for polygon mesh adjacency queries. Implemented index-based and in-memory — the point is cache-coherent traversal, so it is deliberately not modelled in a database."
+     },
+     {
+      "item": "Sorting Pipelines",
+      "desc": "Radix or merge sort for depth-sorting transparent geometry back-to-front every frame."
+     },
+     {
+      "item": "LeetCode Focus",
+      "desc": "Sorting algorithm mechanics and advanced graph problems on adjacency lists."
+     },
+     {
+      "item": "Interview Patterns",
+      "desc": "Trie, Backtracking, Advanced Graphs: Word Search II, Design Add/Search Words, advanced traversal. Full pattern review at hard difficulty."
+     }
+    ],
+    "deliverable": [
+     {
+      "item": "Vulkan Mesh Renderer",
+      "desc": "An explicit Vulkan renderer setting up its own pipelines, descriptor sets and device buffers to draw textured meshes with correct synchronization."
+     }
+    ]
+   }
+  }
+ ],
+ "portfolio": [
+  {
+   "id": "p1",
+   "title": "CPU Ray Tracer",
+   "completed": false,
+   "localPath": "https://github.com/alessandrogpz/ray-tracer"
+  },
+  {
+   "id": "p2",
+   "title": "OpenGL Mini-Engine",
+   "completed": false
+  },
+  {
+   "id": "p3",
+   "title": "Vulkan Mesh Renderer",
+   "completed": false
+  }
+ ],
+ "materials": [
+  {
+   "id": "m1",
+   "title": "Foundations of game engine development: Mathematics",
+   "category": "Mathematics",
+   "type": "Book",
+   "status": "In Progress",
+   "currentPage": 87,
+   "totalPages": 183,
+   "currentSubject": "2.7.2 Rotation With Quaternions",
+   "link": "/mnt/Storage4TB/Bookshelf/Game Engine/Foundations of Game Engine Development, Volume 1 Mathematics by Eric Lengyel.pdf",
+   "localPath": "https://github.com/alessandrogpz/linear-algebra"
+  },
+  {
+   "id": "m2",
+   "title": "Programming Principles and Practice Using C++",
+   "category": "Programming Languages",
+   "type": "Book",
+   "status": "In Progress",
+   "currentPage": 111,
+   "totalPages": 639,
+   "currentSubject": "Chapter 4: Errors! - Review",
+   "link": "",
+   "localPath": "https://github.com/alessandrogpz/CCCP-3rd"
+  },
+  {
+   "id": "m4",
+   "title": "Ray Tracer Challenge",
+   "category": "Computer Graphics",
+   "type": "Book",
+   "status": "In Progress",
+   "currentPage": 109,
+   "totalPages": 264,
+   "currentSubject": "Chapter 8: Shadows",
+   "link": "/mnt/Storage4TB/Bookshelf/Graphics Programming/Ray Tracer Challenge _ A Test-driven Guide to Your First 3d Renderer (9781680506792).pdf",
+   "localPath": "https://github.com/alessandrogpz/ray-tracer"
+  },
+  {
+   "id": "m5",
+   "title": "LearnOpenGL",
+   "category": "Computer Graphics",
+   "type": "Website",
+   "status": "In Progress",
+   "currentPage": 0,
+   "totalPages": 50,
+   "currentSubject": "Understand \"Hello Triangle\" deeply",
+   "link": "https://learnopengl.com",
+   "localPath": "https://github.com/alessandrogpz/learn-opengl"
+  },
+  {
+   "id": "m6",
+   "title": "CMU 15-462/662 Computer Graphics",
+   "category": "Computer Graphics",
+   "type": "Course",
+   "status": "In Progress",
+   "currentPage": 0,
+   "totalPages": 24,
+   "currentSubject": "",
+   "link": "https://www.youtube.com/playlist?list=PL9_jI1bdZmz2dy17USgL26wI5_I2n873T"
+  },
+  {
+   "id": "m7",
+   "title": "Foundations of game engine development: Rendering",
+   "category": "Computer Graphics",
+   "type": "Book",
+   "status": "Not Started",
+   "currentPage": 0,
+   "totalPages": 380,
+   "currentSubject": "",
+   "link": "/mnt/Storage4TB/Bookshelf/Game Engine/Foundations of Game Engine Development Volume 2 Rendering by Eric Lengyel.pdf"
+  }
+ ],
+ "dailyStudyPoints": {
+  "math": "",
+  "leetcode": "",
+  "implementation": "",
+  "reflection": ""
+ },
+ "completedItemsHistory": {
+  "2026-06-09": [
+   {
+    "title": "Data Oriented Design"
+   }
+  ],
+  "2026-06-10": [
+   {
+    "title": "Linear Algebra",
+    "description": ""
+   },
+   {
+    "title": "Mathematics (Linear Algebra)"
+   }
+  ],
+  "2026-06-11": [
+   {
+    "title": "Implementation of a Data Structure",
+    "description": ""
+   },
+   {
+    "title": "C++ Book"
+   },
+   {
+    "title": "LearnOpenGL"
+   },
+   {
+    "title": "Data Oriented Design"
+   }
+  ],
+  "2026-06-12": [
+   {
+    "title": "C++ Book"
+   },
+   {
+    "title": "Linear Algebra",
+    "description": ""
+   },
+   {
+    "title": "Mathematics (Linear Algebra)"
+   }
+  ],
+  "2026-06-13": [
+   {
+    "title": "Mathematics (Linear Algebra)"
+   },
+   {
+    "title": "C++ Book"
+   }
+  ],
+  "2026-06-15": [
+   {
+    "title": "Linear Algebra",
+    "description": ""
+   },
+   {
+    "title": "Mathematics (Linear Algebra)"
+   },
+   {
+    "title": "Ray Tracer"
+   },
+   {
+    "title": "C++ Book"
+   },
+   {
+    "title": "Data Oriented Design"
+   }
+  ],
+  "2026-06-16": [
+   {
+    "title": "Mathematics (Linear Algebra)"
+   }
+  ],
+  "2026-06-17": [
+   {
+    "title": "Linear Algebra",
+    "description": ""
+   },
+   {
+    "title": "Mathematics (Linear Algebra)"
+   }
+  ],
+  "2026-06-18": [
+   {
+    "title": "Mathematics (Linear Algebra)"
+   }
+  ],
+  "2026-06-19": [
+   {
+    "title": "Linear Algebra",
+    "description": ""
+   },
+   {
+    "title": "C++ Book"
+   },
+   {
+    "title": "Mathematics (Linear Algebra)"
+   }
+  ],
+  "2026-06-20": [
+   {
+    "title": "C++ Book"
+   },
+   {
+    "title": "Data Oriented Design"
+   }
+  ],
+  "2026-06-21": [
+   {
+    "title": "Data Oriented Design (Concurrency)"
+   }
+  ],
+  "2026-06-22": [
+   {
+    "title": "Linear Algebra",
+    "description": "Translation"
+   },
+   {
+    "title": "Mathematics (Linear Algebra)"
+   },
+   {
+    "title": "C++ Book"
+   },
+   {
+    "title": "Ray Tracer"
+   }
+  ],
+  "2026-06-23": [
+   {
+    "title": "Mathematics (Linear Algebra)"
+   }
+  ],
+  "2026-06-24": [
+   {
+    "title": "Linear Algebra",
+    "description": ""
+   },
+   {
+    "title": "Mathematics (Linear Algebra)"
+   },
+   {
+    "title": "C++ Book"
+   }
+  ],
+  "2026-06-25": [
+   {
+    "title": "C++ Book"
+   },
+   {
+    "title": "Ray Tracer"
+   }
+  ],
+  "2026-06-26": [
+   {
+    "title": "Ray Tracer"
+   }
+  ],
+  "2026-06-27": [
+   {
+    "title": "Ray Tracer Challenge"
+   },
+   {
+    "title": "Data Oriented Design"
+   }
+  ],
+  "2026-06-28": [
+   {
+    "title": "Ray Tracer"
+   }
+  ],
+  "2026-06-29": [
+   {
+    "title": "Linear Algebra",
+    "description": ""
+   },
+   {
+    "title": "C++ Book"
+   },
+   {
+    "title": "Ray Tracer"
+   }
+  ],
+  "2026-06-30": [
+   {
+    "title": "Mathematics"
+   }
+  ],
+  "2026-07-01": [
+   {
+    "title": "Linear Algebra",
+    "description": ""
+   }
+  ],
+  "2026-07-02": [
+   {
+    "title": "Mathematics"
+   }
+  ],
+  "2026-07-03": [
+   {
+    "title": "Linear Algebra",
+    "description": ""
+   },
+   {
+    "title": "Mathematics"
+   }
+  ],
+  "2026-07-04": [
+   {
+    "title": "Mathematics"
+   }
+  ],
+  "2026-07-05": [
+   {
+    "title": "C++ Book"
+   }
+  ],
+  "2026-07-06": [
+   {
+    "title": "C++ Book"
+   }
+  ],
+  "2026-07-07": [
+   {
+    "title": "C++ Book"
+   }
+  ],
+  "2026-07-08": [
+   {
+    "title": "C++ Book"
+   }
+  ],
+  "2026-07-09": [
+   {
+    "title": "Hash Map Patterns",
+    "description": "Two Sum, Group Anagrams, Top K Frequent Elements, Longest Consecutive Sequence"
+   },
+   {
+    "title": "DSA Pattern Study"
+   }
+  ],
+  "2026-07-10": [
+   {
+    "title": "Hash Map Patterns",
+    "description": "Two Sum, Group Anagrams, Top K Frequent Elements, Longest Consecutive Sequence"
+   },
+   {
+    "title": "DSA Practice"
+   },
+   {
+    "title": "C++ Book"
+   }
+  ],
+  "2026-07-13": [
+   {
+    "title": "C++ Book"
+   }
+  ],
+  "2026-07-14": [
+   {
+    "title": "Two Pointers",
+    "description": "Valid Palindrome, Two Sum II, 3Sum, Container With Most Water, Trapping Rain Water"
+   },
+   {
+    "title": "DSA Pattern Study"
+   },
+   {
+    "title": "C++ Book"
+   }
+  ],
+  "2026-07-15": [
+   {
+    "title": "Two Pointers",
+    "description": "Valid Palindrome, Two Sum II, 3Sum, Container With Most Water, Trapping Rain Water"
+   },
+   {
+    "title": "Mathematics"
+   }
+  ],
+  "2026-07-17": [
+   {
+    "title": "Two Pointers",
+    "description": "Valid Palindrome, Two Sum II, 3Sum, Container With Most Water, Trapping Rain Water"
+   }
+  ]
+ },
+ "weeklyCompletions": {},
+ "studyStreak": []
 }
