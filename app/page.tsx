@@ -14,7 +14,7 @@ import {
   type DragOverEvent,
 } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import { LoaderCircle } from "lucide-react";
+import { LayoutGrid, LoaderCircle } from "lucide-react";
 import { fetchWorkspace, updateWorkspace, openLinkOnSystem, visibleTracks } from "@/lib/api";
 import {
   isGoogleAuthenticated,
@@ -42,13 +42,9 @@ import WeeklyPlan from "@/components/WeeklyPlan";
 import RotationModal from "@/components/RotationModal";
 import WeeklyRhythmModal from "@/components/WeeklyRhythmModal";
 import SortablePanel from "@/components/SortablePanel";
+import { MODULES, defaultPanelColumns, homeColumnFor, resolveTrackLayout } from "@/lib/modules";
 
 type PanelColumnId = "left" | "right";
-
-const DEFAULT_PANEL_COLUMNS: PanelColumns = {
-  left: ["weeklyPlan", "phaseTracker", "streakGraph", "pomodoroTimer"],
-  right: ["portfolioTracker", "materialsTracker"],
-};
 
 const findPanelColumn = (columns: PanelColumns, id: string): PanelColumnId | null => {
   if (columns.left.includes(id)) return "left";
@@ -171,11 +167,18 @@ export default function Home() {
   // (a dashboard-layout preference shared across tracks) but must also hold
   // ahead-of-persistence state during an active drag gesture, so it's synced
   // from the loaded workspace during render rather than via an effect.
-  const [panelColumns, setPanelColumns] = useState<PanelColumns>(DEFAULT_PANEL_COLUMNS);
-  const [lastSyncedPanelColumns, setLastSyncedPanelColumns] = useState<PanelColumns | undefined>(undefined);
-  if (workspace?.panelColumns && workspace.panelColumns !== lastSyncedPanelColumns) {
-    setLastSyncedPanelColumns(workspace.panelColumns);
-    setPanelColumns(workspace.panelColumns);
+  const [panelColumns, setPanelColumns] = useState<PanelColumns>(defaultPanelColumns());
+  // Re-seed the draggable copy from the active track whenever that track — or
+  // its stored layout — changes. Keyed on trackId + serialized columns so a
+  // track switch or a persisted reorder/hide re-syncs, but an in-flight drag
+  // (which only mutates local state) doesn't get clobbered mid-gesture.
+  const [layoutSyncKey, setLayoutSyncKey] = useState<string>("");
+  if (workspace && data) {
+    const key = `${workspace.activeTrackId}:${JSON.stringify(data.panelColumns ?? null)}`;
+    if (key !== layoutSyncKey) {
+      setLayoutSyncKey(key);
+      setPanelColumns(resolveTrackLayout(data).columns);
+    }
   }
 
   const panelSensors = useSensors(
@@ -189,16 +192,56 @@ export default function Home() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  const persistPanelColumns = async (next: PanelColumns) => {
+  /** Persist the active track's dashboard layout. A normal (non-reset) save so
+   *  the layout change bumps the track's configVersion and syncs like the rest
+   *  of its config. `hidden` defaults to the track's current hidden set, so a
+   *  pure reorder leaves closed modules untouched. */
+  const persistTrackLayout = async (columns: PanelColumns, hidden?: string[]) => {
     const ws = workspaceRef.current;
     if (!ws) return;
-    const newWorkspace = { ...ws, panelColumns: next };
+    const active = ws.tracks[ws.activeTrackId];
+    if (!active) return;
+    const newTrack: TrackState = { ...active, panelColumns: columns, hiddenPanels: hidden ?? active.hiddenPanels ?? [] };
+    const newWorkspace = withTrack(ws, newTrack);
     setWorkspace(newWorkspace);
     try {
-      await updateWorkspace({ ...newWorkspace, isReset: true });
+      await updateWorkspace(newWorkspace);
     } catch (err) {
-      console.error("Failed to save panel order", err);
+      console.error("Failed to save dashboard layout", err);
     }
+  };
+
+  /** Close a module: drop it from the visible columns and add it to the track's
+   *  hidden set. The track's data behind the module is never touched. */
+  const handleHideModule = (id: string) => {
+    const next: PanelColumns = {
+      left: panelColumns.left.filter((x) => x !== id),
+      right: panelColumns.right.filter((x) => x !== id),
+    };
+    const active = workspaceRef.current?.tracks[workspaceRef.current.activeTrackId];
+    const hidden = Array.from(new Set([...(active?.hiddenPanels ?? []), id]));
+    setPanelColumns(next);
+    persistTrackLayout(next, hidden);
+  };
+
+  /** Reopen a module: append it to its home column (unless already placed) and
+   *  remove it from the hidden set. */
+  const handleShowModule = (id: string) => {
+    const next: PanelColumns = { left: [...panelColumns.left], right: [...panelColumns.right] };
+    if (!next.left.includes(id) && !next.right.includes(id)) {
+      const home = homeColumnFor(id);
+      next[home] = [...next[home], id];
+    }
+    const active = workspaceRef.current?.tracks[workspaceRef.current.activeTrackId];
+    const hidden = (active?.hiddenPanels ?? []).filter((x) => x !== id);
+    setPanelColumns(next);
+    persistTrackLayout(next, hidden);
+  };
+
+  const handleToggleModule = (id: string) => {
+    const isVisible = panelColumns.left.includes(id) || panelColumns.right.includes(id);
+    if (isVisible) handleHideModule(id);
+    else handleShowModule(id);
   };
 
   const handlePanelDragOver = (e: DragOverEvent) => {
@@ -234,10 +277,10 @@ export default function Home() {
       const newIndex = items.indexOf(String(over.id));
       const next = { ...panelColumns, [activeCol]: arrayMove(items, oldIndex, newIndex) };
       setPanelColumns(next);
-      persistPanelColumns(next);
+      persistTrackLayout(next);
     } else {
       // Cross-column move was already applied live by handlePanelDragOver — persist as-is.
-      persistPanelColumns(panelColumns);
+      persistTrackLayout(panelColumns);
     }
   };
 
@@ -660,6 +703,10 @@ export default function Home() {
     weeklyPlan: () => setShowRhythmEditor(true),
   };
 
+  const visibleModuleIds = new Set([...panelColumns.left, ...panelColumns.right]);
+  const moduleState = MODULES.map((m) => ({ id: m.id, label: m.label, visible: visibleModuleIds.has(m.id) }));
+  const allModulesHidden = panelColumns.left.length === 0 && panelColumns.right.length === 0;
+
   return (
     <main className="container">
       <div className="app-glow" aria-hidden="true" />
@@ -682,6 +729,8 @@ export default function Home() {
             onEditTrack={handleEditTrackIdentity}
             onDeleteTrack={handleDeleteTrack}
             canDeleteTrack={visibleTracks(workspace).length > 1}
+            moduleState={moduleState}
+            onToggleModule={handleToggleModule}
           />
 
           {/* Phase recommendation alert */}
@@ -703,7 +752,7 @@ export default function Home() {
         <SortableContext items={panelColumns.left} strategy={verticalListSortingStrategy}>
           <div className="flex flex-col gap-8">
             {panelColumns.left.map((id, i) => (
-              <SortablePanel key={id} id={id} index={i} onEdit={PANEL_EDIT_HANDLERS[id]}>{PANELS[id]}</SortablePanel>
+              <SortablePanel key={id} id={id} index={i} onEdit={PANEL_EDIT_HANDLERS[id]} onHide={() => handleHideModule(id)}>{PANELS[id]}</SortablePanel>
             ))}
           </div>
         </SortableContext>
@@ -711,10 +760,20 @@ export default function Home() {
         <SortableContext items={panelColumns.right} strategy={verticalListSortingStrategy}>
           <div className="flex flex-col gap-8">
             {panelColumns.right.map((id, i) => (
-              <SortablePanel key={id} id={id} index={i + 1} onEdit={PANEL_EDIT_HANDLERS[id]}>{PANELS[id]}</SortablePanel>
+              <SortablePanel key={id} id={id} index={i + 1} onEdit={PANEL_EDIT_HANDLERS[id]} onHide={() => handleHideModule(id)}>{PANELS[id]}</SortablePanel>
             ))}
           </div>
         </SortableContext>
+
+        {allModulesHidden && (
+          <div className="col-span-full glass-panel flex flex-col items-center justify-center gap-3 py-16 text-center">
+            <LayoutGrid size={28} strokeWidth={1.75} className="text-muted-foreground" />
+            <p className="text-foreground text-sm font-medium">No modules are open for this track</p>
+            <p className="text-subtle-foreground text-xs max-w-[360px]">
+              Open some from the Modules menu in the header. Closing a module only hides it — none of this track&apos;s data is ever deleted.
+            </p>
+          </div>
+        )}
       </DndContext>
 
       {selectedPhase && (

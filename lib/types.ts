@@ -193,12 +193,21 @@ export interface TrackState extends Omit<AppState, "hasUnsyncedChanges" | "lastS
   /** Free-form markdown — this track's own full roadmap/plan, private to it
    *  and fully editable. Never a shared/shipped file: every track has its own. */
   roadmapContent?: string;
+  /** This track's own dashboard layout: the order + column placement of its
+   *  *visible* modules. Per-track, so each track can arrange the board its own
+   *  way. Absent on legacy tracks — seeded on load from the old workspace-level
+   *  value (or the default) by fetchWorkspace's migration. */
+  panelColumns?: PanelColumns;
+  /** Module ids this track has closed. Closing only removes a module from the
+   *  view (it's dropped from panelColumns and listed here) — the track's data
+   *  behind it is never touched, so reopening restores it intact. */
+  hiddenPanels?: string[];
 }
 
 /** Dashboard panel keys, grouped by column. The two columns can hold a
  *  different number of panels (they're independently-sized flex columns,
  *  not a fixed grid), so drag-and-drop uses dnd-kit's multi-container
- *  pattern rather than a single flat order. Shared across all tracks. */
+ *  pattern rather than a single flat order. Held per-track on TrackState. */
 export interface PanelColumns {
   left: string[];
   right: string[];
@@ -207,6 +216,8 @@ export interface PanelColumns {
 export interface Workspace {
   activeTrackId: TrackId;
   tracks: Record<TrackId, TrackState>;
+  /** @deprecated Legacy shared layout. Layout is now per-track
+   *  (TrackState.panelColumns); this is only read once to migrate old data. */
   panelColumns?: PanelColumns;
 
   // Sync bookkeeping — one Drive round trip covers the whole workspace.

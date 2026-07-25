@@ -9,6 +9,7 @@ import { Pencil, Ellipsis, Cloud, Map, Flame } from "lucide-react";
 import TrackSwitcher from "@/components/TrackSwitcher";
 import TrackSettingsModal from "@/components/TrackSettingsModal";
 import ThemeToggle from "@/components/ThemeToggle";
+import ModulesMenu, { type ModuleState } from "@/components/ModulesMenu";
 
 export type SyncStatus = "idle" | "syncing" | "success" | "error";
 
@@ -24,6 +25,8 @@ interface DashboardHeaderProps {
   onEditTrack: (fields: { name: string; color: string; startDate: string; totalDays: number }) => void;
   onDeleteTrack: () => void;
   canDeleteTrack: boolean;
+  moduleState: ModuleState[];
+  onToggleModule: (id: string) => void;
 }
 
 const getRelativeTimeString = (timestamp: number | undefined) => {
@@ -127,7 +130,7 @@ function StatTile({
   );
 }
 
-export default function DashboardHeader({ data, workspace, syncStatus, syncError, onSync, onOpenCloudMenu, onSwitchTrack, onNewTrack, onEditTrack, onDeleteTrack, canDeleteTrack }: DashboardHeaderProps) {
+export default function DashboardHeader({ data, workspace, syncStatus, syncError, onSync, onOpenCloudMenu, onSwitchTrack, onNewTrack, onEditTrack, onDeleteTrack, canDeleteTrack, moduleState, onToggleModule }: DashboardHeaderProps) {
   const [showTrackSettings, setShowTrackSettings] = useState(false);
   const daysPassed = data.startDate && data.isSynced ? daysSince(data.startDate) : 0;
   const daysInPhase: number | string = data.isSynced
@@ -220,6 +223,8 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
         >
           <Ellipsis size={15} strokeWidth={2} />
         </button>
+
+        <ModulesMenu modules={moduleState} trackName={data.meta.name} onToggle={onToggleModule} />
 
         <ThemeToggle />
       </div>

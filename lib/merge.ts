@@ -299,9 +299,11 @@ export function mergeWorkspace(local: Workspace, remote: Workspace): WorkspaceMe
 
   return {
     data: {
+      // Dashboard layout is per-track now (each track's panelColumns/hiddenPanels
+      // ride its own configVersion via mergeAppState), so there's no
+      // workspace-level layout to reconcile here anymore.
       activeTrackId,
       tracks: mergedTracks,
-      panelColumns: local.panelColumns || remote.panelColumns,
       isSynced: true,
       hasUnsyncedChanges: false,
       lastSyncTime: Date.now(),

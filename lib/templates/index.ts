@@ -1,4 +1,5 @@
 import type { FocusType, Material, Phase, PortfolioProject, TrackId, TrackState, WeekDay } from "../types";
+import { defaultPanelColumns } from "../modules";
 import { fitnessTemplate } from "./fitness";
 import { learningTemplate } from "./learning";
 import { workTemplate } from "./work";
@@ -93,5 +94,7 @@ export function seedTrackFromTemplate(template: TrackTemplate, answers: SeedAnsw
     configVersion: 0,
     itemUpdatedAt: {},
     historyUpdatedAt: {},
+    panelColumns: defaultPanelColumns(),
+    hiddenPanels: [],
   };
 }

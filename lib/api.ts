@@ -1,5 +1,6 @@
 import { db } from "./localDb";
-import type { GitStats, Material, PortfolioProject, RotationDef, TrackId, TrackState, Workspace } from "./types";
+import type { GitStats, Material, PanelColumns, PortfolioProject, RotationDef, TrackId, TrackState, Workspace } from "./types";
+import { defaultPanelColumns } from "./modules";
 import { LEGACY_PATH_TO_REPO, MATERIAL_REPO_MAP, PORTFOLIO_REPO_MAP } from "./migrationConfig";
 import { LEGACY_TRACK_ID } from "./localDb";
 import { DEFAULT_WEEK_SCHEDULE } from "./constants";
@@ -183,6 +184,8 @@ const applyTrackBookkeeping = (
     "weekSchedule",
     "roadmapContent",
     "phases",
+    "panelColumns",
+    "hiddenPanels",
   ] as const;
 
   let configChanged = false;
@@ -198,6 +201,23 @@ const applyTrackBookkeeping = (
   return { track, changed: configChanged || hasChanges };
 };
 
+/**
+ * One-time move of dashboard layout from the old shared workspace level to
+ * per-track. Seeds a track that has no layout of its own from the legacy
+ * workspace-wide columns (so an arrangement made before this feature is
+ * preserved), or the default. Tracks created since already carry their own.
+ */
+const migratePerTrackLayout = (
+  track: TrackState,
+  legacyColumns: PanelColumns | undefined
+): { track: TrackState; modified: boolean } => {
+  if (track.panelColumns) return { track, modified: false };
+  const seed: PanelColumns = legacyColumns
+    ? { left: [...legacyColumns.left], right: [...legacyColumns.right] }
+    : defaultPanelColumns();
+  return { track: { ...track, panelColumns: seed }, modified: true };
+};
+
 /** Fresh install: an empty workspace, which app/page.tsx treats as "redirect to onboarding". */
 const buildEmptyWorkspace = (): Workspace => ({ activeTrackId: "", tracks: {} });
 
@@ -209,11 +229,17 @@ export const fetchWorkspace = async (): Promise<Workspace> => {
       const tracks: Record<TrackId, TrackState> = {};
       Object.entries(record.data.tracks).forEach(([id, t]) => {
         const { track: pathsTrack, modified: pathsModified } = migrateLocalPaths(t);
-        const { track, modified: rotationModified } = migrateLegacyRotation(pathsTrack);
+        const { track: rotationTrack, modified: rotationModified } = migrateLegacyRotation(pathsTrack);
+        const { track, modified: layoutModified } = migratePerTrackLayout(rotationTrack, record.data.panelColumns);
         tracks[id] = track;
-        if (pathsModified || rotationModified) modified = true;
+        if (pathsModified || rotationModified || layoutModified) modified = true;
       });
       const data: Workspace = { ...record.data, tracks };
+      // Layout now lives per-track; drop the retired workspace-level copy.
+      if (data.panelColumns !== undefined) {
+        delete data.panelColumns;
+        modified = true;
+      }
       if (modified) {
         await db.workspace.put({ id: "current", data });
       }
