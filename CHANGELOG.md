@@ -7,6 +7,34 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.2.0] - 2026-07-25
+
+### Changed
+- Premium-minimal UI pass (shadcn/Vercel-flavored), dark mode. No information
+  was moved behind menus — the dashboard stays as dense as before.
+  - **Depth & elevation:** panels now sit on a proper surface ladder
+    (page → card → inner rows) with a faint top-edge highlight and soft
+    shadows, instead of a single flat plane of hairline-outlined boxes.
+    Modals/notes drawer use a real translucent backdrop-blur surface.
+  - **Hero metrics:** the header leads with an at-a-glance stat band —
+    current streak (animated count-up), a Day X / Y timeline progress ring,
+    phase day, and overall progress — all previously smaller inline text.
+  - **Faint light source:** a low-opacity accent glow anchors the top of the
+    page; base tone warmed slightly off pure black.
+  - **Softer borders + motion:** relies more on elevation than outlines;
+    checkbox check spring, staggered panel entrance, streak-cell hover, and
+    progress-ring/count-up transitions (all respect `prefers-reduced-motion`).
+  - **Icons:** dashboard chrome now uses lucide line-icons (edit, drag, more,
+    cloud, roadmap, per-panel section icons, close/check) in place of unicode
+    glyphs. Modal/onboarding-internal glyphs are a tracked follow-up.
+- Section titles restyled as compact uppercase eyebrow labels.
+
+### Added
+- `currentStreakLength()` streak helper (consecutive-day count, anchored on
+  today or yesterday) powering the hero streak metric, with unit tests.
+- Light-theme design tokens staged in CSS (`:root[data-theme="light"]`),
+  ready for a future toggle once the component color-token migration lands.
+
 ## [0.1.2] - 2026-07-25
 
 ### Fixed

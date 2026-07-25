@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { BookOpen, Check, X } from "lucide-react";
 import { fetchGitStats, fetchNotes, saveNotes } from "@/lib/api";
 import { renderMarkdownToHtml } from "@/lib/markdown";
 import type { GitStats, Material } from "@/lib/types";
@@ -219,7 +220,10 @@ export default function MaterialsTracker({
   return (
     <div className="glass-panel p-6 flex flex-col gap-4">
       <div className="flex justify-between items-center border-b border-card-border pb-3">
-        <h2 className="section-title !mb-0">Materials</h2>
+        <h2 className="section-title !mb-0">
+          <BookOpen size={14} strokeWidth={2.5} className="section-icon" />
+          Materials
+        </h2>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
           className="btn px-2.5 py-1 text-xs"
@@ -528,18 +532,19 @@ export default function MaterialsTracker({
             </h3>
           </div>
           <div className="flex items-center gap-4 shrink-0">
-            <span className={`text-[0.7rem] font-mono ${notesStatus === "error" ? "text-red-500" : "text-zinc-400"}`}>
+            <span className={`text-[0.7rem] font-mono inline-flex items-center gap-1 ${notesStatus === "error" ? "text-red-500" : "text-zinc-400"}`}>
               {notesStatus === "loading" && "Loading..."}
               {notesStatus === "saving" && "Saving..."}
-              {notesStatus === "saved" && "Saved ✓"}
+              {notesStatus === "saved" && (<><Check size={12} strokeWidth={2.5} /> Saved</>)}
               {notesStatus === "error" && "Error saving!"}
               {notesStatus === "idle" && ""}
             </span>
             <button
               onClick={closeNotes}
-              className="bg-transparent border-none text-white cursor-pointer text-[1.2rem] p-1 flex items-center"
+              className="bg-transparent border-none text-white cursor-pointer p-1 flex items-center hover:text-muted-foreground transition-colors"
+              aria-label="Close notes"
             >
-              ✕
+              <X size={18} strokeWidth={2} />
             </button>
           </div>
         </div>

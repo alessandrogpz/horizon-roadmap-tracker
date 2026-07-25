@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { FolderGit2, X } from "lucide-react";
 import { fetchGitStats } from "@/lib/api";
 import type { GitStats, PortfolioProject } from "@/lib/types";
 
@@ -63,7 +64,10 @@ export default function PortfolioTracker({ portfolio, onToggle, onAddProject, on
   return (
     <div className="glass-panel p-6 flex flex-col gap-4">
       <div className="flex justify-between items-center border-b border-card-border pb-3">
-        <h2 className="section-title !mb-0">Portfolio Deliverables</h2>
+        <h2 className="section-title !mb-0">
+          <FolderGit2 size={14} strokeWidth={2.5} className="section-icon" />
+          Portfolio Deliverables
+        </h2>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
           className="btn px-2.5 py-1 text-xs"
@@ -166,7 +170,7 @@ export default function PortfolioTracker({ portfolio, onToggle, onAddProject, on
                 </div>
                 <div className="flex items-center gap-2 text-xs shrink-0">
                   <button onClick={() => startEdit(proj)} className="text-accent bg-transparent border-none cursor-pointer">Edit</button>
-                  <button onClick={() => onDeleteProject(proj.id)} className="text-red-500 bg-transparent border-none cursor-pointer">✕</button>
+                  <button onClick={() => onDeleteProject(proj.id)} className="text-red-500 bg-transparent border-none cursor-pointer flex items-center" aria-label="Delete project"><X size={14} strokeWidth={2} /></button>
                 </div>
               </>
             )}

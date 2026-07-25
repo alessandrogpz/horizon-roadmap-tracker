@@ -14,6 +14,7 @@ import {
   type DragOverEvent,
 } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { LoaderCircle } from "lucide-react";
 import { fetchWorkspace, updateWorkspace, openLinkOnSystem, visibleTracks } from "@/lib/api";
 import {
   isGoogleAuthenticated,
@@ -568,8 +569,8 @@ export default function Home() {
   if (loading) {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-4 bg-background text-foreground">
-        <span className="animate-spin text-[2rem]">↻</span>
-        <p>Loading your Horizon workspace...</p>
+        <LoaderCircle className="animate-spin text-accent" size={30} strokeWidth={2} />
+        <p className="text-muted-foreground text-sm">Loading your Horizon workspace...</p>
       </div>
     );
   }
@@ -577,8 +578,8 @@ export default function Home() {
   if (workspace && visibleTracks(workspace).length === 0) {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-4 bg-background text-foreground">
-        <span className="animate-spin text-[2rem]">↻</span>
-        <p>Setting up your workspace...</p>
+        <LoaderCircle className="animate-spin text-accent" size={30} strokeWidth={2} />
+        <p className="text-muted-foreground text-sm">Setting up your workspace...</p>
       </div>
     );
   }
@@ -661,6 +662,7 @@ export default function Home() {
 
   return (
     <main className="container">
+      <div className="app-glow" aria-hidden="true" />
       <DndContext
         sensors={panelSensors}
         collisionDetection={closestCenter}
@@ -700,16 +702,16 @@ export default function Home() {
 
         <SortableContext items={panelColumns.left} strategy={verticalListSortingStrategy}>
           <div className="flex flex-col gap-8">
-            {panelColumns.left.map((id) => (
-              <SortablePanel key={id} id={id} onEdit={PANEL_EDIT_HANDLERS[id]}>{PANELS[id]}</SortablePanel>
+            {panelColumns.left.map((id, i) => (
+              <SortablePanel key={id} id={id} index={i} onEdit={PANEL_EDIT_HANDLERS[id]}>{PANELS[id]}</SortablePanel>
             ))}
           </div>
         </SortableContext>
 
         <SortableContext items={panelColumns.right} strategy={verticalListSortingStrategy}>
           <div className="flex flex-col gap-8">
-            {panelColumns.right.map((id) => (
-              <SortablePanel key={id} id={id} onEdit={PANEL_EDIT_HANDLERS[id]}>{PANELS[id]}</SortablePanel>
+            {panelColumns.right.map((id, i) => (
+              <SortablePanel key={id} id={id} index={i + 1} onEdit={PANEL_EDIT_HANDLERS[id]}>{PANELS[id]}</SortablePanel>
             ))}
           </div>
         </SortableContext>

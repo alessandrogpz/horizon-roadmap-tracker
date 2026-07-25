@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { addCompletion, removeCompletion, rebuildStreakHistory, completedItemTitle } from "../streak";
+import { addCompletion, removeCompletion, rebuildStreakHistory, completedItemTitle, currentStreakLength } from "../streak";
 import type { AppState } from "../types";
 
 const baseData = { completedItemsHistory: {} } as AppState;
@@ -46,5 +46,32 @@ describe("addCompletion / removeCompletion", () => {
     const withTwo = addCompletion({ ...baseData, completedItemsHistory: withOne.completedItemsHistory }, "2026-01-01", "Item B");
     const removed = removeCompletion({ ...baseData, completedItemsHistory: withTwo.completedItemsHistory }, "2026-01-01", "Item A");
     expect(removed.completedItemsHistory["2026-01-01"]).toEqual([{ title: "Item B", description: "" }]);
+  });
+});
+
+describe("currentStreakLength", () => {
+  it("counts consecutive days ending today", () => {
+    expect(currentStreakLength(["2026-07-23", "2026-07-24", "2026-07-25"], "2026-07-25")).toBe(3);
+  });
+
+  it("still counts a live streak when today has not been worked yet (anchors on yesterday)", () => {
+    expect(currentStreakLength(["2026-07-23", "2026-07-24"], "2026-07-25")).toBe(2);
+  });
+
+  it("returns 0 when neither today nor yesterday is present", () => {
+    expect(currentStreakLength(["2026-07-20", "2026-07-21"], "2026-07-25")).toBe(0);
+  });
+
+  it("stops at the first gap", () => {
+    // 2026-07-22 is missing, so the streak from today is only the 24th+25th.
+    expect(currentStreakLength(["2026-07-20", "2026-07-21", "2026-07-24", "2026-07-25"], "2026-07-25")).toBe(2);
+  });
+
+  it("handles month boundaries", () => {
+    expect(currentStreakLength(["2026-06-29", "2026-06-30", "2026-07-01"], "2026-07-01")).toBe(3);
+  });
+
+  it("returns 0 for empty history", () => {
+    expect(currentStreakLength([], "2026-07-25")).toBe(0);
   });
 });
