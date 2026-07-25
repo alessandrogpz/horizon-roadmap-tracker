@@ -26,8 +26,8 @@ This document serves as a reference roadmap for all four study phases. It outlin
 | Phase | Duration | Core Goal | Primary Resources | Key Deliverable |
 | :--- | :--- | :--- | :--- | :--- |
 | **Phase 1** | Months 1-3 | Language & Software Rendering | C++ Book (PPP), Lengyel Vol 1 (Mathematics), LearnOpenGL | CPU Ray Tracer |
-| **Phase 2** | Months 4-7 | Hardware Rasterization | LearnOpenGL, Lengyel Vol 2 (Rendering), CMU 15-462, Calculus 1 | OpenGL Scene Viewer |
-| **Phase 3** | Months 8-10 | Optimization & Architectures | CMU 15-462 (Advanced), Calculus 2 | Optimized Scene Graph Engine |
+| **Phase 2** | Months 4-7 | Hardware Rasterization | LearnOpenGL, Lengyel Vol 2 (Rendering), CMU 15-462, Calculus 1 | OpenGL Scene Viewer + Asset/Scene Database |
+| **Phase 3** | Months 8-10 | Optimization & Architectures | CMU 15-462 (Advanced), Calculus 2 | Optimized Scene Graph Engine + Frame-Timing Database |
 | **Phase 4** | Months 11-12| Modern GPU APIs | Vulkan Tutorial, Vector Calculus | Vulkan Mesh Renderer |
 
 ---
@@ -122,6 +122,12 @@ This document serves as a reference roadmap for all four study phases. It outlin
 - **RenderDoc**: Capture frames, inspect bound uniforms/VBOs, step through shader variables.
 - **Debug Drawer**: Implement a utility class to draw wireframe vectors, coordinate axes, and bounding boxes in 3D.
 
+#### 6. Data Management (Relational vs. Non-Relational)
+**Topics**:
+- Model the scene graph two ways and compare: a relational adjacency-list table (\`node_id, parent_id, transform\`) vs. nested JSON documents. Check how "get all descendants of node X" looks in each.
+- Build a small SQLite-backed asset database: \`materials\`, \`meshes\`, \`textures\` tables, with a join table for mesh↔material reuse (first real many-to-many/foreign-key exercise).
+- **Deliverable tie-in**: the OpenGL Scene Viewer loads its scene from this database instead of a hardcoded scene file.
+
 ---
 
 ### Phase 3: Spatial Architectures & Optimization (Months 8–10)
@@ -162,6 +168,11 @@ This document serves as a reference roadmap for all four study phases. It outlin
 - **Profiler Integration**: Integrate Tracy Profiler (or custom timer scopes in ImGui) to track CPU/GPU frame boundaries and detect CPU-side bottleneck loops.
 - **Culling Controls**: Toggle BVH/frustum culling visual overlays via ImGui to inspect culled geometry counts.
 
+#### 6. Data Management
+**Topics**:
+- Pipe Tracy/ImGui frame captures into SQLite (\`frame_number, cpu_time, gpu_time, draw_calls\`).
+- Write real aggregate queries: slowest frames, average by scene, percentile breakdowns.
+
 ---
 
 ### Phase 4: Low-Level Graphics & Vulkan Transition (Months 11–12)
@@ -193,7 +204,7 @@ This document serves as a reference roadmap for all four study phases. It outlin
 
 #### 4. Algorithms & Data Structures
 **Topics**:
-- Mesh Representation & Sorting (Months 11–12): Half-Edge data structure for mesh representations (polygon mesh adjacencies lookup for geometry processing).
+- Mesh Representation & Sorting (Months 11–12): Half-Edge data structure for mesh representations (polygon mesh adjacencies lookup for geometry processing). Same relational-vs-document comparison as Phase 2's scene graph, now applied to geometry adjacency.
 - Sorting Pipelines: Radix Sort or Merge Sort for depth-sorting transparent geometry from back-to-front every frame.
 - LeetCode Focus: Standard sorting algorithm mechanics and advanced Graph problems (Adjacency Lists).
 - Interview Patterns: **Trie, Backtracking, Advanced Graphs**. Word Search II, Design Add/Search Words, advanced graph traversal. Full pattern review at hard difficulty.
