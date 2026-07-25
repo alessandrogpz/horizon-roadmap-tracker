@@ -153,15 +153,10 @@ export default function Home() {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
   const [syncError, setSyncError] = useState("");
   const [driveModalMode, setDriveModalMode] = useState<DriveModalMode | null>(null);
-  const [, setSyncTick] = useState(0);
 
-  // Re-render periodically so the "Last Sync" relative time stays fresh
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSyncTick((t) => t + 1);
-    }, 15000);
-    return () => clearInterval(interval);
-  }, []);
+  // The "Last Sync" relative-time label keeps itself fresh via its own interval
+  // inside DashboardHeader (LastSyncedLabel), so no dashboard-wide ticker is
+  // needed here — that would re-render every panel every 15s.
 
   // No tracks yet: send the user through the onboarding wizard instead of
   // rendering an empty/placeholder dashboard.

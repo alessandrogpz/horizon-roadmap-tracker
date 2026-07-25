@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { TrackState, Workspace } from "@/lib/types";
 import { daysSince } from "@/lib/dates";
 import { visibleTracks } from "@/lib/api";
@@ -33,6 +33,17 @@ const getRelativeTimeString = (timestamp: number | undefined) => {
   if (hours < 24) return `${hours}h ago`;
   return new Date(timestamp).toLocaleDateString();
 };
+
+/** Self-ticking relative-time label. Owns its own 15s interval so refreshing
+ *  the "last synced" text re-renders only this span, not the whole dashboard. */
+function LastSyncedLabel({ timestamp }: { timestamp: number | undefined }) {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => setTick((t) => t + 1), 15000);
+    return () => clearInterval(interval);
+  }, []);
+  return <span className="text-zinc-500">{getRelativeTimeString(timestamp)}</span>;
+}
 
 export default function DashboardHeader({ data, workspace, syncStatus, syncError, onSync, onOpenCloudMenu, onSwitchTrack, onNewTrack, onEditTrack, onDeleteTrack, canDeleteTrack }: DashboardHeaderProps) {
   const [showTrackSettings, setShowTrackSettings] = useState(false);
@@ -113,7 +124,7 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
             {syncStatus === "idle" && (workspace.hasUnsyncedChanges ? "Unsynced (Click to Sync)" : "Synced with Cloud")}
           </span>
           <span className="text-zinc-700">•</span>
-          <span className="text-zinc-500">{getRelativeTimeString(workspace.lastSyncTime)}</span>
+          <LastSyncedLabel timestamp={workspace.lastSyncTime} />
         </div>
 
         <button

@@ -279,6 +279,13 @@ export const createTrack = async (track: TrackState): Promise<void> => {
     ...ws,
     tracks: { ...ws.tracks, [track.meta.id]: track },
     activeTrackId: track.meta.id,
+    // A wizard-created track is real local data. Mark the workspace synced so
+    // the first Sync takes the merge path — otherwise syncWithGoogleDrive's
+    // "unsynced: overwrite local with remote" branch would discard this new
+    // track when the Drive account already holds data from another device.
+    // (ConnectExistingAccount stays correct: it syncs before any track exists,
+    // so the workspace is still unsynced there and the overwrite is intended.)
+    isSynced: ws.isSynced ?? true,
   };
   await db.workspace.put({ id: "current", data: nextWorkspace });
 };
