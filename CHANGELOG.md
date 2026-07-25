@@ -7,6 +7,47 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.6.0] - 2026-07-25
+
+### Added
+- **Phase deadlines are now editable.** The phase detail modal's edit view gains
+  a **Phase Ends** section: a date picker, the resulting curriculum day number
+  shown beside it, and a *Clear* action that removes the deadline entirely.
+  `Phase.recommendedByDay` has existed in the model since multi-track landed but
+  was only ever settable by editing stored data by hand — there was no way to
+  change a phase's end date from the UI at all.
+  - Stored as a day offset from the track start rather than an absolute date, so
+    re-dating a whole track later doesn't require rewriting every phase.
+  - Clearing the field is how a phase opts out of the deadline and the
+    phase-recommendation banner.
+- **Deadlines shown in the Roadmap Timeline.** Each phase now renders its end
+  date in faint monospace beneath its description (`Ends 31 Aug 2026 · day 88`),
+  so the whole schedule is legible from the collapsed timeline without opening
+  anything. Mirrored in the phase modal's header. Only rendered for phases that
+  actually carry a threshold.
+- `dateForDay`, `dayForDate` and `formatDayMonthYear` in `lib/dates.ts`.
+  `dateForDay`/`dayForDate` are mutual inverses and share `daysSince`'s 1-based
+  convention (day 1 *is* the track start date). `dateForDay` uses `setDate`
+  rather than millisecond arithmetic, and `dayForDate` rounds rather than
+  floors, so neither can drop a day across a daylight-saving boundary.
+
+### Changed
+- **Phase 1 of the Engine & Graphics track now ends 31 Aug 2026** (day 88)
+  instead of running into September, so Phase 2 begins exactly on 1 September.
+  Phases 2-4 keep their durations unchanged and shift accordingly: day 182
+  (3 Dec 2026), day 330 (30 Apr 2027), day 392 (1 Jul 2027).
+- **End dates removed from phase titles.** Titles return to `Phase 1: Months 1-3`
+  — the date is derived from `recommendedByDay` and rendered by the timeline, so
+  it can no longer drift out of sync with the stored threshold.
+
+### Fixed
+- **Phase end dates were off by one day.** `daysSince` counts inclusively from
+  the track start (day 1 is the start date itself), but 0.5.0's phase boundaries
+  were labelled as if day 0 were the start — so every date shown in the roadmap
+  was a day late (day 92 is 4 Sep 2026, not 5 Sep). All day numbers and dates in
+  the roadmap document and the timeline now use the same 1-based convention the
+  rest of the app does.
+
 ## [0.5.0] - 2026-07-25
 
 ### Changed

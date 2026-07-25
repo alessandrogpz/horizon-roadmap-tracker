@@ -58,6 +58,32 @@ export function getDateForDayName(dayName: string, offset: number = 0): string {
   return formatDateYMD(targetDate);
 }
 
+/** Calendar date of 1-based curriculum day `n`, counted from startDate — so
+ *  day 1 *is* the start date. Inverse of `dayForDate`, and consistent with
+ *  `daysSince` below, which is what `Phase.recommendedByDay` is compared
+ *  against. Uses setDate rather than millisecond arithmetic so it stays
+ *  correct across daylight-saving boundaries. */
+export function dateForDay(startDateStr: string, n: number): Date {
+  const d = parseYMD(startDateStr);
+  d.setDate(d.getDate() + n - 1);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+/** 1-based curriculum day number of a "YYYY-MM-DD" date. Inverse of
+ *  `dateForDay`. Rounds rather than floors so a DST shift (which makes the
+ *  span 23 or 25 hours) can't drop a day. */
+export function dayForDate(startDateStr: string, dateStr: string): number {
+  const start = parseYMD(startDateStr);
+  const target = parseYMD(dateStr);
+  return Math.round((target.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+}
+
+/** Compact human-readable form used for phase deadlines, e.g. "31 Aug 2026". */
+export function formatDayMonthYear(date: Date): string {
+  return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+
 /** 1-based day count from startDate (inclusive), never below 1. */
 export function daysSince(startDateStr: string): number {
   const start = parseYMD(startDateStr);

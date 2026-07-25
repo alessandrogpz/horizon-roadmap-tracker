@@ -2,11 +2,15 @@
 
 import React, { useState } from "react";
 import { X } from "lucide-react";
+import { dateForDay, dayForDate, formatDateYMD, formatDayMonthYear } from "@/lib/dates";
 import type { Phase, PhaseDetailItem, TaskItem } from "@/lib/types";
 
 interface PhaseDetailModalProps {
   phase: Phase;
   currentPhaseId: number;
+  /** Track start, needed to convert between this phase's recommendedByDay
+   *  threshold and the calendar date shown in the editor. */
+  startDate: string;
   onClose: () => void;
   onActivatePhase: (id: number) => void;
   onChange: (updatedPhase: Phase) => void;
@@ -100,9 +104,75 @@ function EditableDetailSection({
   );
 }
 
+/** The phase's deadline as an editable calendar date. `Phase.recommendedByDay`
+ *  is stored as a day offset from the track start (so a track can be re-dated
+ *  wholesale without rewriting every phase), but a day number is not something
+ *  anyone wants to reason about — so it's edited as a date and converted here.
+ *  Clearing the field removes the threshold entirely, which is how a phase opts
+ *  out of the deadline/banner behaviour. */
+function PhaseEndDateEditor({
+  phase,
+  startDate,
+  onChange,
+}: {
+  phase: Phase;
+  startDate: string;
+  onChange: (updatedPhase: Phase) => void;
+}) {
+  if (!startDate) return null;
+
+  const value =
+    phase.recommendedByDay !== undefined
+      ? formatDateYMD(dateForDay(startDate, phase.recommendedByDay))
+      : "";
+
+  const handle = (next: string) => {
+    if (!next) {
+      const cleared = { ...phase };
+      delete cleared.recommendedByDay;
+      onChange(cleared);
+      return;
+    }
+    const day = dayForDate(startDate, next);
+    if (day < 1) return; // a phase cannot end before the track begins
+    onChange({ ...phase, recommendedByDay: day });
+  };
+
+  return (
+    <div>
+      <h4 className="text-[0.8rem] text-accent uppercase tracking-[0.05em] mb-2 border-b border-card-border pb-1 font-bold">
+        Phase Ends
+      </h4>
+      <div className="flex items-center gap-3 flex-wrap">
+        <input
+          type="date"
+          value={value}
+          onChange={(e) => handle(e.target.value)}
+          className="bg-input-bg border border-card-border rounded-md px-2.5 py-1.5 text-foreground text-[0.85rem] outline-none"
+        />
+        <span className="text-[0.75rem] font-mono text-muted-foreground">
+          {phase.recommendedByDay !== undefined ? `day ${phase.recommendedByDay}` : "no deadline set"}
+        </span>
+        {phase.recommendedByDay !== undefined && (
+          <button
+            onClick={() => handle("")}
+            className="text-[0.75rem] text-muted-foreground hover:text-red-400 bg-transparent border-none cursor-pointer underline"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+      <p className="text-[0.7rem] text-muted-foreground/70 mt-1.5 m-0">
+        Counted from the track start. The last phase with a date also sets the track&apos;s total length.
+      </p>
+    </div>
+  );
+}
+
 export default function PhaseDetailModal({
   phase,
   currentPhaseId,
+  startDate,
   onClose,
   onActivatePhase,
   onChange,
@@ -113,6 +183,10 @@ export default function PhaseDetailModal({
   const isActive = phase.id === currentPhaseId;
   const [isEditing, setIsEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const endsOn =
+    phase.recommendedByDay !== undefined && startDate
+      ? formatDayMonthYear(dateForDay(startDate, phase.recommendedByDay))
+      : null;
 
   const updateDetail = (field: keyof Phase["detailedInfo"], items: PhaseDetailItem[]) => {
     onChange({ ...phase, detailedInfo: { ...detailedInfo, [field]: items } });
@@ -176,6 +250,8 @@ export default function PhaseDetailModal({
                 rows={2}
               />
             </div>
+
+            <PhaseEndDateEditor phase={phase} startDate={startDate} onChange={onChange} />
 
             {/* Tasks (editing) */}
             <div>
@@ -275,6 +351,11 @@ export default function PhaseDetailModal({
                 ) : null}
               </div>
               <p className="text-muted-foreground text-[0.9rem] mt-1">{phase.description}</p>
+              {endsOn && (
+                <p className="text-[0.7rem] font-mono text-muted-foreground/60 mt-1 m-0">
+                  Ends {endsOn}<span className="opacity-70"> · day {phase.recommendedByDay}</span>
+                </p>
+              )}
             </div>
 
             {/* Tasks (read-only — plain list, no checkboxes) */}
