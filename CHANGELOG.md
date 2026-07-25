@@ -7,6 +7,17 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.4.1] - 2026-07-25
+
+### Fixed
+- **Modules menu no longer shifts the dashboard.** The header's *Modules*
+  popover carried both the `absolute` utility and `glass-surface` (whose
+  `position: relative` won the cascade), so it opened *in the layout flow* and
+  pushed the hero metrics and every panel below it downward — by a varying
+  amount depending on how the header wrapped at each screen width. It now
+  forces `position: absolute` and overlaps the content instead. Also anchored
+  it to the left of its trigger so the menu stays fully on-screen.
+
 ## [0.4.0] - 2026-07-25
 
 ### Added

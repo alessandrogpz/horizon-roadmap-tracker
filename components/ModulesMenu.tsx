@@ -77,7 +77,7 @@ export default function ModulesMenu({
 
       {open && (
         <div
-          className="absolute right-0 mt-2 w-64 z-50 glass-surface p-1.5 flex flex-col"
+          className="!absolute left-0 mt-2 w-64 z-50 glass-surface p-1.5 flex flex-col"
           role="menu"
         >
           <div className="px-2.5 py-1.5 flex items-center justify-between gap-2">
