@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { CompletedItem } from "@/lib/types";
 import { formatDateYMD, parseYMD } from "@/lib/dates";
 
@@ -22,56 +22,62 @@ export default function StreakGraph({
     }
   }, [streakHistory]);
 
-  // Count achievements per date from completedItemsHistory
-  const dateCounts: { [key: string]: number } = {};
-  Object.entries(completedItemsHistory || {}).forEach(([date, items]) => {
-    if (Array.isArray(items)) {
-      dateCounts[date] = items.length;
+  // Building the ~53-week grid walks every day from startDate to today, so
+  // memoize it — otherwise it re-runs on every unrelated parent re-render.
+  const weeks = useMemo(() => {
+    // Count achievements per date from completedItemsHistory
+    const dateCounts: { [key: string]: number } = {};
+    Object.entries(completedItemsHistory || {}).forEach(([date, items]) => {
+      if (Array.isArray(items)) {
+        dateCounts[date] = items.length;
+      }
+    });
+
+    const today = new Date();
+    let startDateObj: Date;
+
+    if (startDate) {
+      startDateObj = parseYMD(startDate);
+    } else {
+      // Fallback: 53 weeks ago if startDate not provided
+      startDateObj = new Date(today);
+      startDateObj.setDate(today.getDate() - 370);
     }
-  });
+    startDateObj.setHours(0, 0, 0, 0);
 
-  const today = new Date();
-  let startDateObj: Date;
+    // Align start date to Sunday (so weeks represent Sun-Sat rows)
+    const startDayOfWeek = startDateObj.getDay();
+    startDateObj.setDate(startDateObj.getDate() - startDayOfWeek);
 
-  if (startDate) {
-    startDateObj = parseYMD(startDate);
-  } else {
-    // Fallback: 53 weeks ago if startDate not provided
-    startDateObj = new Date(today);
-    startDateObj.setDate(today.getDate() - 370);
-  }
-  startDateObj.setHours(0, 0, 0, 0);
+    const result: { dateStr: string; count: number }[][] = [];
+    let currentWeek: { dateStr: string; count: number }[] = [];
 
-  // Align start date to Sunday (so weeks represent Sun-Sat rows)
-  const startDayOfWeek = startDateObj.getDay();
-  startDateObj.setDate(startDateObj.getDate() - startDayOfWeek);
+    const tempDate = new Date(startDateObj);
+    // Render up to today
+    while (tempDate <= today) {
+      const dateStr = formatDateYMD(tempDate);
+      const count = dateCounts[dateStr] || 0;
 
-  const weeks: { dateStr: string; count: number }[][] = [];
-  let currentWeek: { dateStr: string; count: number }[] = [];
+      currentWeek.push({ dateStr, count });
 
-  const tempDate = new Date(startDateObj);
-  // Render up to today
-  while (tempDate <= today) {
-    const dateStr = formatDateYMD(tempDate);
-    const count = dateCounts[dateStr] || 0;
+      if (currentWeek.length === 7) {
+        result.push(currentWeek);
+        currentWeek = [];
+      }
 
-    currentWeek.push({ dateStr, count });
-
-    if (currentWeek.length === 7) {
-      weeks.push(currentWeek);
-      currentWeek = [];
+      tempDate.setDate(tempDate.getDate() + 1);
     }
 
-    tempDate.setDate(tempDate.getDate() + 1);
-  }
-
-  // Handle remaining days for current week
-  if (currentWeek.length > 0) {
-    while (currentWeek.length < 7) {
-      currentWeek.push({ dateStr: '', count: 0 });
+    // Handle remaining days for current week
+    if (currentWeek.length > 0) {
+      while (currentWeek.length < 7) {
+        currentWeek.push({ dateStr: '', count: 0 });
+      }
+      result.push(currentWeek);
     }
-    weeks.push(currentWeek);
-  }
+
+    return result;
+  }, [completedItemsHistory, startDate]);
 
   // Helper to color cells based on contribution level
   const getColorClass = (count: number) => {
