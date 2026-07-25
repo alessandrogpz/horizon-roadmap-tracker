@@ -23,7 +23,7 @@ export const LEGACY_ROADMAP_CONTENT = `# 13-Month Engine Developer Curriculum & 
 
 This document is the reference roadmap for all four study phases. It outlines topics, resources, milestones, and diagnostic tool integrations in chronological order. Every phase heading, deliverable, and task here has a matching entry in the **Roadmap Timeline** on the dashboard — the two are kept in step deliberately, so the timeline is a summary of this document and never a second, drifting plan.
 
-**Track start:** 2026-06-05. All day numbers below are counted from that date, and match each phase's recommended-by-day threshold in the timeline.
+**Track start:** 2026-06-05, which is day 1. All day numbers below are counted inclusively from that date, and match each phase's recommended-by-day threshold in the timeline.
 
 ---
 
@@ -31,10 +31,10 @@ This document is the reference roadmap for all four study phases. It outlines to
 
 | Phase | Months | Days | Ends | Core Goal | Primary Resources | Key Deliverable |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Phase 1** | 1–3 | 1–92 | 2026-09-05 | Language Fundamentals & Software Rendering | C++ (PPP), Lengyel Vol 1, Ray Tracer Challenge | CPU Ray Tracer |
-| **Phase 2** | 4–6 | 93–186 | 2026-12-08 | Real-Time Rendering, End to End | LearnOpenGL, Calculus 1 | OpenGL Scene Viewer |
-| **Phase 3** | 7–11 | 187–334 | 2027-05-05 | Engine Architecture & Optimization | Gregory, Lengyel Vol 2, CMU 15-462, Calculus 2 | Optimized Engine + Asset Pipeline |
-| **Phase 4** | 12–13 | 335–396 | 2027-07-06 | Explicit GPU Control | Vulkan Tutorial, Multivariable Calculus | Vulkan Mesh Renderer |
+| **Phase 1** | 1–3 | 1–88 | 2026-08-31 | Language Fundamentals & Software Rendering | C++ (PPP), Lengyel Vol 1, Ray Tracer Challenge | CPU Ray Tracer |
+| **Phase 2** | 4–6 | 89–182 | 2026-12-03 | Real-Time Rendering, End to End | LearnOpenGL, Calculus 1 | OpenGL Scene Viewer |
+| **Phase 3** | 7–11 | 183–330 | 2027-04-30 | Engine Architecture & Optimization | Gregory, Lengyel Vol 2, CMU 15-462, Calculus 2 | Optimized Engine + Asset Pipeline |
+| **Phase 4** | 12–13 | 331–392 | 2027-07-01 | Explicit GPU Control | Vulkan Tutorial, Multivariable Calculus | Vulkan Mesh Renderer |
 
 ---
 
@@ -56,7 +56,7 @@ Read this before the phase outlines — it explains why the phases are the lengt
 
 ### Phase 1: Language Fundamentals & Software Rendering (Months 1–3)
 
-**Days 1–92, ending 2026-09-05. Deliverable: CPU Ray Tracer.**
+**Days 1–88, ending 2026-08-31. Deliverable: CPU Ray Tracer.**
 
 #### 1. Programming (C++)
 **Resource**: *Programming: Principles and Practice Using C++ (Stroustrup)*
@@ -104,7 +104,7 @@ Read this before the phase outlines — it explains why the phases are the lengt
 
 ### Phase 2: Real-Time Rendering, End to End (Months 4–6)
 
-**Days 93–186, ending 2026-12-08. Deliverable: OpenGL Scene Viewer.**
+**Days 89–182, ending 2026-12-03. Deliverable: OpenGL Scene Viewer.**
 
 This phase has one job: move from software rendering to a real-time GPU renderer you can fly a camera around. Engine architecture, spatial optimization, and asset databases are deliberately *not* here — they are Phase 3.
 
@@ -156,7 +156,7 @@ This phase has one job: move from software rendering to a real-time GPU renderer
 
 ### Phase 3: Engine Architecture & Optimization (Months 7–11)
 
-**Days 187–334, ending 2027-05-05. Deliverable: Optimized Engine + Asset Pipeline.**
+**Days 183–330, ending 2027-04-30. Deliverable: Optimized Engine + Asset Pipeline.**
 
 The long phase, and the one where the artifact stops being a renderer and starts being an engine. Split into two halves.
 
@@ -230,7 +230,7 @@ The database thread, positioned the way engines actually do it: the database is 
 
 ### Phase 4: Explicit GPU Control — Vulkan (Months 12–13)
 
-**Days 335–396, ending 2027-07-06. Deliverable: Vulkan Mesh Renderer.**
+**Days 331–392, ending 2027-07-01. Deliverable: Vulkan Mesh Renderer.**
 
 Vulkan only. Nothing else competes for these two months. The scope here matches what two months can actually produce: a correct, explicit, textured mesh renderer. PBR and image-based lighting are **not** in this phase — see Beyond the Horizon.
 
