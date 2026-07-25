@@ -14,21 +14,21 @@ interface TrackIdentityStepProps extends TrackIdentityFields {
 export default function TrackIdentityStep({ name, color, onChange }: TrackIdentityStepProps) {
   return (
     <div className="flex flex-col gap-5">
-      <h2 className="text-[1.1rem] font-semibold text-white m-0">Name your track</h2>
+      <h2 className="text-[1.1rem] font-semibold text-foreground m-0">Name your track</h2>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-[0.8rem] text-zinc-400">Track name</label>
+        <label className="text-[0.8rem] text-muted-foreground">Track name</label>
         <input
           type="text"
           value={name}
           onChange={(e) => onChange({ name: e.target.value })}
           placeholder="e.g. Marathon Training"
-          className="bg-black/25 border border-card-border rounded-md text-white text-[0.95rem] outline-none px-3 py-2 font-[inherit]"
+          className="bg-input-bg border border-card-border rounded-md text-foreground text-[0.95rem] outline-none px-3 py-2 font-[inherit]"
         />
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-[0.8rem] text-zinc-400">Accent color</label>
+        <label className="text-[0.8rem] text-muted-foreground">Accent color</label>
         <input
           type="color"
           value={color}

@@ -35,27 +35,27 @@ export default function PhaseReviewStep({ phases, onChange }: PhaseReviewStepPro
 
   return (
     <div className="flex flex-col gap-4">
-      <h2 className="text-[1.1rem] font-semibold text-white m-0">Review your phases</h2>
-      <p className="text-zinc-400 text-[0.85rem] m-0">
+      <h2 className="text-[1.1rem] font-semibold text-foreground m-0">Review your phases</h2>
+      <p className="text-muted-foreground text-[0.85rem] m-0">
         Auto-generated from your horizon — rename, reword, or restructure them however you like. Nothing here is locked in.
       </p>
 
       <div className="flex flex-col gap-3 max-h-[360px] overflow-y-auto pr-1">
         {phases.map((phase) => (
-          <div key={phase.id} className="bg-black/15 border border-white/5 rounded-md p-3 flex flex-col gap-2">
+          <div key={phase.id} className="bg-input-bg border border-card-border rounded-md p-3 flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <span className="text-[0.7rem] text-accent font-mono font-bold shrink-0">P{phase.id}</span>
               <input
                 type="text"
                 value={phase.title}
                 onChange={(e) => updatePhase(phase.id, { title: e.target.value })}
-                className="flex-1 bg-transparent border-none text-white text-[0.9rem] font-semibold outline-none"
+                className="flex-1 bg-transparent border-none text-foreground text-[0.9rem] font-semibold outline-none"
               />
               <button
                 onClick={() => removePhase(phase.id)}
                 disabled={phases.length <= 1}
                 className={`flex items-center bg-transparent border-none ${
-                  phases.length <= 1 ? "text-zinc-700 cursor-not-allowed" : "text-red-500 cursor-pointer"
+                  phases.length <= 1 ? "text-subtle-foreground cursor-not-allowed" : "text-red-500 cursor-pointer"
                 }`}
                 aria-label="Remove phase"
               >
@@ -67,7 +67,7 @@ export default function PhaseReviewStep({ phases, onChange }: PhaseReviewStepPro
               value={phase.description}
               onChange={(e) => updatePhase(phase.id, { description: e.target.value })}
               placeholder="What is this phase about?"
-              className="bg-transparent border-none border-b border-dashed border-white/10 text-zinc-400 text-[0.8rem] outline-none py-px"
+              className="bg-transparent border-none border-b border-dashed border-card-border text-muted-foreground text-[0.8rem] outline-none py-px"
             />
           </div>
         ))}

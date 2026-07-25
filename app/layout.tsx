@@ -16,16 +16,22 @@ export const metadata: Metadata = {
   },
 };
 
+// Runs before first paint: applies the saved theme (or the OS preference on
+// first visit) to <html> so there's no light/dark flash on load. Kept as a
+// tiny inline string on purpose — it must execute before React hydrates.
+const themeScript = `(function(){try{var t=localStorage.getItem('horizon-theme');if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${jetbrainsMono.variable} ${inter.variable} ${inter.className}`} suppressHydrationWarning>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         {children}
-        <span className="fixed bottom-2 right-2.5 text-[0.65rem] text-zinc-700 font-mono pointer-events-none select-none z-10">
+        <span className="fixed bottom-2 right-2.5 text-[0.65rem] text-subtle-foreground font-mono pointer-events-none select-none z-10">
           v{packageJson.version}
         </span>
       </body>

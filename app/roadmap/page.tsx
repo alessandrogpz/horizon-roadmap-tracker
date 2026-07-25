@@ -67,7 +67,7 @@ export default function RoadmapPage() {
   if (loadState === "loading") {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <p className="text-zinc-400 font-mono">Loading roadmap...</p>
+        <p className="text-muted-foreground font-mono">Loading roadmap...</p>
       </div>
     );
   }
@@ -84,7 +84,7 @@ export default function RoadmapPage() {
       {loadState === "unsynced" && (
         <div className="glass-panel p-12 text-center rounded-lg !border !border-dashed !border-red-500/30 !bg-red-500/[0.02]">
           <h2 className="text-[1.2rem] font-semibold text-red-400 mb-2">Roadmap Locked</h2>
-          <p className="text-zinc-400 text-[0.9rem] max-w-[450px] mx-auto mb-6">
+          <p className="text-muted-foreground text-[0.9rem] max-w-[450px] mx-auto mb-6">
             Please connect your Google Drive account on the main dashboard to unlock your roadmap.
           </p>
           <Link
@@ -102,7 +102,7 @@ export default function RoadmapPage() {
             <div className="flex gap-1">
               <button
                 className={`px-4 py-2 text-[0.8rem] font-semibold uppercase tracking-[0.05em] border-b-2 -mb-px cursor-pointer bg-transparent ${
-                  tab === "write" ? "text-accent border-accent" : "text-zinc-500 border-transparent hover:text-white"
+                  tab === "write" ? "text-accent border-accent" : "text-muted-foreground border-transparent hover:text-foreground"
                 }`}
                 onClick={() => setTab("write")}
               >
@@ -110,14 +110,14 @@ export default function RoadmapPage() {
               </button>
               <button
                 className={`px-4 py-2 text-[0.8rem] font-semibold uppercase tracking-[0.05em] border-b-2 -mb-px cursor-pointer bg-transparent ${
-                  tab === "preview" ? "text-accent border-accent" : "text-zinc-500 border-transparent hover:text-white"
+                  tab === "preview" ? "text-accent border-accent" : "text-muted-foreground border-transparent hover:text-foreground"
                 }`}
                 onClick={() => setTab("preview")}
               >
                 Preview
               </button>
             </div>
-            <span className="text-[0.7rem] font-mono text-zinc-500 inline-flex items-center gap-1">
+            <span className="text-[0.7rem] font-mono text-muted-foreground inline-flex items-center gap-1">
               {saveStatus === "saving" && "Saving..."}
               {saveStatus === "saved" && (<><Check size={12} strokeWidth={2.5} /> Saved</>)}
               {saveStatus === "idle" && "This track's own private roadmap — autosaves"}
@@ -138,7 +138,7 @@ export default function RoadmapPage() {
             />
           ) : (
             <div className="px-10 py-16 text-center">
-              <p className="text-zinc-400 text-[0.9rem] mb-4">You haven&apos;t written a roadmap for this track yet.</p>
+              <p className="text-muted-foreground text-[0.9rem] mb-4">You haven&apos;t written a roadmap for this track yet.</p>
               <button onClick={() => setTab("write")} className="btn px-5 py-2 text-[0.85rem]">
                 Start Writing
               </button>

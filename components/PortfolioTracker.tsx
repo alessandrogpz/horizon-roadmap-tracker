@@ -13,8 +13,8 @@ interface PortfolioTrackerProps {
   onDeleteProject: (id: string) => void;
 }
 
-const inputClass = "w-full p-1 rounded bg-black/30 border border-card-border text-white outline-none font-[inherit] text-[0.85rem]";
-const labelClass = "block text-[0.7rem] text-zinc-400 mb-1 uppercase";
+const inputClass = "w-full p-1 rounded bg-input-bg border border-card-border text-foreground outline-none font-[inherit] text-[0.85rem]";
+const labelClass = "block text-[0.7rem] text-muted-foreground mb-1 uppercase";
 
 export default function PortfolioTracker({ portfolio, onToggle, onAddProject, onEditProject, onDeleteProject }: PortfolioTrackerProps) {
   const [gitStats, setGitStats] = useState<{ [id: string]: GitStats }>({});
@@ -77,7 +77,7 @@ export default function PortfolioTracker({ portfolio, onToggle, onAddProject, on
       </div>
 
       {showAddForm && (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-3 bg-white/[0.01] border border-card-border rounded">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-3 bg-surface-muted border border-card-border rounded">
           <div>
             <label className={labelClass}>Title</label>
             <input
@@ -130,7 +130,7 @@ export default function PortfolioTracker({ portfolio, onToggle, onAddProject, on
                   <button onClick={() => saveEdit(proj.id)} className="btn px-3 py-1 text-xs">Save</button>
                   <button
                     onClick={() => setEditingId(null)}
-                    className="btn px-3 py-1 text-xs !bg-transparent !text-zinc-400 !border-white/10"
+                    className="btn px-3 py-1 text-xs !bg-transparent !text-muted-foreground !border-card-border"
                   >
                     Cancel
                   </button>
@@ -145,11 +145,11 @@ export default function PortfolioTracker({ portfolio, onToggle, onAddProject, on
                   onChange={() => onToggle(proj.id)}
                 />
                 <div className="flex-1 flex flex-col">
-                  <span className={`text-[0.95rem] font-medium transition-colors duration-200 ${proj.completed ? "text-zinc-500 line-through" : "text-foreground"}`}>
+                  <span className={`text-[0.95rem] font-medium transition-colors duration-200 ${proj.completed ? "text-muted-foreground line-through" : "text-foreground"}`}>
                     {proj.title}
                   </span>
                   {gitStats[proj.id] && gitStats[proj.id].isRepo && (
-                    <div className="text-[0.7rem] text-zinc-400 mt-1 font-mono flex flex-wrap gap-x-2">
+                    <div className="text-[0.7rem] text-muted-foreground mt-1 font-mono flex flex-wrap gap-x-2">
                       <span>branch: <span className="text-accent">{gitStats[proj.id].branch}</span></span>
                       <span>|</span>
                       {(gitStats[proj.id].uncommittedCount ?? 0) > 0 ? (
@@ -160,7 +160,7 @@ export default function PortfolioTracker({ portfolio, onToggle, onAddProject, on
                       {gitStats[proj.id].lastCommitMsg && (
                         <>
                           <span>|</span>
-                          <span className="text-zinc-500" title={gitStats[proj.id].lastCommitMsg}>
+                          <span className="text-muted-foreground" title={gitStats[proj.id].lastCommitMsg}>
                             last: {(gitStats[proj.id].lastCommitMsg || "").length > 20 ? `${gitStats[proj.id].lastCommitMsg!.slice(0, 20)}...` : gitStats[proj.id].lastCommitMsg} ({gitStats[proj.id].lastCommitTime})
                           </span>
                         </>
@@ -177,7 +177,7 @@ export default function PortfolioTracker({ portfolio, onToggle, onAddProject, on
           </div>
         ))}
         {portfolio.length === 0 && !showAddForm && (
-          <p className="text-zinc-600 text-[0.85rem] italic py-2">No portfolio projects yet.</p>
+          <p className="text-subtle-foreground text-[0.85rem] italic py-2">No portfolio projects yet.</p>
         )}
       </div>
     </div>

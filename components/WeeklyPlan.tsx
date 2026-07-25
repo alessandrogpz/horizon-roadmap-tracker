@@ -45,21 +45,21 @@ export default function WeeklyPlan({
     <div className="glass-panel border-l-4 border-accent-muted px-6 py-5">
       <div className="flex flex-col gap-3">
         {/* Header */}
-        <div className="flex flex-col gap-3 pb-3 border-b border-white/5">
+        <div className="flex flex-col gap-3 pb-3 border-b border-card-border">
           {/* Top Row: Title and Navigation */}
           <div className="flex items-center gap-4">
-            <h3 className="text-[1.1rem] font-semibold text-white m-0 whitespace-nowrap inline-flex items-center gap-2">
+            <h3 className="text-[1.1rem] font-semibold text-foreground m-0 whitespace-nowrap inline-flex items-center gap-2">
               <CalendarDays size={16} strokeWidth={2.5} className="text-muted-foreground" />
               Weekly Study Plan
             </h3>
 
             {/* Week Navigation Pill */}
-            <div className="flex items-center gap-1.5 bg-white/[0.03] px-2 py-1 rounded-md border border-white/5 shrink-0">
+            <div className="flex items-center gap-1.5 bg-surface-muted px-2 py-1 rounded-md border border-card-border shrink-0">
               <WeekNavButton label="‹" onClick={() => setWeekOffset(weekOffset - 1)} />
-              <span className="text-zinc-200 font-medium text-[0.85rem] min-w-[60px] text-center font-mono whitespace-nowrap">
+              <span className="text-foreground font-medium text-[0.85rem] min-w-[60px] text-center font-mono whitespace-nowrap">
                 {weekLabel}
                 {weekOffset !== 0 && (
-                  <span className="text-[0.7rem] text-zinc-500 ml-1">
+                  <span className="text-[0.7rem] text-muted-foreground ml-1">
                     ({weekOffset > 0 ? `+${weekOffset}` : weekOffset})
                   </span>
                 )}
@@ -92,7 +92,7 @@ export default function WeeklyPlan({
                   }`}
                   title={data.isSynced ? "View full rotation cycle" : "Connect Google Drive to unlock"}
                 >
-                  <span className="text-[0.7rem] text-zinc-400 uppercase tracking-[0.05em] font-semibold">
+                  <span className="text-[0.7rem] text-muted-foreground uppercase tracking-[0.05em] font-semibold">
                     {rotation.label}:
                   </span>
                   <span className="text-[0.85rem] text-accent font-bold font-mono">
@@ -105,7 +105,7 @@ export default function WeeklyPlan({
             {data.isSynced && (
               <button
                 onClick={() => onRotationClick(null)}
-                className="inline-flex items-center gap-1 border border-dashed border-white/15 px-3 py-1.5 rounded-md text-[0.7rem] text-zinc-500 uppercase tracking-[0.05em] font-semibold cursor-pointer transition-all duration-200 hover:text-white hover:border-white/30"
+                className="inline-flex items-center gap-1 border border-dashed border-card-border-hover px-3 py-1.5 rounded-md text-[0.7rem] text-muted-foreground uppercase tracking-[0.05em] font-semibold cursor-pointer transition-all duration-200 hover:text-foreground hover:border-card-border-hover"
               >
                 + New Rotation
               </button>
@@ -141,7 +141,7 @@ function WeekNavButton({ label, onClick }: { label: string; onClick: () => void 
   return (
     <button
       onClick={onClick}
-      className="bg-transparent border border-white/10 rounded text-zinc-400 cursor-pointer px-1.5 py-0.5 text-[0.8rem] font-mono leading-none transition-all duration-150 hover:border-accent hover:text-white"
+      className="bg-transparent border border-card-border rounded text-muted-foreground cursor-pointer px-1.5 py-0.5 text-[0.8rem] font-mono leading-none transition-all duration-150 hover:border-accent hover:text-foreground"
     >
       {label}
     </button>
@@ -287,15 +287,15 @@ function DayCard({ dayItem, idx, data, todayStr, dayOfWeek, weekOffset, viewedWe
       className={`flex flex-col gap-[0.35rem] px-2 py-[0.6rem] rounded-lg cursor-pointer transition-all duration-200 min-h-[160px] overflow-hidden ${
         isToday
           ? "bg-accent/[0.06] border border-accent shadow-[0_0_12px_rgba(14,165,233,0.15)]"
-          : "bg-black/15 border border-white/5"
+          : "bg-input-bg border border-card-border"
       } ${isFuture ? "opacity-50" : ""}`}
     >
       {/* Day name + date */}
-      <div className="text-center pb-1 border-b border-white/5">
-        <span className={`text-[0.7rem] uppercase tracking-[0.05em] ${isToday ? "font-bold text-white" : "font-semibold text-zinc-500"}`}>
+      <div className="text-center pb-1 border-b border-card-border">
+        <span className={`text-[0.7rem] uppercase tracking-[0.05em] ${isToday ? "font-bold text-foreground" : "font-semibold text-muted-foreground"}`}>
           {dayItem.name}
         </span>
-        <div className="text-[0.55rem] text-zinc-600 mt-px">
+        <div className="text-[0.55rem] text-subtle-foreground mt-px">
           {data.isSynced ? dayDateStr.slice(5) : "MM-DD"}
         </div>
       </div>
@@ -328,7 +328,7 @@ function DayCard({ dayItem, idx, data, todayStr, dayOfWeek, weekOffset, viewedWe
                     onClick={(e: React.MouseEvent) => e.stopPropagation()}
                     onChange={() => handleToggleItem(item.id, item.title, item.description || "", true, completed)}
                   />
-                  <span className={`text-[0.72rem] leading-[1.3] ${completed ? "text-zinc-600 line-through" : isToday ? "text-foreground" : "text-zinc-400"}`}>
+                  <span className={`text-[0.72rem] leading-[1.3] ${completed ? "text-subtle-foreground line-through" : isToday ? "text-foreground" : "text-muted-foreground"}`}>
                     {item.title}
                   </span>
                 </div>
@@ -356,7 +356,7 @@ function DayCard({ dayItem, idx, data, todayStr, dayOfWeek, weekOffset, viewedWe
                     onClick={(e: React.MouseEvent) => e.stopPropagation()}
                     onChange={() => handleToggleItem(task.id, task.title, "", false, completed)}
                   />
-                  <span className={`text-[0.72rem] leading-[1.3] ${completed ? "text-zinc-600 line-through" : isToday ? "text-foreground" : "text-zinc-400"}`}>
+                  <span className={`text-[0.72rem] leading-[1.3] ${completed ? "text-subtle-foreground line-through" : isToday ? "text-foreground" : "text-muted-foreground"}`}>
                     {task.title}
                   </span>
                 </div>
@@ -369,7 +369,7 @@ function DayCard({ dayItem, idx, data, todayStr, dayOfWeek, weekOffset, viewedWe
       {/* Empty state */}
       {revisionItems.length === 0 && focusTasks.length === 0 && (
         <div className="flex-1 flex items-center justify-center">
-          <span className="text-[0.7rem] text-zinc-700 italic">No tasks</span>
+          <span className="text-[0.7rem] text-subtle-foreground italic">No tasks</span>
         </div>
       )}
     </div>

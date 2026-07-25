@@ -167,7 +167,7 @@ export default function StreakGraph({
               <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold font-mono tracking-[0.05em]">
                 Streak Achievement
               </span>
-              <h3 className="text-[1.1rem] font-bold text-white mt-2 mb-0">
+              <h3 className="text-[1.1rem] font-bold text-foreground mt-2 mb-0">
                 Accomplished on {selectedDateDetails}
               </h3>
             </div>
@@ -181,14 +181,14 @@ export default function StreakGraph({
                     return (
                       <div
                         key={idx}
-                        className="flex flex-col gap-1 bg-black/15 px-3 py-2 rounded-md border border-white/5 w-full"
+                        className="flex flex-col gap-1 bg-input-bg px-3 py-2 rounded-md border border-card-border w-full"
                       >
                         <div className="flex items-center gap-3">
                           <Check size={15} strokeWidth={2.5} className="text-accent shrink-0" />
-                          <span className="text-[0.85rem] text-white font-semibold">{itemObj.title}</span>
+                          <span className="text-[0.85rem] text-foreground font-semibold">{itemObj.title}</span>
                         </div>
                         {itemObj.description && (
-                          <span className="text-xs text-zinc-500 ml-[1.65rem]">
+                          <span className="text-xs text-muted-foreground ml-[1.65rem]">
                             {itemObj.description}
                           </span>
                         )}
@@ -197,7 +197,7 @@ export default function StreakGraph({
                   })}
                 </div>
               ) : (
-                <p className="text-zinc-500 text-[0.85rem] italic m-0 text-center py-4">
+                <p className="text-muted-foreground text-[0.85rem] italic m-0 text-center py-4">
                   No accomplishments recorded on this day.
                 </p>
               )}

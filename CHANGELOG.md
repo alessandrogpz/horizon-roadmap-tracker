@@ -7,6 +7,24 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.3.0] - 2026-07-25
+
+### Added
+- **Light theme.** A Sun/Moon toggle in the header switches between light and
+  dark; the choice persists (localStorage) and first-time visitors get their
+  OS `prefers-color-scheme`. An inline pre-paint script applies the theme
+  before first render, so there's no light/dark flash on load.
+
+### Changed
+- Migrated the component tree off hardcoded dark-only colors (~430 usages of
+  `text-white`, `text-zinc-*`, `bg-black/*`, `bg-white/*`, `border-white/*`,
+  etc.) to semantic design tokens (`text-foreground`, `text-muted-foreground`,
+  `text-subtle-foreground`, `bg-card`, `bg-input-bg`, `bg-surface-muted/hover`,
+  `border-card-border[-hover]`), so both themes derive from one token set.
+  Dark mode is visually unchanged. On-color text (`text-black` on accent/
+  success chips) and modal scrims were intentionally left as-is.
+- Added `--subtle-foreground` and exposed `--input-bg` as Tailwind utilities.
+
 ## [0.2.1] - 2026-07-25
 
 ### Changed

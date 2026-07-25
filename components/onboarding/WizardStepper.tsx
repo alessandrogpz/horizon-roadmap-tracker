@@ -20,17 +20,17 @@ export default function WizardStepper({ steps, currentIndex }: WizardStepperProp
                   ? "bg-success text-black"
                   : idx === currentIndex
                     ? "bg-accent text-black"
-                    : "bg-white/[0.06] text-zinc-500 border border-white/10"
+                    : "bg-surface-hover text-muted-foreground border border-card-border"
               }`}
             >
               {idx < currentIndex ? <Check size={13} strokeWidth={3} /> : idx + 1}
             </div>
-            <span className={`text-[0.75rem] hidden sm:inline ${idx === currentIndex ? "text-white font-semibold" : "text-zinc-500"}`}>
+            <span className={`text-[0.75rem] hidden sm:inline ${idx === currentIndex ? "text-foreground font-semibold" : "text-muted-foreground"}`}>
               {step}
             </span>
           </div>
           {idx < steps.length - 1 && (
-            <div className={`flex-1 h-px ${idx < currentIndex ? "bg-success" : "bg-white/10"}`} />
+            <div className={`flex-1 h-px ${idx < currentIndex ? "bg-success" : "bg-surface-hover"}`} />
           )}
         </React.Fragment>
       ))}
