@@ -36,7 +36,7 @@ export default function TrackSwitcher({ tracks, activeTrackId, onSwitch, onNewTr
         title="Switch track"
       >
         <span>{activeTrack.meta.name}</span>
-        <span className="text-zinc-600 text-[0.7rem]">{open ? "^" : "v"}</span>
+        <span className="text-subtle-foreground text-[0.7rem]">{open ? "^" : "v"}</span>
       </button>
 
       {open && (
@@ -49,7 +49,7 @@ export default function TrackSwitcher({ tracks, activeTrackId, onSwitch, onNewTr
                 if (track.meta.id !== activeTrackId) onSwitch(track.meta.id);
               }}
               className={`w-full flex items-center gap-2 px-3 py-2 text-left text-[0.85rem] bg-transparent border-none cursor-pointer transition-colors duration-150 ${
-                track.meta.id === activeTrackId ? "text-white bg-white/[0.04]" : "text-zinc-300 hover:bg-white/[0.04] hover:text-white"
+                track.meta.id === activeTrackId ? "text-foreground bg-surface-hover" : "text-foreground hover:bg-surface-hover hover:text-foreground"
               }`}
             >
               <span className="flex-1 truncate">{track.meta.name}</span>

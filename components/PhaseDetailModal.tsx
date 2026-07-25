@@ -24,14 +24,14 @@ function ReadOnlyDetailSection({ title, items }: { title: string; items: PhaseDe
   if (items.length === 0) return null;
   return (
     <div>
-      <h4 className="text-[0.8rem] text-accent uppercase tracking-[0.05em] mb-2 border-b border-white/5 pb-1 font-bold">
+      <h4 className="text-[0.8rem] text-accent uppercase tracking-[0.05em] mb-2 border-b border-card-border pb-1 font-bold">
         {title}
       </h4>
       <div className="flex flex-col gap-3">
         {items.map((f, idx) => (
           <div key={idx} className="text-[0.85rem] leading-normal">
-            <div className="text-white font-semibold">{f.item}</div>
-            {f.desc && <div className="text-zinc-400 pl-4">{f.desc}</div>}
+            <div className="text-foreground font-semibold">{f.item}</div>
+            {f.desc && <div className="text-muted-foreground pl-4">{f.desc}</div>}
           </div>
         ))}
       </div>
@@ -50,12 +50,12 @@ function EditableDetailSection({
 }) {
   return (
     <div>
-      <h4 className="text-[0.8rem] text-accent uppercase tracking-[0.05em] mb-2 border-b border-white/5 pb-1 font-bold">
+      <h4 className="text-[0.8rem] text-accent uppercase tracking-[0.05em] mb-2 border-b border-card-border pb-1 font-bold">
         {title}
       </h4>
       <div className="flex flex-col gap-2">
         {items.map((f, idx) => (
-          <div key={idx} className="flex flex-col gap-1 bg-black/15 border border-white/5 rounded-md p-2.5">
+          <div key={idx} className="flex flex-col gap-1 bg-input-bg border border-card-border rounded-md p-2.5">
             <div className="flex items-center gap-2">
               <input
                 type="text"
@@ -66,7 +66,7 @@ function EditableDetailSection({
                   onChange(next);
                 }}
                 placeholder="Item"
-                className="flex-1 bg-transparent border-none text-white text-[0.85rem] font-semibold outline-none"
+                className="flex-1 bg-transparent border-none text-foreground text-[0.85rem] font-semibold outline-none"
               />
               <button
                 onClick={() => onChange(items.filter((_, i) => i !== idx))}
@@ -85,7 +85,7 @@ function EditableDetailSection({
                 onChange(next);
               }}
               placeholder="Description (optional)"
-              className="bg-transparent border-none border-t border-dashed border-white/10 text-zinc-400 text-[0.8rem] outline-none pt-1"
+              className="bg-transparent border-none border-t border-dashed border-card-border text-muted-foreground text-[0.8rem] outline-none pt-1"
             />
           </div>
         ))}
@@ -145,7 +145,7 @@ export default function PhaseDetailModal({
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 flex items-center bg-transparent border-none text-zinc-400 hover:text-white cursor-pointer transition-colors"
+          className="absolute top-6 right-6 flex items-center bg-transparent border-none text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
           aria-label="Close"
         >
           <X size={18} strokeWidth={2} />
@@ -172,19 +172,19 @@ export default function PhaseDetailModal({
                 value={phase.description}
                 onChange={(e) => onChange({ ...phase, description: e.target.value })}
                 placeholder="What is this phase about?"
-                className="bg-transparent border-none border-b border-dashed border-white/10 text-zinc-400 text-[0.9rem] outline-none pb-1.5 resize-none"
+                className="bg-transparent border-none border-b border-dashed border-card-border text-muted-foreground text-[0.9rem] outline-none pb-1.5 resize-none"
                 rows={2}
               />
             </div>
 
             {/* Tasks (editing) */}
             <div>
-              <h4 className="text-[0.8rem] text-accent uppercase tracking-[0.05em] mb-2 border-b border-white/5 pb-1 font-bold">
+              <h4 className="text-[0.8rem] text-accent uppercase tracking-[0.05em] mb-2 border-b border-card-border pb-1 font-bold">
                 Tasks
               </h4>
               <div className="flex flex-col gap-2">
                 {phase.tasks.map((task) => (
-                  <div key={task.id} className="flex items-center gap-2 bg-black/15 border border-white/5 rounded-md px-2.5 py-1.5">
+                  <div key={task.id} className="flex items-center gap-2 bg-input-bg border border-card-border rounded-md px-2.5 py-1.5">
                     <input
                       type="checkbox"
                       className="checkbox-custom"
@@ -195,7 +195,7 @@ export default function PhaseDetailModal({
                       type="text"
                       value={task.title}
                       onChange={(e) => updateTask(task.id, { title: e.target.value })}
-                      className="flex-1 bg-transparent border-none text-white text-[0.85rem] outline-none"
+                      className="flex-1 bg-transparent border-none text-foreground text-[0.85rem] outline-none"
                     />
                     <button onClick={() => removeTask(task.id)} className="flex items-center bg-transparent border-none text-red-500 cursor-pointer" aria-label="Remove task">
                       <X size={14} strokeWidth={2} />
@@ -212,7 +212,7 @@ export default function PhaseDetailModal({
                     e.currentTarget.value = "";
                   }
                 }}
-                className="mt-2 w-full bg-black/25 border border-dashed border-white/10 rounded-md px-2.5 py-1.5 text-white text-[0.85rem] outline-none"
+                className="mt-2 w-full bg-input-bg border border-dashed border-card-border rounded-md px-2.5 py-1.5 text-foreground text-[0.85rem] outline-none"
               />
             </div>
 
@@ -225,7 +225,7 @@ export default function PhaseDetailModal({
             </div>
 
             {/* Footer (editing) */}
-            <div className="flex justify-between items-center mt-2 border-t border-white/5 pt-4">
+            <div className="flex justify-between items-center mt-2 border-t border-card-border pt-4">
               {confirmingDelete ? (
                 <div className="flex items-center gap-2">
                   <span className="text-[0.8rem] text-red-400">Delete this phase?</span>
@@ -240,7 +240,7 @@ export default function PhaseDetailModal({
                   </button>
                   <button
                     onClick={() => setConfirmingDelete(false)}
-                    className="btn px-3 py-1.5 text-[0.8rem] !bg-transparent !text-zinc-400 !border-white/10"
+                    className="btn px-3 py-1.5 text-[0.8rem] !bg-transparent !text-muted-foreground !border-card-border"
                   >
                     Cancel
                   </button>
@@ -274,20 +274,20 @@ export default function PhaseDetailModal({
                   </span>
                 ) : null}
               </div>
-              <p className="text-zinc-400 text-[0.9rem] mt-1">{phase.description}</p>
+              <p className="text-muted-foreground text-[0.9rem] mt-1">{phase.description}</p>
             </div>
 
             {/* Tasks (read-only — plain list, no checkboxes) */}
             {phase.tasks.length > 0 && (
               <div>
-                <h4 className="text-[0.8rem] text-accent uppercase tracking-[0.05em] mb-2 border-b border-white/5 pb-1 font-bold">
+                <h4 className="text-[0.8rem] text-accent uppercase tracking-[0.05em] mb-2 border-b border-card-border pb-1 font-bold">
                   Tasks
                 </h4>
                 <div className="flex flex-col gap-2">
                   {phase.tasks.map((task) => (
                     <div
                       key={task.id}
-                      className={`text-[0.85rem] ${task.completed ? "text-zinc-500 line-through" : "text-foreground"}`}
+                      className={`text-[0.85rem] ${task.completed ? "text-muted-foreground line-through" : "text-foreground"}`}
                     >
                       {task.title}
                     </div>
@@ -305,7 +305,7 @@ export default function PhaseDetailModal({
             </div>
 
             {/* Footer (read-only) */}
-            <div className="flex justify-between items-center mt-2 border-t border-white/5 pt-4">
+            <div className="flex justify-between items-center mt-2 border-t border-card-border pt-4">
               <div className="flex items-center gap-3">
                 {!isActive && (
                   <button
@@ -320,7 +320,7 @@ export default function PhaseDetailModal({
                 )}
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="btn px-4 py-2 text-[0.85rem] !bg-transparent !text-zinc-400 !border-white/10 hover:!text-white"
+                  className="btn px-4 py-2 text-[0.85rem] !bg-transparent !text-muted-foreground !border-card-border hover:!text-foreground"
                 >
                   Edit
                 </button>

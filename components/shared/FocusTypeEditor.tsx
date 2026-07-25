@@ -15,8 +15,8 @@ interface FocusTypeEditorProps {
  *  the onboarding wizard's rhythm step can reuse the exact same editor. */
 export default function FocusTypeEditor({ focusTypes, weekSchedule, onChange }: FocusTypeEditorProps) {
   return (
-    <div className="bg-white/[0.02] border border-white/5 rounded-lg p-3 flex flex-col gap-[0.6rem]">
-      <span className="text-[0.7rem] text-zinc-400 font-bold uppercase">
+    <div className="bg-surface-muted border border-card-border rounded-lg p-3 flex flex-col gap-[0.6rem]">
+      <span className="text-[0.7rem] text-muted-foreground font-bold uppercase">
         Edit Focus Types Pool
       </span>
 
@@ -37,7 +37,7 @@ export default function FocusTypeEditor({ focusTypes, weekSchedule, onChange }: 
                 onChange(updatedTypes, updatedSchedule);
               }}
               placeholder="Label"
-              className="flex-1 bg-black/25 border border-white/10 rounded px-1.5 py-0.5 text-white text-xs outline-none"
+              className="flex-1 bg-input-bg border border-card-border rounded px-1.5 py-0.5 text-foreground text-xs outline-none"
             />
 
             <input
@@ -68,7 +68,7 @@ export default function FocusTypeEditor({ focusTypes, weekSchedule, onChange }: 
               }}
               disabled={Object.keys(focusTypes).length <= 1}
               className={`bg-transparent border-none text-[0.8rem] px-0.5 ${
-                Object.keys(focusTypes).length <= 1 ? "text-zinc-700 cursor-not-allowed" : "text-red-500 cursor-pointer"
+                Object.keys(focusTypes).length <= 1 ? "text-subtle-foreground cursor-not-allowed" : "text-red-500 cursor-pointer"
               }`}
               title="Delete Focus Type"
             >
@@ -78,12 +78,12 @@ export default function FocusTypeEditor({ focusTypes, weekSchedule, onChange }: 
         ))}
       </div>
 
-      <div className="flex gap-1.5 items-center border-t border-white/5 pt-2">
+      <div className="flex gap-1.5 items-center border-t border-card-border pt-2">
         <input
           type="text"
           id="new-type-label"
           placeholder="New type label..."
-          className="flex-1 bg-black/25 border border-white/10 rounded px-2 py-1 text-white text-xs outline-none"
+          className="flex-1 bg-input-bg border border-card-border rounded px-2 py-1 text-foreground text-xs outline-none"
         />
         <input
           type="color"

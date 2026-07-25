@@ -53,14 +53,14 @@ export default function ConnectExistingAccount({ onConnected, onBack }: ConnectE
 
   return (
     <div className="flex flex-col gap-5">
-      <h2 className="text-[1.1rem] font-semibold text-white m-0">Connect your existing account</h2>
-      <p className="text-zinc-400 text-[0.85rem] m-0">
+      <h2 className="text-[1.1rem] font-semibold text-foreground m-0">Connect your existing account</h2>
+      <p className="text-muted-foreground text-[0.85rem] m-0">
         If you&apos;ve already set up Horizon somewhere else (e.g. your computer) and are opening it here for the first
         time, connect the same Google Drive account to pull down your existing tracks.
       </p>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-[0.8rem] text-zinc-400">OAuth Client ID</label>
+        <label className="text-[0.8rem] text-muted-foreground">OAuth Client ID</label>
         <input
           type="text"
           value={clientId}
@@ -69,12 +69,12 @@ export default function ConnectExistingAccount({ onConnected, onBack }: ConnectE
           onKeyDown={(e) => {
             if (e.key === "Enter" && clientId.trim()) handleConnect();
           }}
-          className="bg-black/25 border border-card-border rounded-md text-white text-[0.9rem] outline-none px-3 py-2 font-[inherit]"
+          className="bg-input-bg border border-card-border rounded-md text-foreground text-[0.9rem] outline-none px-3 py-2 font-[inherit]"
         />
       </div>
 
       {status === "empty" && (
-        <div className="p-3 bg-card rounded-md border border-card-border text-zinc-300 text-[0.85rem]">
+        <div className="p-3 bg-card rounded-md border border-card-border text-foreground text-[0.85rem]">
           Connected, but no existing tracks were found in this account. You can start fresh instead.
         </div>
       )}
@@ -87,7 +87,7 @@ export default function ConnectExistingAccount({ onConnected, onBack }: ConnectE
       <div className="flex justify-between items-center">
         <button
           onClick={onBack}
-          className="btn px-4 py-2 text-[0.85rem] !bg-transparent !text-zinc-400 !border-white/10 hover:!text-white"
+          className="btn px-4 py-2 text-[0.85rem] !bg-transparent !text-muted-foreground !border-card-border hover:!text-foreground"
         >
           Back
         </button>

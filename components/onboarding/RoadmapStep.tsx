@@ -27,7 +27,7 @@ export default function RoadmapStep({ trackName, phases, content, onChange }: Ro
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-[1.1rem] font-semibold text-white m-0">Write your full roadmap</h2>
+        <h2 className="text-[1.1rem] font-semibold text-foreground m-0">Write your full roadmap</h2>
         <button
           onClick={() => onChange(buildRoadmapOutline(trackName, phases))}
           className="bg-transparent border-none text-accent text-xs cursor-pointer font-mono p-0 underline"
@@ -35,7 +35,7 @@ export default function RoadmapStep({ trackName, phases, content, onChange }: Ro
           Regenerate outline
         </button>
       </div>
-      <p className="text-zinc-400 text-[0.85rem] m-0">
+      <p className="text-muted-foreground text-[0.85rem] m-0">
         This is your own document — private to this track, nobody else can see it. Started from your phases above;
         add as much detail as you want. You can keep editing it anytime from the dashboard.
       </p>
@@ -43,7 +43,7 @@ export default function RoadmapStep({ trackName, phases, content, onChange }: Ro
       <div className="flex border-b border-card-border">
         <button
           className={`px-4 py-2 text-[0.8rem] font-semibold uppercase tracking-[0.05em] border-b-2 -mb-px cursor-pointer bg-transparent ${
-            tab === "write" ? "text-accent border-accent" : "text-zinc-500 border-transparent hover:text-white"
+            tab === "write" ? "text-accent border-accent" : "text-muted-foreground border-transparent hover:text-foreground"
           }`}
           onClick={() => setTab("write")}
         >
@@ -51,7 +51,7 @@ export default function RoadmapStep({ trackName, phases, content, onChange }: Ro
         </button>
         <button
           className={`px-4 py-2 text-[0.8rem] font-semibold uppercase tracking-[0.05em] border-b-2 -mb-px cursor-pointer bg-transparent ${
-            tab === "preview" ? "text-accent border-accent" : "text-zinc-500 border-transparent hover:text-white"
+            tab === "preview" ? "text-accent border-accent" : "text-muted-foreground border-transparent hover:text-foreground"
           }`}
           onClick={() => setTab("preview")}
         >
@@ -64,7 +64,7 @@ export default function RoadmapStep({ trackName, phases, content, onChange }: Ro
           value={content}
           onChange={(e) => onChange(e.target.value)}
           placeholder="Write your full roadmap using Markdown..."
-          className="bg-black/25 border border-card-border rounded-md text-white text-[0.85rem] outline-none p-4 font-[inherit] leading-relaxed min-h-[320px] resize-y"
+          className="bg-input-bg border border-card-border rounded-md text-foreground text-[0.85rem] outline-none p-4 font-[inherit] leading-relaxed min-h-[320px] resize-y"
         />
       ) : (
         <div

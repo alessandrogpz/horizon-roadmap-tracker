@@ -126,10 +126,10 @@ function OnboardingContent() {
       <div className="min-h-screen flex items-center justify-center p-4 sm:p-8">
         <div className="w-full max-w-[560px] flex flex-col gap-6">
           <div>
-            <h1 className="text-[1.6rem] font-bold text-white m-0 flex items-center gap-2">
+            <h1 className="text-[1.6rem] font-bold text-foreground m-0 flex items-center gap-2">
               <span className="text-accent">&gt;_</span> Welcome to Horizon
             </h1>
-            <p className="text-zinc-400 text-[0.9rem] mt-1">
+            <p className="text-muted-foreground text-[0.9rem] mt-1">
               Is this a new setup, or do you already have an account synced elsewhere?
             </p>
           </div>
@@ -137,17 +137,17 @@ function OnboardingContent() {
           <div className="flex flex-col gap-3">
             <button
               onClick={() => setEntryChoice("fresh")}
-              className="glass-panel p-5 text-left cursor-pointer border border-card-border hover:border-white/20 transition-all duration-150"
+              className="glass-panel p-5 text-left cursor-pointer border border-card-border hover:border-card-border-hover transition-all duration-150"
             >
-              <span className="text-white font-semibold text-[0.95rem] block mb-1">Start fresh</span>
-              <span className="text-zinc-400 text-[0.8rem]">Build a new roadmap from scratch.</span>
+              <span className="text-foreground font-semibold text-[0.95rem] block mb-1">Start fresh</span>
+              <span className="text-muted-foreground text-[0.8rem]">Build a new roadmap from scratch.</span>
             </button>
             <button
               onClick={() => setEntryChoice("connect")}
-              className="glass-panel p-5 text-left cursor-pointer border border-card-border hover:border-white/20 transition-all duration-150"
+              className="glass-panel p-5 text-left cursor-pointer border border-card-border hover:border-card-border-hover transition-all duration-150"
             >
-              <span className="text-white font-semibold text-[0.95rem] block mb-1">I already have an account</span>
-              <span className="text-zinc-400 text-[0.8rem]">Connect Google Drive to pull down your existing tracks — e.g. opening on a new device for the first time.</span>
+              <span className="text-foreground font-semibold text-[0.95rem] block mb-1">I already have an account</span>
+              <span className="text-muted-foreground text-[0.8rem]">Connect Google Drive to pull down your existing tracks — e.g. opening on a new device for the first time.</span>
             </button>
           </div>
         </div>
@@ -160,7 +160,7 @@ function OnboardingContent() {
       <div className="min-h-screen flex items-center justify-center p-4 sm:p-8">
         <div className="w-full max-w-[560px] flex flex-col gap-6">
           <div>
-            <h1 className="text-[1.6rem] font-bold text-white m-0 flex items-center gap-2">
+            <h1 className="text-[1.6rem] font-bold text-foreground m-0 flex items-center gap-2">
               <span className="text-accent">&gt;_</span> Welcome to Horizon
             </h1>
           </div>
@@ -176,10 +176,10 @@ function OnboardingContent() {
     <div className="min-h-screen flex items-center justify-center p-4 sm:p-8">
       <div className="w-full max-w-[720px] flex flex-col gap-6">
         <div>
-          <h1 className="text-[1.6rem] font-bold text-white m-0 flex items-center gap-2">
+          <h1 className="text-[1.6rem] font-bold text-foreground m-0 flex items-center gap-2">
             <span className="text-accent">&gt;_</span> {isAddMode ? "New Track" : "Welcome to Horizon"}
           </h1>
-          <p className="text-zinc-400 text-[0.9rem] mt-1">
+          <p className="text-muted-foreground text-[0.9rem] mt-1">
             {isAddMode
               ? "Set up a new roadmap alongside your existing tracks."
               : "Let's set up your first roadmap — pick a starting point, then make it yours."}
@@ -252,7 +252,7 @@ function OnboardingContent() {
             {stepIndex > 0 && (
               <button
                 onClick={goBack}
-                className="btn px-4 py-2 text-[0.85rem] !bg-transparent !text-zinc-400 !border-white/10 hover:!text-white"
+                className="btn px-4 py-2 text-[0.85rem] !bg-transparent !text-muted-foreground !border-card-border hover:!text-foreground"
               >
                 Back
               </button>
@@ -260,7 +260,7 @@ function OnboardingContent() {
             {stepIndex === 0 && isAddMode && (
               <Link
                 href="/"
-                className="btn px-4 py-2 text-[0.85rem] !bg-transparent !text-zinc-400 !border-white/10 hover:!text-white no-underline inline-block"
+                className="btn px-4 py-2 text-[0.85rem] !bg-transparent !text-muted-foreground !border-card-border hover:!text-foreground no-underline inline-block"
               >
                 Cancel
               </Link>
@@ -268,7 +268,7 @@ function OnboardingContent() {
             {stepIndex === 0 && !isAddMode && (
               <button
                 onClick={() => setEntryChoice("unset")}
-                className="btn px-4 py-2 text-[0.85rem] !bg-transparent !text-zinc-400 !border-white/10 hover:!text-white"
+                className="btn px-4 py-2 text-[0.85rem] !bg-transparent !text-muted-foreground !border-card-border hover:!text-foreground"
               >
                 Back
               </button>

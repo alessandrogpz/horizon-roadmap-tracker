@@ -8,6 +8,7 @@ import { visibleTracks } from "@/lib/api";
 import { Pencil, Ellipsis, Cloud, Map, Flame } from "lucide-react";
 import TrackSwitcher from "@/components/TrackSwitcher";
 import TrackSettingsModal from "@/components/TrackSettingsModal";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export type SyncStatus = "idle" | "syncing" | "success" | "error";
 
@@ -219,6 +220,8 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
         >
           <Ellipsis size={15} strokeWidth={2} />
         </button>
+
+        <ThemeToggle />
       </div>
 
       {/* Hero metrics — the "am I on track?" glance, up front. */}

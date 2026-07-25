@@ -19,23 +19,23 @@ export default function Error({
         <h2 className="text-warning mb-4 uppercase tracking-[0.05em] text-2xl font-bold">
           Workspace Error
         </h2>
-        <p className="text-zinc-400 text-[0.9rem] mb-6 leading-normal">
+        <p className="text-muted-foreground text-[0.9rem] mb-6 leading-normal">
           A client-side rendering or hydration error occurred while building the dashboard.
         </p>
-        <div className="p-4 bg-black rounded-md text-left text-[0.8rem] text-red-400 overflow-x-auto mb-8 border border-white/5">
+        <div className="p-4 bg-black rounded-md text-left text-[0.8rem] text-red-400 overflow-x-auto mb-8 border border-card-border">
           <strong>Error:</strong> {error.message || String(error)}
-          {error.digest && <div className="text-zinc-500 mt-2">Digest: {error.digest}</div>}
+          {error.digest && <div className="text-muted-foreground mt-2">Digest: {error.digest}</div>}
         </div>
         <div className="flex gap-4 justify-center">
           <button
             onClick={() => reset()}
-            className="bg-transparent text-white border border-accent rounded-md px-5 py-2 cursor-pointer font-medium transition-all duration-200 hover:bg-accent hover:text-black"
+            className="bg-transparent text-foreground border border-accent rounded-md px-5 py-2 cursor-pointer font-medium transition-all duration-200 hover:bg-accent hover:text-black"
           >
             Try Again
           </button>
           <button
             onClick={() => window.location.reload()}
-            className="bg-transparent text-zinc-500 border border-card-border rounded-md px-5 py-2 cursor-pointer font-medium transition-all duration-200 hover:border-white hover:text-white"
+            className="bg-transparent text-muted-foreground border border-card-border rounded-md px-5 py-2 cursor-pointer font-medium transition-all duration-200 hover:border-card-border-hover hover:text-foreground"
           >
             Reload Page
           </button>
