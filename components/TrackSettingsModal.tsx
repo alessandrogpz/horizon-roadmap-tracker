@@ -41,7 +41,7 @@ export default function TrackSettingsModal({ name, color, startDate, totalDays, 
       >
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 flex items-center bg-transparent border-none text-zinc-400 hover:text-white cursor-pointer transition-colors"
+          className="absolute top-6 right-6 flex items-center bg-transparent border-none text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
           aria-label="Close"
         >
           <X size={18} strokeWidth={2} />
@@ -51,23 +51,23 @@ export default function TrackSettingsModal({ name, color, startDate, totalDays, 
           <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold uppercase font-mono tracking-[0.05em]">
             Track Settings
           </span>
-          <h2 className="text-[1.3rem] font-bold text-white mt-2">Edit Track</h2>
+          <h2 className="text-[1.3rem] font-bold text-foreground mt-2">Edit Track</h2>
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-[0.8rem] text-zinc-400">Track name</label>
+          <label className="text-[0.8rem] text-muted-foreground">Track name</label>
           <input
             type="text"
             value={draftName}
             onChange={(e) => setDraftName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSave()}
             autoFocus
-            className="bg-black/25 border border-card-border rounded-md text-white text-[0.95rem] outline-none px-3 py-2 font-[inherit]"
+            className="bg-input-bg border border-card-border rounded-md text-foreground text-[0.95rem] outline-none px-3 py-2 font-[inherit]"
           />
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-[0.8rem] text-zinc-400">Accent color</label>
+          <label className="text-[0.8rem] text-muted-foreground">Accent color</label>
           <input
             type="color"
             value={draftColor}
@@ -78,30 +78,30 @@ export default function TrackSettingsModal({ name, color, startDate, totalDays, 
 
         <div className="flex gap-3">
           <div className="flex-1 flex flex-col gap-1.5">
-            <label className="text-[0.8rem] text-zinc-400">Start date</label>
+            <label className="text-[0.8rem] text-muted-foreground">Start date</label>
             <input
               type="date"
               value={draftStartDate}
               onChange={(e) => setDraftStartDate(e.target.value)}
-              className="bg-black/25 border border-card-border rounded-md text-white text-[0.9rem] outline-none px-3 py-2 font-[inherit] w-full"
+              className="bg-input-bg border border-card-border rounded-md text-foreground text-[0.9rem] outline-none px-3 py-2 font-[inherit] w-full"
             />
           </div>
           <div className="flex-1 flex flex-col gap-1.5">
-            <label className="text-[0.8rem] text-zinc-400">Total days</label>
+            <label className="text-[0.8rem] text-muted-foreground">Total days</label>
             <input
               type="number"
               min={1}
               value={draftTotalDays}
               onChange={(e) => setDraftTotalDays(Math.max(1, Number(e.target.value) || 1))}
-              className="bg-black/25 border border-card-border rounded-md text-white text-[0.9rem] outline-none px-3 py-2 font-[inherit] w-full"
+              className="bg-input-bg border border-card-border rounded-md text-foreground text-[0.9rem] outline-none px-3 py-2 font-[inherit] w-full"
             />
           </div>
         </div>
-        <p className="text-[0.75rem] text-zinc-500 -mt-3">
+        <p className="text-[0.75rem] text-muted-foreground -mt-3">
           Changing total days rescales your phase timeline proportionally.
         </p>
 
-        <div className="border-t border-white/5 pt-4 flex justify-between items-center">
+        <div className="border-t border-card-border pt-4 flex justify-between items-center">
           {confirmingDelete ? (
             <div className="flex items-center gap-2">
               <span className="text-[0.8rem] text-red-400">Delete this track?</span>
@@ -116,7 +116,7 @@ export default function TrackSettingsModal({ name, color, startDate, totalDays, 
               </button>
               <button
                 onClick={() => setConfirmingDelete(false)}
-                className="btn px-3 py-1.5 text-[0.8rem] !bg-transparent !text-zinc-400 !border-white/10"
+                className="btn px-3 py-1.5 text-[0.8rem] !bg-transparent !text-muted-foreground !border-card-border"
               >
                 Cancel
               </button>
@@ -129,7 +129,7 @@ export default function TrackSettingsModal({ name, color, startDate, totalDays, 
               Delete Track
             </button>
           ) : (
-            <span className="text-[0.75rem] text-zinc-600" title="You need at least one track">
+            <span className="text-[0.75rem] text-subtle-foreground" title="You need at least one track">
               Can&apos;t delete your only track
             </span>
           )}
@@ -137,7 +137,7 @@ export default function TrackSettingsModal({ name, color, startDate, totalDays, 
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="btn px-4 py-2 text-[0.85rem] !bg-transparent !text-zinc-400 !border-white/10 hover:!text-white"
+              className="btn px-4 py-2 text-[0.85rem] !bg-transparent !text-muted-foreground !border-card-border hover:!text-foreground"
             >
               Cancel
             </button>

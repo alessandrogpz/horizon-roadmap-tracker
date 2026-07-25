@@ -12,6 +12,8 @@
   --foreground: #e7e7ea;
   /* Secondary/label text — one token instead of scattered zinc-400/500. */
   --muted-foreground: #8b8b94;
+  /* Even quieter — placeholders, disabled, timestamps (was zinc-600/700). */
+  --subtle-foreground: #5c5c65;
 
   --accent: #0ea5e9;
   --accent-hover: #38bdf8;
@@ -67,6 +69,7 @@
   --background: #fbfbfc;
   --foreground: #0a0a0b;
   --muted-foreground: #5a5a63;
+  --subtle-foreground: #9a9aa3;
 
   --accent: #0284c7;
   --accent-hover: #0ea5e9;
@@ -99,6 +102,8 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-muted-foreground: var(--muted-foreground);
+  --color-subtle-foreground: var(--subtle-foreground);
+  --color-input-bg: var(--input-bg);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-muted: var(--accent-muted);

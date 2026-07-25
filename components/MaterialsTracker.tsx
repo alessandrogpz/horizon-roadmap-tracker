@@ -15,10 +15,10 @@ interface MaterialsTrackerProps {
   onOpenLink: (link: string) => void;
 }
 
-const inputClass = "w-full p-1 rounded bg-black/30 border border-card-border text-white outline-none font-[inherit] text-[0.85rem]";
-const selectClass = "w-full p-1 rounded bg-black/30 border border-card-border text-white outline-none font-[inherit] text-[0.8rem]";
-const labelClass = "block text-[0.7rem] text-zinc-400 mb-1 uppercase";
-const metricLabelClass = "text-[0.65rem] text-zinc-500 w-[70px] uppercase font-mono font-bold tracking-[0.05em]";
+const inputClass = "w-full p-1 rounded bg-input-bg border border-card-border text-foreground outline-none font-[inherit] text-[0.85rem]";
+const selectClass = "w-full p-1 rounded bg-input-bg border border-card-border text-foreground outline-none font-[inherit] text-[0.8rem]";
+const labelClass = "block text-[0.7rem] text-muted-foreground mb-1 uppercase";
+const metricLabelClass = "text-[0.65rem] text-muted-foreground w-[70px] uppercase font-mono font-bold tracking-[0.05em]";
 
 export default function MaterialsTracker({
   materials,
@@ -233,7 +233,7 @@ export default function MaterialsTracker({
       </div>
 
       {showAddForm && (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-3 bg-white/[0.01] border border-card-border rounded">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-3 bg-surface-muted border border-card-border rounded">
           <div>
             <label className={labelClass}>Title</label>
             <input
@@ -302,7 +302,7 @@ export default function MaterialsTracker({
             <h3 className="text-xs text-accent uppercase tracking-[0.05em] border-l-2 border-accent pl-2 mb-3 font-bold">
               {category}
             </h3>
-            <div className="flex flex-col border border-card-border rounded-md bg-white/[0.01] overflow-hidden">
+            <div className="flex flex-col border border-card-border rounded-md bg-surface-muted overflow-hidden">
               {items.map((mat, idx) => {
                 const isEditing = editingId === mat.id;
                 const stats = gitStats[mat.id];
@@ -365,9 +365,9 @@ export default function MaterialsTracker({
                                 type="number"
                                 value={editCurrentPage}
                                 onChange={(e) => setEditCurrentPage(Number(e.target.value))}
-                                className="w-[60px] p-1 rounded bg-black/30 border border-card-border text-white font-[inherit] text-[0.85rem] text-center outline-none"
+                                className="w-[60px] p-1 rounded bg-input-bg border border-card-border text-foreground font-[inherit] text-[0.85rem] text-center outline-none"
                               />
-                              <span className="text-[0.8rem] text-zinc-400">/ {editTotalPages}</span>
+                              <span className="text-[0.8rem] text-muted-foreground">/ {editTotalPages}</span>
                             </div>
                           )}
                           <div className="flex items-center gap-2">
@@ -376,7 +376,7 @@ export default function MaterialsTracker({
                               type="text"
                               value={editCurrentSubject}
                               onChange={(e) => setEditCurrentSubject(e.target.value)}
-                              className="flex-1 min-w-0 p-1 rounded bg-black/30 border border-card-border text-white font-[inherit] text-[0.85rem] outline-none"
+                              className="flex-1 min-w-0 p-1 rounded bg-input-bg border border-card-border text-foreground font-[inherit] text-[0.85rem] outline-none"
                             />
                           </div>
                         </div>
@@ -394,7 +394,7 @@ export default function MaterialsTracker({
                           <button
                             type="button"
                             onClick={() => setEditingId(null)}
-                            className="bg-transparent text-zinc-400 border border-card-border rounded px-2 py-1 text-xs cursor-pointer"
+                            className="bg-transparent text-muted-foreground border border-card-border rounded px-2 py-1 text-xs cursor-pointer"
                           >
                             Cancel
                           </button>
@@ -428,7 +428,7 @@ export default function MaterialsTracker({
                             {mat.title}
                           </div>
                         ) : (
-                          <div className="font-semibold text-[0.9rem] text-white">
+                          <div className="font-semibold text-[0.9rem] text-foreground">
                             {mat.title}
                           </div>
                         )}
@@ -438,7 +438,7 @@ export default function MaterialsTracker({
                           </span>
                         </div>
                         {stats && stats.isRepo && (
-                          <div className="text-[0.7rem] text-zinc-400 mt-1 font-mono flex flex-wrap gap-x-2 gap-y-px">
+                          <div className="text-[0.7rem] text-muted-foreground mt-1 font-mono flex flex-wrap gap-x-2 gap-y-px">
                             <span>branch: <span className="text-accent">{stats.branch}</span></span>
                             <span>|</span>
                             {(stats.uncommittedCount ?? 0) > 0 ? (
@@ -449,7 +449,7 @@ export default function MaterialsTracker({
                             {stats.lastCommitMsg && (
                               <>
                                 <span>|</span>
-                                <span className="text-zinc-500" title={stats.lastCommitMsg}>
+                                <span className="text-muted-foreground" title={stats.lastCommitMsg}>
                                   last: {stats.lastCommitMsg.length > 20 ? `${stats.lastCommitMsg.slice(0, 20)}...` : stats.lastCommitMsg} ({stats.lastCommitTime})
                                 </span>
                               </>
@@ -466,7 +466,7 @@ export default function MaterialsTracker({
                         </button>
                         <button
                           onClick={() => startEdit(mat)}
-                          className="bg-transparent border-none text-zinc-400 cursor-pointer text-[0.7rem] px-1 py-px font-[inherit]"
+                          className="bg-transparent border-none text-muted-foreground cursor-pointer text-[0.7rem] px-1 py-px font-[inherit]"
                         >
                           Edit
                         </button>
@@ -475,7 +475,7 @@ export default function MaterialsTracker({
                             ? "text-success border-success/20 bg-success/5"
                             : mat.status === "In Progress"
                               ? "text-accent border-accent/20 bg-accent/5"
-                              : "text-zinc-500 border-white/[0.06] bg-transparent"
+                              : "text-muted-foreground border-card-border bg-transparent"
                         }`}>
                           {mat.status}
                         </span>
@@ -484,11 +484,11 @@ export default function MaterialsTracker({
 
                     {/* Progress properties as static display metrics */}
                     {mat.status !== "Not Started" && (
-                      <div className="flex flex-col gap-1.5 mt-1 border-t border-dashed border-white/5 pt-2">
+                      <div className="flex flex-col gap-1.5 mt-1 border-t border-dashed border-card-border pt-2">
                         {mat.type === "Book" && (
                           <div className="flex items-center gap-2">
                             <span className={metricLabelClass}>PAGE</span>
-                            <span className="text-[0.8rem] text-zinc-200 font-mono">
+                            <span className="text-[0.8rem] text-foreground font-mono">
                               {mat.currentPage || 0} / {mat.totalPages || 100}
                             </span>
                           </div>
@@ -496,7 +496,7 @@ export default function MaterialsTracker({
                         {mat.currentSubject && (
                           <div className="flex items-center gap-2">
                             <span className={metricLabelClass}>SUBJECT</span>
-                            <span className="text-[0.8rem] text-zinc-200">
+                            <span className="text-[0.8rem] text-foreground">
                               {mat.currentSubject}
                             </span>
                           </div>
@@ -525,14 +525,14 @@ export default function MaterialsTracker({
               Study Notes
             </span>
             <h3
-              className="text-base font-semibold text-white m-0 overflow-hidden text-ellipsis whitespace-nowrap"
+              className="text-base font-semibold text-foreground m-0 overflow-hidden text-ellipsis whitespace-nowrap"
               title={activeNotesTitle}
             >
               {activeNotesTitle}
             </h3>
           </div>
           <div className="flex items-center gap-4 shrink-0">
-            <span className={`text-[0.7rem] font-mono inline-flex items-center gap-1 ${notesStatus === "error" ? "text-red-500" : "text-zinc-400"}`}>
+            <span className={`text-[0.7rem] font-mono inline-flex items-center gap-1 ${notesStatus === "error" ? "text-red-500" : "text-muted-foreground"}`}>
               {notesStatus === "loading" && "Loading..."}
               {notesStatus === "saving" && "Saving..."}
               {notesStatus === "saved" && (<><Check size={12} strokeWidth={2.5} /> Saved</>)}
@@ -541,7 +541,7 @@ export default function MaterialsTracker({
             </span>
             <button
               onClick={closeNotes}
-              className="bg-transparent border-none text-white cursor-pointer p-1 flex items-center hover:text-muted-foreground transition-colors"
+              className="bg-transparent border-none text-foreground cursor-pointer p-1 flex items-center hover:text-muted-foreground transition-colors"
               aria-label="Close notes"
             >
               <X size={18} strokeWidth={2} />
@@ -583,7 +583,7 @@ export default function MaterialsTracker({
         </div>
 
         <div className="notes-drawer-footer">
-          <span className="text-[0.7rem] text-zinc-500">
+          <span className="text-[0.7rem] text-muted-foreground">
             Markdown supported • Autosaves
           </span>
           <button

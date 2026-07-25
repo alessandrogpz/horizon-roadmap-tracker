@@ -24,7 +24,7 @@ export default function RhythmStep({ weekSchedule, focusTypes, onChange }: Rhyth
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-[1.1rem] font-semibold text-white m-0">Set your weekly rhythm</h2>
+        <h2 className="text-[1.1rem] font-semibold text-foreground m-0">Set your weekly rhythm</h2>
         <button
           onClick={() => setShowManager(!showManager)}
           className="bg-transparent border-none text-accent text-xs cursor-pointer font-mono p-0 underline"
@@ -32,7 +32,7 @@ export default function RhythmStep({ weekSchedule, focusTypes, onChange }: Rhyth
           {showManager ? "Hide Settings" : "Customize Pool"}
         </button>
       </div>
-      <p className="text-zinc-400 text-[0.85rem] m-0">
+      <p className="text-muted-foreground text-[0.85rem] m-0">
         Assign a focus to each day. You can change this anytime from the dashboard.
       </p>
 
@@ -48,16 +48,16 @@ export default function RhythmStep({ weekSchedule, focusTypes, onChange }: Rhyth
         {weekSchedule.map((day) => (
           <div
             key={day.name}
-            className="flex items-center justify-between gap-2 bg-black/15 border border-white/5 rounded-md px-3 py-2"
+            className="flex items-center justify-between gap-2 bg-input-bg border border-card-border rounded-md px-3 py-2"
           >
-            <span className="text-[0.85rem] text-zinc-300 font-mono w-10">{day.name}</span>
+            <span className="text-[0.85rem] text-foreground font-mono w-10">{day.name}</span>
             <select
               value={day.type}
               onChange={(e) => setDayType(day.name, e.target.value)}
-              className="flex-1 bg-black/40 border border-white/10 rounded-md px-2 py-1.5 text-white text-[0.85rem] font-[inherit] outline-none cursor-pointer"
+              className="flex-1 bg-input-bg border border-card-border rounded-md px-2 py-1.5 text-foreground text-[0.85rem] font-[inherit] outline-none cursor-pointer"
             >
               {Object.entries(focusTypes).map(([key, val]) => (
-                <option key={key} value={key} className="bg-zinc-900 text-white">
+                <option key={key} value={key} className="bg-card text-foreground">
                   {val.label}
                 </option>
               ))}

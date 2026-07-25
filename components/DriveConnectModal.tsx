@@ -51,7 +51,7 @@ export default function DriveConnectModal({
       >
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 flex items-center bg-transparent border-none text-zinc-400 hover:text-white cursor-pointer transition-colors"
+          className="absolute top-6 right-6 flex items-center bg-transparent border-none text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
           aria-label="Close"
         >
           <X size={18} strokeWidth={2} />
@@ -61,10 +61,10 @@ export default function DriveConnectModal({
           <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold uppercase font-mono tracking-[0.05em]">
             Google Drive
           </span>
-          <h2 className="text-[1.3rem] font-bold text-white mt-2 mb-1">
+          <h2 className="text-[1.3rem] font-bold text-foreground mt-2 mb-1">
             {mode === "connect" ? "Connect Cloud Sync" : "Cloud & Backup"}
           </h2>
-          <p className="text-[0.85rem] text-zinc-400 m-0 leading-normal">
+          <p className="text-[0.85rem] text-muted-foreground m-0 leading-normal">
             {mode === "connect"
               ? "Your progress is stored in your own Google Drive (hidden app folder). Enter the OAuth Client ID of your Google Cloud project to connect."
               : `Status: ${isAuthenticated ? "authenticated" : "not authenticated"}. Disconnecting clears the stored Client ID and access token from this browser.`}
@@ -73,7 +73,7 @@ export default function DriveConnectModal({
 
         {mode === "connect" && (
           <div>
-            <label className="block text-[0.7rem] text-zinc-400 mb-1.5 uppercase tracking-[0.05em]">
+            <label className="block text-[0.7rem] text-muted-foreground mb-1.5 uppercase tracking-[0.05em]">
               OAuth Client ID
             </label>
             <input
@@ -85,29 +85,29 @@ export default function DriveConnectModal({
               onKeyDown={(e) => {
                 if (e.key === "Enter" && clientId.trim()) onConnect(clientId.trim());
               }}
-              className="w-full px-3 py-2 rounded-md bg-black/30 border border-card-border text-white outline-none font-[inherit] text-[0.85rem]"
+              className="w-full px-3 py-2 rounded-md bg-input-bg border border-card-border text-foreground outline-none font-[inherit] text-[0.85rem]"
             />
           </div>
         )}
 
         {mode === "manage" && (
-          <div className="flex flex-col gap-2 border-t border-white/5 pt-4">
-            <span className="text-[0.7rem] text-zinc-400 uppercase tracking-[0.05em] font-semibold">Backup</span>
-            <p className="text-[0.8rem] text-zinc-500 m-0 leading-normal">
+          <div className="flex flex-col gap-2 border-t border-card-border pt-4">
+            <span className="text-[0.7rem] text-muted-foreground uppercase tracking-[0.05em] font-semibold">Backup</span>
+            <p className="text-[0.8rem] text-muted-foreground m-0 leading-normal">
               Download everything that syncs — every track, its roadmap, rotations, materials, and notes.
             </p>
             <div className="flex gap-2 flex-wrap mt-1">
               <button
                 onClick={() => handleExport("single")}
                 disabled={exporting !== null}
-                className="btn px-4 py-2 text-[0.8rem] !bg-transparent !text-zinc-300 !border-white/10 hover:!text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn px-4 py-2 text-[0.8rem] !bg-transparent !text-foreground !border-card-border hover:!text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {exporting === "single" ? "Exporting..." : "Single File (.json)"}
               </button>
               <button
                 onClick={() => handleExport("zip")}
                 disabled={exporting !== null}
-                className="btn px-4 py-2 text-[0.8rem] !bg-transparent !text-zinc-300 !border-white/10 hover:!text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn px-4 py-2 text-[0.8rem] !bg-transparent !text-foreground !border-card-border hover:!text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {exporting === "zip" ? "Exporting..." : "Separate Files (.zip)"}
               </button>
@@ -128,7 +128,7 @@ export default function DriveConnectModal({
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="btn px-4 py-2 text-[0.85rem] !bg-transparent !text-zinc-400 !border-white/10 hover:!text-white"
+              className="btn px-4 py-2 text-[0.85rem] !bg-transparent !text-muted-foreground !border-card-border hover:!text-foreground"
             >
               Cancel
             </button>

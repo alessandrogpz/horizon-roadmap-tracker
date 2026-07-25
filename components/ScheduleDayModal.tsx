@@ -19,7 +19,7 @@ interface ScheduleDayModalProps {
   weekOffset?: number;
 }
 
-const fieldInputClass = "bg-black/25 border border-card-border rounded-md text-zinc-200 font-[inherit] text-[0.8rem] outline-none px-2.5 py-1.5";
+const fieldInputClass = "bg-input-bg border border-card-border rounded-md text-foreground font-[inherit] text-[0.8rem] outline-none px-2.5 py-1.5";
 
 export default function ScheduleDayModal({
   day,
@@ -116,7 +116,7 @@ export default function ScheduleDayModal({
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 flex items-center bg-transparent border-none text-zinc-400 hover:text-white cursor-pointer transition-colors"
+          className="absolute top-6 right-6 flex items-center bg-transparent border-none text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
           aria-label="Close"
         >
           <X size={18} strokeWidth={2} />
@@ -127,7 +127,7 @@ export default function ScheduleDayModal({
           <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold uppercase font-mono tracking-[0.05em]">
             {day.name} Schedule • {targetDateStr}
           </span>
-          <h2 className="text-[1.3rem] font-bold text-white mt-2">
+          <h2 className="text-[1.3rem] font-bold text-foreground mt-2">
             {getFullLabel(currentDaySchedule.type)}
           </h2>
         </div>
@@ -136,7 +136,7 @@ export default function ScheduleDayModal({
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-[0.8rem] text-zinc-400">Focus Type:</span>
+              <span className="text-[0.8rem] text-muted-foreground">Focus Type:</span>
               <select
                 value={currentDaySchedule.type}
                 onChange={(e) => {
@@ -150,10 +150,10 @@ export default function ScheduleDayModal({
                   });
                   applyChange({ ...data, weekSchedule: updatedSchedule });
                 }}
-                className="bg-black/40 border border-white/10 rounded-md px-2 py-1.5 text-white text-[0.85rem] font-[inherit] outline-none cursor-pointer"
+                className="bg-input-bg border border-card-border rounded-md px-2 py-1.5 text-foreground text-[0.85rem] font-[inherit] outline-none cursor-pointer"
               >
                 {Object.entries(focusTypes).map(([key, val]) => (
-                  <option key={key} value={key} className="bg-zinc-900 text-white">
+                  <option key={key} value={key} className="bg-card text-foreground">
                     {val.label}
                   </option>
                 ))}
@@ -206,13 +206,13 @@ export default function ScheduleDayModal({
                           checked={completed}
                           onChange={() => toggleRotationItemCompletion(item.id, item.title, item.description || "", true, completed)}
                         />
-                        <span className={`flex-1 text-[0.85rem] font-semibold ${completed ? "text-zinc-500 line-through" : "text-white"}`}>
+                        <span className={`flex-1 text-[0.85rem] font-semibold ${completed ? "text-muted-foreground line-through" : "text-foreground"}`}>
                           {item.title}
                         </span>
                         <span className="text-[0.65rem] text-accent/70 uppercase tracking-[0.05em] shrink-0">Rotation</span>
                       </div>
                       {item.description && (
-                        <span className="text-[0.8rem] text-zinc-400 ml-7">{item.description}</span>
+                        <span className="text-[0.8rem] text-muted-foreground ml-7">{item.description}</span>
                       )}
                     </div>
                   );
@@ -221,7 +221,7 @@ export default function ScheduleDayModal({
                 {manualRevisionItems.map((item, index) => (
                   <div
                     key={item.id || index}
-                    className="flex flex-col gap-1.5 bg-black/15 px-3 py-[0.6rem] rounded-md border border-white/5"
+                    className="flex flex-col gap-1.5 bg-input-bg px-3 py-[0.6rem] rounded-md border border-card-border"
                   >
                     <div className="flex items-center gap-3">
                       <input
@@ -290,7 +290,7 @@ export default function ScheduleDayModal({
                         }}
                         onBlur={persistOnBlur}
                         placeholder="Revision topic..."
-                        className="flex-1 bg-transparent border-none text-white font-[inherit] text-[0.85rem] font-semibold outline-none"
+                        className="flex-1 bg-transparent border-none text-foreground font-[inherit] text-[0.85rem] font-semibold outline-none"
                       />
                       <button
                         onClick={() => {
@@ -348,13 +348,13 @@ export default function ScheduleDayModal({
                       }}
                       onBlur={persistOnBlur}
                       placeholder="Topic description (optional)..."
-                      className="bg-transparent border-none border-b border-dashed border-white/10 text-zinc-400 font-[inherit] text-[0.8rem] outline-none py-px ml-7"
+                      className="bg-transparent border-none border-b border-dashed border-card-border text-muted-foreground font-[inherit] text-[0.8rem] outline-none py-px ml-7"
                     />
                   </div>
                 ))}
 
                 {/* Add revision item form */}
-                <div className="flex flex-col gap-1.5 bg-white/[0.02] p-[0.6rem] rounded-md border border-dashed border-white/10">
+                <div className="flex flex-col gap-1.5 bg-surface-muted p-[0.6rem] rounded-md border border-dashed border-card-border">
                   <input
                     type="text"
                     id="new-rev-title"
@@ -423,7 +423,7 @@ export default function ScheduleDayModal({
                         checked={completed}
                         onChange={() => toggleRotationItemCompletion(task.id, task.title, "", false, completed)}
                       />
-                      <span className={`flex-1 text-[0.85rem] ${completed ? "text-zinc-500 line-through" : "text-white"}`}>
+                      <span className={`flex-1 text-[0.85rem] ${completed ? "text-muted-foreground line-through" : "text-foreground"}`}>
                         {task.title}
                       </span>
                       <span className="text-[0.65rem] text-accent/70 uppercase tracking-[0.05em] shrink-0">Rotation</span>
@@ -434,7 +434,7 @@ export default function ScheduleDayModal({
                 {manualFocusTasks.map((task, index) => (
                   <div
                     key={task.id || index}
-                    className="flex items-center gap-3 bg-black/15 px-[0.6rem] py-1.5 rounded-md border border-white/5"
+                    className="flex items-center gap-3 bg-input-bg px-[0.6rem] py-1.5 rounded-md border border-card-border"
                   >
                     <input
                       type="checkbox"
@@ -502,7 +502,7 @@ export default function ScheduleDayModal({
                       }}
                       onBlur={persistOnBlur}
                       placeholder="Task description..."
-                      className="flex-1 bg-transparent border-none text-white font-[inherit] text-[0.85rem] outline-none"
+                      className="flex-1 bg-transparent border-none text-foreground font-[inherit] text-[0.85rem] outline-none"
                     />
                     <button
                       onClick={() => {
@@ -563,7 +563,7 @@ export default function ScheduleDayModal({
                         e.currentTarget.value = "";
                       }
                     }}
-                    className="flex-1 bg-black/25 border border-card-border rounded-md px-3 py-2 text-zinc-200 font-[inherit] text-[0.85rem] outline-none"
+                    className="flex-1 bg-input-bg border border-card-border rounded-md px-3 py-2 text-foreground font-[inherit] text-[0.85rem] outline-none"
                   />
                   <button
                     onClick={(e) => {

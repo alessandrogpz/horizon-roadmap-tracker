@@ -588,7 +588,7 @@ export default function Home() {
     return (
       <div className="flex h-screen flex-col items-center justify-center p-8 bg-background text-foreground font-mono text-center">
         <h2 className="text-warning mb-4 uppercase tracking-[0.05em] text-2xl font-bold">Initialization Failed</h2>
-        <p className="text-zinc-400 text-[0.9rem] mb-6">
+        <p className="text-muted-foreground text-[0.9rem] mb-6">
           The app failed to connect to the backend server.
         </p>
         <div className="p-4 bg-card rounded-md border border-card-border text-red-400 mb-6 max-w-[500px] break-all">
@@ -687,7 +687,7 @@ export default function Home() {
           {/* Phase recommendation alert */}
           {data.currentPhase !== recommendedPhase && (
             <div className="glass-panel border-l-4 !border-l-warning flex justify-between items-center px-6 py-4">
-              <span className="text-[0.9rem] text-gray-100">
+              <span className="text-[0.9rem] text-foreground">
                 Schedule suggestion: Time to transition to Phase {recommendedPhase} (Day {daysPassed})
               </span>
               <button
