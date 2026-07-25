@@ -7,6 +7,74 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.5.0] - 2026-07-25
+
+### Changed
+- **Engine & Graphics curriculum rebalanced from 12 to 13 months.** The old
+  plan gave Phase 2 roughly 2.5× Phase 1's load in 33% more time (four books,
+  three tools, an asset database and the scene viewer) while Phase 3 carried
+  three tasks across three months — the load curve was inverted, and the
+  hardest phase had the least slack. Rebalanced across both the full roadmap
+  (`LEGACY_ROADMAP_CONTENT`) and the Roadmap Timeline (`phases[]`):
+  - **Phase 2** (now months 4–6) slimmed to one job: get a real-time renderer
+    working end to end. LearnOpenGL, Calculus 1, ImGui, RenderDoc, the debug
+    drawer and the scene graph, and nothing else.
+  - **Phase 3** (now months 7–11, the long phase) absorbs everything
+    architectural: *Game Engine Architecture* (Gregory), the Lengyel Vol 2
+    deepening pass, the asset pipeline, plus the optimization half — deferred
+    rendering, BVH/frustum culling, post-processing, Tracy.
+  - **Phase 4** (months 12–13) reduced to Vulkan alone. PBR, image-based
+    lighting and multi-threaded command buffer recording moved to a new
+    **Beyond the Horizon** section rather than pretending a two-month phase
+    could absorb them alongside learning Vulkan from zero.
+  - **Phase 1 is unchanged** in content, but now states explicitly that PPP
+    and LearnOpenGL are expected to carry into Phase 2.
+- **Sequencing over parallelism.** LearnOpenGL (tutorial) and Lengyel Vol 2
+  (derivation reference) no longer share a phase — the reference is now a
+  second pass over code that already exists.
+- **The SQLite thread is now an offline asset pipeline.** The database is
+  editor-side, with a bake step emitting a flat binary that the runtime loads;
+  the engine never opens the database. Previously the scene viewer deliverable
+  loaded directly from SQLite, which coupled a schema bug to the graphics
+  milestone and misrepresented how asset pipelines actually work. Phase 3's
+  frame-timing database is kept as-is; Phase 4's half-edge relational-vs-
+  document comparison is dropped (half-edge is an index structure whose point
+  is cache-coherent traversal).
+
+### Added
+- **`recommendedByDay` on every phase** (92 / 186 / 334 / 396, from the
+  2026-06-05 track start). This field existed in the model but was set on no
+  phase, so the "time to switch phase" banner never fired and
+  `DashboardHeader` fell back to its hardcoded 365-day horizon. Both now
+  reflect the real 396-day plan.
+- **A consolidation week closing every phase** — no new material, used to
+  finish the in-flight chapter, polish the deliverable and write the README.
+  This is the plan's explicit shock absorber; previously there was no slack
+  anywhere across the twelve months.
+- **A portfolio artifact in every phase.** Only Phase 1 had one (the visual
+  README). Phase 2 now ends with a demo video, Phase 3 with a written
+  performance case study drawn straight from the frame-timing database, and
+  Phase 4 with an OpenGL-vs-Vulkan writeup plus a full portfolio pass.
+- **Probability and Monte Carlo basics in Phase 4**, and multivariable
+  calculus started early in Phase 3. Probability was absent from the entire
+  curriculum despite Phase 4 requiring Monte Carlo integration and the
+  rendering equation.
+- **A required measurement artifact for Gregory's memory chapter** (arena +
+  pool allocator with before/after load-time and allocation counts), so the
+  book produces something instead of being passive reading.
+- Phase task lists expanded from 18 to 37 entries so the timeline names
+  everything the roadmap document does — deferred rendering, the allocator
+  pass, the asset pipeline and the portfolio milestones were all previously
+  described in the roadmap but invisible in the timeline.
+
+### Notes
+- The full roadmap and the Roadmap Timeline are now kept deliberately in step:
+  phase names, deliverables, day thresholds and end dates agree across the
+  document's overview table, its per-phase sections, and `phases[]`.
+- `lib/legacyPersonalData.ts` and `data/database.json` are migration/test
+  fixtures — they seed the Dexie v1→v2 upgrade and the merge tests, and do not
+  retroactively update an already-migrated local workspace.
+
 ## [0.4.3] - 2026-07-25
 
 ### Changed
