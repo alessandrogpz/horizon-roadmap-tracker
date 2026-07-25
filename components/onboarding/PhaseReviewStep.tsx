@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { X } from "lucide-react";
 import type { Phase } from "@/lib/types";
 
 interface PhaseReviewStepProps {
@@ -53,11 +54,12 @@ export default function PhaseReviewStep({ phases, onChange }: PhaseReviewStepPro
               <button
                 onClick={() => removePhase(phase.id)}
                 disabled={phases.length <= 1}
-                className={`bg-transparent border-none text-[0.85rem] ${
+                className={`flex items-center bg-transparent border-none ${
                   phases.length <= 1 ? "text-zinc-700 cursor-not-allowed" : "text-red-500 cursor-pointer"
                 }`}
+                aria-label="Remove phase"
               >
-                ✕
+                <X size={14} strokeWidth={2} />
               </button>
             </div>
             <input
