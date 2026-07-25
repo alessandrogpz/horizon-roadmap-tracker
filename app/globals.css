@@ -1,23 +1,96 @@
 @import "tailwindcss";
 
+/* ===========================================================================
+   Design tokens — premium-minimal, shadcn/Vercel-flavored.
+   A clear elevation ladder replaces the old flat single-plane look:
+     background (page) < card (panel) < surface-muted (inner rows) < hover.
+   Panels catch a faint top-edge light (--highlight-top) and sit on soft
+   shadows instead of relying on hard 1px outlines everywhere.
+   =========================================================================== */
 :root {
-  --background: #09090b;
-  --foreground: #e4e4e7;
+  --background: #0a0a0c;
+  --foreground: #e7e7ea;
+  /* Secondary/label text — one token instead of scattered zinc-400/500. */
+  --muted-foreground: #8b8b94;
+
   --accent: #0ea5e9;
   --accent-hover: #38bdf8;
   /* Quieter accent tier for structural borders (modals, panel accents) —
-     keeps the saturated --accent reserved for interactive/status signals
-     (sync dot, today's highlight, active phase dot, primary buttons). */
+     keeps the saturated --accent reserved for interactive/status signals. */
   --accent-muted: rgba(14, 165, 233, 0.35);
-  --card-bg: #121214;
-  --card-border: rgba(255, 255, 255, 0.08);
+  /* Focus ring — shadcn signature; used on inputs/buttons via :focus-visible. */
+  --ring: rgba(14, 165, 233, 0.45);
+
+  /* Elevation ladder */
+  --card-bg: #101014;
+  --card-border: rgba(255, 255, 255, 0.06);
+  --card-border-hover: rgba(255, 255, 255, 0.12);
+  --surface-muted: rgba(255, 255, 255, 0.025);
+  --surface-hover: rgba(255, 255, 255, 0.045);
+  --input-bg: rgba(255, 255, 255, 0.03);
+
+  /* Accent system — each color owns one job so they stop competing:
+       accent (cyan)  = interactive / primary / status
+       success (green)= achievement / streak
+       warning (amber)= attention / suggestions */
   --success: #10b981;
   --warning: #f59e0b;
-  --streak-0: #1a1a1e;
-  --streak-1: #064e3b;
-  --streak-2: #047857;
+
+  --streak-0: #17171b;
+  --streak-1: #0b5747;
+  --streak-2: #068466;
   --streak-3: #10b981;
-  --streak-4: #34d399;
+  --streak-4: #4ade80;
+
+  /* Depth primitives */
+  --highlight-top: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --shadow-panel: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 28px -18px rgba(0, 0, 0, 0.7);
+  --shadow-panel-hover: 0 1px 2px rgba(0, 0, 0, 0.45), 0 18px 40px -20px rgba(0, 0, 0, 0.8);
+  --shadow-float: 0 24px 60px -20px rgba(0, 0, 0, 0.75);
+
+  /* Corner rounding — slightly larger cards read as more premium. */
+  --radius-card: 12px;
+  --radius-control: 8px;
+  --radius-inner: 6px;
+
+  /* Faint page light-source glow (radial, behind the header). */
+  --glow: rgba(14, 165, 233, 0.10);
+}
+
+/* ---------------------------------------------------------------------------
+   Light theme tokens — infrastructure staged and ready. Not yet activated by
+   a toggle: the component tree still hardcodes many dark-only colors, so a
+   correct light mode needs a dedicated color-token migration (tracked
+   separately). Flip by setting data-theme="light" on <html> once that lands.
+   --------------------------------------------------------------------------- */
+:root[data-theme="light"] {
+  --background: #fbfbfc;
+  --foreground: #0a0a0b;
+  --muted-foreground: #5a5a63;
+
+  --accent: #0284c7;
+  --accent-hover: #0ea5e9;
+  --accent-muted: rgba(2, 132, 199, 0.28);
+  --ring: rgba(2, 132, 199, 0.4);
+
+  --card-bg: #ffffff;
+  --card-border: rgba(0, 0, 0, 0.08);
+  --card-border-hover: rgba(0, 0, 0, 0.16);
+  --surface-muted: rgba(0, 0, 0, 0.02);
+  --surface-hover: rgba(0, 0, 0, 0.04);
+  --input-bg: rgba(0, 0, 0, 0.03);
+
+  --streak-0: #ebedf0;
+  --streak-1: #9be9a8;
+  --streak-2: #40c463;
+  --streak-3: #30a14e;
+  --streak-4: #216e39;
+
+  --highlight-top: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --shadow-panel: 0 1px 2px rgba(0, 0, 0, 0.05), 0 10px 24px -16px rgba(0, 0, 0, 0.18);
+  --shadow-panel-hover: 0 1px 2px rgba(0, 0, 0, 0.07), 0 16px 32px -18px rgba(0, 0, 0, 0.22);
+  --shadow-float: 0 24px 60px -22px rgba(0, 0, 0, 0.25);
+  --glow: rgba(2, 132, 199, 0.08);
 }
 
 /* Expose the design tokens as Tailwind color utilities
@@ -25,11 +98,16 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-muted: var(--accent-muted);
   --color-card: var(--card-bg);
   --color-card-border: var(--card-border);
+  --color-card-border-hover: var(--card-border-hover);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-hover: var(--surface-hover);
+  --color-ring: var(--ring);
   --color-success: var(--success);
   --color-warning: var(--warning);
   /* Body copy is sans; font-mono stays JetBrains Mono for data/numeric/code-like
@@ -59,86 +137,151 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Faint, fixed light source high on the page — premium dark UIs almost always
+   have one. Sits behind all content and never intercepts pointer events. */
+.app-glow {
+  position: fixed;
+  top: -20vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1100px, 120vw);
+  height: 60vh;
+  background: radial-gradient(closest-side, var(--glow), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(8px);
+}
+
+/* ===========================================================================
+   Surfaces
+   =========================================================================== */
 .glass-panel {
+  position: relative;
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-radius: 8px; /* Softer rounded corners */
+  border-radius: var(--radius-card);
   padding: 1.5rem;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  box-shadow: var(--highlight-top), var(--shadow-panel);
 }
 
 .glass-panel:hover {
-  border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  border-color: var(--card-border-hover);
+  box-shadow: var(--highlight-top), var(--shadow-panel-hover);
+}
+
+/* True glass for overlapping surfaces (modals, popovers) — translucent card
+   tint plus a real backdrop blur, so what's behind shows through softly. */
+.glass-surface {
+  position: relative;
+  background: color-mix(in srgb, var(--card-bg) 82%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  backdrop-filter: blur(16px) saturate(1.2);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--highlight-top), var(--shadow-float);
+}
+
+/* Dim + blur behind a modal. */
+.modal-overlay {
+  background: rgba(0, 0, 0, 0.6);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
 }
 
 .btn {
   background: transparent;
-  color: #fff;
+  color: var(--foreground);
   border: 1px solid var(--accent);
-  border-radius: 6px; /* Clean, refined rounding */
+  border-radius: var(--radius-control);
   padding: 0.5rem 1rem;
   cursor: pointer;
   font-weight: 500;
   font-family: inherit;
-  transition: all 0.2s ease;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .btn:hover {
   background: var(--accent);
-  color: #000;
+  color: #00121c;
+  box-shadow: 0 6px 18px -8px var(--accent);
+}
+
+.btn:focus-visible,
+.checkbox-custom:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--ring);
 }
 
 .checkbox-custom {
   appearance: none;
   width: 18px;
   height: 18px;
-  border: 1px solid var(--card-border);
-  border-radius: 4px; /* Subtle rounding */
-  background: transparent;
+  border: 1px solid var(--card-border-hover);
+  border-radius: 5px;
+  background: var(--input-bg);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
+}
+
+.checkbox-custom:hover {
+  border-color: var(--success);
 }
 
 .checkbox-custom:checked {
   background: var(--success);
   border-color: var(--success);
+  /* Tiny spring pop on check — a cheap, unmistakably-modern micro-interaction. */
+  animation: checkbox-pop 0.24s ease;
 }
 
 .checkbox-custom:checked::after {
   content: '✓';
-  color: #000;
+  color: #00120c;
   font-weight: bold;
   font-size: 11px;
 }
 
+@keyframes checkbox-pop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.22); }
+  100% { transform: scale(1); }
+}
+
 .section-title {
-  font-size: 1.1rem;
+  font-size: 0.8rem;
   font-weight: 600;
   margin-bottom: 1rem;
-  color: #fff;
+  color: var(--foreground);
   display: flex;
   align-items: center;
   gap: 0.5rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
 }
 
-/* Base Task Item styles */
+/* Small line-icon that precedes a section title — muted so the label leads. */
+.section-title .section-icon {
+  color: var(--muted-foreground);
+  flex-shrink: 0;
+}
+
+/* ===========================================================================
+   Task lists
+   =========================================================================== */
 .task-item {
   display: flex;
   align-items: center;
   gap: 1rem;
   padding: 0.75rem;
   border: 1px solid var(--card-border);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.01);
+  border-radius: var(--radius-inner);
+  background: var(--surface-muted);
   margin-bottom: 0.5rem;
-  transition: all 0.2s ease;
+  transition: background 0.18s ease, border-color 0.18s ease;
 }
 
 .task-item:last-child {
@@ -154,19 +297,20 @@ body {
 
 .task-item.completed {
   border-color: rgba(16, 185, 129, 0.15);
-  background: rgba(16, 185, 129, 0.02);
+  background: rgba(16, 185, 129, 0.04);
 }
 
 .task-item.completed .task-label {
-  color: #71717a;
+  color: var(--muted-foreground);
   text-decoration: line-through;
 }
 
-/* Grouped Task List to eliminate blocky individual boxes */
+/* Grouped Task List — leans on background elevation rather than a box per row,
+   so the list reads as one surface instead of a stack of outlined chips. */
 .task-group {
   border: 1px solid var(--card-border);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.01);
+  border-radius: var(--radius-inner);
+  background: var(--surface-muted);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -186,14 +330,19 @@ body {
 }
 
 .task-group .task-item.completed {
-  background: rgba(16, 185, 129, 0.015);
+  background: rgba(16, 185, 129, 0.03);
 }
 
 .task-group .task-item:hover {
-  background: rgba(255, 255, 255, 0.015);
+  background: var(--surface-hover);
 }
 
+/* ===========================================================================
+   Layout
+   =========================================================================== */
 .container {
+  position: relative;
+  z-index: 1;
   max-width: 1440px;
   margin: 0 auto;
   padding: 1rem;
@@ -224,10 +373,10 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(0,0,0,0.2);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--card-border);
+  background: var(--card-border-hover);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
@@ -242,7 +391,7 @@ body {
 }
 
 .link-title {
-  color: #fff;
+  color: var(--foreground);
   cursor: pointer;
   transition: color 0.2s ease;
 }
@@ -253,15 +402,18 @@ body {
   text-underline-offset: 3px;
 }
 
-/* Notes Drawer */
+/* ===========================================================================
+   Notes Drawer
+   =========================================================================== */
 .notes-drawer-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.6);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
   z-index: 999;
   opacity: 0;
   pointer-events: none;
@@ -280,12 +432,14 @@ body {
   bottom: 0;
   width: 550px;
   max-width: 100vw;
-  background: #0d0d0f;
+  background: color-mix(in srgb, var(--card-bg) 88%, transparent);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  backdrop-filter: blur(20px) saturate(1.2);
   border-left: 1px solid var(--card-border);
   z-index: 1000;
   transform: translateX(100%);
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.6);
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.6);
   display: flex;
   flex-direction: column;
 }
@@ -305,14 +459,14 @@ body {
 .notes-drawer-tabs {
   display: flex;
   border-bottom: 1px solid var(--card-border);
-  background: rgba(255, 255, 255, 0.01);
+  background: var(--surface-muted);
 }
 
 .notes-tab-btn {
   flex: 1;
   background: transparent;
   border: none;
-  color: #71717a;
+  color: var(--muted-foreground);
   padding: 0.75rem;
   font-family: inherit;
   font-size: 0.8rem;
@@ -325,13 +479,13 @@ body {
 }
 
 .notes-tab-btn:hover {
-  color: #fff;
+  color: var(--foreground);
 }
 
 .notes-tab-btn.active {
   color: var(--accent);
   border-bottom-color: var(--accent);
-  background: rgba(14, 165, 233, 0.03);
+  background: rgba(14, 165, 233, 0.05);
 }
 
 .notes-content-area {
@@ -368,7 +522,7 @@ body {
   border-bottom: 1px solid var(--card-border);
   padding-bottom: 0.3rem;
   margin: 1.5rem 0 0.8rem;
-  color: #fff;
+  color: var(--foreground);
 }
 .notes-preview-pane h1:first-child {
   margin-top: 0;
@@ -376,12 +530,12 @@ body {
 .notes-preview-pane h2 {
   font-size: 1.2rem;
   margin: 1.2rem 0 0.6rem;
-  color: #fff;
+  color: var(--foreground);
 }
 .notes-preview-pane h3 {
   font-size: 1rem;
   margin: 1rem 0 0.5rem;
-  color: #fff;
+  color: var(--foreground);
 }
 .notes-preview-pane p {
   margin-bottom: 0.8rem;
@@ -392,7 +546,7 @@ body {
   margin-bottom: 0.8rem;
 }
 .notes-preview-pane code {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-hover);
   padding: 0.15rem 0.3rem;
   border-radius: 3px;
   font-size: 0.8rem;
@@ -401,7 +555,7 @@ body {
 .notes-preview-pane pre {
   background: rgba(0, 0, 0, 0.4);
   padding: 1rem;
-  border-radius: 6px;
+  border-radius: var(--radius-inner);
   border: 1px solid var(--card-border);
   overflow-x: auto;
   margin-bottom: 0.8rem;
@@ -414,7 +568,7 @@ body {
 .notes-preview-pane blockquote {
   border-left: 3px solid var(--accent);
   padding-left: 1rem;
-  color: #a1a1aa;
+  color: var(--muted-foreground);
   margin-bottom: 0.8rem;
   font-style: italic;
 }
@@ -422,14 +576,15 @@ body {
 .notes-drawer-footer {
   padding: 1rem 1.5rem;
   border-top: 1px solid var(--card-border);
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--surface-muted);
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-/* Weekly plan grid: 7 equal columns on desktop; on small screens the cards
-   keep a readable width and the row scrolls horizontally instead */
+/* ===========================================================================
+   Weekly plan grid
+   =========================================================================== */
 .week-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -447,7 +602,9 @@ body {
   }
 }
 
-/* Animations */
+/* ===========================================================================
+   Motion
+   =========================================================================== */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -457,3 +614,24 @@ body {
   display: inline-block;
 }
 
+/* Panel entrance — a subtle staggered fade-up on first mount. Applied to the
+   inner content of SortablePanel (never the drag-transform node) so it can't
+   fight dnd-kit's live transform during a drag. */
+@keyframes panel-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.panel-in {
+  /* `backwards` (not `both`): apply the start frame during the stagger delay,
+     but retain NO transform after the animation ends. A lingering transform
+     would turn the panel into the containing block for its position:fixed
+     descendants (e.g. the notes drawer), breaking their layout. */
+  animation: panel-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel-in,
+  .checkbox-custom:checked {
+    animation: none;
+  }
+}

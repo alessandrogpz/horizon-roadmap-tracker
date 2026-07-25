@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { Milestone } from "lucide-react";
 import type { Phase } from "@/lib/types";
 
 interface PhaseTrackerProps {
@@ -14,7 +15,10 @@ export default function PhaseTracker({ phases, currentPhase, onPhaseClick, onAdd
   return (
     <div className="glass-panel p-6 flex flex-col gap-6">
       <div className="flex justify-between items-center">
-        <h2 className="section-title !mb-0">Roadmap Timeline</h2>
+        <h2 className="section-title !mb-0">
+          <Milestone size={14} strokeWidth={2.5} className="section-icon" />
+          Roadmap Timeline
+        </h2>
         <button onClick={onAddPhase} className="btn px-2.5 py-1 text-xs">
           [+ Add Phase]
         </button>

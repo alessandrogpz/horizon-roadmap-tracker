@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { CalendarDays } from "lucide-react";
 import type { TrackState, WeekDay } from "@/lib/types";
 import { getDateForDayName, getWeekNum } from "@/lib/dates";
 import { rebuildStreakHistory, completedItemTitle } from "@/lib/streak";
@@ -47,7 +48,8 @@ export default function WeeklyPlan({
         <div className="flex flex-col gap-3 pb-3 border-b border-white/5">
           {/* Top Row: Title and Navigation */}
           <div className="flex items-center gap-4">
-            <h3 className="text-[1.1rem] font-semibold text-white m-0 whitespace-nowrap">
+            <h3 className="text-[1.1rem] font-semibold text-white m-0 whitespace-nowrap inline-flex items-center gap-2">
+              <CalendarDays size={16} strokeWidth={2.5} className="text-muted-foreground" />
               Weekly Study Plan
             </h3>
 
