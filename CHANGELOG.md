@@ -7,6 +7,28 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.4.0] - 2026-07-25
+
+### Added
+- **Per-track modules.** Each track now controls which dashboard modules
+  (Weekly Study Plan, Roadmap Timeline, Consistency Streak, Focus Timer,
+  Portfolio Deliverables, Materials) are open, and in what order/column.
+  - A **Modules** menu in the header toggles any module on/off for the active
+    track, and each panel gets a hover **close (eye-off)** button. Reopen a
+    closed module from the menu — it returns to its home column.
+  - **Closing a module never deletes data.** It's a pure view change: the
+    module is removed from the track's layout only; its data (streak history,
+    materials, portfolio, …) stays untouched and reappears intact on reopen.
+  - Different tracks keep independent layouts. An empty-state prompt shows when
+    every module is closed.
+
+### Changed
+- Dashboard layout moved from a single shared workspace-level setting to
+  **per-track** (`TrackState.panelColumns` + `hiddenPanels`). Existing layouts
+  are migrated on load (each track seeded from the old shared value), and the
+  per-track layout now syncs/merges via the track's own configVersion. New
+  tracks are seeded with the default layout.
+
 ## [0.3.0] - 2026-07-25
 
 ### Added
