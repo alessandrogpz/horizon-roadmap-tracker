@@ -36,7 +36,9 @@ export async function GET(req: NextRequest) {
   // Security check: restrict paths to subdirectories of ~/Documents
   const homeDocumentsDir = path.join(os.homedir(), "Documents");
   const resolvedPath = fs.realpathSync(expandedPath);
-  if (!resolvedPath.startsWith(homeDocumentsDir)) {
+  // Exact prefix match on a path boundary — a bare startsWith would also let
+  // sibling dirs like "~/Documents-private" through.
+  if (resolvedPath !== homeDocumentsDir && !resolvedPath.startsWith(homeDocumentsDir + path.sep)) {
     return NextResponse.json({ error: `Access denied: Path must be within ${homeDocumentsDir}` }, { status: 403 });
   }
 

@@ -7,6 +7,27 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.1.2] - 2026-07-25
+
+### Fixed
+- A track created through the onboarding wizard is no longer discarded on its
+  first sync. `createTrack` now marks the workspace synced, so the first Sync
+  against a Drive account that already holds data takes the merge path instead
+  of the "unsynced: overwrite local with remote" branch that would wipe the
+  new local track. (Connecting an existing account still overwrites correctly,
+  since that path syncs before any local track exists.)
+- The local `/api/git` route's home-directory guard now matches on a path
+  boundary instead of a bare string prefix, so sibling directories such as
+  `~/Documents-private` are no longer treated as inside `~/Documents`.
+
+### Performance
+- The "last synced" relative-time label now refreshes via its own interval
+  inside the header instead of a dashboard-wide 15-second ticker, so the whole
+  panel tree (streak grid, materials, weekly plan) no longer re-renders every
+  15 seconds.
+- The consistency-streak grid computation (a per-day walk across ~53 weeks) is
+  now memoized on its inputs rather than rebuilt on every parent re-render.
+
 ## [0.1.1] - 2026-07-23
 
 ### Fixed
