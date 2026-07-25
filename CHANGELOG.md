@@ -7,6 +7,17 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.4.3] - 2026-07-25
+
+### Changed
+- **Roadmap curriculum now includes a data-management thread.** Added a
+  "Data Management" topic to Phase 2 (modeling the scene graph as a
+  relational adjacency table vs. nested documents, plus a SQLite-backed
+  asset/material database feeding the OpenGL Scene Viewer deliverable) and
+  Phase 3 (piping profiler frame captures into SQLite and querying them),
+  with a callback from Phase 4's half-edge mesh topic. Master curriculum
+  table's Phase 2/3 deliverables updated to match.
+
 ## [0.4.2] - 2026-07-25
 
 ### Fixed
