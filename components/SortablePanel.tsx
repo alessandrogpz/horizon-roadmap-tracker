@@ -3,7 +3,7 @@
 import React from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Pencil } from "lucide-react";
+import { GripVertical, Pencil, EyeOff } from "lucide-react";
 
 interface SortablePanelProps {
   id: string;
@@ -13,6 +13,9 @@ interface SortablePanelProps {
   /** Optional: shows a hover-revealed edit icon next to the drag handle for
    *  panels that have a dedicated bulk editor beyond their inline editing. */
   onEdit?: () => void;
+  /** Optional: closes (hides) this module for the current track. Data-safe —
+   *  the panel is removed from the view only; reopen it from the Modules menu. */
+  onHide?: () => void;
 }
 
 /** Wraps a dashboard panel so it can be reordered — within its column or
@@ -24,7 +27,7 @@ interface SortablePanelProps {
  *  handle still works too) — reaching for a small icon is much harder on a
  *  phone, and TouchSensor's delay means a quick tap/scroll is never
  *  mistaken for a drag. */
-export default function SortablePanel({ id, children, index = 0, onEdit }: SortablePanelProps) {
+export default function SortablePanel({ id, children, index = 0, onEdit, onHide }: SortablePanelProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
   const style: React.CSSProperties = {
@@ -47,6 +50,11 @@ export default function SortablePanel({ id, children, index = 0, onEdit }: Sorta
         {onEdit && (
           <button onClick={onEdit} className={chromeBtn} title="Edit panel" aria-label="Edit panel">
             <Pencil size={13} strokeWidth={2} />
+          </button>
+        )}
+        {onHide && (
+          <button onClick={onHide} className={chromeBtn} title="Close module (keeps its data)" aria-label="Close module">
+            <EyeOff size={14} strokeWidth={2} />
           </button>
         )}
         <button
