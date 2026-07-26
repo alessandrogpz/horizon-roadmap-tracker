@@ -7,6 +7,40 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.12.0] - 2026-07-26
+
+The four hero metrics under the header — Current Streak, Timeline, Phase Day,
+Progress — are now buttons, and each opens a detail panel for the number it
+shows. Until now they were the only numbers in the app you couldn't ask a
+follow-up question about: the streak said "1 day" without saying what the
+longest run was, and Progress was a bar with no legend at all.
+
+### Added
+- **`lib/stats.ts`** (new) — pure, read-only summaries behind the panels:
+  `streakStats` (current run, longest run anywhere in the history, active days,
+  last 30, consistency, recent accomplishments), `streakCalendar` (day cells
+  from the track's start, aligned back to the preceding Sunday), `timelineStats`
+  (days passed/remaining, and each phase's day window, derived by opening each
+  phase the day after the previous one's `recommendedByDay`), `phaseStats` (day
+  within the phase, deadline, days left, task progress, and how many phases
+  behind the schedule says you are) and `progressStats`. Covered by
+  `lib/__tests__/stats.test.ts` (17 cases, clock pinned).
+- **`components/StatDetailModal.tsx`** (new) — the panel itself, one body per
+  metric, closing on Escape, backdrop click or the X. The streak body renders
+  the same `StreakGrid` the dashboard panel and the landing page use.
+
+### Changed
+- **`components/DashboardHeader.tsx`** — `StatTile` is a `<button>` (keyboard
+  focusable, with a focus ring) and takes an `onClick`; the Progress tile,
+  which was a bare `<div>`, got the same treatment. The header owns which
+  metric is open, the way it already owned the track-settings modal.
+
+Progress deliberately reports two numbers rather than one: the share of the
+work done, and the share of the time spent, with the gap between them stated in
+words. Only the dimensions that actually hold items (phases, phase tasks,
+deliverables, materials) count toward the work figure, so a track with no
+portfolio isn't permanently capped below 100%.
+
 ## [0.11.0] - 2026-07-26
 
 The consistency streak now renders as one grid that fills its panel instead of
