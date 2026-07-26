@@ -6,12 +6,13 @@ import { daysSince, todayYMD } from "@/lib/dates";
 import { currentStreakLength } from "@/lib/streak";
 import { visibleTracks } from "@/lib/selectors";
 import type { SyncStatus } from "@/components/workspace/WorkspaceProvider";
-import { Pencil, Ellipsis, Cloud, Map, Flame } from "lucide-react";
+import { Cloud, Flame } from "lucide-react";
 import HorizonMark from "@/components/HorizonMark";
 import TrackSwitcher from "@/components/TrackSwitcher";
 import TrackSettingsModal from "@/components/TrackSettingsModal";
 import ThemeToggle from "@/components/ThemeToggle";
-import ModulesMenu, { type ModuleState } from "@/components/ModulesMenu";
+import TopBarMenu, { type ModuleState } from "@/components/TopBarMenu";
+import SettingsModal from "@/components/SettingsModal";
 import StatDetailModal, { type StatMetric } from "@/components/StatDetailModal";
 
 /** Re-exported for the header's own consumers; the provider owns the type. */
@@ -31,6 +32,12 @@ interface DashboardHeaderProps {
   canDeleteTrack: boolean;
   moduleState: ModuleState[];
   onToggleModule: (id: string) => void;
+  /** Opens the weekly-rhythm editor — same dialog the Weekly Plan panel uses. */
+  onEditRhythm: () => void;
+  /** Opens the "create a rotation" flow. */
+  onNewRotation: () => void;
+  /** Re-reads the workspace from storage, after a restore or a wipe. */
+  onReloadWorkspace: () => void;
 }
 
 const getRelativeTimeString = (timestamp: number | undefined) => {
@@ -141,8 +148,9 @@ function StatTile({
   );
 }
 
-export default function DashboardHeader({ data, workspace, syncStatus, syncError, onSync, onOpenCloudMenu, onSwitchTrack, onNewTrack, onEditTrack, onDeleteTrack, canDeleteTrack, moduleState, onToggleModule }: DashboardHeaderProps) {
+export default function DashboardHeader({ data, workspace, syncStatus, syncError, onSync, onOpenCloudMenu, onSwitchTrack, onNewTrack, onEditTrack, onDeleteTrack, canDeleteTrack, moduleState, onToggleModule, onEditRhythm, onNewRotation, onReloadWorkspace }: DashboardHeaderProps) {
   const [showTrackSettings, setShowTrackSettings] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   // Which hero metric has its detail panel open, if any.
   const [openStat, setOpenStat] = useState<StatMetric | null>(null);
   const daysPassed = data.startDate && data.isSynced ? daysSince(data.startDate) : 0;
@@ -169,77 +177,65 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
 
   return (
     <header className="main-header w-full flex flex-col gap-4 border-b border-card-border pb-5">
-      {/* Line 1: Identity + track + roadmap link + sync status, all inline */}
-      <div className="flex items-center gap-3 flex-wrap text-[0.85rem]">
+      {/* Line 1: identity, which track, and whether it's saved — the things
+          you read. Everything you *do* occasionally lives in the ⋮ menu, so
+          this stays one row on a phone instead of wrapping to three. */}
+      <div className="flex items-center gap-2 sm:gap-3 flex-wrap text-[0.85rem]">
         <h1 className="text-[1.3rem] font-bold text-foreground m-0 flex items-center gap-2 tracking-[-0.01em] shrink-0">
           <HorizonMark className="h-[0.85em] w-auto text-accent" /> Horizon
         </h1>
 
-        <span className="text-card-border">|</span>
+        <span className="text-card-border hidden sm:inline">|</span>
 
-        <div className="flex items-center gap-1.5">
-          <span className="text-muted-foreground">Track:</span>
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="text-muted-foreground hidden sm:inline">Track:</span>
           <TrackSwitcher
             tracks={visibleTracks(workspace)}
             activeTrackId={workspace.activeTrackId}
             onSwitch={onSwitchTrack}
             onNewTrack={onNewTrack}
           />
-          <button
-            onClick={() => setShowTrackSettings(true)}
-            className="flex items-center text-muted-foreground hover:text-foreground cursor-pointer p-1 transition-colors"
-            title="Edit track name/color"
-            aria-label="Edit track"
-          >
-            <Pencil size={13} strokeWidth={2} />
-          </button>
         </div>
 
-        {/* Every track has its own private, editable roadmap doc. */}
-        <span className="text-card-border">|</span>
-        {data.isSynced ? (
-          <a href="/roadmap" className="link-title !text-accent no-underline font-semibold inline-flex items-center gap-1.5">
-            <Map size={14} strokeWidth={2} /> Full Roadmap
-          </a>
-        ) : (
-          <span className="text-muted-foreground/70 font-semibold cursor-not-allowed inline-flex items-center gap-1.5" title="Connect Google Drive to unlock roadmap">
-            <Map size={14} strokeWidth={2} /> Full Roadmap (Locked)
-          </span>
-        )}
+        <span className="text-card-border hidden sm:inline">|</span>
 
-        <span className="text-card-border">|</span>
-
-        {/* Cloud status, clickable to sync */}
+        {/* Sync status, clickable to sync. Stays in the bar on purpose: a
+            status indicator hidden inside a menu stops being one. */}
         <div
           onClick={onSync}
-          className={`flex items-center gap-2 text-muted-foreground select-none w-fit py-1 px-2 -mx-2 rounded transition-colors duration-200 ${
+          className={`flex items-center gap-2 text-muted-foreground select-none w-fit py-1 px-2 -mx-2 rounded transition-colors duration-200 min-w-0 ${
             syncStatus === "syncing" ? "cursor-not-allowed" : "cursor-pointer hover:bg-surface-hover"
           }`}
           title={syncStatus === "error" ? syncError : "Click to sync with Google Drive"}
         >
           <div className={`w-2 h-2 rounded-full transition-all duration-300 shrink-0 ${dotColor}`} />
-          <span className="font-medium">
+          <span className="font-medium truncate">
             {syncStatus === "syncing" && "Syncing..."}
             {syncStatus === "error" && "Sync Error (retry)"}
             {syncStatus === "success" && "Synced"}
             {syncStatus === "idle" && (workspace.hasUnsyncedChanges ? "Unsynced (Click to Sync)" : "Synced with Cloud")}
           </span>
-          <span className="text-card-border">•</span>
-          <LastSyncedLabel timestamp={workspace.lastSyncTime} />
+          <span className="text-card-border hidden sm:inline">•</span>
+          <span className="hidden sm:inline">
+            <LastSyncedLabel timestamp={workspace.lastSyncTime} />
+          </span>
         </div>
 
-        <button
-          onClick={onOpenCloudMenu}
-          className="flex items-center justify-center w-7 h-7 rounded-md bg-transparent border border-card-border text-muted-foreground cursor-pointer hover:text-foreground hover:border-card-border-hover shrink-0 transition-colors"
-          title="Cloud connection & backup"
-          aria-label="Cloud connection & backup"
-        >
-          <Ellipsis size={15} strokeWidth={2} />
-        </button>
-
-        <ModulesMenu modules={moduleState} trackName={data.meta.name} onToggle={onToggleModule} />
-
-        <ThemeToggle />
+        <div className="ml-auto flex items-center gap-2">
+          <ThemeToggle />
+          <TopBarMenu
+            trackName={data.meta.name}
+            roadmapEnabled={!!data.isSynced}
+            modules={moduleState}
+            onToggleModule={onToggleModule}
+            onEditTrack={() => setShowTrackSettings(true)}
+            onEditRhythm={onEditRhythm}
+            onNewRotation={onNewRotation}
+            onNewTrack={onNewTrack}
+            onOpenCloud={onOpenCloudMenu}
+            onOpenSettings={() => setShowSettings(true)}
+          />
+        </div>
       </div>
 
       {/* Hero metrics — the "am I on track?" glance, up front. */}
@@ -297,6 +293,14 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
 
       {openStat && (
         <StatDetailModal metric={openStat} track={data} onClose={() => setOpenStat(null)} />
+      )}
+
+      {showSettings && (
+        <SettingsModal
+          onClose={() => setShowSettings(false)}
+          onOpenCloudMenu={onOpenCloudMenu}
+          onRestored={onReloadWorkspace}
+        />
       )}
 
       {showTrackSettings && (

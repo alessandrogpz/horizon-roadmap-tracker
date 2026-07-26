@@ -1,0 +1,456 @@
+"use client";
+
+import React, { useEffect, useRef, useState } from "react";
+import {
+  AlertTriangle,
+  Bell,
+  Clock,
+  Download,
+  HardDrive,
+  Info,
+  Monitor,
+  Moon,
+  Sun,
+  Upload,
+  X,
+} from "lucide-react";
+import packageJson from "../package.json";
+import { exportSingleFile, exportZipBundle } from "@/lib/export";
+import {
+  InvalidBackupError,
+  readBackupFile,
+  restoreBackup,
+  summarizeBackup,
+  wipeLocalData,
+  type BackupSummary,
+} from "@/lib/import";
+import type { BackupBundle } from "@/lib/export";
+import { updateSettings } from "@/lib/settings";
+import { useAppSettings } from "@/lib/useAppSettings";
+import { getThemePreference, setThemePreference, type ThemePreference } from "@/lib/theme";
+
+/**
+ * App-level settings: the choices that belong to this device rather than to a
+ * track. Track identity, rhythm and rotations stay in their own dialogs — a
+ * user looking for "start date" should never find it next to "Client ID".
+ */
+
+function Row({
+  icon,
+  title,
+  hint,
+  children,
+}: {
+  icon?: React.ReactNode;
+  title: string;
+  hint?: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-2 border-b border-card-border py-4 last:border-b-0 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+      <div className="flex gap-2.5">
+        {icon && <span className="mt-0.5 text-muted-foreground">{icon}</span>}
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[0.9rem] font-semibold text-foreground">{title}</span>
+          {hint && <span className="text-[0.78rem] leading-snug text-muted-foreground">{hint}</span>}
+        </div>
+      </div>
+      {children && <div className="flex shrink-0 items-center gap-2">{children}</div>}
+    </div>
+  );
+}
+
+function Segmented<T extends string>({
+  value,
+  options,
+  onChange,
+}: {
+  value: T;
+  options: { value: T; label: string; icon?: React.ReactNode }[];
+  onChange: (value: T) => void;
+}) {
+  return (
+    <div className="flex rounded-[var(--radius-control)] border border-card-border bg-surface-muted p-0.5">
+      {options.map((option) => (
+        <button
+          key={option.value}
+          onClick={() => onChange(option.value)}
+          className={`flex cursor-pointer items-center gap-1.5 rounded-[5px] px-2.5 py-1 text-[0.78rem] transition-colors ${
+            option.value === value
+              ? "bg-accent/15 text-accent font-semibold"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          {option.icon}
+          {option.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+const selectClass =
+  "rounded-[var(--radius-control)] border border-card-border bg-input-bg px-2.5 py-1.5 text-[0.8rem] text-foreground outline-none focus-visible:shadow-[0_0_0_3px_var(--ring)]";
+
+const quietButton =
+  "rounded-[var(--radius-control)] border border-card-border bg-surface-muted px-3 py-1.5 text-[0.78rem] text-foreground cursor-pointer transition-colors hover:border-card-border-hover hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-50";
+
+export default function SettingsModal({
+  onClose,
+  onOpenCloudMenu,
+  onRestored,
+}: {
+  onClose: () => void;
+  /** Opens the existing Drive connect/backup dialog — connection lives there. */
+  onOpenCloudMenu: () => void;
+  /** Called after a restore or a wipe, so the app can reload the workspace. */
+  onRestored: () => void;
+}) {
+  const settings = useAppSettings();
+  // Lazy initializers rather than an effect: both read browser state that
+  // can't change while this dialog is open, and the dialog only ever mounts
+  // client-side (it's rendered behind a click), so there's no SSR snapshot to
+  // mismatch.
+  const [theme, setTheme] = useState<ThemePreference>(getThemePreference);
+  const [notifyState, setNotifyState] = useState<NotificationPermission | "unsupported">(() =>
+    typeof Notification === "undefined" ? "unsupported" : Notification.permission
+  );
+  const [storage, setStorage] = useState<string>("");
+  const [busy, setBusy] = useState<"export-json" | "export-zip" | "restore" | null>(null);
+  const [error, setError] = useState("");
+  const [pending, setPending] = useState<{ bundle: BackupBundle; summary: BackupSummary } | null>(null);
+  const [confirmWipe, setConfirmWipe] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  // How much this origin is actually holding — worth knowing before deciding
+  // whether a backup matters. Async, so it lands after first paint.
+  useEffect(() => {
+    navigator.storage?.estimate?.().then((estimate) => {
+      if (estimate.usage === undefined) return;
+      const mb = estimate.usage / (1024 * 1024);
+      setStorage(mb < 0.1 ? "< 0.1 MB" : `${mb.toFixed(1)} MB`);
+    });
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const handleExport = async (kind: "export-json" | "export-zip") => {
+    setBusy(kind);
+    setError("");
+    try {
+      await (kind === "export-json" ? exportSingleFile() : exportZipBundle());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Export failed");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const handleFile = async (file: File | undefined) => {
+    if (!file) return;
+    setError("");
+    try {
+      const bundle = await readBackupFile(file);
+      setPending({ bundle, summary: summarizeBackup(bundle) });
+    } catch (err) {
+      setError(
+        err instanceof InvalidBackupError ? err.message : "That file couldn't be read as a backup."
+      );
+    } finally {
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
+  const confirmRestore = async () => {
+    if (!pending) return;
+    setBusy("restore");
+    setError("");
+    try {
+      await restoreBackup(pending.bundle);
+      setPending(null);
+      onRestored();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Restore failed");
+      setBusy(null);
+    }
+  };
+
+  const doWipe = async () => {
+    await wipeLocalData();
+    onRestored();
+    window.location.assign("/");
+  };
+
+  const requestNotifications = async () => {
+    if (typeof Notification === "undefined") return;
+    const result = await Notification.requestPermission();
+    setNotifyState(result);
+    if (result === "granted") updateSettings({ reminder: { ...settings.reminder, enabled: true } });
+  };
+
+  return (
+    <div
+      onClick={onClose}
+      className="modal-overlay fixed inset-0 z-[1000] flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Settings"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="glass-panel relative flex max-h-[90vh] w-full max-w-[640px] flex-col gap-1 overflow-y-auto border-accent-muted"
+      >
+        <button
+          onClick={onClose}
+          className="absolute right-4 top-4 flex cursor-pointer items-center text-muted-foreground transition-colors hover:text-foreground"
+          aria-label="Close"
+        >
+          <X size={16} strokeWidth={2} />
+        </button>
+
+        <h3 className="m-0 pr-8 text-[1.1rem] font-semibold text-foreground">Settings</h3>
+        <p className="m-0 mb-2 text-[0.8rem] text-muted-foreground">
+          These apply to this device, and to every track on it. A track&apos;s own name, dates,
+          rhythm and rotations live in its settings.
+        </p>
+
+        {/* ── Appearance ─────────────────────────────────────────────── */}
+        <Row
+          icon={<Sun size={16} strokeWidth={2} />}
+          title="Theme"
+          hint="System follows your OS setting and keeps following it."
+        >
+          <Segmented<ThemePreference>
+            value={theme}
+            onChange={(next) => {
+              setTheme(next);
+              setThemePreference(next);
+            }}
+            options={[
+              { value: "light", label: "Light", icon: <Sun size={13} /> },
+              { value: "dark", label: "Dark", icon: <Moon size={13} /> },
+              { value: "system", label: "System", icon: <Monitor size={13} /> },
+            ]}
+          />
+        </Row>
+
+        {/* ── Behaviour ──────────────────────────────────────────────── */}
+        <Row
+          icon={<Clock size={16} strokeWidth={2} />}
+          title="My day starts at"
+          hint="Work logged before this hour counts for the previous day, so a late session doesn't land on tomorrow and break a streak."
+        >
+          <select
+            value={settings.dayRolloverHour}
+            onChange={(e) => updateSettings({ dayRolloverHour: Number(e.target.value) })}
+            className={selectClass}
+          >
+            {Array.from({ length: 12 }, (_, h) => (
+              <option key={h} value={h}>
+                {h === 0 ? "Midnight" : `${String(h).padStart(2, "0")}:00`}
+              </option>
+            ))}
+          </select>
+        </Row>
+
+        <Row
+          title="Weeks start on"
+          hint="Which day each column of the consistency grid begins with."
+        >
+          <Segmented<"sun" | "mon">
+            value={settings.weekStartsOn}
+            onChange={(weekStartsOn) => updateSettings({ weekStartsOn })}
+            options={[
+              { value: "sun", label: "Sunday" },
+              { value: "mon", label: "Monday" },
+            ]}
+          />
+        </Row>
+
+        <Row
+          icon={<Bell size={16} strokeWidth={2} />}
+          title="Daily reminder"
+          hint={
+            notifyState === "unsupported"
+              ? "This browser doesn't support notifications."
+              : notifyState === "denied"
+                ? "Notifications are blocked for this site in your browser settings."
+                : "Nudges you if nothing has been recorded by this time. It can only fire while Horizon is open in a tab or installed — there's no server sending push."
+          }
+        >
+          {notifyState === "granted" ? (
+            <>
+              <input
+                type="time"
+                value={settings.reminder.time}
+                onChange={(e) =>
+                  updateSettings({ reminder: { ...settings.reminder, time: e.target.value } })
+                }
+                className={selectClass}
+              />
+              <Segmented<"on" | "off">
+                value={settings.reminder.enabled ? "on" : "off"}
+                onChange={(v) =>
+                  updateSettings({ reminder: { ...settings.reminder, enabled: v === "on" } })
+                }
+                options={[
+                  { value: "on", label: "On" },
+                  { value: "off", label: "Off" },
+                ]}
+              />
+            </>
+          ) : (
+            <button
+              onClick={requestNotifications}
+              disabled={notifyState !== "default"}
+              className={quietButton}
+            >
+              Allow notifications
+            </button>
+          )}
+        </Row>
+
+        {/* ── Data ───────────────────────────────────────────────────── */}
+        <Row
+          icon={<HardDrive size={16} strokeWidth={2} />}
+          title="Cloud sync"
+          hint="Connect, disconnect, or check which Google account this device syncs through."
+        >
+          <button
+            onClick={() => {
+              onClose();
+              onOpenCloudMenu();
+            }}
+            className={quietButton}
+          >
+            Manage connection
+          </button>
+        </Row>
+
+        <Row
+          icon={<Download size={16} strokeWidth={2} />}
+          title="Export a backup"
+          hint="Every track, roadmap, rotation, material and note. The .zip additionally breaks each document out as readable markdown."
+        >
+          <button
+            onClick={() => handleExport("export-json")}
+            disabled={busy !== null}
+            className={quietButton}
+          >
+            {busy === "export-json" ? "Exporting…" : ".json"}
+          </button>
+          <button
+            onClick={() => handleExport("export-zip")}
+            disabled={busy !== null}
+            className={quietButton}
+          >
+            {busy === "export-zip" ? "Exporting…" : ".zip"}
+          </button>
+        </Row>
+
+        <Row
+          icon={<Upload size={16} strokeWidth={2} />}
+          title="Restore from a backup"
+          hint="Replaces everything on this device with the contents of a .json or .zip export."
+        >
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".json,.zip,application/json,application/zip"
+            onChange={(e) => handleFile(e.target.files?.[0])}
+            className="hidden"
+          />
+          <button onClick={() => fileRef.current?.click()} disabled={busy !== null} className={quietButton}>
+            Choose file…
+          </button>
+        </Row>
+
+        {pending && (
+          <div className="flex flex-col gap-3 rounded-[var(--radius-inner)] border border-accent-muted bg-accent/[0.06] px-4 py-3">
+            <div className="flex flex-col gap-1">
+              <span className="text-[0.85rem] font-semibold text-foreground">
+                Restore this backup?
+              </span>
+              <span className="text-[0.8rem] leading-snug text-muted-foreground">
+                {pending.summary.trackCount} track
+                {pending.summary.trackCount === 1 ? "" : "s"} (
+                {pending.summary.trackNames.slice(0, 3).join(", ")}
+                {pending.summary.trackNames.length > 3 ? "…" : ""}), {pending.summary.noteCount} note
+                {pending.summary.noteCount === 1 ? "" : "s"}, {pending.summary.activeDays} active day
+                {pending.summary.activeDays === 1 ? "" : "s"}
+                {pending.summary.exportedAt
+                  ? `, exported ${new Date(pending.summary.exportedAt).toLocaleDateString()}`
+                  : ""}
+                . Everything currently on this device is replaced — export first if you&apos;re not
+                sure.
+              </span>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={confirmRestore} disabled={busy === "restore"} className="btn btn-sm btn-solid">
+                {busy === "restore" ? "Restoring…" : "Replace my data"}
+              </button>
+              <button onClick={() => setPending(null)} className={quietButton}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        <Row
+          icon={<Info size={16} strokeWidth={2} />}
+          title="This device"
+          hint={`Horizon v${packageJson.version}${storage ? ` · about ${storage} stored locally` : ""}`}
+        >
+          <a href="/landing" className={quietButton}>
+            About Horizon
+          </a>
+        </Row>
+
+        {/* ── Danger zone ────────────────────────────────────────────── */}
+        <div className="mt-2 flex flex-col gap-3 rounded-[var(--radius-inner)] border border-red-500/30 bg-red-500/[0.05] px-4 py-3">
+          <div className="flex gap-2.5">
+            <AlertTriangle size={16} strokeWidth={2} className="mt-0.5 shrink-0 text-red-400" />
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[0.9rem] font-semibold text-foreground">Delete local data</span>
+              <span className="text-[0.78rem] leading-snug text-muted-foreground">
+                Clears every track, note and credential from this browser. Anything already synced
+                stays in your Drive; this device just forgets it.
+              </span>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {confirmWipe ? (
+              <>
+                <button
+                  onClick={doWipe}
+                  className="cursor-pointer rounded-[var(--radius-control)] border border-red-500/40 bg-red-500/15 px-3 py-1.5 text-[0.78rem] font-semibold text-red-400"
+                >
+                  Yes, delete everything
+                </button>
+                <button onClick={() => setConfirmWipe(false)} className={quietButton}>
+                  Keep my data
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => setConfirmWipe(true)}
+                className="cursor-pointer rounded-[var(--radius-control)] border border-red-500/30 bg-transparent px-3 py-1.5 text-[0.78rem] text-red-400 transition-colors hover:bg-red-500/10"
+              >
+                Delete local data…
+              </button>
+            )}
+          </div>
+        </div>
+
+        {error && <p className="m-0 pt-2 text-[0.8rem] text-red-400">{error}</p>}
+      </div>
+    </div>
+  );
+}
