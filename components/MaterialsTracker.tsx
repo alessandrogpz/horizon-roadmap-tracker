@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { BookOpen, Check, X } from "lucide-react";
+import { BookOpen, Check, ChevronDown, X } from "lucide-react";
 import { fetchGitStats, hasGitSource } from "@/lib/gitStats";
 import { fetchNotes, saveNotes } from "@/lib/notes";
 import { renderMarkdownToHtml } from "@/lib/markdown";
@@ -14,6 +14,20 @@ interface MaterialsTrackerProps {
   onAddMaterial: (material: Omit<Material, "id">) => void;
   onDeleteMaterial: (id: string) => void;
   onOpenLink: (link: string) => void;
+}
+
+/** Which category groups are folded shut. A per-device view preference, so it
+ *  lives in localStorage rather than on the track (which syncs to Drive). */
+const COLLAPSED_KEY = "horizon-materials-collapsed";
+
+function readCollapsedCategories(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(COLLAPSED_KEY) || "[]");
+    return Array.isArray(parsed) ? parsed.filter((c): c is string => typeof c === "string") : [];
+  } catch {
+    return [];
+  }
 }
 
 const inputClass = "w-full p-1 rounded bg-input-bg border border-card-border text-foreground outline-none font-[inherit] text-[0.85rem]";
@@ -50,6 +64,22 @@ export default function MaterialsTracker({
 
   // Git stats state
   const [gitStats, setGitStats] = useState<{ [id: string]: GitStats }>({});
+
+  // Collapsed category groups
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(readCollapsedCategories()));
+
+  const toggleCategory = (category: string) => {
+    setCollapsed(prev => {
+      const next = new Set(prev);
+      if (!next.delete(category)) next.add(category);
+      try {
+        localStorage.setItem(COLLAPSED_KEY, JSON.stringify([...next]));
+      } catch {
+        // localStorage unavailable (private mode) — folding still works for this session.
+      }
+      return next;
+    });
+  };
 
   // Notes drawer states
   const [activeNotesId, setActiveNotesId] = useState<string | null>(null);
@@ -298,12 +328,33 @@ export default function MaterialsTracker({
       )}
 
       <div className="flex flex-col gap-5">
-        {Object.entries(grouped).map(([category, items]) => (
+        {Object.entries(grouped).map(([category, items]) => {
+          const isCollapsed = collapsed.has(category);
+          const groupId = `materials-group-${category.replace(/\W+/g, "-").toLowerCase()}`;
+
+          return (
           <div key={category}>
-            <h3 className="text-xs text-accent uppercase tracking-[0.05em] border-l-2 border-accent pl-2 mb-3 font-bold">
-              {category}
+            <h3 className={isCollapsed ? "" : "mb-3"}>
+              <button
+                type="button"
+                onClick={() => toggleCategory(category)}
+                aria-expanded={!isCollapsed}
+                aria-controls={groupId}
+                className="flex w-full items-center gap-1.5 py-0.5 text-xs text-accent uppercase tracking-[0.05em] border-l-2 border-accent pl-2 font-bold bg-transparent text-left cursor-pointer hover:opacity-75 transition-opacity"
+              >
+                <ChevronDown
+                  size={13}
+                  strokeWidth={3}
+                  className={`shrink-0 transition-transform duration-200 ${isCollapsed ? "-rotate-90" : ""}`}
+                />
+                <span>{category}</span>
+                <span className="text-muted-foreground font-mono font-normal">({items.length})</span>
+              </button>
             </h3>
-            <div className="flex flex-col border border-card-border rounded-md bg-surface-muted overflow-hidden">
+            <div
+              id={groupId}
+              className={`${isCollapsed ? "hidden" : "flex"} flex-col border border-card-border rounded-md bg-surface-muted overflow-hidden`}
+            >
               {items.map((mat, idx) => {
                 const isEditing = editingId === mat.id;
                 const stats = gitStats[mat.id];
@@ -509,7 +560,8 @@ export default function MaterialsTracker({
               })}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Notes Drawer Overlay */}

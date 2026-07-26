@@ -7,6 +7,27 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.9.0] - 2026-07-26
+
+Collapsible category groups in Materials. A long reading list pushed every
+other panel down the page; now each category heading is a disclosure control,
+so groups you're not actively working through can be folded out of the way.
+
+### Added
+- **Fold/unfold per category** in `components/MaterialsTracker.tsx` — the
+  category heading became a button with a rotating chevron and an item count
+  (e.g. `Mathematics (2)`), carrying `aria-expanded`/`aria-controls` for
+  screen readers. The count stays visible when folded, so a closed group still
+  says how much is inside.
+- **Fold state persists** under the `horizon-materials-collapsed` localStorage
+  key. It's a per-device view preference, not track data, so it deliberately
+  stays out of the workspace record and off Drive sync — the same reasoning as
+  `horizon-theme`. A device with no stored value starts fully expanded.
+
+### Notes
+- Folded groups are hidden with a display utility rather than unmounted, so an
+  in-progress edit form inside a group survives folding it shut and back open.
+
 ## [0.8.0] - 2026-07-26
 
 A real logo. The app had three different marks in the three places you
