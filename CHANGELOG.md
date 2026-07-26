@@ -7,6 +7,21 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.13.2] - 2026-07-26
+
+### Fixed
+- **Dropdown lists still unreadable in dark mode.** 0.13.1 set `color-scheme`,
+  which is enough on browsers that apply it to the popup a `<select>` opens —
+  but not on all of them: each `<option>` kept inheriting the control's light
+  `color` while the list stayed on its default white backdrop, so the rows read
+  as pale grey on white and only the one under the cursor was legible. Now the
+  option colours are stated outright (`select option { background-color:
+  var(--card-bg); color: var(--foreground) }`), which Chrome honours on Windows
+  and Linux; `color-scheme` stays for macOS, which draws its own list and
+  ignores per-option colours. Belt and braces, because there's no single
+  property every platform respects. Disabled options get the subtle-foreground
+  token so they stay visible-but-quiet against the dark backdrop.
+
 ## [0.13.1] - 2026-07-26
 
 Three fixes on top of 0.13.0.
