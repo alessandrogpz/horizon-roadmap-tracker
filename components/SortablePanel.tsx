@@ -31,7 +31,13 @@ export default function SortablePanel({ id, children, index = 0, onEdit, onHide 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
   const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
+    // Translate only, never CSS.Transform — that one also emits the scaleX/
+    // scaleY dnd-kit computes from the ratio between the dragged panel and
+    // whatever it's currently over. Dashboard panels differ enormously in
+    // height (a Focus Timer against a full Roadmap Timeline), so those factors
+    // visibly squashed and stretched the panel's text mid-drag, snapping back
+    // only once the transform was dropped on release.
+    transform: CSS.Translate.toString(transform),
     transition,
     opacity: isDragging ? 0.4 : 1,
   };
