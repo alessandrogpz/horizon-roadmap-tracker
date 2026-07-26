@@ -261,7 +261,7 @@
    "tasks": [
     {
      "id": "t3",
-     "title": "C++ Book (PPP) — ch 1-10 core; 17-21 may carry",
+     "title": "C++ Book (PPP 3rd ed) — ch 1-9, 12, 15-17; 18-21 may carry",
      "completed": false
     },
     {
@@ -294,7 +294,7 @@
     "focus": [
      {
       "item": "Programming: Principles and Practice Using C++",
-      "desc": "Pointers, references, manual memory allocation, and STL containers. Prioritise ch 8-10 — the ray tracer depends on them; ch 17-21 may carry into Phase 2."
+      "desc": "Pointers, references, free store, and essential operations. Prioritise ch 8-9 (operator overloading, file I/O) and 15-17 — the ray tracer depends on them; ch 18-21 may carry into Phase 2. Ch 10-11 and 13-14 (display model, GUI) skipped deliberately."
      },
      {
       "item": "Lengyel Vol 1: Mathematics",
@@ -350,7 +350,7 @@
     },
     {
      "id": "t2_ppp",
-     "title": "Finish PPP ch 17-21 (carry-over)",
+     "title": "Finish PPP ch 18-21 (carry-over)",
      "completed": false
     },
     {
@@ -401,8 +401,8 @@
       "desc": "Core profile, GLSL, texturing, Blinn-Phong lighting, Assimp model loading, framebuffers, cubemaps, instancing, shadow mapping and normal mapping."
      },
      {
-      "item": "PPP ch 17-21 (carry-over)",
-      "desc": "Templates, RAII, STL algorithms and lambdas — applied immediately as RAII wrappers around OpenGL buffer, texture and shader handles."
+      "item": "PPP ch 18-21 (carry-over)",
+      "desc": "Templates, containers, maps, STL algorithms and lambdas, plus 18.5 resource-management pointers — applied immediately as RAII wrappers around OpenGL buffer, texture and shader handles. Ch 21 is the last chapter: PPP is finished here."
      },
      {
       "item": "Dear ImGui Integration",

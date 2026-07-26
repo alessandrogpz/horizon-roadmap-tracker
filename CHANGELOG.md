@@ -7,6 +7,37 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.9.1] - 2026-07-26
+
+Corrected the PPP chapter numbers in the engine track's roadmap fixtures. The
+curriculum was drafted against *Programming: Principles and Practice Using C++*
+**2nd edition**, but the copy actually being read is the **3rd**, which dropped
+the old chapter 1, merged the two I/O chapters, added a new chapter 17, split
+the old chapter 21, and cut chapters 22-27. Under 3rd-edition numbering the old
+groups pointed at the wrong material: Phase 1's "ch 1-10 core" ended five
+chapters short of any pointer or free-store content while walking into the
+book's GUI-library block, and the roadmap's "prioritise ch 8-10 — the ray
+tracer depends on them" named functions, classes and I/O rather than the
+memory-management chapters it meant.
+
+### Changed
+- **`lib/legacyPersonalData.ts`** (`LEGACY_ROADMAP_CONTENT`) — Phase 1 §1 now
+  reads ch 1-6, 7-8, 9, 12, 15-17 with the reason each group is there, and
+  Phase 2 §1 reads ch 18, 19, 20, 21 one bullet apiece. Added an explicit
+  edition warning, a "deliberately skipped: ch 10, 11 past 11.2, 13, 14"
+  paragraph so the GUI chapters don't read as an oversight, and a carry-over
+  rule ordering the phase 1-9 → 12 → 15-17 (15-17 may slip into Phase 2, but
+  never behind 18-21 — pointers gate the ray tracer, templates don't). The
+  Phase 1 overview row and both resource lines now say "3rd ed".
+- **`data/database.json`** — the four Roadmap Timeline strings holding chapter
+  numbers, kept in step with the document above per the "the timeline is a
+  summary of this document, never a second plan" rule.
+
+Both files are migration/test fixtures — `LEGACY_ROADMAP_CONTENT` is read once
+by the Dexie v1→v2 upgrade and `data/database.json` only by
+`lib/__tests__/mergeWorkspace.test.ts` — so neither reaches an installation
+that has already migrated. The live roadmap and timeline are edited in the app.
+
 ## [0.9.0] - 2026-07-26
 
 Collapsible category groups in Materials. A long reading list pushed every

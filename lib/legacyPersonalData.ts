@@ -31,7 +31,7 @@ This document is the reference roadmap for all four study phases. It outlines to
 
 | Phase | Months | Days | Ends | Core Goal | Primary Resources | Key Deliverable |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Phase 1** | 1–3 | 1–88 | 2026-08-31 | Language Fundamentals & Software Rendering | C++ (PPP), Lengyel Vol 1, Ray Tracer Challenge | CPU Ray Tracer |
+| **Phase 1** | 1–3 | 1–88 | 2026-08-31 | Language Fundamentals & Software Rendering | C++ (PPP 3rd ed), Lengyel Vol 1, Ray Tracer Challenge | CPU Ray Tracer |
 | **Phase 2** | 4–6 | 89–182 | 2026-12-03 | Real-Time Rendering, End to End | LearnOpenGL, Calculus 1 | OpenGL Scene Viewer |
 | **Phase 3** | 7–11 | 183–330 | 2027-04-30 | Engine Architecture & Optimization | Gregory, Lengyel Vol 2, CMU 15-462, Calculus 2 | Optimized Engine + Asset Pipeline |
 | **Phase 4** | 12–13 | 331–392 | 2027-07-01 | Explicit GPU Control | Vulkan Tutorial, Multivariable Calculus | Vulkan Mesh Renderer |
@@ -59,15 +59,20 @@ Read this before the phase outlines — it explains why the phases are the lengt
 **Days 1–88, ending 2026-08-31. Deliverable: CPU Ray Tracer.**
 
 #### 1. Programming (C++)
-**Resource**: *Programming: Principles and Practice Using C++ (Stroustrup)*
+**Resource**: *Programming: Principles and Practice Using C++, 3rd edition (Stroustrup)*
+
+All chapter numbers below are **3rd edition**. The 3rd edition renumbered heavily against the 2nd — it dropped the old chapter 1, merged the two I/O chapters, added a new chapter 17, split the old chapter 21 in two, and cut chapters 22-27 entirely. Do not translate these numbers against an older printing.
 
 **Topics**:
-- Chapter 1-7: C++ syntax, types, and compiler basics
-- Chapter 8-10: Pointers, references, vectors, and manual memory management
-- Chapter 17-19: Templates, containers, exceptions, and resource allocation (RAII)
-- Chapter 20-21: STL algorithms, lambdas, and iterator models
+- Chapter 1-6: C++ syntax, types, computation, errors, and compiler/linker basics
+- Chapter 7-8: Functions, then classes. **8.6 operator overloading is mandatory** — the ray tracer is tuple and matrix arithmetic from the first page. 8.4 ("Evolving a class: Date") is the pattern to copy for \`Tuple\` and \`Matrix\`.
+- Chapter 9: I/O streams — 9.9 reading a structured file, 9.10 formatting, 9.11 string streams. Needed to emit PPM images and parse scene descriptions.
+- Chapter 12: Class design — design principles, base and derived classes, virtual functions. Skim 11.1-11.2 first for context only. This is the one place the book teaches inheritance, and its worked example is a \`Shape\` base class with derived shapes — the ray tracer's sphere/plane/cube hierarchy, already designed for you.
+- Chapter 15-17: Vector and free store, arrays/pointers/references, essential operations. This is the manual memory management thread: destructors, \`this\`, list initialization, and copying vs. moving (17.4) — the prerequisite for math types with value semantics that never allocate.
 
-**Carry-over**: chapters 17-21 are expected to land in Phase 2. Prioritise 8-10 inside this phase — the ray tracer depends on them and the later chapters do not.
+**Deliberately skipped**: chapters 10, 11 (past 11.2), 13, and 14 — the display model, graphics classes, function graphing, and GUI chapters, roughly 120 pages. They are built on the book's own teaching GUI library, which is a dead end here: graphics comes from the Ray Tracer Challenge, then LearnOpenGL, then Lengyel. This is a decision, not an oversight.
+
+**Carry-over**: chapters 18-21 are expected to land in Phase 2. Inside this phase, priority runs 1-9, then 12, then 15-17. If something has to slip, let 15-17 slip into early Phase 2 — but never ahead of 18-21, because pointers and the free store gate the ray tracer and templates do not.
 
 #### 2. Mathematics (Linear Algebra)
 **Resource**: *Foundations of Game Engine Development, Vol 1: Mathematics (Lengyel)*
@@ -109,12 +114,16 @@ Read this before the phase outlines — it explains why the phases are the lengt
 This phase has one job: move from software rendering to a real-time GPU renderer you can fly a camera around. Engine architecture, spatial optimization, and asset databases are deliberately *not* here — they are Phase 3.
 
 #### 1. Programming (C++, finishing)
-**Resource**: *Programming: Principles and Practice Using C++ (Stroustrup)* — carry-over
+**Resource**: *Programming: Principles and Practice Using C++, 3rd edition (Stroustrup)* — carry-over
 
 **Topics**:
-- Chapter 17-19: templates, containers, exceptions, RAII
-- Chapter 20-21: STL algorithms, lambdas, iterator models
+- Chapter 18: Templates and exceptions. **18.5, resource-management pointers**, is the RAII skill this phase spends immediately.
+- Chapter 19: Containers and iterators — sequences, linked lists, and generalizing your own \`Vector\` once more.
+- Chapter 20: Maps and sets — \`map\`, \`unordered_map\`, \`set\`, and ranges. 20.4 (timing) is a free win for a renderer.
+- Chapter 21: Algorithms — standard-library algorithms, function objects and lambdas, sorting and searching.
 - Applied immediately: RAII wrappers for OpenGL handles (buffers, textures, shader programs) so GPU resources free themselves.
+
+The 3rd edition ends at chapter 21, so PPP is **finished** at the end of this phase — there is no tail of chapters left over. If chapters 15-17 slipped out of Phase 1, clear them before starting 18.
 
 #### 2. Mathematics (Calculus 1)
 **Resource**: *Calculus: Early Transcendentals (Stewart)*
