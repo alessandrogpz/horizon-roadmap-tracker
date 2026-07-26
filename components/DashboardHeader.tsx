@@ -12,6 +12,7 @@ import TrackSwitcher from "@/components/TrackSwitcher";
 import TrackSettingsModal from "@/components/TrackSettingsModal";
 import ThemeToggle from "@/components/ThemeToggle";
 import ModulesMenu, { type ModuleState } from "@/components/ModulesMenu";
+import StatDetailModal, { type StatMetric } from "@/components/StatDetailModal";
 
 /** Re-exported for the header's own consumers; the provider owns the type. */
 export type { SyncStatus };
@@ -110,31 +111,40 @@ function ProgressRing({ pct, size = 60 }: { pct: number; size?: number }) {
   );
 }
 
-/** One hero stat tile — elevated surface, muted label, large mono value. */
+/** One hero stat tile — elevated surface, muted label, large mono value.
+ *  Every tile opens its own detail panel, so it's a button, not a div. */
 function StatTile({
   label,
   icon,
+  onClick,
   children,
   className = "",
 }: {
   label: string;
   icon?: React.ReactNode;
+  onClick: () => void;
   children: React.ReactNode;
   className?: string;
 }) {
   return (
-    <div className={`flex items-center gap-3 rounded-[10px] border border-card-border bg-card/60 px-4 py-3 ${className}`}>
+    <button
+      onClick={onClick}
+      title={`${label} — click for detail`}
+      className={`flex items-center gap-3 rounded-[10px] border border-card-border bg-card/60 px-4 py-3 text-left cursor-pointer transition-colors duration-200 hover:border-card-border-hover hover:bg-surface-hover focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_var(--ring)] ${className}`}
+    >
       {icon}
       <div className="flex flex-col">
         <span className="text-[0.65rem] uppercase tracking-[0.08em] text-muted-foreground font-semibold">{label}</span>
         {children}
       </div>
-    </div>
+    </button>
   );
 }
 
 export default function DashboardHeader({ data, workspace, syncStatus, syncError, onSync, onOpenCloudMenu, onSwitchTrack, onNewTrack, onEditTrack, onDeleteTrack, canDeleteTrack, moduleState, onToggleModule }: DashboardHeaderProps) {
   const [showTrackSettings, setShowTrackSettings] = useState(false);
+  // Which hero metric has its detail panel open, if any.
+  const [openStat, setOpenStat] = useState<StatMetric | null>(null);
   const daysPassed = data.startDate && data.isSynced ? daysSince(data.startDate) : 0;
   const daysInPhase: number | string = data.isSynced
     ? daysSince(data.currentPhaseStartDate || data.startDate)
@@ -237,6 +247,7 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
         <StatTile
           label="Current Streak"
           icon={<Flame size={20} strokeWidth={2} className="text-warning shrink-0" />}
+          onClick={() => setOpenStat("streak")}
         >
           <div className="flex items-baseline gap-1.5">
             <CountUp value={streak} className="text-[1.5rem] font-bold font-mono text-foreground leading-none" />
@@ -246,6 +257,7 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
 
         <StatTile
           label="Timeline"
+          onClick={() => setOpenStat("timeline")}
           icon={
             <div className="relative shrink-0 grid place-items-center" style={{ width: 60, height: 60 }}>
               <ProgressRing pct={progressPct} />
@@ -261,11 +273,15 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
           </div>
         </StatTile>
 
-        <StatTile label="Phase Day">
+        <StatTile label="Phase Day" onClick={() => setOpenStat("phase")}>
           <span className="text-[1.5rem] font-bold font-mono text-foreground leading-none">{daysInPhase}</span>
         </StatTile>
 
-        <div className="flex items-center gap-2.5 rounded-[10px] border border-card-border bg-card/60 px-4 py-3 flex-1 min-w-[200px]">
+        <button
+          onClick={() => setOpenStat("progress")}
+          title="Progress — click for detail"
+          className="flex items-center gap-2.5 rounded-[10px] border border-card-border bg-card/60 px-4 py-3 flex-1 min-w-[200px] text-left cursor-pointer transition-colors duration-200 hover:border-card-border-hover hover:bg-surface-hover focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_var(--ring)]"
+        >
           <Cloud size={18} strokeWidth={2} className="text-muted-foreground shrink-0" />
           <div className="flex flex-col flex-1 gap-1.5">
             <span className="text-[0.65rem] uppercase tracking-[0.08em] text-muted-foreground font-semibold">Progress</span>
@@ -276,8 +292,12 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
               />
             </div>
           </div>
-        </div>
+        </button>
       </div>
+
+      {openStat && (
+        <StatDetailModal metric={openStat} track={data} onClose={() => setOpenStat(null)} />
+      )}
 
       {showTrackSettings && (
         <TrackSettingsModal
