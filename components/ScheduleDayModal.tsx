@@ -4,45 +4,42 @@ import React, { useState } from "react";
 import { X } from "lucide-react";
 import type { TrackState, WeekDay } from "@/lib/types";
 import { getDateForDayName, getWeekNum, parseYMD, todayYMD } from "@/lib/dates";
-import { rebuildStreakHistory, completedItemTitle } from "@/lib/streak";
 import { DEFAULT_WEEK_SCHEDULE, DEFAULT_FOCUS_TYPES } from "@/lib/constants";
 import { computeRotationItemsForDay, isRotationItem } from "@/lib/rotation";
+import {
+  addDayItem,
+  isItemCompleted,
+  removeDayItem,
+  setItemCompletion,
+  updateDayItem,
+  type ItemKind,
+} from "@/lib/completions";
+import { useWorkspaceActions } from "@/components/workspace/WorkspaceProvider";
 import FocusTypeEditor from "@/components/shared/FocusTypeEditor";
 
 interface ScheduleDayModalProps {
   day: WeekDay;
   data: TrackState;
-  setData: (data: TrackState) => void;
-  saveDailyChanges: (data: TrackState) => void;
+  /** Optimistic update plus a debounced save. Takes an updater so an edit
+   *  always applies to the newest track, never a captured snapshot. */
+  applyChange: (updater: (previous: TrackState) => TrackState) => void;
   onClose: () => void;
-  updateTrackState: (state: TrackState) => Promise<unknown>;
   weekOffset?: number;
 }
 
 const fieldInputClass = "bg-input-bg border border-card-border rounded-md text-foreground font-[inherit] text-[0.8rem] outline-none px-2.5 py-1.5";
 
-export default function ScheduleDayModal({
-  day,
-  data,
-  setData,
-  saveDailyChanges,
-  onClose,
-  updateTrackState,
-  weekOffset = 0
-}: ScheduleDayModalProps) {
+export default function ScheduleDayModal({ day, data, applyChange, onClose, weekOffset = 0 }: ScheduleDayModalProps) {
+  const { flush } = useWorkspaceActions();
   const [showManager, setShowManager] = useState(false);
+  const [newRevision, setNewRevision] = useState({ title: "", description: "" });
+  const [newFocus, setNewFocus] = useState("");
 
   const focusTypes = data.focusTypes || DEFAULT_FOCUS_TYPES;
-
   const currentDaySchedule = (data.weekSchedule || DEFAULT_WEEK_SCHEDULE).find((d) => d.name === day.name) || day;
+  const getFullLabel = (type: string) => focusTypes[type]?.label || type || "Daily Focus";
 
-  const getFullLabel = (type: string) => {
-    return focusTypes[type]?.label || type || "Daily Focus";
-  };
-
-  const getDateForDay = (dayName: string): string => getDateForDayName(dayName, weekOffset);
-
-  const targetDateStr = getDateForDay(day.name);
+  const targetDateStr = getDateForDayName(day.name, weekOffset);
   const isTargetToday = targetDateStr === todayYMD();
 
   // Rotation-managed items are recomputed live for the viewed week (same
@@ -58,50 +55,42 @@ export default function ScheduleDayModal({
   const manualRevisionItems = (data.dailyRevisionItems?.[day.name] || []).filter((it) => !isRotationItem(it));
   const manualFocusTasks = (data.dailyTasks?.[day.name] || []).filter((it) => !isRotationItem(it));
 
-  const applyChange = (newData: TrackState) => {
-    setData(newData);
-    saveDailyChanges(newData);
+  /** Blur commits immediately rather than waiting out the debounce, so tabbing
+   *  away from a field can never leave an edit in flight. */
+  const persistOnBlur = () => {
+    void flush();
   };
 
-  const persistOnBlur = async () => {
-    try {
-      await updateTrackState(data);
-    } catch (err) {
-      console.error("Failed to save edits inside schedule modal", err);
-    }
+  const isDone = (kind: ItemKind, id: string) => isItemCompleted(data, targetDateStr, kind, id);
+
+  /** `stored` distinguishes a manually-added item (which has a saved record
+   *  whose `completed` flag needs syncing) from a rotation item (recomputed
+   *  every render, so completion lives only in the day's id set). */
+  const toggle = (
+    kind: ItemKind,
+    item: { id: string; title: string; description?: string },
+    completed: boolean,
+    stored: boolean
+  ) => {
+    applyChange((previous) =>
+      setItemCompletion(
+        previous,
+        { dateStr: targetDateStr, dayKey: stored ? day.name : undefined, kind, ...item },
+        completed
+      )
+    );
   };
 
-  /** Completion for a rotation item lives entirely in weeklyCompletions —
-   *  there's no persisted item record to keep in sync, since the item
-   *  itself is always recomputed from the rotation definition. */
-  const toggleRotationItemCompletion = (itemId: string, itemTitle: string, itemDesc: string, isRevision: boolean, currentCompleted: boolean) => {
-    const newCompleted = !currentCompleted;
-    const newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
-    const newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
-    const targetComps = newWeeklyCompletions[targetDateStr] || { tasks: [], revisions: [] };
-    const compKey = isRevision ? "revisions" : "tasks";
+  const addRevision = () => {
+    if (!newRevision.title.trim()) return;
+    applyChange((previous) => addDayItem(previous, day.name, "revision", newRevision));
+    setNewRevision({ title: "", description: "" });
+  };
 
-    if (newCompleted) {
-      const dateItems = newCompletedItemsHistory[targetDateStr] || [];
-      if (!dateItems.some((it) => completedItemTitle(it) === itemTitle)) {
-        newCompletedItemsHistory[targetDateStr] = [...dateItems, { title: itemTitle, description: itemDesc || "" }];
-      }
-      if (!targetComps[compKey].includes(itemId)) {
-        targetComps[compKey] = [...targetComps[compKey], itemId];
-      }
-    } else {
-      const dateItems = newCompletedItemsHistory[targetDateStr] || [];
-      newCompletedItemsHistory[targetDateStr] = dateItems.filter((it) => completedItemTitle(it) !== itemTitle);
-      targetComps[compKey] = targetComps[compKey].filter((id: string) => id !== itemId);
-    }
-    newWeeklyCompletions[targetDateStr] = targetComps;
-
-    applyChange({
-      ...data,
-      streakHistory: rebuildStreakHistory(newCompletedItemsHistory),
-      completedItemsHistory: newCompletedItemsHistory,
-      weeklyCompletions: newWeeklyCompletions,
-    });
+  const addFocus = () => {
+    if (!newFocus.trim()) return;
+    applyChange((previous) => addDayItem(previous, day.name, "focus", { title: newFocus }));
+    setNewFocus("");
   };
 
   return (
@@ -142,13 +131,12 @@ export default function ScheduleDayModal({
                 onChange={(e) => {
                   const newType = e.target.value;
                   const newLabel = focusTypes[newType]?.label || newType;
-                  const updatedSchedule = (data.weekSchedule || DEFAULT_WEEK_SCHEDULE).map((d) => {
-                    if (d.name === day.name) {
-                      return { ...d, type: newType, label: newLabel };
-                    }
-                    return d;
-                  });
-                  applyChange({ ...data, weekSchedule: updatedSchedule });
+                  applyChange((previous) => ({
+                    ...previous,
+                    weekSchedule: (previous.weekSchedule || DEFAULT_WEEK_SCHEDULE).map((d) =>
+                      d.name === day.name ? { ...d, type: newType, label: newLabel } : d
+                    ),
+                  }));
                 }}
                 className="bg-input-bg border border-card-border rounded-md px-2 py-1.5 text-foreground text-[0.85rem] font-[inherit] outline-none cursor-pointer"
               >
@@ -173,7 +161,7 @@ export default function ScheduleDayModal({
               focusTypes={focusTypes}
               weekSchedule={data.weekSchedule || DEFAULT_WEEK_SCHEDULE}
               onChange={(updatedTypes, updatedSchedule) => {
-                applyChange({ ...data, focusTypes: updatedTypes, weekSchedule: updatedSchedule });
+                applyChange((previous) => ({ ...previous, focusTypes: updatedTypes, weekSchedule: updatedSchedule }));
               }}
             />
           )}
@@ -193,7 +181,7 @@ export default function ScheduleDayModal({
                 {/* Rotation-managed items: read-only here (checkbox only) —
                     edit the rotation itself via its pill on the dashboard. */}
                 {rotationRevisions.map((item) => {
-                  const completed = (data.weeklyCompletions?.[targetDateStr]?.revisions || []).includes(item.id);
+                  const completed = isDone("revision", item.id);
                   return (
                     <div
                       key={item.id}
@@ -204,7 +192,14 @@ export default function ScheduleDayModal({
                           type="checkbox"
                           className="checkbox-custom"
                           checked={completed}
-                          onChange={() => toggleRotationItemCompletion(item.id, item.title, item.description || "", true, completed)}
+                          onChange={(e) =>
+                            toggle(
+                              "revision",
+                              { id: item.id, title: item.title, description: item.description },
+                              e.target.checked,
+                              false
+                            )
+                          }
                         />
                         <span className={`flex-1 text-[0.85rem] font-semibold ${completed ? "text-muted-foreground line-through" : "text-foreground"}`}>
                           {item.title}
@@ -218,108 +213,49 @@ export default function ScheduleDayModal({
                   );
                 })}
 
-                {manualRevisionItems.map((item, index) => (
+                {manualRevisionItems.map((item) => (
                   <div
-                    key={item.id || index}
+                    key={item.id}
                     className="flex flex-col gap-1.5 bg-input-bg px-3 py-[0.6rem] rounded-md border border-card-border"
                   >
                     <div className="flex items-center gap-3">
                       <input
                         type="checkbox"
                         className="checkbox-custom"
-                        checked={(data.weeklyCompletions?.[targetDateStr]?.revisions || []).includes(item.id)}
-                        onChange={(e) => {
-                          const updatedItems = manualRevisionItems.map((it) => {
-                            if (it.id === item.id) {
-                              return { ...it, completed: e.target.checked };
-                            }
-                            return it;
-                          });
-
-                          // Sync streak history for the actual date of this day
-                          const newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
-                          const newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
-
-                          const dateItems = newCompletedItemsHistory[targetDateStr] || [];
-                          const targetComps = newWeeklyCompletions[targetDateStr] || { tasks: [], revisions: [] };
-
-                          if (e.target.checked) {
-                            const alreadyExists = dateItems.some((it) => completedItemTitle(it) === item.title);
-                            if (!alreadyExists) {
-                              newCompletedItemsHistory[targetDateStr] = [...dateItems, { title: item.title, description: item.description || "" }];
-                            }
-                            if (!targetComps.revisions.includes(item.id)) {
-                              targetComps.revisions = [...targetComps.revisions, item.id];
-                            }
-                          } else {
-                            newCompletedItemsHistory[targetDateStr] = dateItems.filter((it) => completedItemTitle(it) !== item.title);
-                            targetComps.revisions = targetComps.revisions.filter((id: string) => id !== item.id);
-                          }
-
-                          newWeeklyCompletions[targetDateStr] = targetComps;
-
-                          applyChange({
-                            ...data,
-                            dailyRevisionItems: {
-                              ...(data.dailyRevisionItems || {}),
-                              [day.name]: updatedItems
-                            },
-                            streakHistory: rebuildStreakHistory(newCompletedItemsHistory),
-                            completedItemsHistory: newCompletedItemsHistory,
-                            weeklyCompletions: newWeeklyCompletions
-                          });
-                        }}
+                        checked={isDone("revision", item.id)}
+                        onChange={(e) =>
+                          toggle(
+                            "revision",
+                            { id: item.id, title: item.title, description: item.description },
+                            e.target.checked,
+                            true
+                          )
+                        }
                       />
                       <input
                         type="text"
                         value={item.title}
-                        onChange={(e) => {
-                          const updatedItems = manualRevisionItems.map((it) => {
-                            if (it.id === item.id) {
-                              return { ...it, title: e.target.value };
-                            }
-                            return it;
-                          });
-                          applyChange({
-                            ...data,
-                            dailyRevisionItems: {
-                              ...(data.dailyRevisionItems || {}),
-                              [day.name]: updatedItems
-                            }
-                          });
-                        }}
+                        onChange={(e) =>
+                          applyChange((previous) =>
+                            updateDayItem(previous, day.name, "revision", item.id, { title: e.target.value })
+                          )
+                        }
                         onBlur={persistOnBlur}
                         placeholder="Revision topic..."
                         className="flex-1 bg-transparent border-none text-foreground font-[inherit] text-[0.85rem] font-semibold outline-none"
                       />
                       <button
-                        onClick={() => {
-                          const updatedItems = manualRevisionItems.filter((it) => it.id !== item.id);
-
-                          // Sync streak history for the actual date of this day
-                          const newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
-                          const newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
-                          const targetComps = newWeeklyCompletions[targetDateStr] || { tasks: [], revisions: [] };
-
-                          if (item.completed) {
-                            const dateItems = newCompletedItemsHistory[targetDateStr] || [];
-                            newCompletedItemsHistory[targetDateStr] = dateItems.filter((it) => completedItemTitle(it) !== item.title);
-                          }
-
-                          targetComps.revisions = targetComps.revisions.filter((id: string) => id !== item.id);
-                          newWeeklyCompletions[targetDateStr] = targetComps;
-
-                          applyChange({
-                            ...data,
-                            dailyRevisionItems: {
-                              ...(data.dailyRevisionItems || {}),
-                              [day.name]: updatedItems
-                            },
-                            streakHistory: rebuildStreakHistory(newCompletedItemsHistory),
-                            completedItemsHistory: newCompletedItemsHistory,
-                            weeklyCompletions: newWeeklyCompletions
-                          });
-                        }}
+                        onClick={() =>
+                          applyChange((previous) =>
+                            removeDayItem(previous, {
+                              dateStr: targetDateStr,
+                              dayKey: day.name,
+                              kind: "revision",
+                              id: item.id,
+                              title: item.title,
+                            })
+                          )
+                        }
                         className="flex items-center bg-transparent border-none text-red-500 cursor-pointer"
                         aria-label="Remove item"
                       >
@@ -331,21 +267,11 @@ export default function ScheduleDayModal({
                     <input
                       type="text"
                       value={item.description || ""}
-                      onChange={(e) => {
-                        const updatedItems = manualRevisionItems.map((it) => {
-                          if (it.id === item.id) {
-                            return { ...it, description: e.target.value };
-                          }
-                          return it;
-                        });
-                        applyChange({
-                          ...data,
-                          dailyRevisionItems: {
-                            ...(data.dailyRevisionItems || {}),
-                            [day.name]: updatedItems
-                          }
-                        });
-                      }}
+                      onChange={(e) =>
+                        applyChange((previous) =>
+                          updateDayItem(previous, day.name, "revision", item.id, { description: e.target.value })
+                        )
+                      }
                       onBlur={persistOnBlur}
                       placeholder="Topic description (optional)..."
                       className="bg-transparent border-none border-b border-dashed border-card-border text-muted-foreground font-[inherit] text-[0.8rem] outline-none py-px ml-7"
@@ -357,42 +283,22 @@ export default function ScheduleDayModal({
                 <div className="flex flex-col gap-1.5 bg-surface-muted p-[0.6rem] rounded-md border border-dashed border-card-border">
                   <input
                     type="text"
-                    id="new-rev-title"
+                    value={newRevision.title}
+                    onChange={(e) => setNewRevision((prev) => ({ ...prev, title: e.target.value }))}
+                    onKeyDown={(e) => e.key === "Enter" && addRevision()}
                     placeholder="New revision topic..."
                     className={fieldInputClass}
                   />
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      id="new-rev-desc"
+                      value={newRevision.description}
+                      onChange={(e) => setNewRevision((prev) => ({ ...prev, description: e.target.value }))}
+                      onKeyDown={(e) => e.key === "Enter" && addRevision()}
                       placeholder="Topic description (optional)..."
                       className={`flex-1 ${fieldInputClass}`}
                     />
-                    <button
-                      onClick={() => {
-                        const titleInput = document.getElementById("new-rev-title") as HTMLInputElement;
-                        const descInput = document.getElementById("new-rev-desc") as HTMLInputElement;
-                        if (titleInput && titleInput.value.trim()) {
-                          const newItem = {
-                            id: `rev_${Date.now()}`,
-                            title: titleInput.value.trim(),
-                            description: descInput ? descInput.value.trim() : "",
-                            completed: false
-                          };
-                          const updatedItems = [...(data.dailyRevisionItems?.[day.name] || []), newItem];
-                          applyChange({
-                            ...data,
-                            dailyRevisionItems: {
-                              ...(data.dailyRevisionItems || {}),
-                              [day.name]: updatedItems
-                            }
-                          });
-                          titleInput.value = "";
-                          if (descInput) descInput.value = "";
-                        }
-                      }}
-                      className="btn px-3 py-1.5 text-[0.8rem]"
-                    >
+                    <button onClick={addRevision} className="btn px-3 py-1.5 text-[0.8rem]">
                       + Add
                     </button>
                   </div>
@@ -411,7 +317,7 @@ export default function ScheduleDayModal({
                 {/* Rotation-managed items: read-only here (checkbox only) —
                     edit the rotation itself via its pill on the dashboard. */}
                 {rotationFocus.map((task) => {
-                  const completed = (data.weeklyCompletions?.[targetDateStr]?.tasks || []).includes(task.id);
+                  const completed = isDone("focus", task.id);
                   return (
                     <div
                       key={task.id}
@@ -421,7 +327,7 @@ export default function ScheduleDayModal({
                         type="checkbox"
                         className="checkbox-custom"
                         checked={completed}
-                        onChange={() => toggleRotationItemCompletion(task.id, task.title, "", false, completed)}
+                        onChange={(e) => toggle("focus", { id: task.id, title: task.title }, e.target.checked, false)}
                       />
                       <span className={`flex-1 text-[0.85rem] ${completed ? "text-muted-foreground line-through" : "text-foreground"}`}>
                         {task.title}
@@ -431,107 +337,39 @@ export default function ScheduleDayModal({
                   );
                 })}
 
-                {manualFocusTasks.map((task, index) => (
+                {manualFocusTasks.map((task) => (
                   <div
-                    key={task.id || index}
+                    key={task.id}
                     className="flex items-center gap-3 bg-input-bg px-[0.6rem] py-1.5 rounded-md border border-card-border"
                   >
                     <input
                       type="checkbox"
                       className="checkbox-custom"
-                      checked={(data.weeklyCompletions?.[targetDateStr]?.tasks || []).includes(task.id)}
-                      onChange={(e) => {
-                        const updatedTasks = manualFocusTasks.map((t) => {
-                          if (t.id === task.id) {
-                            return { ...t, completed: e.target.checked };
-                          }
-                          return t;
-                        });
-
-                        // Sync streak history for the actual date of this day
-                        const newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
-                        const newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
-
-                        const dateItems = newCompletedItemsHistory[targetDateStr] || [];
-                        const targetComps = newWeeklyCompletions[targetDateStr] || { tasks: [], revisions: [] };
-
-                        if (e.target.checked) {
-                          const alreadyExists = dateItems.some((it) => completedItemTitle(it) === task.title);
-                          if (!alreadyExists) {
-                            newCompletedItemsHistory[targetDateStr] = [...dateItems, { title: task.title }];
-                          }
-                          if (!targetComps.tasks.includes(task.id)) {
-                            targetComps.tasks = [...targetComps.tasks, task.id];
-                          }
-                        } else {
-                          newCompletedItemsHistory[targetDateStr] = dateItems.filter((it) => completedItemTitle(it) !== task.title);
-                          targetComps.tasks = targetComps.tasks.filter((id: string) => id !== task.id);
-                        }
-
-                        newWeeklyCompletions[targetDateStr] = targetComps;
-
-                        applyChange({
-                          ...data,
-                          dailyTasks: {
-                            ...(data.dailyTasks || {}),
-                            [day.name]: updatedTasks
-                          },
-                          streakHistory: rebuildStreakHistory(newCompletedItemsHistory),
-                          completedItemsHistory: newCompletedItemsHistory,
-                          weeklyCompletions: newWeeklyCompletions
-                        });
-                      }}
+                      checked={isDone("focus", task.id)}
+                      onChange={(e) => toggle("focus", { id: task.id, title: task.title }, e.target.checked, true)}
                     />
                     <input
                       type="text"
                       value={task.title}
-                      onChange={(e) => {
-                        const updatedTasks = manualFocusTasks.map((t) => {
-                          if (t.id === task.id) {
-                            return { ...t, title: e.target.value };
-                          }
-                          return t;
-                        });
-                        applyChange({
-                          ...data,
-                          dailyTasks: {
-                            ...(data.dailyTasks || {}),
-                            [day.name]: updatedTasks
-                          }
-                        });
-                      }}
+                      onChange={(e) =>
+                        applyChange((previous) => updateDayItem(previous, day.name, "focus", task.id, { title: e.target.value }))
+                      }
                       onBlur={persistOnBlur}
                       placeholder="Task description..."
                       className="flex-1 bg-transparent border-none text-foreground font-[inherit] text-[0.85rem] outline-none"
                     />
                     <button
-                      onClick={() => {
-                        const updatedTasks = manualFocusTasks.filter((t) => t.id !== task.id);
-
-                        // Sync streak history for the actual date of this day
-                        const newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
-                        const newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
-                        const targetComps = newWeeklyCompletions[targetDateStr] || { tasks: [], revisions: [] };
-
-                        if (task.completed) {
-                          const dateItems = newCompletedItemsHistory[targetDateStr] || [];
-                          newCompletedItemsHistory[targetDateStr] = dateItems.filter((it) => completedItemTitle(it) !== task.title);
-                        }
-
-                        targetComps.tasks = targetComps.tasks.filter((id: string) => id !== task.id);
-                        newWeeklyCompletions[targetDateStr] = targetComps;
-
-                        applyChange({
-                          ...data,
-                          dailyTasks: {
-                            ...(data.dailyTasks || {}),
-                            [day.name]: updatedTasks
-                          },
-                          streakHistory: rebuildStreakHistory(newCompletedItemsHistory),
-                          completedItemsHistory: newCompletedItemsHistory,
-                          weeklyCompletions: newWeeklyCompletions
-                        });
-                      }}
+                      onClick={() =>
+                        applyChange((previous) =>
+                          removeDayItem(previous, {
+                            dateStr: targetDateStr,
+                            dayKey: day.name,
+                            kind: "focus",
+                            id: task.id,
+                            title: task.title,
+                          })
+                        )
+                      }
                       className="flex items-center bg-transparent border-none text-red-500 cursor-pointer"
                       aria-label="Remove item"
                     >
@@ -544,49 +382,13 @@ export default function ScheduleDayModal({
                 <div className="flex items-center gap-3 mt-2">
                   <input
                     type="text"
+                    value={newFocus}
+                    onChange={(e) => setNewFocus(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && addFocus()}
                     placeholder="Add a focus item..."
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && e.currentTarget.value.trim()) {
-                        const newTask = {
-                          id: `task_${Date.now()}`,
-                          title: e.currentTarget.value.trim(),
-                          completed: false
-                        };
-                        const updatedTasks = [...(data.dailyTasks?.[day.name] || []), newTask];
-                        applyChange({
-                          ...data,
-                          dailyTasks: {
-                            ...(data.dailyTasks || {}),
-                            [day.name]: updatedTasks
-                          }
-                        });
-                        e.currentTarget.value = "";
-                      }
-                    }}
                     className="flex-1 bg-input-bg border border-card-border rounded-md px-3 py-2 text-foreground font-[inherit] text-[0.85rem] outline-none"
                   />
-                  <button
-                    onClick={(e) => {
-                      const input = e.currentTarget.previousElementSibling as HTMLInputElement;
-                      if (input && input.value.trim()) {
-                        const newTask = {
-                          id: `task_${Date.now()}`,
-                          title: input.value.trim(),
-                          completed: false
-                        };
-                        const updatedTasks = [...(data.dailyTasks?.[day.name] || []), newTask];
-                        applyChange({
-                          ...data,
-                          dailyTasks: {
-                            ...(data.dailyTasks || {}),
-                            [day.name]: updatedTasks
-                          }
-                        });
-                        input.value = "";
-                      }
-                    }}
-                    className="btn px-4 py-2 text-[0.85rem]"
-                  >
+                  <button onClick={addFocus} className="btn px-4 py-2 text-[0.85rem]">
                     + Add
                   </button>
                 </div>

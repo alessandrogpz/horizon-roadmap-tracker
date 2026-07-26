@@ -87,20 +87,24 @@ export interface AppState {
   startDate: DateStr;
   currentPhaseStartDate?: DateStr;
   streakHistory: DateStr[];
-  lastDailyRoutineCheck: string;
   lastTasksResetDate: DateStr | "";
-  dailyFocus: Record<string, string>;
   dailyTasks: Record<DayKey, TaskItem[]>;
   dailyRevisionItems: Record<DayKey, RevisionItem[]>;
   phases: Phase[];
   portfolio: PortfolioProject[];
   materials: Material[];
-  dailyStudyPoints: Record<DateStr, number>;
   completedItemsHistory: Record<DateStr, CompletedItem[]>;
   weeklyCompletions: Record<DateStr, DayCompletions>;
-  studyStreak: DateStr[];
   weekSchedule?: WeekDay[];
   focusTypes?: Record<string, FocusType>;
+
+  // Carried by records written before these were retired. Nothing reads or
+  // writes them; they're declared only so old data round-trips unchanged
+  // and lib/workspaceRepo.ts can exclude them from config-change detection.
+  /** @deprecated */ lastDailyRoutineCheck?: string;
+  /** @deprecated */ dailyFocus?: Record<string, string>;
+  /** @deprecated */ dailyStudyPoints?: Record<DateStr, number>;
+  /** @deprecated */ studyStreak?: DateStr[];
 
   // Sync bookkeeping
   isSynced?: boolean;
@@ -216,6 +220,10 @@ export interface PanelColumns {
 export interface Workspace {
   activeTrackId: TrackId;
   tracks: Record<TrackId, TrackState>;
+  /** How many of lib/migrations' steps this record has been through. Absent
+   *  means "written before the pipeline existed" — treated as 0, so every
+   *  step replays (they're all idempotent). See lib/migrations/index.ts. */
+  schemaVersion?: number;
   /** @deprecated Legacy shared layout. Layout is now per-track
    *  (TrackState.panelColumns); this is only read once to migrate old data. */
   panelColumns?: PanelColumns;

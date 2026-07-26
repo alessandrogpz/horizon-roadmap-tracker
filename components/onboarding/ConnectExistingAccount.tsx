@@ -8,7 +8,8 @@ import {
   setGoogleClientId,
   syncWithGoogleDrive,
 } from "@/lib/googleDrive";
-import { fetchWorkspace, visibleTracks } from "@/lib/api";
+import { fetchWorkspace } from "@/lib/workspaceRepo";
+import { visibleTracks } from "@/lib/selectors";
 import type { Workspace } from "@/lib/types";
 
 interface ConnectExistingAccountProps {

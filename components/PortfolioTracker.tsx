@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { FolderGit2, X } from "lucide-react";
-import { fetchGitStats } from "@/lib/api";
+import { fetchGitStats, hasGitSource } from "@/lib/gitStats";
 import type { GitStats, PortfolioProject } from "@/lib/types";
 
 interface PortfolioTrackerProps {
@@ -29,9 +29,9 @@ export default function PortfolioTracker({ portfolio, onToggle, onAddProject, on
 
   useEffect(() => {
     portfolio.forEach(proj => {
-      // repoUrl is injected by migrateLocalPaths from the authoritative ID map — always reliable
+      // repoUrl is injected by the legacy-local-paths migration from the authoritative ID map
       const source = proj.repoUrl || proj.localPath || "";
-      if (source.includes("github.com") || source.startsWith("/") || source.startsWith("~")) {
+      if (hasGitSource(source)) {
         fetchGitStats(source)
           .then(stats => {
             setGitStats(prev => ({ ...prev, [proj.id]: stats }));

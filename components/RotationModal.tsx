@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Check, X } from "lucide-react";
 import type { RotationDef, TrackState } from "@/lib/types";
 import { getWeekNum } from "@/lib/dates";
@@ -11,8 +11,10 @@ interface RotationModalProps {
   /** null opens the "create a new rotation" flow. */
   rotationId: string | null;
   onClose: () => void;
-  /** Applies an optimistic state update and schedules a debounced save. */
-  applyChange: (newData: TrackState) => void;
+  /** Applies an optimistic state update and schedules a debounced save. Takes
+   *  an updater, so the debounced plan autosave below always writes against
+   *  the newest track rather than the one captured at keystroke time. */
+  applyChange: (updater: (previous: TrackState) => TrackState) => void;
 }
 
 const ALL_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -46,15 +48,6 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
   const [planSaveStatus, setPlanSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const planSaveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
-
-  // The debounced autosave below fires up to 800ms after the keystroke that
-  // scheduled it — read the latest data through a ref rather than closing
-  // over the `data` prop directly, so a save that lands after some other
-  // change happened in between doesn't clobber it with a stale snapshot.
-  const dataRef = React.useRef(data);
-  useEffect(() => {
-    dataRef.current = data;
-  }, [data]);
 
   if (!isNew && !existing) return null;
 
@@ -106,11 +99,12 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
       explanation: explanation.trim() || undefined,
     };
 
-    const nextRotations = existing
-      ? (data.rotations || []).map((r) => (r.id === rotation.id ? rotation : r))
-      : [...(data.rotations || []), rotation];
-
-    applyChange({ ...data, rotations: nextRotations });
+    applyChange((previous) => ({
+      ...previous,
+      rotations: existing
+        ? (previous.rotations || []).map((r) => (r.id === rotation.id ? rotation : r))
+        : [...(previous.rotations || []), rotation],
+    }));
 
     if (isNew) onClose();
     else setMode("view");
@@ -128,12 +122,12 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
       return next;
     };
 
-    applyChange({
-      ...data,
-      rotations: (data.rotations || []).filter((r) => r.id !== existing.id),
-      dailyRevisionItems: stripRotationItem(data.dailyRevisionItems) || data.dailyRevisionItems,
-      dailyTasks: stripRotationItem(data.dailyTasks) || data.dailyTasks,
-    });
+    applyChange((previous) => ({
+      ...previous,
+      rotations: (previous.rotations || []).filter((r) => r.id !== existing.id),
+      dailyRevisionItems: stripRotationItem(previous.dailyRevisionItems) || previous.dailyRevisionItems,
+      dailyTasks: stripRotationItem(previous.dailyTasks) || previous.dailyTasks,
+    }));
     onClose();
   };
 
@@ -141,10 +135,12 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
   const selectActiveItem = (idx: number) => {
     if (!existing) return;
     const newStartWeek = currentWeekNum - idx;
-    const nextRotations = (data.rotations || []).map((r) =>
-      r.id === existing.id ? { ...r, startWeek: newStartWeek } : r
-    );
-    applyChange({ ...data, rotations: nextRotations });
+    applyChange((previous) => ({
+      ...previous,
+      rotations: (previous.rotations || []).map((r) =>
+        r.id === existing.id ? { ...r, startWeek: newStartWeek } : r
+      ),
+    }));
   };
 
   const persistPlan = (newContent: string) => {
@@ -152,11 +148,12 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
     if (planSaveTimeoutRef.current) clearTimeout(planSaveTimeoutRef.current);
     setPlanSaveStatus("saving");
     planSaveTimeoutRef.current = setTimeout(() => {
-      const latestData = dataRef.current;
-      const nextRotations = (latestData.rotations || []).map((r) =>
-        r.id === existing.id ? { ...r, explanation: newContent } : r
-      );
-      applyChange({ ...latestData, rotations: nextRotations });
+      applyChange((previous) => ({
+        ...previous,
+        rotations: (previous.rotations || []).map((r) =>
+          r.id === existing.id ? { ...r, explanation: newContent } : r
+        ),
+      }));
       setPlanSaveStatus("saved");
       setTimeout(() => setPlanSaveStatus("idle"), 2000);
     }, 800);

@@ -1,6 +1,6 @@
 import "fake-indexeddb/auto";
 import { describe, it, expect } from "vitest";
-import { fetchWorkspace, updateWorkspace, createTrack } from "../api";
+import { fetchWorkspace, updateWorkspace, createTrack } from "../workspaceRepo";
 import { db } from "../localDb";
 import type { TrackState, Workspace } from "../types";
 
@@ -91,6 +91,43 @@ describe("updateWorkspace config-change detection", () => {
     const after = await fetchWorkspace();
     expect(after.tracks[track.meta.id].meta.name).toBe("Renamed Track");
     expect(after.tracks[track.meta.id].configVersion).toBe(1);
+  });
+
+  it("detects a focus-type edit, which the old hand-kept field list missed entirely", async () => {
+    const track = baseTrack("track_test_focus_types");
+    await createTrack(track);
+
+    const before = await fetchWorkspace();
+    const editedTrack: TrackState = {
+      ...before.tracks[track.meta.id],
+      focusTypes: { study: { label: "Study", color: "#ff0000" } },
+    };
+    await updateWorkspace({ ...before, tracks: { ...before.tracks, [track.meta.id]: editedTrack } });
+
+    const after = await fetchWorkspace();
+    expect(after.tracks[track.meta.id].configVersion).toBe(1);
+  });
+
+  it("does not bump configVersion for progress-only changes (a ticked checkbox)", async () => {
+    const track = baseTrack("track_test_progress_only");
+    await createTrack(track);
+
+    const before = await fetchWorkspace();
+    const editedTrack: TrackState = {
+      ...before.tracks[track.meta.id],
+      weeklyCompletions: { "2026-07-06": { tasks: ["task_1"], revisions: [] } },
+      completedItemsHistory: { "2026-07-06": [{ title: "Read" }] },
+      streakHistory: ["2026-07-06"],
+      dailyTasks: { Mon: [{ id: "task_1", title: "Read", completed: true }] },
+    };
+    await updateWorkspace({ ...before, tracks: { ...before.tracks, [track.meta.id]: editedTrack } });
+
+    const after = await fetchWorkspace();
+    // The progress landed, but structural config didn't "win" a future merge
+    // just because a box was ticked here more recently.
+    expect(after.tracks[track.meta.id].weeklyCompletions["2026-07-06"].tasks).toEqual(["task_1"]);
+    expect(after.tracks[track.meta.id].configVersion).toBe(0);
+    expect(after.hasUnsyncedChanges).toBe(true);
   });
 
   it("detects archiving a track (meta.archived), so soft-deletes propagate through sync", async () => {

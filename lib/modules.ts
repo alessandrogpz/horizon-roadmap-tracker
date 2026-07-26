@@ -1,37 +1,47 @@
 import type { PanelColumns, TrackState } from "./types";
 
-/** The dashboard modules, in a stable order, with the labels shown in the
- *  Modules menu. Kept here (not in a component) so both the render/migration
- *  logic and the menu draw from one source of truth. Icons live in the menu
- *  component, since they're React nodes. */
-export const MODULES: { id: string; label: string }[] = [
-  { id: "weeklyPlan", label: "Weekly Study Plan" },
-  { id: "phaseTracker", label: "Roadmap Timeline" },
-  { id: "streakGraph", label: "Consistency Streak" },
-  { id: "pomodoroTimer", label: "Focus Timer" },
-  { id: "portfolioTracker", label: "Portfolio Deliverables" },
-  { id: "materialsTracker", label: "Materials" },
-];
+export type ColumnId = "left" | "right";
 
-export const MODULE_IDS = MODULES.map((m) => m.id);
+export interface ModuleDefinition {
+  id: string;
+  /** Shown in the header's Modules menu. */
+  label: string;
+  /** Which column the module sits in by default, and returns to when reopened. */
+  homeColumn: ColumnId;
+}
+
+/**
+ * Every dashboard module, in the order they appear by default.
+ *
+ * This is the source of truth for *which* modules exist. It stays free of
+ * React so the layout logic below (and its tests) can run headless; each id's
+ * icon and actual panel live in components/panels/registry.tsx, which is typed
+ * against `ModuleId` — so a module added here without a matching panel is a
+ * compile error rather than a blank space on the dashboard.
+ */
+export const MODULES = [
+  { id: "weeklyPlan", label: "Weekly Study Plan", homeColumn: "left" },
+  { id: "phaseTracker", label: "Roadmap Timeline", homeColumn: "left" },
+  { id: "streakGraph", label: "Consistency Streak", homeColumn: "left" },
+  { id: "pomodoroTimer", label: "Focus Timer", homeColumn: "left" },
+  { id: "portfolioTracker", label: "Portfolio Deliverables", homeColumn: "right" },
+  { id: "materialsTracker", label: "Materials", homeColumn: "right" },
+] as const satisfies readonly ModuleDefinition[];
+
+export type ModuleId = (typeof MODULES)[number]["id"];
+
+export const MODULE_IDS: readonly string[] = MODULES.map((m) => m.id);
 
 /** Fresh copy each call — never share one object across tracks, or two tracks
  *  would alias the same array and edits to one would silently affect the other. */
 export const defaultPanelColumns = (): PanelColumns => ({
-  left: ["weeklyPlan", "phaseTracker", "streakGraph", "pomodoroTimer"],
-  right: ["portfolioTracker", "materialsTracker"],
+  left: MODULES.filter((m) => m.homeColumn === "left").map((m) => m.id),
+  right: MODULES.filter((m) => m.homeColumn === "right").map((m) => m.id),
 });
 
-/** Which column a module returns to when reopened, derived from the default. */
-const DEFAULT_HOME: Record<string, "left" | "right"> = (() => {
-  const cols = defaultPanelColumns();
-  const home: Record<string, "left" | "right"> = {};
-  cols.left.forEach((id) => (home[id] = "left"));
-  cols.right.forEach((id) => (home[id] = "right"));
-  return home;
-})();
-
-export const homeColumnFor = (id: string): "left" | "right" => DEFAULT_HOME[id] ?? "left";
+/** Which column a module returns to when reopened. */
+export const homeColumnFor = (id: string): ColumnId =>
+  MODULES.find((m) => m.id === id)?.homeColumn ?? "left";
 
 /**
  * The track's effective layout for rendering: its stored visible columns, plus
