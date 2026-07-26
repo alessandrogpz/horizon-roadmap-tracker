@@ -52,18 +52,14 @@ describe("settings", () => {
   });
 
   it("repairs a malformed stored blob rather than throwing", () => {
-    window.localStorage.setItem("horizon-settings", '{"weekStartsOn":"funday","reminder":{"time":"25:99"}}');
-    resetSettings();
-    // resetSettings clears storage, so write it back and only drop the cache.
-    window.localStorage.setItem("horizon-settings", '{"weekStartsOn":"funday","reminder":{"time":"25:99"}}');
+    window.localStorage.setItem("horizon-settings", '{"weekStartsOn":"funday","dayRolloverHour":"four"}');
     const settings = getSettings();
     expect(settings.weekStartsOn).toBe("sun");
-    expect(settings.reminder.time).toBe("20:00");
+    expect(settings.dayRolloverHour).toBe(0);
   });
 
-  it("rejects a nonsense reminder time but keeps a valid one", () => {
-    expect(updateSettings({ reminder: { enabled: true, time: "07:45" } }).reminder.time).toBe("07:45");
-    expect(updateSettings({ reminder: { enabled: true, time: "7:45pm" } }).reminder.time).toBe("20:00");
+  it("keeps a valid week start", () => {
+    expect(updateSettings({ weekStartsOn: "mon" }).weekStartsOn).toBe("mon");
   });
 });
 

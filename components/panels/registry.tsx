@@ -64,6 +64,7 @@ function PhaseTrackerPanel({ ctx }: { ctx: PanelContext }) {
       phases={track.phases}
       currentPhase={track.currentPhase}
       startDate={track.startDate}
+      roadmapEnabled={!!track.isSynced}
       onPhaseClick={ctx.openPhase}
       onAddPhase={async () => {
         const { track: next, phase } = addPhase(track);

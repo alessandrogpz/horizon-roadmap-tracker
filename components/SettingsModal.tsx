@@ -3,7 +3,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
-  Bell,
   Clock,
   Download,
   HardDrive,
@@ -107,14 +106,11 @@ export default function SettingsModal({
   onRestored: () => void;
 }) {
   const settings = useAppSettings();
-  // Lazy initializers rather than an effect: both read browser state that
+  // A lazy initializer rather than an effect: it reads browser state that
   // can't change while this dialog is open, and the dialog only ever mounts
   // client-side (it's rendered behind a click), so there's no SSR snapshot to
   // mismatch.
   const [theme, setTheme] = useState<ThemePreference>(getThemePreference);
-  const [notifyState, setNotifyState] = useState<NotificationPermission | "unsupported">(() =>
-    typeof Notification === "undefined" ? "unsupported" : Notification.permission
-  );
   const [storage, setStorage] = useState<string>("");
   const [busy, setBusy] = useState<"export-json" | "export-zip" | "restore" | null>(null);
   const [error, setError] = useState("");
@@ -186,13 +182,6 @@ export default function SettingsModal({
     await wipeLocalData();
     onRestored();
     window.location.assign("/");
-  };
-
-  const requestNotifications = async () => {
-    if (typeof Notification === "undefined") return;
-    const result = await Notification.requestPermission();
-    setNotifyState(result);
-    if (result === "granted") updateSettings({ reminder: { ...settings.reminder, enabled: true } });
   };
 
   return (
@@ -272,49 +261,6 @@ export default function SettingsModal({
               { value: "mon", label: "Monday" },
             ]}
           />
-        </Row>
-
-        <Row
-          icon={<Bell size={16} strokeWidth={2} />}
-          title="Daily reminder"
-          hint={
-            notifyState === "unsupported"
-              ? "This browser doesn't support notifications."
-              : notifyState === "denied"
-                ? "Notifications are blocked for this site in your browser settings."
-                : "Nudges you if nothing has been recorded by this time. It can only fire while Horizon is open in a tab or installed — there's no server sending push."
-          }
-        >
-          {notifyState === "granted" ? (
-            <>
-              <input
-                type="time"
-                value={settings.reminder.time}
-                onChange={(e) =>
-                  updateSettings({ reminder: { ...settings.reminder, time: e.target.value } })
-                }
-                className={selectClass}
-              />
-              <Segmented<"on" | "off">
-                value={settings.reminder.enabled ? "on" : "off"}
-                onChange={(v) =>
-                  updateSettings({ reminder: { ...settings.reminder, enabled: v === "on" } })
-                }
-                options={[
-                  { value: "on", label: "On" },
-                  { value: "off", label: "Off" },
-                ]}
-              />
-            </>
-          ) : (
-            <button
-              onClick={requestNotifications}
-              disabled={notifyState !== "default"}
-              className={quietButton}
-            >
-              Allow notifications
-            </button>
-          )}
         </Row>
 
         {/* ── Data ───────────────────────────────────────────────────── */}

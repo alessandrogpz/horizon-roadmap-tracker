@@ -1,8 +1,8 @@
 // Device-level app preferences: the handful of choices that belong to this
 // browser rather than to a track. Kept in localStorage, deliberately *not* in
 // the synced workspace — they describe how this device behaves (when your day
-// rolls over, whether this device may notify you), so syncing them would let
-// one device silently reconfigure another. The theme is the same idea and
+// rolls over, how it draws a week), so syncing them would let one device
+// silently reconfigure another. The theme is the same idea and
 // already lives under its own `horizon-theme` key, read pre-paint by the
 // inline script in app/layout.tsx.
 //
@@ -15,17 +15,11 @@ export interface AppSettings {
   dayRolloverHour: number;
   /** Which column the consistency grid starts its weeks on. */
   weekStartsOn: "sun" | "mon";
-  reminder: {
-    enabled: boolean;
-    /** "HH:MM", local. */
-    time: string;
-  };
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
   dayRolloverHour: 0,
   weekStartsOn: "sun",
-  reminder: { enabled: false, time: "20:00" },
 };
 
 export const SETTINGS_EVENT = "horizon-settings-change";
@@ -41,23 +35,13 @@ const clampHour = (value: unknown): number => {
   return Number.isFinite(n) ? Math.min(11, Math.max(0, n)) : DEFAULT_SETTINGS.dayRolloverHour;
 };
 
-const validTime = (value: unknown): string =>
-  typeof value === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(value)
-    ? value
-    : DEFAULT_SETTINGS.reminder.time;
-
 /** Merges a stored (possibly older, possibly hand-edited) blob over the
  *  defaults, so a missing or malformed field can never break the app. */
 function normalize(raw: unknown): AppSettings {
   const obj = (raw && typeof raw === "object" ? raw : {}) as Partial<AppSettings>;
-  const reminder = (obj.reminder || {}) as Partial<AppSettings["reminder"]>;
   return {
     dayRolloverHour: clampHour(obj.dayRolloverHour),
     weekStartsOn: obj.weekStartsOn === "mon" ? "mon" : "sun",
-    reminder: {
-      enabled: reminder.enabled === true,
-      time: validTime(reminder.time),
-    },
   };
 }
 
