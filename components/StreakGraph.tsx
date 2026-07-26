@@ -3,8 +3,10 @@
 import React, { useMemo, useState } from "react";
 import { Activity, Check, Flame, X } from "lucide-react";
 import type { CompletedItem } from "@/lib/types";
-import { formatDateYMD, parseYMD, todayYMD } from "@/lib/dates";
+import { todayYMD } from "@/lib/dates";
 import { currentStreakLength } from "@/lib/streak";
+import { streakCalendar } from "@/lib/stats";
+import { useAppSettings } from "@/lib/useAppSettings";
 import StreakGrid, { type StreakCell } from "@/components/StreakGrid";
 
 export default function StreakGraph({
@@ -17,63 +19,19 @@ export default function StreakGraph({
   startDate?: string;
 }) {
   const [selectedDateDetails, setSelectedDateDetails] = useState<string | null>(null);
+  const settings = useAppSettings();
 
-  // Building the ~53-week grid walks every day from startDate to today, so
-  // memoize it — otherwise it re-runs on every unrelated parent re-render.
-  const weeks = useMemo(() => {
-    // Count achievements per date from completedItemsHistory
-    const dateCounts: { [key: string]: number } = {};
-    Object.entries(completedItemsHistory || {}).forEach(([date, items]) => {
-      if (Array.isArray(items)) {
-        dateCounts[date] = items.length;
-      }
-    });
-
-    const today = new Date();
-    let startDateObj: Date;
-
-    if (startDate) {
-      startDateObj = parseYMD(startDate);
-    } else {
-      // Fallback: 53 weeks ago if startDate not provided
-      startDateObj = new Date(today);
-      startDateObj.setDate(today.getDate() - 370);
-    }
-    startDateObj.setHours(0, 0, 0, 0);
-
-    // Align start date to Sunday (so weeks represent Sun-Sat rows)
-    const startDayOfWeek = startDateObj.getDay();
-    startDateObj.setDate(startDateObj.getDate() - startDayOfWeek);
-
-    const result: { dateStr: string; count: number }[][] = [];
-    let currentWeek: { dateStr: string; count: number }[] = [];
-
-    const tempDate = new Date(startDateObj);
-    // Render up to today
-    while (tempDate <= today) {
-      const dateStr = formatDateYMD(tempDate);
-      const count = dateCounts[dateStr] || 0;
-
-      currentWeek.push({ dateStr, count });
-
-      if (currentWeek.length === 7) {
-        result.push(currentWeek);
-        currentWeek = [];
-      }
-
-      tempDate.setDate(tempDate.getDate() + 1);
-    }
-
-    // Handle remaining days for current week
-    if (currentWeek.length > 0) {
-      while (currentWeek.length < 7) {
-        currentWeek.push({ dateStr: '', count: 0 });
-      }
-      result.push(currentWeek);
-    }
-
-    return result;
-  }, [completedItemsHistory, startDate]);
+  // Walking every day from startDate to today is real work on a year-long
+  // track, so memoize it — otherwise it re-runs on every unrelated re-render.
+  const days = useMemo(
+    () =>
+      streakCalendar(
+        { startDate: startDate || "", completedItemsHistory },
+        todayYMD(),
+        settings.weekStartsOn
+      ),
+    [completedItemsHistory, startDate, settings.weekStartsOn]
+  );
 
   const streak = useMemo(() => currentStreakLength(streakHistory, todayYMD()), [streakHistory]);
   const totalActive = streakHistory.length;
@@ -89,27 +47,25 @@ export default function StreakGraph({
 
   const itemAsObject = (it: CompletedItem) => (typeof it === "string" ? { title: it, description: "" } : { description: "", ...it });
 
-  // Week-major order: StreakGrid flows column-first over seven rows, so a flat
-  // list of weeks lands one week per column.
-  const cells: StreakCell[] = weeks.flatMap((week, wIdx) =>
-    week.map((day, dIdx) => {
-      if (!day.dateStr) return { id: `pad-${wIdx}-${dIdx}`, level: 0, filled: false };
-      const items = completedItemsHistory[day.dateStr] || [];
-      const accomplishments = items.length
-        ? `\nAccomplished:\n• ${items
-            .map((it) => {
-              const itemObj = itemAsObject(it);
-              return itemObj.description ? `${itemObj.title} (${itemObj.description})` : itemObj.title;
-            })
-            .join("\n• ")}`
-        : "";
-      return {
-        id: day.dateStr,
-        level: levelFor(day.count),
-        title: `${day.dateStr}: ${day.count} update${day.count !== 1 ? "s" : ""}${accomplishments}`,
-      };
-    })
-  );
+  // streakCalendar already returns week-major order, which is exactly how
+  // StreakGrid flows: column-first over seven rows, one week per column.
+  const cells: StreakCell[] = days.map((day, i) => {
+    if (!day.date) return { id: `pad-${i}`, level: 0, filled: false };
+    const items = completedItemsHistory[day.date] || [];
+    const accomplishments = items.length
+      ? `\nAccomplished:\n• ${items
+          .map((it) => {
+            const itemObj = itemAsObject(it);
+            return itemObj.description ? `${itemObj.title} (${itemObj.description})` : itemObj.title;
+          })
+          .join("\n• ")}`
+      : "";
+    return {
+      id: day.date,
+      level: levelFor(day.count),
+      title: `${day.date}: ${day.count} update${day.count !== 1 ? "s" : ""}${accomplishments}`,
+    };
+  });
 
   return (
     <div className="glass-panel">

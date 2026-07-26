@@ -30,6 +30,7 @@ import {
 import { useWorkspace, useWorkspaceActions } from "@/components/workspace/WorkspaceProvider";
 import { panelFor, type PanelContext } from "@/components/panels/registry";
 import PanelErrorBoundary from "@/components/panels/PanelErrorBoundary";
+import DailyReminder from "@/components/DailyReminder";
 import DashboardHeader from "@/components/DashboardHeader";
 import DriveConnectModal, { type DriveModalMode } from "@/components/DriveConnectModal";
 import PhaseDetailModal from "@/components/PhaseDetailModal";
@@ -59,7 +60,7 @@ function FullScreenMessage({ children }: { children: React.ReactNode }) {
 export default function Dashboard() {
   const router = useRouter();
   const { workspace, track, status, error, syncStatus, syncError } = useWorkspace();
-  const { updateTrack, commitTrack, commitWorkspace, switchTrack, sync } = useWorkspaceActions();
+  const { updateTrack, commitTrack, commitWorkspace, switchTrack, sync, reload } = useWorkspaceActions();
 
   const [selectedScheduleDay, setSelectedScheduleDay] = useState<WeekDay | null>(null);
   // null = closed. { rotationId: null } = create new. { rotationId: "<id>" } = view/edit that one.
@@ -296,6 +297,7 @@ export default function Dashboard() {
   return (
     <main className="container">
       <div className="app-glow" aria-hidden="true" />
+      <DailyReminder activeDates={track.streakHistory || []} />
       <DndContext
         sensors={panelSensors}
         collisionDetection={closestCenter}
@@ -317,6 +319,9 @@ export default function Dashboard() {
             canDeleteTrack={visibleTracks(workspace).length > 1}
             moduleState={moduleState}
             onToggleModule={handleToggleModule}
+            onEditRhythm={() => setShowRhythmEditor(true)}
+            onNewRotation={() => setRotationModal({ rotationId: null })}
+            onReloadWorkspace={() => void reload()}
           />
 
           {/* Phase recommendation alert */}

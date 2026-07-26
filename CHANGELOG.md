@@ -7,6 +7,71 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.13.0] - 2026-07-26
+
+Settings, restore-from-backup, and a top bar that fits on a phone.
+
+The header had grown to seven items on one wrapping row, and every piece of
+configuration lived behind a different unlabelled icon. Two changes: an overflow
+menu holding everything you *do*, and a Settings dialog for the choices that
+belong to the device rather than to a track. The bar keeps only what you *read*
+— the mark, which track you're on, and whether it's saved.
+
+### Added
+- **Restore from a backup** (`lib/import.ts`) — the way back in for what
+  `lib/export.ts` writes out, and the gap that mattered most: you could export a
+  full backup but nothing could read one, so a cleared browser with a lapsed
+  Drive connection meant the file was unreadable by its own app. Accepts either
+  export format (the `.json`, or the `.zip`'s `database.json`), validates before
+  touching anything, shows what's inside — tracks, notes, active days, export
+  date — and only then replaces. Replace rather than merge: a restore means "put
+  it back", and merging would need per-item timestamps a file may predate. The
+  workspace goes through the migration pipeline on the way in, so an old backup
+  lands at the current schema exactly as Drive data does.
+- **`components/SettingsModal.tsx`** — theme, day rollover, week start, daily
+  reminder, cloud connection, export, restore, storage used, and a two-step
+  "delete local data". Explicitly *app*-level: a user hunting for "start date"
+  should never find it next to "Client ID", so track identity, rhythm and
+  rotations stay in their own dialogs.
+- **`lib/settings.ts`** — device preferences in localStorage, deliberately not
+  in the synced workspace: they describe how *this* device behaves, and syncing
+  them would let one device silently reconfigure another. Malformed or missing
+  fields fall back to defaults rather than breaking the app.
+- **Day rollover hour** — `todayYMD()` now honours it, so work logged at 01:00
+  can count for the previous day. It's the one setting that changes what the
+  data *means*, and it lands in one place: every existing caller (the daily
+  reset, which card the weekly plan highlights, which date a checkbox records
+  against, the streak anchor) picks it up without threading a parameter.
+- **Week start** — the consistency grid can open its columns on Monday.
+- **Daily reminder** (`components/DailyReminder.tsx`) — fires once a day if
+  nothing has been recorded by the chosen time. Only while the app is open:
+  scheduled push needs a server holding a subscription, and this app doesn't
+  have one (having one would mean your goals leaving your device). Settings says
+  so plainly rather than implying otherwise.
+- **Three-state theme** (`lib/theme.ts`) — Light, Dark, or System. "System" is
+  encoded as *no stored value*, which is what the pre-paint script already
+  treats as "follow the OS"; it now also re-applies when the OS flips while the
+  app is open. Previously, once you clicked the toggle, "follow my system" was
+  unrecoverable.
+
+### Changed
+- **`components/TopBarMenu.tsx`** (replaces `ModulesMenu.tsx`) — one `⋮` holding
+  track settings, weekly rhythm, new rotation, full roadmap, new track, panel
+  visibility, cloud & backup and settings. Module toggles are a section rather
+  than their own popover: a menu that opens a menu is the worse trade.
+- **`components/DashboardHeader.tsx`** — sync status stays in the bar on
+  purpose; a status indicator hidden inside a menu stops being one. The theme
+  toggle stays too (one click, and it's 28px).
+- **`components/StreakGraph.tsx`** — builds its grid from `streakCalendar`
+  instead of its own copy of the same week-walking logic, which is also what
+  makes week-start work everywhere at once.
+- **`WorkspaceProvider`** exposes `reload`, for changes made underneath the
+  provider rather than through it — a restored backup, a wiped database.
+
+Tests: `lib/__tests__/settings.test.ts` (settings normalisation and clamping,
+rollover arithmetic) and `lib/__tests__/import.test.ts` (both file formats,
+every rejection path, the summary) — 192 passing overall.
+
 ## [0.12.1] - 2026-07-26
 
 Landing page trims and a theme toggle.

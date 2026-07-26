@@ -104,6 +104,13 @@ describe("streakCalendar", () => {
     expect(cells.filter((c) => !c.date).every((c) => c.count === 0)).toBe(true);
   });
 
+  it("opens on the Monday before the track when weeks start on Monday", () => {
+    // 2026-07-01 is a Wednesday: Sunday-first opens 06-28, Monday-first 06-29.
+    const cells = streakCalendar(track(), "2026-07-31", "mon");
+    expect(cells[0].date).toBe("2026-06-29");
+    expect(cells.length % 7).toBe(0);
+  });
+
   it("carries each day's accomplishment count", () => {
     const cells = streakCalendar(
       track({ completedItemsHistory: { "2026-07-04": ["a", "b", "c"] } }),

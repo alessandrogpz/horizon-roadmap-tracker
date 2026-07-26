@@ -14,10 +14,13 @@ export const metadata: Metadata = {
   // per file. Declaring `icons` here would override that with worse tags.
 };
 
-// Runs before first paint: applies the saved theme (or the OS preference on
-// first visit) to <html> so there's no light/dark flash on load. Kept as a
-// tiny inline string on purpose — it must execute before React hydrates.
-const themeScript = `(function(){try{var t=localStorage.getItem('horizon-theme');if(t!=='light'&&t!=='dark'){t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`;
+// Runs before first paint: applies the saved theme to <html> so there's no
+// light/dark flash on load. A stored 'light'/'dark' pins the theme; anything
+// else — including no value at all, which is how "System" is encoded (see
+// lib/theme.ts) — follows the OS. The listener keeps a System user in step
+// when their OS flips while the app is open. Kept as a tiny inline string on
+// purpose: it must execute before React hydrates.
+const themeScript = `(function(){try{var m=window.matchMedia('(prefers-color-scheme: light)');var apply=function(){var t=localStorage.getItem('horizon-theme');if(t!=='light'&&t!=='dark'){t=m.matches?'light':'dark';}document.documentElement.setAttribute('data-theme',t);};apply();m.addEventListener('change',apply);}catch(e){}})();`;
 
 export default function RootLayout({
   children,
