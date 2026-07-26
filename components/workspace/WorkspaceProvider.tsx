@@ -50,6 +50,9 @@ export interface WorkspaceActions {
   switchTrack: (trackId: string) => Promise<void>;
   /** Runs a full Drive sync and reloads the merged result. */
   sync: (clientId: string) => Promise<void>;
+  /** Re-reads the workspace from storage. For changes made underneath the
+   *  provider — a restored backup, a wiped database — rather than through it. */
+  reload: () => Promise<void>;
 }
 
 const StateContext = createContext<WorkspaceState | null>(null);
@@ -301,8 +304,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   );
 
   const actions = useMemo<WorkspaceActions>(
-    () => ({ updateTrack, commitTrack, commitWorkspace, flush, switchTrack, sync }),
-    [updateTrack, commitTrack, commitWorkspace, flush, switchTrack, sync]
+    () => ({ updateTrack, commitTrack, commitWorkspace, flush, switchTrack, sync, reload }),
+    [updateTrack, commitTrack, commitWorkspace, flush, switchTrack, sync, reload]
   );
 
   return (

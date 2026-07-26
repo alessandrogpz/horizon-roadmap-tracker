@@ -1,6 +1,8 @@
 // Shared date helpers. All dates are handled in local time and serialized as
 // "YYYY-MM-DD" to avoid timezone shifts from Date.toISOString().
 
+import { getSettings } from "./settings";
+
 export const DAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export function formatDateYMD(date: Date): string {
@@ -10,8 +12,32 @@ export function formatDateYMD(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
+/** The date a moment belongs to once the day-rollover hour is applied: with a
+ *  rollover of 4, anything before 04:00 still counts as the previous day.
+ *  Pure — the configured hour is passed in. */
+export function activeDateYMD(now: Date, rolloverHour: number): string {
+  const shifted = new Date(now);
+  shifted.setHours(shifted.getHours() - rolloverHour);
+  return formatDateYMD(shifted);
+}
+
+/**
+ * The date the app is currently operating in — what "today" means everywhere:
+ * the daily reset, which card the weekly plan highlights, which date a ticked
+ * checkbox is recorded against, and where the streak is anchored.
+ *
+ * Honours the user's day-rollover hour (see lib/settings.ts), so a 01:00
+ * session still lands on the day it feels like rather than the one the
+ * calendar says. Defaults to plain calendar midnight.
+ */
 export function todayYMD(): string {
-  return formatDateYMD(new Date());
+  return activeDateYMD(new Date(), getSettings().dayRolloverHour);
+}
+
+/** `new Date()` shifted into the active day, for week maths that has to agree
+ *  with `todayYMD()` about which day it currently is. */
+export function activeNow(): Date {
+  return parseYMD(todayYMD());
 }
 
 /** Parse a "YYYY-MM-DD" string as a local-midnight Date. */
@@ -32,7 +58,7 @@ export function getMondayOfDateWeek(date: Date): Date {
 }
 
 /** 1-based curriculum week number for targetDate, counted from the Monday of startDate's week. */
-export function getWeekNum(startDateStr: string, targetDate: Date = new Date()): number {
+export function getWeekNum(startDateStr: string, targetDate: Date = activeNow()): number {
   if (!startDateStr) return 1;
   const startMonday = getMondayOfDateWeek(parseYMD(startDateStr));
 
@@ -49,7 +75,7 @@ export function getWeekNum(startDateStr: string, targetDate: Date = new Date()):
 export function getDateForDayName(dayName: string, offset: number = 0): string {
   const dayNameToIndex: Record<string, number> = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 0 };
   const targetDayIndex = dayNameToIndex[dayName] ?? 0;
-  const currentMonday = getMondayOfDateWeek(new Date());
+  const currentMonday = getMondayOfDateWeek(activeNow());
   const mondayOfTargetWeek = new Date(currentMonday);
   mondayOfTargetWeek.setDate(currentMonday.getDate() + offset * 7);
   const diff = targetDayIndex === 0 ? 6 : targetDayIndex - 1; // Mon=0 .. Sun=6
@@ -87,8 +113,7 @@ export function formatDayMonthYear(date: Date): string {
 /** 1-based day count from startDate (inclusive), never below 1. */
 export function daysSince(startDateStr: string): number {
   const start = parseYMD(startDateStr);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = activeNow();
   const diffDays = Math.floor((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
   return Math.max(0, diffDays) + 1;
 }

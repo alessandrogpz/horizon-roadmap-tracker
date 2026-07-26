@@ -82,8 +82,8 @@ export function streakStats(track: TrackState, todayStr: string): StreakStats {
 }
 
 /**
- * One cell per day from the track's start (aligned back to the preceding
- * Sunday, so weeks read as columns) up to today, with how many accomplishments
+ * One cell per day from the track's start (aligned back to the start of that
+ * week, so weeks read as columns) up to today, with how many accomplishments
  * landed on it. The shape the streak grid renders, kept here so the component
  * stays presentational.
  */
@@ -93,7 +93,11 @@ export interface StreakDay {
   count: number;
 }
 
-export function streakCalendar(track: TrackState, todayStr: string): StreakDay[] {
+export function streakCalendar(
+  track: Pick<TrackState, "startDate" | "completedItemsHistory">,
+  todayStr: string,
+  weekStartsOn: "sun" | "mon" = "sun"
+): StreakDay[] {
   if (!track.startDate) return [];
   const counts: Record<string, number> = {};
   Object.entries(track.completedItemsHistory || {}).forEach(([date, items]) => {
@@ -101,7 +105,10 @@ export function streakCalendar(track: TrackState, todayStr: string): StreakDay[]
   });
 
   const cursor = parseYMD(track.startDate);
-  cursor.setDate(cursor.getDate() - cursor.getDay()); // back to Sunday
+  // Back to the first day of the track's opening week, so every column holds
+  // one whole week and the rows mean the same weekday all the way across.
+  const offsetToWeekStart = weekStartsOn === "mon" ? (cursor.getDay() + 6) % 7 : cursor.getDay();
+  cursor.setDate(cursor.getDate() - offsetToWeekStart);
   const today = parseYMD(todayStr);
 
   const days: StreakDay[] = [];
