@@ -6,6 +6,7 @@ import { fetchGitStats, hasGitSource } from "@/lib/gitStats";
 import { fetchNotes, saveNotes } from "@/lib/notes";
 import { renderMarkdownToHtml } from "@/lib/markdown";
 import type { GitStats, Material } from "@/lib/types";
+import Portal from "@/components/Portal";
 
 interface MaterialsTrackerProps {
   materials: Material[];
@@ -564,14 +565,19 @@ export default function MaterialsTracker({
         })}
       </div>
 
-      {/* Notes Drawer Overlay */}
-      <div
-        className={`notes-drawer-overlay ${activeNotesId ? "open" : ""}`}
-        onClick={closeNotes}
-      />
+      {/* Both of these are position:fixed and stay mounted (closed means
+          translated off-screen, which is what animates the slide). Rendered
+          into <body> rather than here: this panel gets a transform for the
+          length of a drag, and a transformed ancestor would make that
+          off-screen translation relative to the panel instead of the viewport,
+          sliding the "closed" drawer into view mid-drag. */}
+      <Portal>
+        <div
+          className={`notes-drawer-overlay ${activeNotesId ? "open" : ""}`}
+          onClick={closeNotes}
+        />
 
-      {/* Notes Drawer */}
-      <div className={`notes-drawer ${activeNotesId ? "open" : ""}`}>
+        <div className={`notes-drawer ${activeNotesId ? "open" : ""}`}>
         <div className="notes-drawer-header">
           <div className="flex flex-col gap-1 min-w-0 flex-1 pr-4">
             <span className="text-[0.65rem] text-accent uppercase tracking-[0.05em] font-mono font-semibold">
@@ -646,8 +652,9 @@ export default function MaterialsTracker({
           >
             Save Now
           </button>
+          </div>
         </div>
-      </div>
+      </Portal>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { todayYMD } from "@/lib/dates";
 import { currentStreakLength } from "@/lib/streak";
 import { streakCalendar } from "@/lib/stats";
 import { useAppSettings } from "@/lib/useAppSettings";
+import Portal from "@/components/Portal";
 import StreakGrid, { type StreakCell } from "@/components/StreakGrid";
 
 export default function StreakGraph({
@@ -86,7 +87,11 @@ export default function StreakGraph({
         <StreakGrid cells={cells} onCellClick={setSelectedDateDetails} />
       </div>
 
+      {/* Into <body>, not here: this modal is position:fixed inside a panel
+          that carries a transform while it's being dragged, which would make
+          "fixed" mean "relative to the panel". See components/Portal.tsx. */}
       {selectedDateDetails && (
+        <Portal>
         <div
           onClick={() => setSelectedDateDetails(null)}
           className="fixed inset-0 modal-overlay flex items-center justify-center z-[1000] p-4"
@@ -156,6 +161,7 @@ export default function StreakGraph({
             </div>
           </div>
         </div>
+        </Portal>
       )}
     </div>
   );
