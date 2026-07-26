@@ -7,6 +7,7 @@ import type { FocusType, Material, Phase, WeekDay, Workspace } from "@/lib/types
 import { TEMPLATE_LIST, seedTrackFromTemplate, type TrackTemplate } from "@/lib/templates";
 import { createTrack } from "@/lib/workspaceRepo";
 import { todayYMD } from "@/lib/dates";
+import HorizonMark from "@/components/HorizonMark";
 import WizardStepper from "@/components/onboarding/WizardStepper";
 import TemplatePicker from "@/components/onboarding/TemplatePicker";
 import TrackIdentityStep from "@/components/onboarding/TrackIdentityStep";
@@ -127,7 +128,7 @@ function OnboardingContent() {
         <div className="w-full max-w-[560px] flex flex-col gap-6">
           <div>
             <h1 className="text-[1.6rem] font-bold text-foreground m-0 flex items-center gap-2">
-              <span className="text-accent">&gt;_</span> Welcome to Horizon
+              <HorizonMark className="h-[0.8em] w-auto text-accent" /> Welcome to Horizon
             </h1>
             <p className="text-muted-foreground text-[0.9rem] mt-1">
               Is this a new setup, or do you already have an account synced elsewhere?
@@ -161,7 +162,7 @@ function OnboardingContent() {
         <div className="w-full max-w-[560px] flex flex-col gap-6">
           <div>
             <h1 className="text-[1.6rem] font-bold text-foreground m-0 flex items-center gap-2">
-              <span className="text-accent">&gt;_</span> Welcome to Horizon
+              <HorizonMark className="h-[0.8em] w-auto text-accent" /> Welcome to Horizon
             </h1>
           </div>
           <div className="glass-panel p-6 sm:p-8">
@@ -177,7 +178,7 @@ function OnboardingContent() {
       <div className="w-full max-w-[720px] flex flex-col gap-6">
         <div>
           <h1 className="text-[1.6rem] font-bold text-foreground m-0 flex items-center gap-2">
-            <span className="text-accent">&gt;_</span> {isAddMode ? "New Track" : "Welcome to Horizon"}
+            <HorizonMark className="h-[0.8em] w-auto text-accent" /> {isAddMode ? "New Track" : "Welcome to Horizon"}
           </h1>
           <p className="text-muted-foreground text-[0.9rem] mt-1">
             {isAddMode

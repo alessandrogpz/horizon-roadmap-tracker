@@ -7,6 +7,50 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.8.0] - 2026-07-26
+
+A real logo. The app had three different marks in the three places you
+actually see it: a `>_` terminal glyph in the header, a stock rainbow torus on
+the phone home screen, and the untouched Next.js default in the browser tab.
+All three are now one mark, drawn from the app's own design tokens — a sun
+clearing the horizon, where the horizon line doubles as the track's progress
+bar.
+
+### Added
+- **`app/icon.svg`** — the master artwork, and also what modern browsers get
+  as their favicon (`sizes="any"`, so it stays crisp at any tab size).
+- **`components/HorizonMark.tsx`** — the same mark drawn plate-free in
+  `currentColor` for use inside the app, so it follows the theme. Replaces the
+  `>_` glyph in the dashboard header and on all three onboarding screens.
+- **`app/apple-icon.png`** (180×180) and **`public/icon-maskable-512.png`** —
+  purpose-built variants. Both are full-bleed with no corner radius of their
+  own, because iOS and Android each apply their own mask; the maskable one
+  keeps the mark inside the 80% safe zone so the ends of the horizon bar
+  survive the circular crop.
+- **`brand/build-icons.sh`** — regenerates every PNG and the `.ico` from the
+  SVG sources, so the set can't drift apart by hand-editing one of them.
+
+### Changed
+- `app/favicon.ico` is now the Horizon mark at 16/32/48 px, replacing the
+  Next.js starter default.
+- `public/icon-192.png` and `public/icon-512.png` re-rendered from the new
+  master.
+- The manifest points `purpose: 'maskable'` at the dedicated maskable art
+  instead of reusing the standard 512 icon, and its `background_color` now
+  matches the app's actual `--background` (`#0a0a0c`, was `#09090b`).
+- `app/layout.tsx` no longer declares `metadata.icons`. The app-directory file
+  conventions (`favicon.ico`, `icon.svg`, `apple-icon.png`) emit better
+  `rel`/`type`/`sizes` tags per file, and a manual `icons` block would have
+  overridden them.
+- Service worker cache bumped to `v3` and the maskable icon added to the
+  precache list — without the bump, installed PWAs would have kept serving the
+  old icons out of cache.
+
+### Removed
+- `public/icon.png` and `public/icon.jpg` — 1024 px source art for the old
+  rainbow torus, referenced by nothing but the README. Recoverable from git
+  history if ever wanted.
+
 ## [0.7.0] - 2026-07-26
 
 Internal restructuring. No feature was added or removed and the UI is
