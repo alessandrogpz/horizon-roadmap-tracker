@@ -1,4 +1,6 @@
-import { db, wrapLegacyAppState } from "./localDb";
+import { db } from "./localDb";
+import { fetchWorkspace, putWorkspace } from "./workspaceRepo";
+import { migrateWorkspace, wrapLegacyAppState } from "./migrations";
 import type { AppState, SyncResult, Workspace } from "./types";
 import { mergeWorkspace } from "./merge";
 
@@ -148,11 +150,7 @@ export const syncWithGoogleDrive = async (): Promise<SyncResult> => {
   logs.push("Sync started: Connecting to Google Drive...");
 
   try {
-    const localRecord = await db.workspace.get("current");
-    if (!localRecord) {
-      return { success: false, log: logs, error: "No local data to sync" };
-    }
-    const localData: Workspace = localRecord.data;
+    const localData: Workspace = await fetchWorkspace();
 
     let remoteFileId = "";
     let remoteData: Workspace | null = null;
@@ -189,34 +187,33 @@ export const syncWithGoogleDrive = async (): Promise<SyncResult> => {
         remoteData = rawRemote as Workspace;
         logs.push("Fetched remote backup data.");
       }
+      // The backup may have been written by a device on an older version, so
+      // bring it up to the current schema before merging — otherwise a stale
+      // shape could win the merge and land back in local storage.
+      remoteData = migrateWorkspace(remoteData).workspace;
     } else {
       logs.push("No remote backup found. Creating a new one...");
     }
 
+    let syncedData: Workspace;
     if (remoteData) {
       if (!localData.isSynced) {
         logs.push("Local database is unsynced. Overwriting completely with remote backup data.");
-        const finalData = { ...remoteData, isSynced: true };
-        await db.workspace.put({ id: "current", data: finalData });
+        syncedData = { ...remoteData, isSynced: true };
         logs.push("Local database initialized with remote backup.");
-        localRecord.data = finalData;
       } else {
         logs.push("Merging progress and streaks using day-level timestamps...");
-        const { data: finalData, log: mergeLog } = mergeWorkspace(localData, remoteData);
+        const { data: merged, log: mergeLog } = mergeWorkspace(localData, remoteData);
         logs.push(...mergeLog);
-
-        await db.workspace.put({ id: "current", data: finalData });
+        syncedData = merged;
         logs.push("Local database successfully updated with merged state.");
-        localRecord.data = finalData;
       }
     } else {
-      localRecord.data.isSynced = true;
-      localRecord.data.hasUnsyncedChanges = false;
-      localRecord.data.lastSyncTime = Date.now();
-      await db.workspace.put({ id: "current", data: localRecord.data });
+      syncedData = { ...localData, isSynced: true, hasUnsyncedChanges: false, lastSyncTime: Date.now() };
     }
+    await putWorkspace(syncedData);
 
-    const stringifiedData = JSON.stringify(localRecord.data, null, 2);
+    const stringifiedData = JSON.stringify(syncedData, null, 2);
 
     if (remoteFileId) {
       const updateUrl = `https://www.googleapis.com/upload/drive/v3/files/${remoteFileId}?uploadType=media`;

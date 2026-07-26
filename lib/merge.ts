@@ -304,6 +304,9 @@ export function mergeWorkspace(local: Workspace, remote: Workspace): WorkspaceMe
       // workspace-level layout to reconcile here anymore.
       activeTrackId,
       tracks: mergedTracks,
+      // Both sides were migrated before merging, so keep the higher stamp
+      // rather than letting an older device's number undo the other's steps.
+      schemaVersion: Math.max(local.schemaVersion ?? 0, remote.schemaVersion ?? 0),
       isSynced: true,
       hasUnsyncedChanges: false,
       lastSyncTime: Date.now(),

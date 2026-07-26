@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { isLocalRequest, localOnlyResponse } from "@/lib/server/localRequest";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,11 @@ export const dynamic = "force-dynamic";
 const NOTES_DIR = path.join(process.cwd(), "data", "notes");
 
 export async function GET(req: NextRequest) {
+  // These notes only exist in a local checkout, and they're personal content —
+  // same localhost-only rule as /api/git and /api/open.
+  if (!isLocalRequest(req)) {
+    return localOnlyResponse();
+  }
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
 

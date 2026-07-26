@@ -4,14 +4,16 @@ import React, { useEffect, useRef, useState } from "react";
 import type { TrackState, Workspace } from "@/lib/types";
 import { daysSince, todayYMD } from "@/lib/dates";
 import { currentStreakLength } from "@/lib/streak";
-import { visibleTracks } from "@/lib/api";
+import { visibleTracks } from "@/lib/selectors";
+import type { SyncStatus } from "@/components/workspace/WorkspaceProvider";
 import { Pencil, Ellipsis, Cloud, Map, Flame } from "lucide-react";
 import TrackSwitcher from "@/components/TrackSwitcher";
 import TrackSettingsModal from "@/components/TrackSettingsModal";
 import ThemeToggle from "@/components/ThemeToggle";
 import ModulesMenu, { type ModuleState } from "@/components/ModulesMenu";
 
-export type SyncStatus = "idle" | "syncing" | "success" | "error";
+/** Re-exported for the header's own consumers; the provider owns the type. */
+export type { SyncStatus };
 
 interface DashboardHeaderProps {
   data: TrackState;

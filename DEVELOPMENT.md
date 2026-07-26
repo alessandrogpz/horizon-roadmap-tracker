@@ -57,6 +57,58 @@ The Dexie (IndexedDB) database and Google Drive `database.json` used for daily p
 - Use an isolated port (e.g. `next start -p 3003`, `3001`, `3002`) rather than the port-3000 dev server used for daily use — a different port is a different origin, so it gets a fresh IndexedDB with no risk to real data.
 - Stop the isolated test server when done (`pkill -f "next start -p <port>"` or equivalent).
 
+## Where things live
+
+| Concern | Module |
+|---|---|
+| Reading/writing the stored workspace | `lib/workspaceRepo.ts` — the only module that touches the workspace record |
+| Dexie schema | `lib/localDb.ts` |
+| Shape upgrades | `lib/migrations/` (pipeline in `index.ts`, steps in `steps.ts`) |
+| Merge/conflict resolution | `lib/merge.ts` |
+| What an edit does to a track | `lib/trackActions.ts` (materials, portfolio, phases, identity) and `lib/completions.ts` (checkboxes, streak) |
+| Pure workspace queries | `lib/selectors.ts` |
+| App state + persistence timing | `components/workspace/WorkspaceProvider.tsx` |
+| Which dashboard modules exist | `lib/modules.ts` (data) + `components/panels/registry.tsx` (icon + panel) |
+
+Rules of thumb: `lib/` stays free of React, components stay free of business
+rules. A new mutation belongs in `lib/trackActions.ts` as a pure
+`(track, args) => nextTrack` function with a test, not inline in a component.
+
+## Adding a dashboard module
+
+1. Append it to `MODULES` in `lib/modules.ts` (id, label, home column).
+2. Add the matching entry to `PANEL_REGISTRY` in `components/panels/registry.tsx`.
+
+Step 2 is enforced: `PANEL_REGISTRY` is typed as a full map over `ModuleId`, so
+forgetting it fails the build rather than leaving a gap on the dashboard.
+
+## Adding a migration
+
+Write a pure `Workspace -> Workspace` step in `lib/migrations/steps.ts` and
+append it to `MIGRATIONS` in `lib/migrations/index.ts`. Appending is what
+advances `CURRENT_SCHEMA_VERSION`; nothing else needs updating.
+
+**Never reorder or remove an existing entry** — a device's stored
+`schemaVersion` is an index into that list. Steps must be idempotent: records
+written before the pipeline existed report version 0 and replay every step, and
+data pulled down from Drive is replayed through them too.
+
 ## Sync/merge correctness
 
-`lib/api.ts`'s `applyTrackBookkeeping` decides whether a track edit bumps `configVersion` (which drives "higher side wins" conflict resolution during Drive sync). Fields with a dedicated smart-merge in `lib/merge.ts` (`materials`, `portfolio`) are safe by construction. Fields without one (`phases`, `weekSchedule`, etc.) rely entirely on `CONFIG_COMPARE_FIELDS` correctly detecting in-place edits, not just additions/removals — if you add a new structural field to `TrackState`, add it to `CONFIG_COMPARE_FIELDS` and add a regression test in `lib/__tests__/api.test.ts` following the existing pattern (create a track, edit a field in place, assert `configVersion` bumps).
+`lib/workspaceRepo.ts`'s `applyTrackBookkeeping` decides whether a track edit
+bumps `configVersion` (which drives "higher side wins" conflict resolution
+during Drive sync). Fields with a dedicated smart-merge in `lib/merge.ts`
+(`materials`, `portfolio`) are safe by construction. Everything else relies on
+that comparison detecting in-place edits, not just additions/removals.
+
+The comparison is deliberately an **exclusion** list (`NON_CONFIG_FIELDS`):
+progress and bookkeeping fields are named explicitly, and any other field on a
+track counts as structural config. So a new structural field on `TrackState`
+needs no action — it is covered automatically. Only a new *progress* field
+needs an entry, and getting that wrong merely over-bumps a counter, whereas the
+old inclusion list silently lost edits when someone forgot (which is exactly
+what happened to `focusTypes`).
+
+When you do add a progress field, add a regression test in
+`lib/__tests__/workspaceRepo.test.ts` following the existing pattern (create a
+track, change the field, assert `configVersion` does *not* bump).

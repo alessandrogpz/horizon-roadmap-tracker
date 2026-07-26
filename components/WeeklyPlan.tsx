@@ -4,13 +4,12 @@ import React from "react";
 import { CalendarDays } from "lucide-react";
 import type { TrackState, WeekDay } from "@/lib/types";
 import { getDateForDayName, getWeekNum } from "@/lib/dates";
-import { rebuildStreakHistory, completedItemTitle } from "@/lib/streak";
 import { DEFAULT_WEEK_SCHEDULE, DEFAULT_FOCUS_TYPES } from "@/lib/constants";
 import { computeRotationItemsForDay, isRotationItem } from "@/lib/rotation";
+import { isItemCompleted, setItemCompletion, type ItemKind } from "@/lib/completions";
 
 interface WeeklyPlanProps {
   data: TrackState;
-  todayStr: string;
   dayOfWeek: number;
   weekOffset: number;
   setWeekOffset: (offset: number) => void;
@@ -18,12 +17,11 @@ interface WeeklyPlanProps {
   /** null opens the "create a new rotation" flow; a string opens that rotation for viewing/editing. */
   onRotationClick: (rotationId: string | null) => void;
   /** Applies an optimistic state update and schedules a debounced save. */
-  applyChange: (newData: TrackState) => void;
+  applyChange: (updater: (previous: TrackState) => TrackState) => void;
 }
 
 export default function WeeklyPlan({
   data,
-  todayStr,
   dayOfWeek,
   weekOffset,
   setWeekOffset,
@@ -122,7 +120,6 @@ export default function WeeklyPlan({
                 dayItem={dayItem}
                 idx={idx}
                 data={data}
-                todayStr={todayStr}
                 dayOfWeek={dayOfWeek}
                 weekOffset={weekOffset}
                 viewedWeekNum={viewedWeekNum}
@@ -152,15 +149,14 @@ interface DayCardProps {
   dayItem: WeekDay;
   idx: number;
   data: TrackState;
-  todayStr: string;
   dayOfWeek: number;
   weekOffset: number;
   viewedWeekNum: number;
   onDayClick: (day: WeekDay) => void;
-  applyChange: (newData: TrackState) => void;
+  applyChange: (updater: (previous: TrackState) => TrackState) => void;
 }
 
-function DayCard({ dayItem, idx, data, todayStr, dayOfWeek, weekOffset, viewedWeekNum, onDayClick, applyChange }: DayCardProps) {
+function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onDayClick, applyChange }: DayCardProps) {
   const isCurrentWeek = weekOffset === 0;
   const isToday = isCurrentWeek && idx === (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
   const dayKey = dayItem.name;
@@ -184,90 +180,25 @@ function DayCard({ dayItem, idx, data, todayStr, dayOfWeek, weekOffset, viewedWe
     ? [...rotationFocus, ...storedFocusTasks.filter((it) => !isRotationItem(it))]
     : storedFocusTasks;
 
-  // Determine completion: for today use live data, for other days use weeklyCompletions
-  const weeklyCompletions = data.weeklyCompletions || {};
-  const dayCompletions = weeklyCompletions[dayDateStr] || { tasks: [], revisions: [] };
-
   const todayDate = new Date();
   todayDate.setHours(0, 0, 0, 0);
   const dayDate = new Date(dayDateStr + "T00:00:00");
   const isFuture = dayDate > todayDate;
 
-  const getItemCompleted = (itemId: string, isRevision: boolean): boolean => {
-    return isRevision
-      ? (dayCompletions.revisions || []).includes(itemId)
-      : (dayCompletions.tasks || []).includes(itemId);
-  };
+  const getItemCompleted = (itemId: string, kind: ItemKind) => isItemCompleted(data, dayDateStr, kind, itemId);
 
-  const handleToggleItem = (itemId: string, itemTitle: string, itemDesc: string, isRevision: boolean, currentCompleted: boolean) => {
-    const newCompleted = !currentCompleted;
-    const newWeeklyCompletions = { ...(data.weeklyCompletions || {}) };
-    const newCompletedItemsHistory = { ...(data.completedItemsHistory || {}) };
-
-    if (isToday) {
-      // Update live data for today
-      const updatedList = isRevision
-        ? revisionItems.map((it) => it.id === itemId ? { ...it, completed: newCompleted } : it)
-        : focusTasks.map((t) => t.id === itemId ? { ...t, completed: newCompleted } : t);
-
-      // Also update weeklyCompletions for today
-      const todayComps = newWeeklyCompletions[todayStr] || { tasks: [], revisions: [] };
-      const compKey = isRevision ? "revisions" : "tasks";
-      if (newCompleted) {
-        if (!todayComps[compKey].includes(itemId)) todayComps[compKey] = [...todayComps[compKey], itemId];
-      } else {
-        todayComps[compKey] = todayComps[compKey].filter((id: string) => id !== itemId);
-      }
-      newWeeklyCompletions[todayStr] = todayComps;
-
-      // Streak sync for today
-      const todayItems = newCompletedItemsHistory[todayStr] || [];
-      if (newCompleted) {
-        const alreadyExists = todayItems.some((it) => completedItemTitle(it) === itemTitle);
-        if (!alreadyExists) {
-          newCompletedItemsHistory[todayStr] = [...todayItems, { title: itemTitle, description: itemDesc || "" }];
-        }
-      } else {
-        newCompletedItemsHistory[todayStr] = todayItems.filter((it) => completedItemTitle(it) !== itemTitle);
-      }
-
-      const dataKey = isRevision ? "dailyRevisionItems" : "dailyTasks";
-      applyChange({
-        ...data,
-        [dataKey]: { ...(data[dataKey] || {}), [dayKey]: updatedList },
-        weeklyCompletions: newWeeklyCompletions,
-        streakHistory: rebuildStreakHistory(newCompletedItemsHistory),
-        completedItemsHistory: newCompletedItemsHistory,
-      });
-    } else {
-      // Update weeklyCompletions for a non-today day
-      const dayComps = newWeeklyCompletions[dayDateStr] || { tasks: [], revisions: [] };
-      const compKey = isRevision ? "revisions" : "tasks";
-      if (newCompleted) {
-        if (!dayComps[compKey].includes(itemId)) dayComps[compKey] = [...dayComps[compKey], itemId];
-      } else {
-        dayComps[compKey] = dayComps[compKey].filter((id: string) => id !== itemId);
-      }
-      newWeeklyCompletions[dayDateStr] = dayComps;
-
-      // Streak sync for the target date (not today!)
-      const targetDateItems = newCompletedItemsHistory[dayDateStr] || [];
-      if (newCompleted) {
-        const alreadyExists = targetDateItems.some((it) => completedItemTitle(it) === itemTitle);
-        if (!alreadyExists) {
-          newCompletedItemsHistory[dayDateStr] = [...targetDateItems, { title: itemTitle, description: itemDesc || "" }];
-        }
-      } else {
-        newCompletedItemsHistory[dayDateStr] = targetDateItems.filter((it) => completedItemTitle(it) !== itemTitle);
-      }
-
-      applyChange({
-        ...data,
-        weeklyCompletions: newWeeklyCompletions,
-        streakHistory: rebuildStreakHistory(newCompletedItemsHistory),
-        completedItemsHistory: newCompletedItemsHistory,
-      });
-    }
+  /** Completion is always recorded against this card's calendar date, so
+   *  ticking a box on a past day lands on that day rather than today. The
+   *  stored item's own flag is only synced for the live (today) card — on any
+   *  other day the flag belongs to a different date's checklist. */
+  const handleToggleItem = (
+    kind: ItemKind,
+    item: { id: string; title: string; description?: string },
+    completed: boolean
+  ) => {
+    applyChange((previous) =>
+      setItemCompletion(previous, { dateStr: dayDateStr, dayKey: isToday ? dayKey : undefined, kind, ...item }, completed)
+    );
   };
 
   const focusTypes = data.focusTypes || DEFAULT_FOCUS_TYPES;
@@ -318,7 +249,7 @@ function DayCard({ dayItem, idx, data, todayStr, dayOfWeek, weekOffset, viewedWe
           </span>
           <div className="flex flex-col gap-[0.15rem] mt-[0.15rem]">
             {revisionItems.map((item, i) => {
-              const completed = getItemCompleted(item.id, true);
+              const completed = getItemCompleted(item.id, "revision");
               return (
                 <div key={item.id || i} className="flex items-start gap-[0.3rem]">
                   <input
@@ -326,7 +257,9 @@ function DayCard({ dayItem, idx, data, todayStr, dayOfWeek, weekOffset, viewedWe
                     className="checkbox-custom mt-0.5 scale-[0.8]"
                     checked={completed}
                     onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                    onChange={() => handleToggleItem(item.id, item.title, item.description || "", true, completed)}
+                    onChange={(e) =>
+                      handleToggleItem("revision", { id: item.id, title: item.title, description: item.description }, e.target.checked)
+                    }
                   />
                   <span className={`text-[0.72rem] leading-[1.3] ${completed ? "text-subtle-foreground line-through" : isToday ? "text-foreground" : "text-muted-foreground"}`}>
                     {item.title}
@@ -346,7 +279,7 @@ function DayCard({ dayItem, idx, data, todayStr, dayOfWeek, weekOffset, viewedWe
           </span>
           <div className="flex flex-col gap-[0.15rem] mt-[0.15rem]">
             {focusTasks.map((task, i) => {
-              const completed = getItemCompleted(task.id, false);
+              const completed = getItemCompleted(task.id, "focus");
               return (
                 <div key={task.id || i} className="flex items-center gap-[0.3rem]">
                   <input
@@ -354,7 +287,7 @@ function DayCard({ dayItem, idx, data, todayStr, dayOfWeek, weekOffset, viewedWe
                     className="checkbox-custom scale-[0.8]"
                     checked={completed}
                     onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                    onChange={() => handleToggleItem(task.id, task.title, "", false, completed)}
+                    onChange={(e) => handleToggleItem("focus", { id: task.id, title: task.title }, e.target.checked)}
                   />
                   <span className={`text-[0.72rem] leading-[1.3] ${completed ? "text-subtle-foreground line-through" : isToday ? "text-foreground" : "text-muted-foreground"}`}>
                     {task.title}
