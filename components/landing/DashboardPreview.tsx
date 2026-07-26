@@ -1,4 +1,5 @@
 import HorizonMark from "@/components/HorizonMark";
+import StreakGrid, { type StreakCell } from "@/components/StreakGrid";
 
 /**
  * A decorative, non-interactive miniature of the dashboard for the landing
@@ -15,18 +16,18 @@ import HorizonMark from "@/components/HorizonMark";
  * the run reads like a real one: mostly kept, occasionally missed, denser
  * toward the present (the right-hand side).
  */
-const STREAK_LEVELS = (() => {
-  const cells = 26 * 7;
+const STREAK_CELLS: StreakCell[] = (() => {
+  const count = 26 * 7;
   let seed = 20260726;
   const next = () => {
     seed = (seed * 1103515245 + 12345) % 2147483648;
     return seed / 2147483648;
   };
-  return Array.from({ length: cells }, (_, i) => {
-    const recency = i / cells; // 0 at the oldest column, 1 at the newest
+  return Array.from({ length: count }, (_, i) => {
+    const recency = i / count; // 0 at the oldest column, 1 at the newest
     const r = next();
-    if (r > 0.55 + recency * 0.35) return 0; // a missed day, rarer lately
-    return 1 + Math.floor(next() * (2 + recency * 2));
+    const level = r > 0.55 + recency * 0.35 ? 0 : 1 + Math.floor(next() * (2 + recency * 2));
+    return { id: `c${i}`, level };
   });
 })();
 
@@ -34,16 +35,6 @@ const PHASES = [
   { name: "Foundations", state: "done", detail: "Weeks 1–8" },
   { name: "Rasterizer & pipeline", state: "current", detail: "Weeks 9–20" },
   { name: "Physics & scene graph", state: "todo", detail: "Weeks 21–32" },
-] as const;
-
-const WEEK = [
-  { day: "Mon", label: "Study", color: "#a78bfa" },
-  { day: "Tue", label: "Build", color: "#34d399" },
-  { day: "Wed", label: "Study", color: "#a78bfa" },
-  { day: "Thu", label: "Build", color: "#34d399" },
-  { day: "Fri", label: "Study", color: "#a78bfa" },
-  { day: "Sat", label: "Review", color: "#fbbf24" },
-  { day: "Sun", label: "Free", color: "#a1a1aa" },
 ] as const;
 
 export default function DashboardPreview() {
@@ -114,38 +105,7 @@ export default function DashboardPreview() {
           </span>
           <span className="font-mono text-[0.65rem] text-success">31-day streak</span>
         </div>
-        <div
-          className="grid grid-flow-col grid-rows-7 gap-[2px]"
-          style={{ gridAutoColumns: "minmax(0, 1fr)" }}
-        >
-          {STREAK_LEVELS.map((level, i) => (
-            <span
-              key={i}
-              className="aspect-square rounded-[1.5px]"
-              style={{ backgroundColor: `var(--streak-${level})` }}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Weekly rhythm */}
-      <div className="pt-5">
-        <div className="grid grid-cols-7 gap-1">
-          {WEEK.map((d, i) => (
-            <div
-              key={d.day}
-              className={`rounded-md border px-1 py-1.5 text-center ${
-                i === 2 ? "border-accent-muted bg-accent/[0.07]" : "border-card-border bg-surface-muted"
-              }`}
-            >
-              <div className="font-mono text-[0.55rem] text-subtle-foreground">{d.day}</div>
-              <div
-                className="mt-1 h-1 w-full rounded-full"
-                style={{ backgroundColor: d.color, opacity: 0.85 }}
-              />
-            </div>
-          ))}
-        </div>
+        <StreakGrid cells={STREAK_CELLS} />
       </div>
     </div>
   );
