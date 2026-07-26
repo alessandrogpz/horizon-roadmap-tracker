@@ -7,6 +7,39 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.11.0] - 2026-07-26
+
+The consistency streak now renders as one grid that fills its panel instead of
+a sideways-scrolling strip of fixed 10px cells, and the dashboard and the
+landing page share the same component so the two can't drift.
+
+### Changed
+- **`components/StreakGrid.tsx`** (new) — the grid itself: seven rows, one
+  column per week, columns sharing the available width evenly. Holds no state
+  and no hooks, which is what lets the landing page (a server component) render
+  it too; `onCellClick` is what makes it interactive for the dashboard.
+  Cell width is capped at 16px, because a track that's only two weeks old would
+  otherwise stretch its handful of columns into huge tiles — past the cap the
+  grid stays left-aligned at its natural size rather than filling the panel.
+- **`components/StreakGraph.tsx`** — builds cells for the grid rather than
+  laying out the squares itself. Dropped the horizontal scroll container and
+  the effect that pinned it to the right edge; there's nothing left to scroll.
+  Tooltips, the click-through day detail modal and the shade thresholds are
+  unchanged.
+- **`components/landing/DashboardPreview.tsx`** — renders through the same
+  grid, and lost the weekly-rhythm strip that used to sit under it. The
+  hero miniature now ends on the streak, matching the dashboard panel.
+
+### Added
+- **`components/landing/WeeklyPlanPreview.tsx`** + a new "A real week" section
+  on `/landing` — a static replica of the Weekly Study Plan panel showing week
+  12 of the engine track (its focus types and colours, both rotations, and the
+  real per-day work), as a concrete example of what a configured track looks
+  like. It mirrors `WeeklyPlan.tsx`'s DayCard and reuses the app's own
+  `.week-grid` / `.week-grid-scroll` classes, so it scrolls sideways on a phone
+  exactly like the real panel. Checkboxes are drawn rather than real inputs —
+  it's a picture, and a disabled `<input>` would still take tab focus.
+
 ## [0.10.0] - 2026-07-26
 
 Added a public landing page at `/landing`, so the domain has somewhere to send

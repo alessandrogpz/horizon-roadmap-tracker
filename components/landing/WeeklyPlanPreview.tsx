@@ -1,0 +1,239 @@
+import { CalendarDays, Check } from "lucide-react";
+
+/**
+ * A static replica of the Weekly Study Plan panel, showing a real week from the
+ * engine track this app was originally built for. It's an illustration on the
+ * landing page, so it's markup rather than the live component: no workspace, no
+ * IndexedDB, no client JS. The day cards deliberately mirror
+ * `components/WeeklyPlan.tsx`'s DayCard — focus tag, revision list, focus list,
+ * today's highlight, dimmed future days — so what a visitor sees here is what
+ * they get.
+ *
+ * It reuses the app's own `.week-grid` / `.week-grid-scroll` classes, so it
+ * scrolls sideways on a phone exactly like the real panel does.
+ */
+
+interface PreviewDay {
+  name: string;
+  /** Focus type label and colour, as configured on the track. */
+  label: string;
+  color: string;
+  revision?: { title: string; done: boolean }[];
+  focus: { title: string; done: boolean }[];
+  state: "past" | "today" | "future";
+}
+
+const DAYS: PreviewDay[] = [
+  {
+    name: "Mon",
+    label: "Math",
+    color: "#a78bfa",
+    revision: [{ title: "Two Pointers", done: true }],
+    focus: [
+      { title: "Mathematics", done: true },
+      { title: "C++ Book", done: true },
+      { title: "Ray Tracer", done: true },
+    ],
+    state: "past",
+  },
+  {
+    name: "Tue",
+    label: "DSA Pattern",
+    color: "#34d399",
+    revision: [{ title: "Linear Algebra", done: true }],
+    focus: [
+      { title: "DSA Pattern Study", done: true },
+      { title: "C++ Book", done: true },
+      { title: "LearnOpenGL", done: false },
+    ],
+    state: "past",
+  },
+  {
+    name: "Wed",
+    label: "Math",
+    color: "#a78bfa",
+    revision: [{ title: "Two Pointers", done: true }],
+    focus: [
+      { title: "Mathematics", done: true },
+      { title: "C++ Book", done: true },
+      { title: "Ray Tracer", done: true },
+    ],
+    state: "past",
+  },
+  {
+    name: "Thu",
+    label: "DSA Pattern",
+    color: "#34d399",
+    revision: [{ title: "Linear Algebra", done: true }],
+    focus: [
+      { title: "DSA Pattern Study", done: true },
+      { title: "C++ Book", done: false },
+      { title: "LearnOpenGL", done: false },
+    ],
+    state: "today",
+  },
+  {
+    name: "Fri",
+    label: "Math",
+    color: "#a78bfa",
+    revision: [{ title: "Two Pointers", done: false }],
+    focus: [
+      { title: "Mathematics", done: false },
+      { title: "C++ Book", done: false },
+      { title: "Ray Tracer", done: false },
+    ],
+    state: "future",
+  },
+  {
+    name: "Sat",
+    label: "DS Implementation",
+    color: "#fbbf24",
+    revision: [{ title: "Linear Algebra", done: false }],
+    focus: [
+      { title: "Data Structure Implementation", done: false },
+      { title: "C++ Book", done: false },
+      { title: "LearnOpenGL", done: false },
+    ],
+    state: "future",
+  },
+  {
+    name: "Sun",
+    label: "Free",
+    color: "#a1a1aa",
+    focus: [
+      { title: "Review week's problems", done: false },
+      { title: "Catch up on readings", done: false },
+    ],
+    state: "future",
+  },
+];
+
+/** A drawn checkbox rather than a real one — this panel is a picture, and a
+ *  disabled <input> would still take tab focus and read as broken. */
+function Box({ done }: { done: boolean }) {
+  return done ? (
+    <span className="mt-px flex h-[14px] w-[14px] shrink-0 items-center justify-center rounded-[4px] bg-success">
+      <Check size={10} strokeWidth={3.5} className="text-[#00120c]" />
+    </span>
+  ) : (
+    <span className="mt-px h-[14px] w-[14px] shrink-0 rounded-[4px] border border-card-border-hover bg-input-bg" />
+  );
+}
+
+function ItemList({
+  heading,
+  items,
+  isToday,
+}: {
+  heading: string;
+  items: { title: string; done: boolean }[];
+  isToday: boolean;
+}) {
+  return (
+    <div>
+      <span className="font-mono text-[0.55rem] font-bold uppercase tracking-[0.05em] text-accent">
+        {heading}
+      </span>
+      <div className="mt-[0.15rem] flex flex-col gap-[0.15rem]">
+        {items.map((item) => (
+          <div key={item.title} className="flex items-start gap-[0.3rem]">
+            <Box done={item.done} />
+            <span
+              className={`text-[0.72rem] leading-[1.3] ${
+                item.done
+                  ? "text-subtle-foreground line-through"
+                  : isToday
+                    ? "text-foreground"
+                    : "text-muted-foreground"
+              }`}
+            >
+              {item.title}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function WeeklyPlanPreview() {
+  return (
+    <div className="glass-panel select-none border-l-4 border-accent-muted">
+      <div className="flex flex-col gap-3">
+        {/* Header — title, the week the plan is showing, and the rotation pill */}
+        <div className="flex flex-col gap-3 border-b border-card-border pb-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <h3 className="m-0 inline-flex items-center gap-2 whitespace-nowrap text-[1.1rem] font-semibold text-foreground">
+              <CalendarDays size={16} strokeWidth={2.5} className="text-muted-foreground" />
+              Weekly Study Plan
+            </h3>
+            <span className="shrink-0 rounded-md border border-card-border bg-surface-muted px-3 py-1 font-mono text-[0.85rem] font-medium">
+              Week 12
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-2 whitespace-nowrap rounded-md border border-dashed border-accent/30 bg-accent/[0.08] px-3 py-1.5">
+              <span className="text-[0.7rem] font-semibold uppercase tracking-[0.05em] text-muted-foreground">
+                DSA rotation:
+              </span>
+              <span className="font-mono text-[0.85rem] font-bold text-accent">Two Pointers</span>
+            </span>
+            <span className="inline-flex items-center gap-2 whitespace-nowrap rounded-md border border-dashed border-accent/30 bg-accent/[0.08] px-3 py-1.5">
+              <span className="text-[0.7rem] font-semibold uppercase tracking-[0.05em] text-muted-foreground">
+                Math rotation:
+              </span>
+              <span className="font-mono text-[0.85rem] font-bold text-accent">Linear Algebra</span>
+            </span>
+          </div>
+        </div>
+
+        {/* The seven day cards — same grid the app uses, so it scrolls on a phone */}
+        <div className="week-grid-scroll">
+          <div className="week-grid">
+            {DAYS.map((day) => {
+              const isToday = day.state === "today";
+              const rgb = [1, 3, 5].map((i) => parseInt(day.color.slice(i, i + 2), 16));
+              return (
+                <div
+                  key={day.name}
+                  className={`flex min-h-[160px] flex-col gap-[0.35rem] overflow-hidden rounded-lg px-2 py-[0.6rem] ${
+                    isToday
+                      ? "border border-accent bg-accent/[0.06] shadow-[0_0_12px_rgba(14,165,233,0.15)]"
+                      : "border border-card-border bg-input-bg"
+                  } ${day.state === "future" ? "opacity-50" : ""}`}
+                >
+                  <div className="border-b border-card-border pb-1 text-center">
+                    <span
+                      className={`text-[0.7rem] uppercase tracking-[0.05em] ${
+                        isToday ? "font-bold text-foreground" : "font-semibold text-muted-foreground"
+                      }`}
+                    >
+                      {day.name}
+                    </span>
+                  </div>
+
+                  <div className="mb-[0.15rem] flex justify-center">
+                    <span
+                      className="whitespace-nowrap rounded-[3px] px-1.5 py-px text-[0.55rem] font-semibold uppercase tracking-[0.03em]"
+                      style={{
+                        color: day.color,
+                        background: `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.2)`,
+                      }}
+                    >
+                      {day.label}
+                    </span>
+                  </div>
+
+                  {day.revision && (
+                    <ItemList heading="Revision" items={day.revision} isToday={isToday} />
+                  )}
+                  <ItemList heading="Focus" items={day.focus} isToday={isToday} />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
