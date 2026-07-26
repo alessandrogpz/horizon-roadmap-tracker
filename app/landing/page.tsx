@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import HorizonMark from "@/components/HorizonMark";
 import DashboardPreview from "@/components/landing/DashboardPreview";
+import WeeklyPlanPreview from "@/components/landing/WeeklyPlanPreview";
 
 export const metadata: Metadata = {
   title: "Horizon — a roadmap tracker for the goals you're actually chasing",
@@ -341,6 +342,33 @@ export default function LandingPage() {
             <p className="mt-6 text-[0.85rem] text-subtle-foreground">
               Four templates ship with the app — Learning, Fitness, Work and Custom — and each
               is only a starting point you rewrite.
+            </p>
+          </div>
+        </section>
+
+        {/* ── A real week ───────────────────────────────────────────────── */}
+        <section className="border-t border-card-border">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
+            <div className="flex max-w-2xl flex-col gap-3">
+              <SectionLabel>A real week</SectionLabel>
+              <h2 className="text-[1.6rem] font-semibold leading-tight tracking-tight sm:text-[2.1rem]">
+                This is what a week in a track actually looks like.
+              </h2>
+              <p className="text-[0.95rem] leading-relaxed text-muted-foreground">
+                Below is week 12 of the engine track this app was built for — the real plan, not a
+                mock-up. Each day carries the focus type it was assigned, the rotation item due on
+                it, and the work that belongs there. Tick things off as you go; the past stays on
+                the record, tomorrow waits its turn.
+              </p>
+            </div>
+
+            <div className="mt-10">
+              <WeeklyPlanPreview />
+            </div>
+
+            <p className="mt-6 text-[0.85rem] text-subtle-foreground">
+              Days, focus types, colours, rotations and tasks are all yours to define — this is one
+              track&apos;s answer, not a fixed format.
             </p>
           </div>
         </section>

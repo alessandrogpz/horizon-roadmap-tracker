@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Activity, Check, Flame, X } from "lucide-react";
 import type { CompletedItem } from "@/lib/types";
 import { formatDateYMD, parseYMD, todayYMD } from "@/lib/dates";
 import { currentStreakLength } from "@/lib/streak";
+import StreakGrid, { type StreakCell } from "@/components/StreakGrid";
 
 export default function StreakGraph({
   streakHistory = [],
@@ -15,14 +16,7 @@ export default function StreakGraph({
   completedItemsHistory?: { [date: string]: CompletedItem[] };
   startDate?: string;
 }) {
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [selectedDateDetails, setSelectedDateDetails] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth;
-    }
-  }, [streakHistory]);
 
   // Building the ~53-week grid walks every day from startDate to today, so
   // memoize it — otherwise it re-runs on every unrelated parent re-render.
@@ -84,19 +78,41 @@ export default function StreakGraph({
   const streak = useMemo(() => currentStreakLength(streakHistory, todayYMD()), [streakHistory]);
   const totalActive = streakHistory.length;
 
-  // Helper to color cells based on contribution level
-  const getColorClass = (count: number) => {
-    if (count === 0) return 'var(--streak-0)';
-    if (count <= 1) return 'var(--streak-1)';
-    if (count <= 2) return 'var(--streak-2)';
-    if (count <= 3) return 'var(--streak-3)';
-    return 'var(--streak-4)';
+  // How many updates a day needs to reach each shade.
+  const levelFor = (count: number) => {
+    if (count === 0) return 0;
+    if (count <= 1) return 1;
+    if (count <= 2) return 2;
+    if (count <= 3) return 3;
+    return 4;
   };
 
   const itemAsObject = (it: CompletedItem) => (typeof it === "string" ? { title: it, description: "" } : { description: "", ...it });
 
+  // Week-major order: StreakGrid flows column-first over seven rows, so a flat
+  // list of weeks lands one week per column.
+  const cells: StreakCell[] = weeks.flatMap((week, wIdx) =>
+    week.map((day, dIdx) => {
+      if (!day.dateStr) return { id: `pad-${wIdx}-${dIdx}`, level: 0, filled: false };
+      const items = completedItemsHistory[day.dateStr] || [];
+      const accomplishments = items.length
+        ? `\nAccomplished:\n• ${items
+            .map((it) => {
+              const itemObj = itemAsObject(it);
+              return itemObj.description ? `${itemObj.title} (${itemObj.description})` : itemObj.title;
+            })
+            .join("\n• ")}`
+        : "";
+      return {
+        id: day.dateStr,
+        level: levelFor(day.count),
+        title: `${day.dateStr}: ${day.count} update${day.count !== 1 ? "s" : ""}${accomplishments}`,
+      };
+    })
+  );
+
   return (
-    <div ref={scrollContainerRef} className="glass-panel p-6 overflow-x-auto">
+    <div className="glass-panel">
       <div className="flex items-center justify-between gap-3 flex-wrap mb-1">
         <h2 className="section-title !mb-0">
           <Activity size={14} strokeWidth={2.5} className="section-icon" />
@@ -110,38 +126,8 @@ export default function StreakGraph({
           <span className="text-muted-foreground">{totalActive} active</span>
         </div>
       </div>
-      <div className="flex gap-1 py-2.5">
-        {weeks.map((week, wIdx) => (
-          <div key={wIdx} className="flex flex-col gap-1">
-            {week.map((day, dIdx) => (
-              <div
-                key={dIdx}
-                onClick={() => day.dateStr && setSelectedDateDetails(day.dateStr)}
-                className={`w-2.5 h-2.5 transition-transform duration-150 ${day.dateStr ? "cursor-pointer hover:scale-[1.35] hover:ring-1 hover:ring-accent/50" : "cursor-default"}`}
-                style={{ 
-                  backgroundColor: day.dateStr ? getColorClass(day.count) : 'transparent',
-                  borderRadius: '2px'
-                }}
-                title={
-                  day.dateStr
-                    ? `${day.dateStr}: ${day.count} update${day.count !== 1 ? 's' : ''}${
-                        completedItemsHistory[day.dateStr] && completedItemsHistory[day.dateStr].length > 0
-                          ? `\nAccomplished:\n• ${completedItemsHistory[day.dateStr]
-                              .map((it) => {
-                                const itemObj = itemAsObject(it);
-                                return itemObj.description
-                                  ? `${itemObj.title} (${itemObj.description})`
-                                  : itemObj.title;
-                              })
-                              .join('\n• ')}`
-                          : ''
-                      }`
-                    : ''
-                }
-              />
-            ))}
-          </div>
-        ))}
+      <div className="py-2.5">
+        <StreakGrid cells={cells} onCellClick={setSelectedDateDetails} />
       </div>
 
       {selectedDateDetails && (
