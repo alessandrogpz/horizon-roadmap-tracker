@@ -202,6 +202,30 @@ body {
   backdrop-filter: blur(6px);
 }
 
+/* ===========================================================================
+   Native form controls
+   =========================================================================== */
+
+/* The list a <select> opens is drawn by the browser, outside the page's own
+   styling: each <option> inherits the select's light `color` but sits on the
+   popup's default white backdrop, so the closed control looks right while the
+   open list reads as pale-grey-on-white — legible only on the row under the
+   cursor. `color-scheme` (set on :root above) fixes this on browsers that
+   apply it to popups; these rules state it outright for the ones that don't.
+   Option colours are honoured on Windows and Linux; macOS draws its own and
+   relies on color-scheme, which is why both are needed. */
+select option {
+  background-color: var(--card-bg);
+  color: var(--foreground);
+}
+
+/* Chrome keeps checked/hovered rows on the system accent, but a `disabled`
+   option would otherwise fall back to a near-invisible grey on the dark
+   backdrop above. */
+select option:disabled {
+  color: var(--subtle-foreground);
+}
+
 .btn {
   background: transparent;
   color: var(--foreground);
