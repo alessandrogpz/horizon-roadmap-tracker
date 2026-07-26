@@ -57,6 +57,12 @@
 
   /* Faint page light-source glow (radial, behind the header). */
   --glow: rgba(14, 165, 233, 0.10);
+
+  /* Tells the browser to render its *own* chrome dark: the popup list a
+     <select> opens, date/time pickers, form-control defaults, scrollbars.
+     Without it those are drawn light-on-light over our dark inputs — an
+     opened select showed white text on white until each row was hovered. */
+  color-scheme: dark;
 }
 
 /* ---------------------------------------------------------------------------
@@ -94,6 +100,8 @@
   --shadow-panel-hover: 0 1px 2px rgba(0, 0, 0, 0.07), 0 16px 32px -18px rgba(0, 0, 0, 0.22);
   --shadow-float: 0 24px 60px -22px rgba(0, 0, 0, 0.25);
   --glow: rgba(2, 132, 199, 0.08);
+
+  color-scheme: light;
 }
 
 /* Expose the design tokens as Tailwind color utilities

@@ -30,7 +30,6 @@ import {
 import { useWorkspace, useWorkspaceActions } from "@/components/workspace/WorkspaceProvider";
 import { panelFor, type PanelContext } from "@/components/panels/registry";
 import PanelErrorBoundary from "@/components/panels/PanelErrorBoundary";
-import DailyReminder from "@/components/DailyReminder";
 import DashboardHeader from "@/components/DashboardHeader";
 import DriveConnectModal, { type DriveModalMode } from "@/components/DriveConnectModal";
 import PhaseDetailModal from "@/components/PhaseDetailModal";
@@ -297,7 +296,6 @@ export default function Dashboard() {
   return (
     <main className="container">
       <div className="app-glow" aria-hidden="true" />
-      <DailyReminder activeDates={track.streakHistory || []} />
       <DndContext
         sensors={panelSensors}
         collisionDetection={closestCenter}

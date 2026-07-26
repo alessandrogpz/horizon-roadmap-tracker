@@ -7,6 +7,31 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.13.1] - 2026-07-26
+
+Three fixes on top of 0.13.0.
+
+### Fixed
+- **Unreadable dropdowns in dark mode** — an opened `<select>` drew its popup
+  list in the browser's own light chrome: white text on white, legible only
+  under the cursor. Fixed at the root with `color-scheme: dark` (and `light` on
+  the light theme), which is the property that tells a browser to render *its*
+  widgets — select popups, date/time pickers, form-control defaults, scrollbars
+  — to match. Applies everywhere, not just to the settings dialog: the weekly
+  rhythm editor's day dropdowns had the same problem.
+
+### Changed
+- **`components/PhaseTracker.tsx`** — a "Full Roadmap" button next to
+  "[+ Add Phase]". The link moved into the header's ⋮ menu in 0.13.0, which is
+  the right home for it but a long way from where you're reading the phases the
+  document describes; the timeline is a summary of that roadmap, so it should
+  open it. Locked with the same "connect Drive to unlock" state as the menu
+  entry.
+- **Removed the daily reminder** — the setting, the `reminder` field, and
+  `components/DailyReminder.tsx`. It was the one addition that promised more
+  than it could deliver (no server means no notification unless the app happens
+  to be open), and it isn't wanted.
+
 ## [0.13.0] - 2026-07-26
 
 Settings, restore-from-backup, and a top bar that fits on a phone.
