@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { FolderGit2, X } from "lucide-react";
-import { fetchGitStats, hasGitSource } from "@/lib/gitStats";
+import { fetchGitStats, parseGitSources, serializeGitSources } from "@/lib/gitStats";
 import type { GitStats, PortfolioProject } from "@/lib/types";
 
 interface PortfolioTrackerProps {
@@ -27,19 +27,26 @@ export default function PortfolioTracker({ portfolio, onToggle, onAddProject, on
   const [editTitle, setEditTitle] = useState("");
   const [editRepoUrl, setEditRepoUrl] = useState("");
 
+  // Keyed on the repo list, not the `portfolio` array — its identity changes on
+  // every unrelated workspace edit, which re-fetched stats constantly.
+  // repoUrl is injected by the legacy-local-paths migration from the authoritative ID map.
+  const gitSourceKey = serializeGitSources(
+    portfolio.map(proj => ({ id: proj.id, source: proj.repoUrl || proj.localPath || "" }))
+  );
+
   useEffect(() => {
-    portfolio.forEach(proj => {
-      // repoUrl is injected by the legacy-local-paths migration from the authoritative ID map
-      const source = proj.repoUrl || proj.localPath || "";
-      if (hasGitSource(source)) {
-        fetchGitStats(source)
-          .then(stats => {
-            setGitStats(prev => ({ ...prev, [proj.id]: stats }));
-          })
-          .catch(err => console.error(`Error fetching git stats for ${proj.title}:`, err));
-      }
+    let cancelled = false;
+    parseGitSources(gitSourceKey).forEach(({ id, source }) => {
+      fetchGitStats(source)
+        .then(stats => {
+          if (!cancelled) setGitStats(prev => ({ ...prev, [id]: stats }));
+        })
+        .catch(err => console.error(`Error fetching git stats for ${source}:`, err));
     });
-  }, [portfolio]);
+    return () => {
+      cancelled = true;
+    };
+  }, [gitSourceKey]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
