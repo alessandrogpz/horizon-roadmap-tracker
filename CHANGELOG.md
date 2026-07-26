@@ -7,6 +7,14 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.13.5] - 2026-07-26
+
+### Removed
+- **`public/feature_graphic.jpg`** — the Play Store feature graphic added in
+  `5a973e0`. Nothing referenced it (it was never in the manifest or any icon
+  set), so it was shipping to every visitor as dead weight in `public/`. Still
+  in the history if a store listing needs it again.
+
 ## [0.13.4] - 2026-07-26
 
 ### Fixed
