@@ -18,6 +18,7 @@ import {
   X,
 } from "lucide-react";
 import HorizonMark from "@/components/HorizonMark";
+import ThemeToggle from "@/components/ThemeToggle";
 import DashboardPreview from "@/components/landing/DashboardPreview";
 import WeeklyPlanPreview from "@/components/landing/WeeklyPlanPreview";
 
@@ -195,6 +196,9 @@ export default function LandingPage() {
               Open the app
               <ArrowRight size={14} strokeWidth={2.2} />
             </Link>
+            {/* Same component, same `horizon-theme` key the app writes, so the
+                choice carries across in both directions. */}
+            <ThemeToggle />
           </div>
         </nav>
       </header>
@@ -221,21 +225,13 @@ export default function LandingPage() {
               exactly where you are.
             </p>
 
-            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
-              <Link
-                href="/"
-                className="btn btn-lg btn-solid flex items-center justify-center gap-2"
-              >
-                Open the app
-                <ArrowRight size={16} strokeWidth={2.2} />
-              </Link>
-              <Link
-                href="/onboarding"
-                className="flex items-center justify-center gap-2 rounded-[var(--radius-control)] border border-card-border bg-surface-muted px-6 py-3 text-[1rem] font-medium text-foreground transition-colors hover:border-card-border-hover hover:bg-surface-hover"
-              >
-                Build your first track
-              </Link>
-            </div>
+            <Link
+              href="/"
+              className="btn btn-lg btn-solid flex w-full items-center justify-center gap-2 sm:w-auto"
+            >
+              Open the app
+              <ArrowRight size={16} strokeWidth={2.2} />
+            </Link>
 
             <p className="text-[0.8rem] text-subtle-foreground">
               Free, and it opens straight into the app — there&apos;s nothing to sign up for.
@@ -515,26 +511,11 @@ export default function LandingPage() {
 
       {/* ── Footer ──────────────────────────────────────────────────────── */}
       <footer className="border-t border-card-border">
-        {/* Extra bottom padding keeps the last row clear of the app's fixed
-            version badge in the corner. */}
-        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 pt-8 pb-14 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <div className="flex items-center gap-2.5">
-            <HorizonMark className="h-3.5 w-auto text-muted-foreground" />
-            <span className="text-[0.85rem] text-muted-foreground">
-              Horizon — Roadmap Tracker
-            </span>
-          </div>
-          <div className="flex flex-wrap items-center gap-4 text-[0.8rem] text-muted-foreground">
-            <Link href="/" className="transition-colors hover:text-foreground">
-              Dashboard
-            </Link>
-            <Link href="/onboarding" className="transition-colors hover:text-foreground">
-              New track
-            </Link>
-            <Link href="/roadmap" className="transition-colors hover:text-foreground">
-              Roadmap
-            </Link>
-          </div>
+        {/* Extra bottom padding keeps the row clear of the app's fixed version
+            badge in the corner. */}
+        <div className="mx-auto flex max-w-6xl items-center gap-2.5 px-4 pt-8 pb-14 sm:px-6">
+          <HorizonMark className="h-3.5 w-auto text-muted-foreground" />
+          <span className="text-[0.85rem] text-muted-foreground">Horizon — Roadmap Tracker</span>
         </div>
       </footer>
     </div>
