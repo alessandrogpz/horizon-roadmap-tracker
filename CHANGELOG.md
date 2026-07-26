@@ -7,6 +7,19 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.13.3] - 2026-07-26
+
+### Fixed
+- **Panels squashed and stretched while being dragged.** `SortablePanel` styled
+  the drag node with `CSS.Transform.toString(transform)`, which emits dnd-kit's
+  `scaleX`/`scaleY` alongside the translation — factors it derives from the
+  ratio between the dragged item and whatever it's currently over. For a list
+  of same-sized rows that's invisible; for dashboard panels, where a Focus Timer
+  can be a fifth the height of a Roadmap Timeline, it visibly distorted the
+  panel's text mid-drag and snapped back on release (the transform is dropped
+  once the panel lands, which is why only the moving panel ever looked wrong).
+  Now `CSS.Translate.toString(transform)` — position without the scaling.
+
 ## [0.13.2] - 2026-07-26
 
 ### Fixed
