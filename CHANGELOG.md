@@ -7,6 +7,26 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.13.4] - 2026-07-26
+
+### Fixed
+- **Dragging the Materials panel slid the notes drawer into view.** The drawer
+  is `position: fixed` and stays mounted whether open or not — "closed" is
+  `translateX(100%)`, parked one drawer-width off the right edge, which is what
+  makes the slide animate. But it was rendered *inside* the Materials panel, and
+  a transformed ancestor becomes the containing block for its fixed
+  descendants. dnd-kit puts a transform on a panel for the whole duration of a
+  drag, so mid-drag that 100% stopped meaning "off the viewport" and started
+  meaning "one panel-width across" — comfortably on screen. Nothing had opened;
+  the closed drawer had simply been re-anchored.
+- **`components/Portal.tsx`** (new) — renders into `<body>`, so a fixed overlay
+  inside a panel can't be captured by an ancestor transform. Used by the notes
+  drawer and by the streak's day-detail modal, which sits in a draggable panel
+  with the same exposure. The hazard was already known here — `globals.css`
+  warns about it for the panel entrance animation — but the drag transform is a
+  second source of it, so this makes it structurally impossible rather than
+  something each overlay has to remember.
+
 ## [0.13.3] - 2026-07-26
 
 ### Fixed
