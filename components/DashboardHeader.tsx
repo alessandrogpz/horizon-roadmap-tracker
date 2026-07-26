@@ -7,6 +7,7 @@ import { currentStreakLength } from "@/lib/streak";
 import { visibleTracks } from "@/lib/selectors";
 import type { SyncStatus } from "@/components/workspace/WorkspaceProvider";
 import { Pencil, Ellipsis, Cloud, Map, Flame } from "lucide-react";
+import HorizonMark from "@/components/HorizonMark";
 import TrackSwitcher from "@/components/TrackSwitcher";
 import TrackSettingsModal from "@/components/TrackSettingsModal";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -161,7 +162,7 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
       {/* Line 1: Identity + track + roadmap link + sync status, all inline */}
       <div className="flex items-center gap-3 flex-wrap text-[0.85rem]">
         <h1 className="text-[1.3rem] font-bold text-foreground m-0 flex items-center gap-2 tracking-[-0.01em] shrink-0">
-          <span className="text-accent font-mono">&gt;_</span> Horizon
+          <HorizonMark className="h-[0.85em] w-auto text-accent" /> Horizon
         </h1>
 
         <span className="text-card-border">|</span>

@@ -10,7 +10,7 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: '/',
     display: 'standalone',
     display_override: ['standalone', 'window-controls-overlay', 'minimal-ui'],
-    background_color: '#09090b',
+    background_color: '#0a0a0c',
     theme_color: '#0ea5e9',
     lang: 'en-US',
     dir: 'ltr',
@@ -34,7 +34,9 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: 'any',
       },
       {
-        src: '/icon-512.png',
+        // Separate art: Android crops adaptive icons to a circle/squircle, so
+        // this variant is full-bleed with the mark inside the safe zone.
+        src: '/icon-maskable-512.png',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'maskable',

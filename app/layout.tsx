@@ -9,11 +9,9 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 export const metadata: Metadata = {
   title: "Horizon: Roadmap Tracker",
   description: "Personal roadmap and consistency engine for the goals you're working toward.",
-  icons: {
-    icon: "/icon-512.png",
-    shortcut: "/icon-512.png",
-    apple: "/icon-512.png",
-  },
+  // Icons are left to the app-directory file conventions — app/favicon.ico,
+  // app/icon.svg and app/apple-icon.png — which emit the right rel/type/sizes
+  // per file. Declaring `icons` here would override that with worse tags.
 };
 
 // Runs before first paint: applies the saved theme (or the OS preference on
