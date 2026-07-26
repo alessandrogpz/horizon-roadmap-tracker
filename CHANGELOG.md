@@ -7,6 +7,24 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.12.1] - 2026-07-26
+
+Landing page trims and a theme toggle.
+
+### Changed
+- **`app/landing/page.tsx`** — one call to action instead of two: the hero's
+  secondary "Build your first track" link is gone, since `/` already forwards
+  to `/onboarding` when there are no tracks, so both buttons led to the same
+  place for the visitors the page is written for. The footer's Dashboard /
+  New track / Roadmap links are gone too — they pointed into an app the
+  visitor hasn't set up yet.
+
+### Added
+- **Theme toggle in the landing nav** — the app's own `ThemeToggle`, not a
+  copy. It writes the same `horizon-theme` localStorage key that the pre-paint
+  script in `layout.tsx` reads on every route, so a choice made on either side
+  carries to the other in both directions, with no flash on the way.
+
 ## [0.12.0] - 2026-07-26
 
 The four hero metrics under the header — Current Streak, Timeline, Phase Day,
