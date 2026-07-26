@@ -56,8 +56,25 @@ no business logic.
 │   └── types.ts                  # TypeScript interfaces
 ├── public/                       # Static assets & service worker
 │   ├── sw.js                     # Custom offline service worker
-│   └── icon.jpg                  # PWA torus icon (glossy rainbow on flat black)
+│   └── icon-*.png                # PWA icons, rendered from app/icon.svg
+├── brand/                        # Logo sources & the script that renders them
+│   └── build-icons.sh            # Regenerates every PNG/ICO from the SVGs
 ```
+
+### The logo
+
+`app/icon.svg` is the master: a sun clearing the horizon, where the horizon
+line doubles as the track's progress bar. Everything else is derived from it —
+`public/icon-192.png`, `public/icon-512.png`, `app/apple-icon.png` and
+`app/favicon.ico`, plus two full-bleed variants in `brand/` for Android's
+maskable crop and iOS's squircle mask. After editing any SVG, re-render with:
+
+```bash
+./brand/build-icons.sh    # needs rsvg-convert (librsvg) and magick (ImageMagick 7)
+```
+
+Inside the app the same mark is drawn plate-free in `currentColor` by
+`components/HorizonMark.tsx`, so it picks up the theme.
 
 ---
 

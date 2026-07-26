@@ -1,11 +1,12 @@
 // Bump the version whenever cached-asset behavior changes; activation deletes
 // all older caches so a new deploy can't be served stale forever.
-const CACHE_NAME = "dev-tracker-cache-v2";
+const CACHE_NAME = "dev-tracker-cache-v3";
 const PRECACHE_URLS = [
   "/",
   "/manifest.webmanifest",
   "/icon-192.png",
   "/icon-512.png",
+  "/icon-maskable-512.png",
 ];
 
 self.addEventListener("install", (event) => {
