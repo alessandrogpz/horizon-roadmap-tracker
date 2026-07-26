@@ -18,29 +18,45 @@ The project has been refactored into a modular, type-safe Next.js PWA:
 
 ### Directory Structure
 
+The app is layered: `lib/` holds the data model and every rule about what an
+edit *means*, and knows nothing about React; `components/` renders it and owns
+no business logic.
+
 ```
-├── app/                     # Next.js Pages & Styles
-│   ├── globals.css          # Tailwind CSS v4 & Custom styles
-│   ├── layout.tsx           # Global HTML wrapper (with JetBrains Mono font)
-│   ├── page.tsx             # Main dashboard view
-│   └── manifest.ts          # PWA Manifest configuration
-├── components/              # Modular UI Components
-│   ├── DashboardHeader.tsx  # Top status line & Sync controls
-│   ├── WeeklyPlan.tsx       # 7-day study planner
-│   ├── MaterialsTracker.tsx # Syllabus reference materials & Notes
-│   ├── PortfolioTracker.tsx # Repository checklist & live Git stats
-│   ├── PhaseTracker.tsx     # Roadmap phases list
-│   └── PomodoroTimer.tsx    # Focus timer component
-├── lib/                     # Decoupled logic libraries
-│   ├── api.ts               # Local DB operations & Git fetching
-│   ├── googleDrive.ts       # Google Drive token & upload wrapper
-│   ├── merge.ts             # Sync state merger (checkboxes & materials)
-│   ├── streak.ts            # Streak calculation helpers
-│   ├── dates.ts             # Date and week utility functions
-│   └── types.ts             # TypeScript interfaces
-├── public/                  # Static assets & Service Worker
-│   ├── sw.js                # Custom offline service worker
-│   └── icon.jpg             # PWA Torus Icon (glossy rainbow on flat black)
+├── app/                          # Next.js routes & styles
+│   ├── globals.css               # Tailwind CSS v4 & custom styles
+│   ├── layout.tsx                # Global HTML wrapper (with JetBrains Mono font)
+│   ├── page.tsx                  # Mounts the workspace provider + dashboard
+│   ├── roadmap/page.tsx          # Per-track markdown roadmap editor
+│   ├── onboarding/page.tsx       # New-track wizard
+│   └── manifest.ts               # PWA manifest configuration
+├── components/
+│   ├── Dashboard.tsx             # Layout, drag-and-drop, modal orchestration
+│   ├── workspace/                # WorkspaceProvider — app state & persistence
+│   ├── panels/                   # Panel registry, panel wiring, error boundary
+│   ├── DashboardHeader.tsx       # Top status line & sync controls
+│   ├── WeeklyPlan.tsx            # 7-day study planner
+│   ├── MaterialsTracker.tsx      # Syllabus reference materials & notes
+│   ├── PortfolioTracker.tsx      # Repository checklist & live git stats
+│   ├── PhaseTracker.tsx          # Roadmap phases list
+│   └── PomodoroTimer.tsx         # Focus timer component
+├── lib/                          # Framework-free logic
+│   ├── workspaceRepo.ts          # The only reader/writer of the stored workspace
+│   ├── localDb.ts                # Dexie schema
+│   ├── migrations/               # Versioned, append-only shape upgrades
+│   ├── trackActions.ts           # Pure track mutations (materials, phases, ...)
+│   ├── completions.ts            # Pure checkbox/streak rules
+│   ├── selectors.ts              # Pure workspace queries
+│   ├── merge.ts                  # Sync state merger (checkboxes & materials)
+│   ├── googleDrive.ts            # Drive auth, REST client & sync engine
+│   ├── gitStats.ts               # GitHub / local git stats, with caching
+│   ├── modules.ts                # Which dashboard modules exist
+│   ├── streak.ts                 # Streak calculation helpers
+│   ├── dates.ts                  # Date and week utility functions
+│   └── types.ts                  # TypeScript interfaces
+├── public/                       # Static assets & service worker
+│   ├── sw.js                     # Custom offline service worker
+│   └── icon.jpg                  # PWA torus icon (glossy rainbow on flat black)
 ```
 
 ---
@@ -82,5 +98,5 @@ You can install the tracker as a native standalone application on your Android/i
 *   **Git Stats Caching:** GitHub API calls are subject to a 60 requests/hour unauthenticated limit. The app mitigates this by:
     *   Caching results in browser `localStorage` for **15 minutes**.
     *   Falling back to the expired cache if a `403 (Rate Limited)` response is returned, guaranteeing the stats always show in the UI.
-*   **Local-only Endpoints:** `/api/git` (local filesystem repo status) and `/api/open` (opening PDF/source links locally) only accept requests addressed to `localhost` to protect your filesystem when exposed on a LAN.
+*   **Local-only Endpoints:** `/api/git` (local filesystem repo status), `/api/open` (opening PDF/source links locally) and `/api/notes` (one-time import of notes from an older on-disk format) only accept requests addressed to `localhost` to protect your filesystem when exposed on a LAN.
 *   **Automated Tests:** Run `npm test` to execute the Vitest test suite verifying the date handlers and the conflict resolution merge logic.

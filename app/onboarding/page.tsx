@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { FocusType, Material, Phase, WeekDay, Workspace } from "@/lib/types";
 import { TEMPLATE_LIST, seedTrackFromTemplate, type TrackTemplate } from "@/lib/templates";
-import { createTrack } from "@/lib/api";
+import { createTrack } from "@/lib/workspaceRepo";
 import { todayYMD } from "@/lib/dates";
 import WizardStepper from "@/components/onboarding/WizardStepper";
 import TemplatePicker from "@/components/onboarding/TemplatePicker";

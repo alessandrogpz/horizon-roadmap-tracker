@@ -1,7 +1,9 @@
 import "fake-indexeddb/auto";
 import Dexie from "dexie";
 import { describe, it, expect } from "vitest";
-import { ProductivityDb, wrapLegacyAppState, LEGACY_TRACK_ID } from "../localDb";
+import { ProductivityDb } from "../localDb";
+import { wrapLegacyAppState } from "../migrations";
+import { LEGACY_TRACK_ID } from "../legacyPersonalData";
 import type { AppState } from "../types";
 
 const uniqueDbName = () => `TestProductivityDb_${Date.now()}_${Math.random().toString(36).slice(2)}`;

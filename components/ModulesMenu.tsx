@@ -1,35 +1,14 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import {
-  LayoutGrid,
-  Eye,
-  EyeOff,
-  CalendarDays,
-  Milestone,
-  Activity,
-  Timer,
-  FolderGit2,
-  BookOpen,
-} from "lucide-react";
+import { LayoutGrid, Eye, EyeOff } from "lucide-react";
+import { panelFor } from "@/components/panels/registry";
 
 export interface ModuleState {
   id: string;
   label: string;
   visible: boolean;
 }
-
-type IconType = React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
-
-// Mirrors each panel's own section icon so the menu reads as the same modules.
-const MODULE_ICONS: Record<string, IconType> = {
-  weeklyPlan: CalendarDays,
-  phaseTracker: Milestone,
-  streakGraph: Activity,
-  pomodoroTimer: Timer,
-  portfolioTracker: FolderGit2,
-  materialsTracker: BookOpen,
-};
 
 /** Header popover to open/close dashboard modules for the active track.
  *  Closing a module is a pure view change — the toggle handler only edits the
@@ -108,7 +87,8 @@ export default function ModulesMenu({
           </div>
 
           {modules.map((m) => {
-            const Icon = MODULE_ICONS[m.id] ?? LayoutGrid;
+            // Same icon the panel itself renders — one registry, no second list to keep in step.
+            const Icon = panelFor(m.id)?.icon ?? LayoutGrid;
             return (
               <button
                 key={m.id}

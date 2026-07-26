@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { X } from "lucide-react";
 import type { FocusType, WeekDay } from "@/lib/types";
 
@@ -14,6 +14,19 @@ interface FocusTypeEditorProps {
  *  labels and fallback assignments in sync. Extracted so both ScheduleDayModal and
  *  the onboarding wizard's rhythm step can reuse the exact same editor. */
 export default function FocusTypeEditor({ focusTypes, weekSchedule, onChange }: FocusTypeEditorProps) {
+  const [draft, setDraft] = useState({ label: "", color: "#0ea5e9" });
+
+  const addType = () => {
+    const label = draft.label.trim();
+    // The key is derived from the label, so two types whose labels reduce to
+    // the same slug would collide — keep the first and ignore the duplicate.
+    const key = label.toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (!key || focusTypes[key]) return;
+
+    onChange({ ...focusTypes, [key]: { label, color: draft.color } }, weekSchedule);
+    setDraft({ label: "", color: draft.color });
+  };
+
   return (
     <div className="bg-surface-muted border border-card-border rounded-lg p-3 flex flex-col gap-[0.6rem]">
       <span className="text-[0.7rem] text-muted-foreground font-bold uppercase">
@@ -81,37 +94,19 @@ export default function FocusTypeEditor({ focusTypes, weekSchedule, onChange }: 
       <div className="flex gap-1.5 items-center border-t border-card-border pt-2">
         <input
           type="text"
-          id="new-type-label"
+          value={draft.label}
+          onChange={(e) => setDraft((prev) => ({ ...prev, label: e.target.value }))}
+          onKeyDown={(e) => e.key === "Enter" && addType()}
           placeholder="New type label..."
           className="flex-1 bg-input-bg border border-card-border rounded px-2 py-1 text-foreground text-xs outline-none"
         />
         <input
           type="color"
-          id="new-type-color"
-          defaultValue="#0ea5e9"
+          value={draft.color}
+          onChange={(e) => setDraft((prev) => ({ ...prev, color: e.target.value }))}
           className="w-6 h-6 border-none bg-transparent cursor-pointer p-0"
         />
-        <button
-          onClick={() => {
-            const labelInput = document.getElementById("new-type-label") as HTMLInputElement;
-            const colorInput = document.getElementById("new-type-color") as HTMLInputElement;
-            if (labelInput && labelInput.value.trim()) {
-              const labelVal = labelInput.value.trim();
-              const colorVal = colorInput ? colorInput.value : "#0ea5e9";
-              const keyVal = labelVal.toLowerCase().replace(/[^a-z0-9]/g, "");
-
-              if (keyVal && !focusTypes[keyVal]) {
-                const updatedTypes = {
-                  ...focusTypes,
-                  [keyVal]: { label: labelVal, color: colorVal }
-                };
-                onChange(updatedTypes, weekSchedule);
-                labelInput.value = "";
-              }
-            }
-          }}
-          className="btn px-2 py-1 text-xs"
-        >
+        <button onClick={addType} className="btn px-2 py-1 text-xs">
           Add Type
         </button>
       </div>

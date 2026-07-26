@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { BookOpen, Check, X } from "lucide-react";
-import { fetchGitStats, fetchNotes, saveNotes } from "@/lib/api";
+import { fetchGitStats, hasGitSource } from "@/lib/gitStats";
+import { fetchNotes, saveNotes } from "@/lib/notes";
 import { renderMarkdownToHtml } from "@/lib/markdown";
 import type { GitStats, Material } from "@/lib/types";
 
@@ -69,7 +70,7 @@ export default function MaterialsTracker({
   useEffect(() => {
     materials.forEach(mat => {
       const source = mat.repoUrl || mat.localPath || "";
-      if (source.includes("github.com") || source.startsWith("/") || source.startsWith("~")) {
+      if (hasGitSource(source)) {
         fetchGitStats(source)
           .then(stats => {
             setGitStats(prev => ({ ...prev, [mat.id]: stats }));

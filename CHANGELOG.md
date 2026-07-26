@@ -7,6 +7,84 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.7.0] - 2026-07-26
+
+Internal restructuring. No feature was added or removed and the UI is
+unchanged — this release is about making the next feature cheaper to build.
+
+### Added
+- **Workspace state provider** (`components/workspace/WorkspaceProvider.tsx`).
+  One place owns the loaded workspace, the debounced write, the flush-on-hide
+  safety net, the daily reset and the Drive sync. Consumers use two hooks:
+  `useWorkspace()` for data and `useWorkspaceActions()` for the three write
+  verbs (`updateTrack` debounced, `commitTrack` immediate, `commitWorkspace`).
+  The dashboard and the roadmap page each used to re-implement all of that
+  independently, and modals took up to four separate mutation callbacks as
+  props.
+  - Writers take an updater function (`updateTrack(prev => next)`), which
+    removes the "read the newest track through a ref" workaround that
+    `RotationModal` needed to stop a debounced autosave clobbering a
+    concurrent edit.
+- **Versioned migration pipeline** (`lib/migrations/`). The three shape
+  upgrades that ran inline — and unconditionally, on every single load —
+  inside `fetchWorkspace` are now an ordered, append-only `MIGRATIONS` list
+  behind a `schemaVersion` stamp on the workspace record, so each one runs
+  once per device. Adding a migration is one function plus one list entry.
+- **Migrations now also run on data pulled down from Drive**, before it is
+  merged. A backup written by a device on an older version could previously
+  win a merge in its old shape and land back in local storage un-upgraded.
+- **`lib/completions.ts`** — the completion rules (day id set, accomplishment
+  history, derived streak, stored item flag) as pure, tested functions.
+- **`lib/trackActions.ts`** — the fifteen material/portfolio/phase/identity
+  mutation handlers that lived inside `app/page.tsx`, as pure functions.
+- **Per-panel error boundary.** A module that throws is now isolated to its own
+  panel instead of taking the whole dashboard down to the app-level error page
+  — including the sync button needed to recover.
+- **Panel registry** (`components/panels/registry.tsx`) typed against
+  `ModuleId`, so a module added to `lib/modules.ts` without a matching panel is
+  a compile error. Module id, label, home column, icon and panel were
+  previously spread across three files with no link between them.
+- 38 new tests (117 → 155) covering the migration pipeline, the completion
+  rules and the track actions.
+
+### Fixed
+- **A focus-type edit no longer risks being lost in a sync.** `configVersion`
+  change detection ran against a hand-maintained list of track fields that
+  omitted `focusTypes` entirely, so recolouring or renaming a focus type
+  didn't mark the track as structurally changed. The check is now an
+  *exclusion* list — progress and bookkeeping fields are named, everything
+  else counts as config — which also makes the documented "remember to add
+  your new field to `CONFIG_COMPARE_FIELDS`" footgun impossible.
+- **Switching tracks now applies that track's daily reset.** A track left
+  untouched since yesterday showed yesterday's ticked checkboxes until the
+  page was reloaded.
+- Completion state is no longer mutated in place inside the `weeklyCompletions`
+  map — the previous code copied the outer map but wrote through to the day
+  objects held by the current React state.
+- `/api/notes` now carries the same localhost-only guard as `/api/git` and
+  `/api/open`.
+- Opening a material's notes no longer writes an empty note row, which would
+  then be uploaded to Drive as an empty `note_<id>.md`.
+
+### Changed
+- `lib/api.ts` split by responsibility into `workspaceRepo.ts` (the only module
+  that reads/writes the stored workspace), `gitStats.ts`, `notes.ts`,
+  `systemLinks.ts` and `selectors.ts`. `lib/localDb.ts` is now just the Dexie
+  schema.
+- `app/page.tsx` went from 831 lines to 11 — it mounts the provider and renders
+  `components/Dashboard.tsx`, which is layout and modal orchestration only.
+- `ScheduleDayModal` (607 → ~390 lines) and `WeeklyPlan` use the shared
+  completion functions instead of six hand-rolled copies of the same logic.
+- `ScheduleDayModal`'s add-item forms and `FocusTypeEditor`'s new-type form use
+  controlled React state instead of reading values back out of the DOM by
+  `document.getElementById`, which also removes their duplicate global ids.
+- The Modules menu draws each icon from the panel registry rather than its own
+  parallel map.
+- Retired `AppState` fields (`dailyFocus`, `dailyStudyPoints`, `studyStreak`,
+  `lastDailyRoutineCheck`) are marked deprecated and optional, and are no
+  longer seeded into new tracks. Existing records keep them untouched.
+- Removed the unused `fetchTrackState` and `setActiveTrack` exports.
+
 ## [0.6.0] - 2026-07-25
 
 ### Added

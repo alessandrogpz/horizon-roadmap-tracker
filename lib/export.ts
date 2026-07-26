@@ -1,5 +1,5 @@
 import { zipSync, strToU8 } from "fflate";
-import { fetchWorkspace } from "./api";
+import { fetchWorkspace } from "./workspaceRepo";
 import { db } from "./localDb";
 import type { Workspace } from "./types";
 

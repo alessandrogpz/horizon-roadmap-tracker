@@ -1,7 +1,7 @@
 import "fake-indexeddb/auto";
 import { describe, it, expect } from "vitest";
 import { buildBackupBundle, buildZipFiles, slugify, type BackupBundle } from "../export";
-import { createTrack } from "../api";
+import { createTrack } from "../workspaceRepo";
 import { db } from "../localDb";
 import type { TrackState } from "../types";
 
