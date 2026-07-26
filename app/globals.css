@@ -218,6 +218,35 @@ body {
   box-shadow: 0 0 0 3px var(--ring);
 }
 
+/* Size/emphasis variants of .btn, used by the marketing page (/landing) where
+   a call to action has to carry more weight than an in-app control. Declared
+   after .btn so they win at equal specificity — note these component classes
+   live outside Tailwind's layers, so a utility like `px-5` can't override
+   them. */
+.btn-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+.btn-lg {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* Filled by default rather than filling on hover — the one primary action. */
+.btn-solid {
+  background: var(--accent);
+  color: #00121c;
+  font-weight: 600;
+}
+
+.btn-solid:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: #00121c;
+}
+
 .checkbox-custom {
   appearance: none;
   width: 18px;
@@ -638,5 +667,43 @@ body {
   .panel-in,
   .checkbox-custom:checked {
     animation: none;
+  }
+}
+
+/* ===========================================================================
+   Landing page (/landing)
+   The marketing page reuses the app's tokens and surfaces so the two never
+   drift apart; only the handful of things a panel-sized card can't express
+   live here. Declared last so they override .glass-panel's own padding.
+   =========================================================================== */
+
+/* The closing call-to-action card — a panel, but with poster-sized breathing
+   room instead of the dashboard's compact 1.5rem. */
+.landing-cta {
+  padding: 3rem 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .landing-cta {
+    padding: 3.5rem 3rem;
+  }
+}
+
+/* A panel whose accent border must survive :hover (which otherwise resets
+   border-color) — used on the "Horizon" side of the comparison. */
+.landing-panel-accent,
+.landing-panel-accent:hover {
+  border-color: var(--accent-muted);
+}
+
+/* The hero's miniature dashboard: same surface, tighter padding so the mock
+   reads as a small screenshot rather than a full-size panel. */
+.landing-preview {
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .landing-preview {
+    padding: 1.25rem;
   }
 }

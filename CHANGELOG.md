@@ -7,6 +7,38 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.10.0] - 2026-07-26
+
+Added a public landing page at `/landing`, so the domain has somewhere to send
+people who haven't used the app yet. `/` still opens straight into the
+dashboard (and still forwards to `/onboarding` when there are no tracks) —
+nothing about the app's entry path changed; the landing page is purely
+additive, and both its calls to action lead back into it.
+
+The page is a static server component: no workspace, no IndexedDB, no client
+state, so it prerenders at build time and renders identically for a first-time
+visitor with an empty browser. It states the thing that's easiest to get wrong
+about this app — it is a roadmap tracker, not a to-do list — and explains
+tracks, the six dashboard modules, the setup wizard, and where the data lives.
+
+### Added
+- **`app/landing/page.tsx`** — the page itself: nav, hero, a to-do-list
+  comparison, tracks, the module grid, a four-step "how it works", the
+  local-first/data section, closing call to action, and a footer. Page-level
+  `metadata` (title, description, canonical, Open Graph) points at
+  `https://www.horizonroadmap.com/landing`.
+- **`components/landing/DashboardPreview.tsx`** — a decorative miniature of the
+  dashboard for the hero (horizon bar, phase timeline, streak grid, weekly
+  rhythm). Deliberately not the real panels: it has to render without a
+  workspace. Its streak cells come from a fixed-seed generator rather than
+  `Math.random` so server and client markup always match.
+- **`app/globals.css`** — `.btn-sm` / `.btn-lg` / `.btn-solid` size and
+  emphasis variants of `.btn`, plus `.landing-cta`, `.landing-panel-accent` and
+  `.landing-preview`. These exist because the app's component classes live
+  outside Tailwind's layers and so can't be overridden by utilities like
+  `px-5`; the landing page otherwise reuses the app's own tokens and surfaces,
+  so the two can't drift apart, and it inherits both themes for free.
+
 ## [0.9.1] - 2026-07-26
 
 Corrected the PPP chapter numbers in the engine track's roadmap fixtures. The
