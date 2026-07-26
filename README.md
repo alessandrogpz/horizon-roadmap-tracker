@@ -112,8 +112,14 @@ You can install the tracker as a native standalone application on your Android/i
 ## Notes & Security
 
 *   **Universal Change Tracking:** Sync comparison logic monitors all data arrays (materials, portfolio, configurations). Changes to any item trigger an auto-save and raise `configVersion` for the next sync.
-*   **Git Stats Caching:** GitHub API calls are subject to a 60 requests/hour unauthenticated limit. The app mitigates this by:
-    *   Caching results in browser `localStorage` for **15 minutes**.
-    *   Falling back to the expired cache if a `403 (Rate Limited)` response is returned, guaranteeing the stats always show in the UI.
+*   **Git Stats Caching:** GitHub API calls are subject to a 60 requests/hour unauthenticated limit, **per IP**, and each repo costs two requests (metadata + last commit). The app stays inside that budget by:
+    *   Caching results in browser `localStorage` for **1 hour**.
+    *   Fetching only when the set of linked repos actually changes — not on every workspace edit.
+    *   Sharing one in-flight request per repo, since Materials and Portfolio often link the same one.
+    *   Pausing all requests until GitHub's own reset time after a `403`, and falling back to the expired cache so the stats still show in the UI.
+    *   To lift the ceiling to 5000/hour, set a read-only personal access token once from the browser console:
+        ```js
+        localStorage.setItem("github_token", "<token>")
+        ```
 *   **Local-only Endpoints:** `/api/git` (local filesystem repo status), `/api/open` (opening PDF/source links locally) and `/api/notes` (one-time import of notes from an older on-disk format) only accept requests addressed to `localhost` to protect your filesystem when exposed on a LAN.
 *   **Automated Tests:** Run `npm test` to execute the Vitest test suite verifying the date handlers and the conflict resolution merge logic.

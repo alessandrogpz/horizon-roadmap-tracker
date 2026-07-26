@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { BookOpen, Check, ChevronDown, X } from "lucide-react";
-import { fetchGitStats, hasGitSource } from "@/lib/gitStats";
+import { fetchGitStats, parseGitSources, serializeGitSources } from "@/lib/gitStats";
 import { fetchNotes, saveNotes } from "@/lib/notes";
 import { renderMarkdownToHtml } from "@/lib/markdown";
 import type { GitStats, Material } from "@/lib/types";
@@ -96,20 +96,28 @@ export default function MaterialsTracker({
     latestContentRef.current = notesContent;
   }, [notesContent]);
 
-  // Fetch Git stats for linked materials on mount and whenever materials change
-  // Uses repoUrl (injected by migration) as primary source
+  // Which materials have a repo behind them, as a plain string. The effect
+  // keys on this rather than on `materials`, whose identity changes on every
+  // unrelated workspace edit — that made the stats re-fetch on every ticked
+  // checkbox and burned the GitHub API's 60-requests/hour budget.
+  // repoUrl (injected by migration) is the primary source.
+  const gitSourceKey = serializeGitSources(
+    materials.map(mat => ({ id: mat.id, source: mat.repoUrl || mat.localPath || "" }))
+  );
+
   useEffect(() => {
-    materials.forEach(mat => {
-      const source = mat.repoUrl || mat.localPath || "";
-      if (hasGitSource(source)) {
-        fetchGitStats(source)
-          .then(stats => {
-            setGitStats(prev => ({ ...prev, [mat.id]: stats }));
-          })
-          .catch(err => console.error(`Error fetching git stats for ${mat.title}:`, err));
-      }
+    let cancelled = false;
+    parseGitSources(gitSourceKey).forEach(({ id, source }) => {
+      fetchGitStats(source)
+        .then(stats => {
+          if (!cancelled) setGitStats(prev => ({ ...prev, [id]: stats }));
+        })
+        .catch(err => console.error(`Error fetching git stats for ${source}:`, err));
     });
-  }, [materials]);
+    return () => {
+      cancelled = true;
+    };
+  }, [gitSourceKey]);
 
   const statuses = ["Not Started", "In Progress", "Completed"];
   const categories = ["Mathematics", "Computer Graphics", "Programming Languages", "DSA", "Other"];

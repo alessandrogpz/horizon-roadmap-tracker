@@ -7,6 +7,41 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.13.6] - 2026-07-26
+
+### Fixed
+- **Repo stats exhausted GitHub's rate limit and then hammered it.** Each repo
+  costs two requests (metadata + last commit) against an unauthenticated budget
+  of 60/hour per IP, so four linked repos burn eight per pass — and passes were
+  firing far more often than the repo list changed. Four causes, all addressed:
+  - **`MaterialsTracker` / `PortfolioTracker` keyed their fetch effect on the
+    `materials` / `portfolio` arrays.** Those get a new identity on every
+    unrelated workspace edit — a ticked checkbox, a sync, the daily reset — so
+    the stats re-fetched constantly. They now key on `serializeGitSources()`, a
+    string of the id→source pairs, which only changes when a repo is actually
+    added, removed, or re-pointed. (Strict Mode's double-invoked effects in dev
+    were doubling all of it.)
+  - **A `403` was never recorded**, so every subsequent render retried and
+    failed again, flooding the console. `lib/gitStats.ts` now parks all
+    requests until GitHub's own `x-ratelimit-reset` time — persisted, so a
+    reload during the lockout doesn't start a fresh round of doomed requests —
+    and logs once, with the fix, instead of once per repo per render.
+  - **No in-flight deduplication.** Materials and Portfolio routinely link the
+    same repo and mount together, so each opened its own round trip for
+    identical data. One shared promise per repo now.
+  - **The cache TTL was 15 minutes**, which is far shorter than a last-commit
+    message stays interesting. Raised to 1 hour. `404`s are cached too — a
+    typo'd URL was re-asking forever.
+
+### Changed
+- **`README.md`** — the Git Stats section documented the old 15-minute TTL and
+  said nothing about the `github_token` escape hatch, which only existed in a
+  code comment. Both fixed; the token raises the ceiling to 5000/hour.
+
+Covered by `lib/__tests__/gitStats.test.ts`, and verified in a browser: three
+workspace updates with the cache wiped between each made zero requests, while
+adding a new repo fetched immediately.
+
 ## [0.13.5] - 2026-07-26
 
 ### Removed
