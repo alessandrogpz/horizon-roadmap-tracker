@@ -23,8 +23,9 @@ export default function HorizonStep({ startDate, durationDays, onChange }: Horiz
     <div className="flex flex-col gap-5">
       <h2 className="text-[1.1rem] font-semibold text-foreground m-0">Set your horizon</h2>
       <p className="text-muted-foreground text-[0.85rem] m-0">
-        How far out is the goal you&apos;re working toward? This shapes the phase timeline on the next step —
-        changing duration later will regenerate it.
+        How far out is the goal you&apos;re working toward? This shapes the phase timeline on the next step.
+        Changing it rebuilds a template timeline, or shifts the dates on a plan you&apos;ve already generated
+        — your phases and tasks are kept either way.
       </p>
 
       <div className="flex flex-col gap-1.5">
