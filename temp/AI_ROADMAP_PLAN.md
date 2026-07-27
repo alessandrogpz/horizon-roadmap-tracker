@@ -1,7 +1,7 @@
 # AI Roadmap Generator — Implementation Plan
 
 **Branch:** `feature/ai-roadmap-generator` (already created, branched from `development`)
-**Status:** Stages 0–2 implemented and shipped in v0.14.0. Stage 3 outstanding, Stage 4 cut.
+**Status:** Stages 0–2 shipped (v0.14.0–0.14.2). Stage 3 deprioritised, Stage 4 cut.
 **Written:** 2026-07-27
 **Revised:** 2026-07-27 — after the Stage −1 screening, then again after implementation.
 
@@ -12,8 +12,10 @@
 > **The Stage −1 screening has been run. Stage 4 (on-device WebLLM) is CUT.**
 > Small open-weights models could not produce keepable roadmaps, and failed to
 > terminate on roughly a quarter of generations. Full evidence in §4 Stage −1;
-> the cut itself is §4 Stage 4. The shipping scope is now **Stages 0–3**:
-> BYO-key as the default path, Chrome's built-in model where it exists.
+> the cut itself is §4 Stage 4. The shipping scope is **Stages 0–2** — BYO-key,
+> which is now built and working. Stage 3 (Chrome's built-in model) was later
+> deprioritised too; see the 2026-07-27 revision on D2 for why it is not the
+> adoption escape hatch it first appeared to be.
 >
 > Do not re-derive this from `temp/AI_MODEL_EVAL.md` — that document describes
 > how to run the experiment and records predictions made *before* it ran, several
@@ -218,6 +220,34 @@ There is no third rung. WebLLM on-device was cut after Stage −1.
 > provider before it ships**, and must be prepared to offer built-in only for
 > Stage 1's low-risk `roadmapContent` drafting while routing full structured
 > generation to BYO-key. Do not assume Nano clears the bar the others missed.
+
+> **Revised 2026-07-27 — "no download, works everywhere" was wrong.** This
+> decision was written believing the built-in API meant zero download and near
+> universal availability, which made it look like the answer to BYO-key's
+> adoption problem. Checked against current documentation, it is not:
+>
+> | | BYO-key | Chrome built-in |
+> |---|---|---|
+> | Model download | none | **~4 GB**, fetched by Chrome on first use per origin |
+> | Disk / GPU floor | none | **≥22 GB free disk, ≥4 GB VRAM** |
+> | Platforms | everything, including iOS | **desktop only** — Windows 10/11, macOS 13+, Linux. Not Android, iOS or ChromeOS |
+> | Stability | shipping now | origin trial / flag; stable expected ~Chrome 145–150 |
+> | Model class | frontier | Nano — "the autocomplete of LLMs" |
+>
+> True: no key, no account, no cost, and the download is Chrome's problem rather
+> than ours — shared across origins, updated and evicted by the browser. That is
+> a genuine difference from Stage 4, which would have made the download *our*
+> problem.
+>
+> But **its reach is narrower than BYO-key, not wider.** BYO-key works on a
+> phone; Nano does not work on any phone. It trades a key requirement for a 4 GB
+> download plus a hardware floor plus a browser-version floor — and it is the
+> same small-model class that scored 0/30 in Stage −1.
+>
+> **Conclusion: Stage 3 is deprioritised.** It is not the answer to "users won't
+> paste an API key", and it should not be built on that reasoning. If it is ever
+> built, it belongs as a fallback for the desktop minority that qualifies, and
+> only after passing the eval above.
 
 ### D3 — The AI's output target is `WizardDraft`, not `AppState`
 
@@ -457,7 +487,7 @@ separate commits (see §8 on versioning).
 | **0** Provider abstraction | ✅ Done. `lib/ai/{types,provider}.ts`, `providers/{gemini,openrouter}.ts`. |
 | **1** `roadmapContent` only | ✅ Done. "Draft this for me" on `RoadmapStep`. |
 | **2** BYO-key structured generation | ✅ Done, and verified end to end against Gemini. |
-| **3** Chrome built-in provider | ⬜ Not started. Carries an eval obligation (D2). |
+| **3** Chrome built-in provider | ⬜ **Deprioritised** — see the 2026-07-27 revision on D2. Narrower reach than BYO-key, not wider. |
 | **4** WebLLM on-device | ❌ **Cut.** See below. |
 
 Stages 0–2 shipped in **v0.14.0**, and generate more than the plan originally
@@ -466,17 +496,43 @@ and the weekly rhythm. See the note in §10 for which non-goals were lifted and
 why, and **D12b** for the three assumptions that did not survive contact with a
 hosted provider.
 
-**Remaining work, roughly in order:**
+**Remaining work — and an honest note on priority.**
 
-1. **Stage 3** — Chrome's built-in Prompt API, gated on it passing the same eval
-   (D2). The provider interface is ready for it: implement `AIProvider`,
-   optionally `listModels`, and it appears in settings with no UI changes.
-2. **Multi-turn generation (D7)** — still unimplemented. One 8,000-token call
-   works on a frontier model, but a failure loses everything and costs a whole
-   request. Revisit if truncation reappears.
+Nothing below is urgent. Stages 0–2 work, are committed, and were verified
+against a real provider. The open items are:
+
+1. **Multi-turn generation (D7)** — unimplemented. One 8,000-token call works on
+   a frontier model, but a failure loses everything and costs a whole request.
+   Revisit only if truncation reappears.
+2. **Stage 3** — deprioritised, see D2. The provider interface is ready if it is
+   ever wanted: implement `AIProvider`, optionally `listModels`, and it appears
+   in settings with no UI changes.
 3. **Ollama is gone from the dev machine** (removed 2026-07-27, once on-device
    was cut). Re-running `temp/ai-eval/run-eval.mjs` now means reinstalling it.
    Nothing in the shipped feature depends on it.
+
+### The adoption question, written down so it doesn't have to be re-derived
+
+**BYO-key will not reach a general audience, and no planned stage changes that.**
+Asking someone to create a cloud project, generate an API key and paste it into a
+web app is a wall for anyone who isn't already a developer. Stage 3 looked like
+the escape hatch and is not one (D2).
+
+This is not a defect in the implementation — it is the direct consequence of the
+founding constraint in §1: *no Horizon-operated AI backend*. That constraint buys
+no subscription, no inference bill, no abuse surface, and no key custody. What it
+costs is the mass-market path, because the only thing that would remove the key
+requirement entirely is inference someone else pays for.
+
+So the honest product position is: **AI generation is a power-user feature.**
+That is already how it is built — with no provider configured, every AI
+affordance is hidden, and the mainstream path stays the templates and the wizard,
+which need no trust decision at all. The thing to avoid is expecting a future
+stage to widen the reach; it won't.
+
+If the constraint is ever revisited, that is a product decision about cost and
+abuse, not an engineering one, and it should be made deliberately rather than
+arrived at by building fallbacks.
 
 ### Stage −1 — Model screening (no code) — ✅ **DONE, 2026-07-27**
 
