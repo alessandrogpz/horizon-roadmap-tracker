@@ -38,6 +38,9 @@ export interface Phase {
 export interface Material {
   id: string;
   title: string;
+  /** Author, publisher, or channel. Optional — plenty of references don't have
+   *  one worth recording, and older materials predate the field. */
+  author?: string;
   category: string;
   type: string;
   status: string;

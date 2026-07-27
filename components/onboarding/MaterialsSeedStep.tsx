@@ -52,22 +52,34 @@ export default function MaterialsSeedStep({
 
       {isGenerated && materials.length > 0 && (
         <div className="rounded-md border border-amber-500/30 bg-amber-500/[0.06] p-3 text-[0.8rem] text-muted-foreground">
-          <span className="font-semibold text-foreground">These titles are AI-suggested and unverified.</span>{" "}
-          Models produce plausible-sounding books that don&apos;t exist, so check anything you don&apos;t recognise
-          before relying on it. No links were generated — add your own once you&apos;ve confirmed the source.
+          <span className="font-semibold text-foreground">
+            These titles and authors are AI-suggested and unverified.
+          </span>{" "}
+          Models produce plausible-sounding books that don&apos;t exist, and misattribute real ones, so check
+          anything you don&apos;t recognise. No links were generated — each material gets a &ldquo;find&rdquo;
+          search on the dashboard instead, which is also how you&apos;ll spot one that isn&apos;t real.
         </div>
       )}
 
       <div className="flex flex-col gap-2 max-h-[320px] overflow-y-auto pr-1">
         {materials.map((m, idx) => (
           <div key={idx} className="flex items-center gap-2 bg-input-bg border border-card-border rounded-md px-3 py-2">
-            <input
-              type="text"
-              value={m.title}
-              onChange={(e) => updateMaterial(idx, { title: e.target.value })}
-              placeholder="Title"
-              className="flex-1 bg-transparent border-none text-foreground text-[0.85rem] outline-none"
-            />
+            <div className="flex flex-1 flex-col">
+              <input
+                type="text"
+                value={m.title}
+                onChange={(e) => updateMaterial(idx, { title: e.target.value })}
+                placeholder="Title"
+                className="border-none bg-transparent text-[0.85rem] text-foreground outline-none"
+              />
+              <input
+                type="text"
+                value={m.author ?? ""}
+                onChange={(e) => updateMaterial(idx, { author: e.target.value })}
+                placeholder="Author (optional)"
+                className="border-none bg-transparent text-[0.75rem] text-muted-foreground outline-none"
+              />
+            </div>
             <input
               type="text"
               value={m.category}

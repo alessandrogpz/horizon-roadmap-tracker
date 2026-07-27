@@ -6,7 +6,7 @@ import { fetchGitStats, parseGitSources, serializeGitSources } from "@/lib/gitSt
 import { fetchNotes, saveNotes } from "@/lib/notes";
 import { renderMarkdownToHtml } from "@/lib/markdown";
 import type { GitStats, Material } from "@/lib/types";
-import { categoriesFor, MATERIAL_STATUSES, MATERIAL_TYPES } from "@/lib/materialOptions";
+import { categoriesFor, MATERIAL_STATUSES, MATERIAL_TYPES, searchUrlFor } from "@/lib/materialOptions";
 import Portal from "@/components/Portal";
 
 interface MaterialsTrackerProps {
@@ -47,6 +47,7 @@ export default function MaterialsTracker({
   // Add / Edit form states
   const [showAddForm, setShowAddForm] = useState(false);
   const [newTitle, setNewTitle] = useState("");
+  const [newAuthor, setNewAuthor] = useState("");
   const [newCategory, setNewCategory] = useState("Mathematics");
   const [newType, setNewType] = useState("Book");
   const [newTotalPages, setNewTotalPages] = useState(100);
@@ -55,6 +56,7 @@ export default function MaterialsTracker({
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
+  const [editAuthor, setEditAuthor] = useState("");
   const [editCategory, setEditCategory] = useState("");
   const [editType, setEditType] = useState("");
   const [editStatus, setEditStatus] = useState("");
@@ -138,6 +140,7 @@ export default function MaterialsTracker({
     if (!newTitle.trim()) return;
     onAddMaterial({
       title: newTitle,
+      author: newAuthor.trim(),
       category: newCategory,
       type: newType,
       status: "Not Started",
@@ -148,6 +151,7 @@ export default function MaterialsTracker({
       localPath: newLocalPath,
     });
     setNewTitle("");
+    setNewAuthor("");
     setNewLink("");
     setNewLocalPath("");
     setShowAddForm(false);
@@ -156,6 +160,7 @@ export default function MaterialsTracker({
   const startEdit = (mat: Material) => {
     setEditingId(mat.id);
     setEditTitle(mat.title);
+    setEditAuthor(mat.author || "");
     setEditCategory(mat.category);
     setEditType(mat.type);
     setEditStatus(mat.status);
@@ -169,6 +174,7 @@ export default function MaterialsTracker({
   const saveEdit = (id: string) => {
     onProgressChange(id, {
       title: editTitle,
+      author: editAuthor.trim(),
       category: editCategory,
       type: editType,
       status: editStatus,
@@ -287,6 +293,16 @@ export default function MaterialsTracker({
               className={inputClass}
             />
           </div>
+          <div>
+            <label className={labelClass}>Author</label>
+            <input
+              type="text"
+              value={newAuthor}
+              onChange={(e) => setNewAuthor(e.target.value)}
+              placeholder="Optional"
+              className={inputClass}
+            />
+          </div>
           <div className="flex gap-2 flex-wrap">
             <div className="flex-[1_1_120px]">
               <label className={labelClass}>Category</label>
@@ -380,6 +396,16 @@ export default function MaterialsTracker({
                       <div>
                         <label className={labelClass}>Title</label>
                         <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className={inputClass} />
+                      </div>
+                      <div>
+                        <label className={labelClass}>Author</label>
+                        <input
+                          type="text"
+                          value={editAuthor}
+                          onChange={(e) => setEditAuthor(e.target.value)}
+                          placeholder="Optional"
+                          className={inputClass}
+                        />
                       </div>
                       <div className="flex gap-2 flex-wrap">
                         <div className="flex-[1_1_120px]">
@@ -496,10 +522,24 @@ export default function MaterialsTracker({
                             {mat.title}
                           </div>
                         )}
+                        {mat.author && (
+                          <div className="text-[0.75rem] text-muted-foreground mt-0.5">{mat.author}</div>
+                        )}
                         <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-[0.65rem] text-accent uppercase tracking-[0.05em] font-mono">
                             {mat.type}
                           </span>
+                          {/* No stored link — offer a search built from the title
+                              and author rather than pretending to know the URL. */}
+                          {!mat.link && (
+                            <button
+                              onClick={() => onOpenLink(searchUrlFor(mat))}
+                              className="cursor-pointer border-none bg-transparent p-0 text-[0.65rem] uppercase tracking-[0.05em] font-mono text-muted-foreground underline hover:text-foreground"
+                              title={`Search the web for "${mat.title}"`}
+                            >
+                              find
+                            </button>
+                          )}
                         </div>
                         {stats && stats.isRepo && (
                           <div className="text-[0.7rem] text-muted-foreground mt-1 font-mono flex flex-wrap gap-x-2 gap-y-px">

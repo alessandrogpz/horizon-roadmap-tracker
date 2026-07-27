@@ -86,6 +86,10 @@ export const ROADMAP_SCHEMA = {
         type: "object",
         properties: {
           title: { type: "string" },
+          // Safe to generate in a way a URL is not: a wrong author is visible
+          // to anyone who knows the field and costs nothing to correct, whereas
+          // a wrong address is clickable and silently sends you somewhere else.
+          author: { type: "string", description: "Author, publisher or channel. Omit if unsure." },
           category: { type: "string", enum: [...MATERIAL_CATEGORIES] },
           type: { type: "string", enum: [...MATERIAL_TYPES] },
           totalPages: { type: "integer", description: "0 unless it is a book" },
