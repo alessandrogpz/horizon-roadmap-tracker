@@ -88,3 +88,31 @@ describe("day rollover", () => {
     expect(todayYMD()).toBe("2026-07-26");
   });
 });
+
+describe("AI settings", () => {
+  it("replaces a Gemini model id that Google has withdrawn", () => {
+    // These shipped as defaults and then stopped working — 2.0-flash lost its
+    // free-tier quota, 2.5-flash was withdrawn from new users. Leaving either
+    // in place keeps the feature broken via a setting the user never chose.
+    updateSettings({ ai: { ...DEFAULT_SETTINGS.ai, geminiModel: "gemini-2.5-flash" } });
+    expect(getSettings().ai.geminiModel).toBe(DEFAULT_SETTINGS.ai.geminiModel);
+
+    updateSettings({ ai: { ...DEFAULT_SETTINGS.ai, geminiModel: "gemini-2.0-flash" } });
+    expect(getSettings().ai.geminiModel).toBe(DEFAULT_SETTINGS.ai.geminiModel);
+  });
+
+  it("keeps a model the user chose themselves", () => {
+    updateSettings({ ai: { ...DEFAULT_SETTINGS.ai, geminiModel: "gemini-3.6-flash" } });
+    expect(getSettings().ai.geminiModel).toBe("gemini-3.6-flash");
+  });
+
+  it("never lets an API key reach the synced workspace shape", () => {
+    // D11 — the key belongs to this device. AppSettings is the localStorage
+    // blob and is deliberately not part of Workspace/TrackState.
+    const settings = updateSettings({ ai: { ...DEFAULT_SETTINGS.ai, geminiKey: "AIza-secret" } });
+    expect(settings.ai.geminiKey).toBe("AIza-secret");
+    expect(JSON.stringify(settings)).toContain("AIza-secret");
+    // The guarantee is structural: nothing here is ever written into a track.
+    expect(Object.keys(settings).sort()).toEqual(["ai", "dayRolloverHour", "weekStartsOn"]);
+  });
+});

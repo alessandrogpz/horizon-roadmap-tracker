@@ -7,6 +7,42 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.14.0] - 2026-07-27
+
+### Added
+- **AI roadmap drafting, bring-your-own-key.** Describe a goal on the wizard's
+  first step — *"Learn Vulkan, C++ memory management, and graphics rendering in
+  3 months"* — and get a complete starting roadmap: phases, tasks, deliverables
+  and a weekly rhythm, all editable before anything is saved. Also adds a
+  "Draft this for me" button on the Roadmap step for the markdown document.
+  - **Horizon operates no AI backend and never will.** There is no subscription,
+    no key held by us, no inference bill, and no abuse surface. Requests go from
+    your browser straight to the provider you configure. Gemini (free tier, no
+    card) and OpenRouter are supported; the key lives in `localStorage` and is
+    deliberately kept out of the workspace, so it is never written to
+    `database.json`, never synced to Drive, and never included in a backup.
+  - **Generation only ever creates a new track**, through the existing wizard
+    and the existing `seedTrackFromTemplate` → `createTrack` path. It cannot
+    modify or overwrite an existing track — a bad overwrite would propagate to
+    every device through Drive sync.
+  - **Every request is capped and timed out.** Model screening found ~23% of
+    small-model generations never emit a stop token at all, two of them running
+    to 40k and 81k tokens. On your own key that is your money, so a truncated
+    response is treated as a failure with a retry rather than parsed, and
+    cancelling actually aborts the request instead of hiding a spinner.
+  - **Nothing the model returns is trusted.** A validator assigns all ids,
+    reschedules phase deadlines that don't fit the horizon, drops phases with no
+    tasks, replaces invalid colours, and strips unknown keys — then tells you
+    what it adjusted rather than silently shipping a mangled plan.
+
+### Notes
+- **On-device generation was evaluated and deliberately cut.** Running Qwen2.5
+  at 1.5B/3B/7B against the real schema, the small models that could plausibly
+  ship in a browser produced roadmaps worth keeping in roughly 0% and 35% of
+  cases respectively, against a 7B control at ~78%. That means no offline or
+  fully-private generation path in this release; the goal text does leave your
+  device. Reasoning and evidence are recorded in the branch's planning notes.
+
 ## [0.13.6] - 2026-07-26
 
 ### Fixed

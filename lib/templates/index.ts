@@ -1,4 +1,4 @@
-import type { FocusType, Material, Phase, PortfolioProject, TrackId, TrackState, WeekDay } from "../types";
+import type { FocusType, Material, Phase, PortfolioProject, RotationDef, TrackId, TrackState, WeekDay } from "../types";
 import { defaultPanelColumns } from "../modules";
 import { fitnessTemplate } from "./fitness";
 import { learningTemplate } from "./learning";
@@ -29,6 +29,10 @@ export interface SeedAnswers {
   focusTypes: Record<string, FocusType>;
   materials?: Omit<Material, "id">[];
   portfolio?: Omit<PortfolioProject, "id">[];
+  /** Ids are assigned here, like materials and portfolio. `startWeek` is not —
+   *  it anchors which item is current and belongs to whoever built the
+   *  rotation, so it arrives already set. */
+  rotations?: Omit<RotationDef, "id">[];
   roadmapContent?: string;
 }
 
@@ -63,6 +67,14 @@ export function seedTrackFromTemplate(template: TrackTemplate, answers: SeedAnsw
     id: `p_${trackId}_${Date.now()}_${i}`,
   }));
 
+  // Ids must be unique within the track: rotation-generated daily items are
+  // namespaced `rotation_<id>`, so a collision would have two rotations
+  // overwriting each other's entries every day.
+  const rotations: RotationDef[] = (answers.rotations ?? []).map((r, i) => ({
+    ...r,
+    id: `r_${trackId}_${Date.now()}_${i}`,
+  }));
+
   return {
     meta: {
       id: trackId,
@@ -81,6 +93,9 @@ export function seedTrackFromTemplate(template: TrackTemplate, answers: SeedAnsw
     phases: answers.phases,
     portfolio,
     materials,
+    // Omitted entirely when empty: `rotations` is optional on TrackState, and
+    // an empty array would show the rotation UI for a track that has none.
+    ...(rotations.length ? { rotations } : {}),
     completedItemsHistory: {},
     weeklyCompletions: {},
     weekSchedule: answers.weekSchedule,

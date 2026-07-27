@@ -3,10 +3,11 @@
 import React, { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { FocusType, Material, Phase, WeekDay, Workspace } from "@/lib/types";
+import type { FocusType, Material, Phase, PortfolioProject, RotationDef, WeekDay, Workspace } from "@/lib/types";
 import { TEMPLATE_LIST, seedTrackFromTemplate, type TrackTemplate } from "@/lib/templates";
 import { createTrack } from "@/lib/workspaceRepo";
 import { todayYMD } from "@/lib/dates";
+import { rescalePhaseDeadlines } from "@/lib/phases";
 import HorizonMark from "@/components/HorizonMark";
 import WizardStepper from "@/components/onboarding/WizardStepper";
 import TemplatePicker from "@/components/onboarding/TemplatePicker";
@@ -17,6 +18,8 @@ import RoadmapStep, { buildRoadmapOutline } from "@/components/onboarding/Roadma
 import RhythmStep from "@/components/onboarding/RhythmStep";
 import MaterialsSeedStep from "@/components/onboarding/MaterialsSeedStep";
 import ConnectExistingAccount from "@/components/onboarding/ConnectExistingAccount";
+import AIGoalStep from "@/components/onboarding/AIGoalStep";
+import type { ValidatedRoadmap } from "@/lib/ai/validate";
 
 interface WizardDraft {
   templateId: string;
@@ -28,6 +31,8 @@ interface WizardDraft {
   weekSchedule: WeekDay[];
   focusTypes: Record<string, FocusType>;
   materials: Omit<Material, "id">[];
+  portfolio: Omit<PortfolioProject, "id">[];
+  rotations: Omit<RotationDef, "id">[];
   roadmapContent: string;
 }
 
@@ -43,6 +48,8 @@ const draftFromTemplate = (template: TrackTemplate): WizardDraft => ({
   weekSchedule: template.defaultWeekSchedule,
   focusTypes: template.defaultFocusTypes,
   materials: template.defaultMaterials || [],
+  portfolio: template.defaultPortfolio || [],
+  rotations: [],
   roadmapContent: "",
 });
 
@@ -61,6 +68,16 @@ function OnboardingContent() {
   const [draft, setDraft] = useState<WizardDraft>(() => draftFromTemplate(TEMPLATE_LIST[0]));
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
+  /** The goal the user typed, when they came in via AI. Carried forward so the
+   *  Roadmap step can draft a document that aims at the same thing. */
+  const [goal, setGoal] = useState("");
+  /** Repairs the validator applied, surfaced once on the Phases step so the
+   *  user knows the plan was adjusted rather than generated exactly as shown. */
+  const [aiAdjustments, setAIAdjustments] = useState<string[]>([]);
+  /** Whether the phases hold real content rather than template scaffolding.
+   *  Changing the duration rebuilds template phases from scratch, which would
+   *  silently destroy a generated plan — so generated phases get rescaled. */
+  const [phasesAreGenerated, setPhasesAreGenerated] = useState(false);
 
   const template = TEMPLATE_LIST.find((t) => t.id === draft.templateId) || TEMPLATE_LIST[0];
   const currentStep = STEPS[stepIndex];
@@ -91,6 +108,8 @@ function OnboardingContent() {
         weekSchedule: draft.weekSchedule,
         focusTypes: draft.focusTypes,
         materials: draft.materials.filter((m) => m.title.trim().length > 0),
+        portfolio: draft.portfolio.filter((p) => p.title.trim().length > 0),
+        rotations: draft.rotations,
         roadmapContent: draft.roadmapContent,
       });
       await createTrack(track);
@@ -100,6 +119,34 @@ function OnboardingContent() {
       setCreateError(err instanceof Error ? err.message : "Failed to create track");
       setCreating(false);
     }
+  };
+
+  /**
+   * Merges a generated roadmap over a fresh template draft and jumps to review.
+   *
+   * D5: this only ever fills the *draft*. It cannot touch an existing track or
+   * the workspace — creation still goes through seedTrackFromTemplate and
+   * createTrack at the end of the wizard, like every other path.
+   */
+  const applyGeneratedDraft = (roadmap: ValidatedRoadmap, sourceGoal: string) => {
+    setDraft((d) => ({
+      ...d,
+      name: roadmap.name,
+      color: roadmap.color,
+      phases: roadmap.phases,
+      weekSchedule: roadmap.weekSchedule,
+      focusTypes: roadmap.focusTypes,
+      materials: roadmap.materials,
+      portfolio: roadmap.portfolio,
+      rotations: roadmap.rotations,
+      // Left empty on purpose: the Roadmap step drafts this separately, so the
+      // user isn't paying for a long document they may not want.
+      roadmapContent: "",
+    }));
+    setGoal(sourceGoal);
+    setAIAdjustments(roadmap.adjustments);
+    setPhasesAreGenerated(true);
+    setStepIndex(STEPS.indexOf("Phases"));
   };
 
   const goNext = () => {
@@ -191,11 +238,35 @@ function OnboardingContent() {
 
         <div className="glass-panel p-6 sm:p-8 min-h-[360px]">
           {currentStep === "Template" && (
-            <TemplatePicker
-              templates={TEMPLATE_LIST}
-              selectedId={draft.templateId}
-              onSelect={(t) => setDraft(draftFromTemplate(t))}
-            />
+            <>
+              <TemplatePicker
+                templates={TEMPLATE_LIST}
+                selectedId={draft.templateId}
+                onSelect={(t) => {
+                  // A fresh template replaces the phases outright, so anything
+                  // previously generated is gone — drop the flag and the notice
+                  // with it rather than letting them describe stale content.
+                  setDraft(draftFromTemplate(t));
+                  setPhasesAreGenerated(false);
+                  setAIAdjustments([]);
+                  setGoal("");
+                }}
+              />
+              <AIGoalStep
+                durationDays={draft.durationDays}
+                onDurationChange={(durationDays) =>
+                  setDraft((d) => ({
+                    ...d,
+                    durationDays,
+                    // Still template scaffolding at this point; keep it in step
+                    // with the horizon so a user who skips generation isn't
+                    // left with phases sized for the old duration.
+                    phases: template.buildPhases(durationDays),
+                  }))
+                }
+                onGenerated={applyGeneratedDraft}
+              />
+            </>
           )}
           {currentStep === "Identity" && (
             <TrackIdentityStep
@@ -212,7 +283,12 @@ function OnboardingContent() {
                 setDraft((d) => {
                   const next = { ...d, ...fields };
                   if (fields.durationDays !== undefined && fields.durationDays !== d.durationDays) {
-                    next.phases = template.buildPhases(fields.durationDays);
+                    // Template phases are scaffolding and cheap to rebuild.
+                    // Generated ones carry titles, tasks and deliverables the
+                    // user came here for — move their dates, don't discard them.
+                    next.phases = phasesAreGenerated
+                      ? rescalePhaseDeadlines(d.phases, d.durationDays, fields.durationDays)
+                      : template.buildPhases(fields.durationDays);
                   }
                   return next;
                 })
@@ -220,13 +296,22 @@ function OnboardingContent() {
             />
           )}
           {currentStep === "Phases" && (
-            <PhaseReviewStep phases={draft.phases} onChange={(phases) => setDraft((d) => ({ ...d, phases }))} />
+            <div className="flex flex-col gap-4">
+              {aiAdjustments.length > 0 && (
+                <div className="rounded-md border border-card-border bg-surface-muted p-3 text-[0.8rem] text-muted-foreground">
+                  <span className="font-semibold text-foreground">Generated, with adjustments:</span>{" "}
+                  {aiAdjustments.join("; ")}. Everything below is editable.
+                </div>
+              )}
+              <PhaseReviewStep phases={draft.phases} onChange={(phases) => setDraft((d) => ({ ...d, phases }))} />
+            </div>
           )}
           {currentStep === "Roadmap" && (
             <RoadmapStep
               trackName={draft.name}
               phases={draft.phases}
               content={draft.roadmapContent}
+              goal={goal}
               onChange={(roadmapContent) => setDraft((d) => ({ ...d, roadmapContent }))}
             />
           )}
@@ -238,7 +323,15 @@ function OnboardingContent() {
             />
           )}
           {currentStep === "Materials" && (
-            <MaterialsSeedStep materials={draft.materials} onChange={(materials) => setDraft((d) => ({ ...d, materials }))} />
+            <MaterialsSeedStep
+              materials={draft.materials}
+              onChange={(materials) => setDraft((d) => ({ ...d, materials }))}
+              portfolio={draft.portfolio}
+              onPortfolioChange={(portfolio) => setDraft((d) => ({ ...d, portfolio }))}
+              rotations={draft.rotations}
+              onRotationsChange={(rotations) => setDraft((d) => ({ ...d, rotations }))}
+              isGenerated={phasesAreGenerated}
+            />
           )}
         </div>
 
