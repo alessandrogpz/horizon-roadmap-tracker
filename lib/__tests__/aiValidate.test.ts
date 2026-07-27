@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { validateRoadmap, RoadmapUnusableError } from "../ai/validate";
+import { categoriesFor, MATERIAL_CATEGORIES } from "../materialOptions";
 
 // Fixtures here are drawn from the Stage −1 model screening
 // (temp/ai-eval/results/), not invented. Real model failures are stranger than
@@ -396,5 +397,33 @@ describe("validateRoadmap — never throws on repairable garbage", () => {
     expect("configVersion" in result).toBe(false);
     expect("isSynced" in result.phases[0]).toBe(false);
     expect("streakHistory" in result.phases[0]).toBe(false);
+  });
+});
+
+describe("material vocabularies stay in step with the UI", () => {
+  it("accepts every category and type the materials UI offers", () => {
+    // The schema constrains the model to these lists and the validator falls
+    // back to "Other" for anything else. If the two drift apart, generation
+    // silently produces materials filed under the wrong heading.
+    for (const category of MATERIAL_CATEGORIES) {
+      const result = validateRoadmap(
+        {
+          name: "T",
+          color: "#0ea5e9",
+          phases: [goodPhase("A", 45), goodPhase("B", 90)],
+          weekSchedule: goodWeek,
+          materials: [{ title: "X", category, type: "Book" }],
+        },
+        90,
+      );
+      expect(result.materials[0].category).toBe(category);
+    }
+  });
+
+  it("surfaces a category already in use that predates the canonical list", () => {
+    expect(categoriesFor([{ category: "Woodworking" }])).toContain("Woodworking");
+    // And doesn't duplicate one that's already canonical.
+    const list = categoriesFor([{ category: "Mathematics" }]);
+    expect(list.filter((c) => c === "Mathematics")).toHaveLength(1);
   });
 });
