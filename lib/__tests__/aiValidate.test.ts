@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { validateRoadmap, RoadmapUnusableError } from "../ai/validate";
-import { categoriesFor, MATERIAL_CATEGORIES } from "../materialOptions";
+import { categoriesFor, MATERIAL_CATEGORIES, searchUrlFor } from "../materialOptions";
 
 // Fixtures here are drawn from the Stage −1 model screening
 // (temp/ai-eval/results/), not invented. Real model failures are stranger than
@@ -425,5 +425,60 @@ describe("material vocabularies stay in step with the UI", () => {
     // And doesn't duplicate one that's already canonical.
     const list = categoriesFor([{ category: "Mathematics" }]);
     expect(list.filter((c) => c === "Mathematics")).toHaveLength(1);
+  });
+});
+
+describe("material authors and search links", () => {
+  const base = {
+    name: "T",
+    color: "#0ea5e9",
+    phases: [goodPhase("A", 45), goodPhase("B", 90)],
+    weekSchedule: goodWeek,
+  };
+
+  it("carries an author when the model supplies one", () => {
+    const result = validateRoadmap(
+      {
+        ...base,
+        materials: [{ title: "Real-Time Rendering", author: "Akenine-Möller et al.", category: "Computer Graphics", type: "Book" }],
+      },
+      90,
+    );
+    expect(result.materials[0].author).toBe("Akenine-Möller et al.");
+  });
+
+  it("omits the author field entirely rather than storing an empty string", () => {
+    const result = validateRoadmap(
+      { ...base, materials: [{ title: "X", author: "   ", category: "Other", type: "Book" }] },
+      90,
+    );
+    expect("author" in result.materials[0]).toBe(false);
+  });
+
+  it("still never stores a link, author or not", () => {
+    const result = validateRoadmap(
+      {
+        ...base,
+        materials: [{ title: "X", author: "Y", category: "Other", type: "Book", link: "https://invented.example" }],
+      },
+      90,
+    );
+    expect(result.materials[0].link).toBe("");
+  });
+
+  it("builds a search URL from the title and author", () => {
+    // Deterministic, not generated: it always resolves, and it visibly finds
+    // nothing when the title was fabricated — which is how a hallucinated
+    // recommendation gets caught.
+    const url = searchUrlFor({ title: "Real-Time Rendering", author: "Akenine-Möller" });
+    // encodeURIComponent, so spaces are %20 and non-ASCII is percent-escaped.
+    expect(decodeURIComponent(url)).toContain("Real-Time Rendering Akenine-Möller");
+    expect(url.startsWith("https://")).toBe(true);
+  });
+
+  it("builds a usable search URL when there is no author", () => {
+    const url = searchUrlFor({ title: "The Rust Book" });
+    expect(url).toContain("Rust");
+    expect(url).not.toContain("undefined");
   });
 });
