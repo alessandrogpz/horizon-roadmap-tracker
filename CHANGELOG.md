@@ -7,6 +7,23 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.14.3] - 2026-07-27
+
+### Added
+- **A Content-Security-Policy, with a strict `connect-src` allowlist.** Horizon
+  asks you to paste an API key for your own AI provider, and "we don't send your
+  key anywhere" is worth nothing as a promise — whoever ships the app controls
+  the code your browser runs. A CSP is different: the *browser* enforces it, the
+  header is visible in devtools in seconds, and no script on the page — ours, a
+  dependency's, or one injected through a hole nobody has found yet — can open a
+  connection to an origin that isn't on the list. The list is exactly the five
+  the app already talks to: Gemini, OpenRouter, Google APIs, Google accounts,
+  and the GitHub API. Also sets `Referrer-Policy`, `X-Content-Type-Options`,
+  `X-Frame-Options`, `frame-ancestors 'none'` and `object-src 'none'`.
+- Settings now says the policy exists and invites you to verify it rather than
+  trust it, and suggests restricting the key and setting a spend limit at the
+  provider — protection that is yours and can't be taken away by us.
+
 ## [0.14.2] - 2026-07-27
 
 ### Added
