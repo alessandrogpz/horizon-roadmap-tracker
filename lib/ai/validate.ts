@@ -131,8 +131,11 @@ function validateMaterials(raw: unknown): Omit<Material, "id">[] {
           ? Math.max(0, Math.min(5000, Math.round(obj.totalPages)))
           : 0;
 
+      const author = text(obj.author, MAX_TITLE_LEN);
+
       return {
         title,
+        ...(author ? { author } : {}),
         category,
         type,
         status: "Not Started",

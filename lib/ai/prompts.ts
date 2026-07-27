@@ -88,9 +88,11 @@ Rules:
   it only when the goal genuinely involves them; return an empty array otherwise.
 - "materials" is 4 to 8 study resources. Name only works you are confident
   actually exist — well-known books, standard references, official
-  documentation. Never invent a title to fill the list, and never include a URL
-  or an author you are unsure of. Set "totalPages" only for books; use 0
-  otherwise. Prefer fewer, real resources over a longer list.
+  documentation. Never invent a title to fill the list. Give "author" only when
+  you are confident of the attribution; leave it out rather than guess, since a
+  misattributed work is harder to find than an unattributed one. Set
+  "totalPages" only for books; use 0 otherwise. Prefer fewer, real resources
+  over a longer list.
 - "portfolio" is 2 to 5 concrete things they will have built by the end —
   artefacts, not activities. "A deferred renderer with shadow mapping" is a
   portfolio item; "practice rendering" is not.
