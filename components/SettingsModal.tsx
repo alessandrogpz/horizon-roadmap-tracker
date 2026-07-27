@@ -297,7 +297,7 @@ export default function SettingsModal({
         <Row
           icon={<Sparkles size={16} strokeWidth={2} />}
           title="AI roadmap drafting"
-          hint="Optional. Bring your own API key to generate a starting roadmap from a goal. Horizon runs no AI of its own — requests go from this browser straight to the provider you pick."
+          hint="Optional. Bring your own API key to generate a starting roadmap from a goal. Horizon runs no AI of its own — requests go from this browser straight to the provider you pick, and a Content-Security-Policy header blocks connections to anywhere else. Check it yourself in devtools; don't take our word for it."
         >
           <select
             value={settings.ai.provider}
@@ -317,7 +317,7 @@ export default function SettingsModal({
           <>
             <Row
               title={`${activeAIProvider.label} API key`}
-              hint={`Stored on this device only, in this browser — never synced to Drive and never included in a backup.${
+              hint={`Stored on this device only, in this browser — never synced to Drive and never included in a backup. Restrict the key and set a spend limit at the provider: that protection is yours, not ours to promise.${
                 activeAIProvider.keyUrl ? ` Get one at ${activeAIProvider.keyUrl.replace(/^https?:\/\//, "")}.` : ""
               }`}
             >
