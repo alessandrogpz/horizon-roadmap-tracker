@@ -26,9 +26,8 @@ import type {
   WeekDay,
 } from "../types";
 import { buildFocusTypes, buildWeekSchedule, DAY_NAMES } from "./prompts";
+import { MATERIAL_CATEGORIES, MATERIAL_TYPES } from "../materialOptions";
 import {
-  MATERIAL_CATEGORIES,
-  MATERIAL_TYPES,
   MAX_MATERIALS,
   MAX_PORTFOLIO,
   MAX_ROTATIONS,
@@ -121,10 +120,12 @@ function validateMaterials(raw: unknown): Omit<Material, "id">[] {
       const title = text(obj.title, MAX_TITLE_LEN);
       if (!title) return null;
 
-      const category = MATERIAL_CATEGORIES.includes(String(obj.category))
+      const category = (MATERIAL_CATEGORIES as readonly string[]).includes(String(obj.category))
         ? String(obj.category)
         : "Other";
-      const type = MATERIAL_TYPES.includes(String(obj.type)) ? String(obj.type) : "Other";
+      const type = (MATERIAL_TYPES as readonly string[]).includes(String(obj.type))
+        ? String(obj.type)
+        : "Other";
       const pages =
         type === "Book" && typeof obj.totalPages === "number" && Number.isFinite(obj.totalPages)
           ? Math.max(0, Math.min(5000, Math.round(obj.totalPages)))
