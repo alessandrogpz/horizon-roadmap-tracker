@@ -54,3 +54,8 @@ data/reflections/
 data/notes/
 
 
+
+# Raw model-screening output (temp/ai-eval). Large and regenerable by re-running
+# the harness; the failure cases worth keeping are already Vitest fixtures in
+# lib/__tests__/aiValidate.test.ts.
+temp/ai-eval/results/
