@@ -6,6 +6,7 @@ import { fetchGitStats, parseGitSources, serializeGitSources } from "@/lib/gitSt
 import { fetchNotes, saveNotes } from "@/lib/notes";
 import { renderMarkdownToHtml } from "@/lib/markdown";
 import type { GitStats, Material } from "@/lib/types";
+import { categoriesFor, MATERIAL_STATUSES, MATERIAL_TYPES } from "@/lib/materialOptions";
 import Portal from "@/components/Portal";
 
 interface MaterialsTrackerProps {
@@ -119,9 +120,11 @@ export default function MaterialsTracker({
     };
   }, [gitSourceKey]);
 
-  const statuses = ["Not Started", "In Progress", "Completed"];
-  const categories = ["Mathematics", "Computer Graphics", "Programming Languages", "DSA", "Other"];
-  const types = ["Book", "Website", "Course", "Video", "Other"];
+  const statuses = MATERIAL_STATUSES;
+  // Includes any category already in use, so editing a material can't silently
+  // reassign one that predates the canonical list.
+  const categories = categoriesFor(materials);
+  const types = MATERIAL_TYPES;
 
   const grouped = materials.reduce((acc, mat) => {
     const cat = mat.category || "Other";

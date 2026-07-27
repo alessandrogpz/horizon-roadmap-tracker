@@ -34,7 +34,7 @@ export default function RoadmapStep({ trackName, phases, content, onChange, goal
   // Read once on mount: settings can't change while the wizard is open, and a
   // lazy initializer keeps this off the server render.
   const [aiReady] = useState(hasAIConfigured);
-  const { busy, error, run, cancel } = useGeneration<string>();
+  const { busy, error, canRetry, run, cancel, retry } = useGeneration<string>();
 
   const draftWithAI = () => {
     setConfirmOverwrite(false);
@@ -49,8 +49,15 @@ export default function RoadmapStep({ trackName, phases, content, onChange, goal
 
   // Same rule the wizard applies at the Phases step: never silently replace
   // something the user wrote themselves.
+  //
+  // "Themselves" is the operative word. Leaving the Phases step auto-fills this
+  // box with buildRoadmapOutline(), so a plain length check would prompt the
+  // user to confirm overwriting text they never typed. Comparing against the
+  // outline we generate distinguishes the two without tracking extra state.
+  const isUntouchedOutline = content.trim() === buildRoadmapOutline(trackName, phases).trim();
+
   const handleDraftClick = () => {
-    if (content.trim().length > 0) setConfirmOverwrite(true);
+    if (content.trim().length > 0 && !isUntouchedOutline) setConfirmOverwrite(true);
     else draftWithAI();
   };
 
@@ -113,7 +120,16 @@ export default function RoadmapStep({ trackName, phases, content, onChange, goal
       )}
 
       {error && (
-        <div className="whitespace-pre-line rounded-md border border-red-500/30 bg-card p-3 text-[0.85rem] text-red-400">{error}</div>
+        <div className="flex flex-col gap-2 rounded-md border border-red-500/30 bg-card p-3">
+          <span className="whitespace-pre-line text-[0.85rem] text-red-400">{error}</span>
+          {/* Only offered when another attempt could actually succeed — a
+              rejected key will fail identically however many times you ask. */}
+          {canRetry && !busy && (
+            <button onClick={retry} className="btn self-start px-3 py-1 text-[0.78rem]">
+              Try again
+            </button>
+          )}
+        </div>
       )}
       <p className="text-muted-foreground text-[0.85rem] m-0">
         This is your own document — private to this track, nobody else can see it. Started from your phases above;

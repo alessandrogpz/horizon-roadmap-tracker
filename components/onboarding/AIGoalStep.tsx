@@ -35,7 +35,7 @@ const DURATION_PRESETS = [
 export default function AIGoalStep({ durationDays, onDurationChange, onGenerated }: AIGoalStepProps) {
   const [goal, setGoal] = useState("");
   const [aiReady] = useState(hasAIConfigured);
-  const { busy, error, run, cancel } = useGeneration<ValidatedRoadmap>();
+  const { busy, error, canRetry, run, cancel, retry } = useGeneration<ValidatedRoadmap>();
 
   if (!aiReady) return null;
 
@@ -108,7 +108,16 @@ export default function AIGoalStep({ durationDays, onDurationChange, onGenerated
       </div>
 
       {error && (
-        <div className="whitespace-pre-line rounded-md border border-red-500/30 bg-card p-3 text-[0.85rem] text-red-400">{error}</div>
+        <div className="flex flex-col gap-2 rounded-md border border-red-500/30 bg-card p-3">
+          <span className="whitespace-pre-line text-[0.85rem] text-red-400">{error}</span>
+          {/* Only offered when another attempt could actually succeed — a
+              rejected key will fail identically however many times you ask. */}
+          {canRetry && !busy && (
+            <button onClick={retry} className="btn self-start px-3 py-1 text-[0.78rem]">
+              Try again
+            </button>
+          )}
+        </div>
       )}
 
       <div className="flex items-center gap-3">

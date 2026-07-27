@@ -12,18 +12,10 @@
 // (D8).
 
 import { DAY_NAMES, RHYTHM_TYPES } from "./prompts";
-
-/** Mirrors the dropdowns in components/MaterialsTracker.tsx. Generating a value
- *  outside these lists produces a material the user can't edit back into a
- *  valid state, so the schema constrains the model to what the UI offers. */
-export const MATERIAL_CATEGORIES = [
-  "Mathematics",
-  "Computer Graphics",
-  "Programming Languages",
-  "DSA",
-  "Other",
-];
-export const MATERIAL_TYPES = ["Book", "Website", "Course", "Video", "Other"];
+// Single source of truth, shared with the materials UI: generating a value the
+// dropdowns don't offer produces a material the user can't edit back into a
+// valid state.
+import { MATERIAL_CATEGORIES, MATERIAL_TYPES } from "../materialOptions";
 
 const detailItems = {
   type: "array",
@@ -94,8 +86,8 @@ export const ROADMAP_SCHEMA = {
         type: "object",
         properties: {
           title: { type: "string" },
-          category: { type: "string", enum: MATERIAL_CATEGORIES },
-          type: { type: "string", enum: MATERIAL_TYPES },
+          category: { type: "string", enum: [...MATERIAL_CATEGORIES] },
+          type: { type: "string", enum: [...MATERIAL_TYPES] },
           totalPages: { type: "integer", description: "0 unless it is a book" },
         },
         required: ["title", "category", "type"],

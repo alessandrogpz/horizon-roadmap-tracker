@@ -7,6 +7,32 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.14.1] - 2026-07-27
+
+### Added
+- **"Try again" on AI errors that can actually succeed.** Every generation error
+  already knew whether retrying was worth it; nothing used that. A rate limit or
+  a truncated response now offers a retry that re-runs the same request. A
+  rejected key does not — it would fail identically however many times you ask.
+
+### Changed
+- **Material categories are no longer locked to a graphics curriculum.** The
+  list was `Mathematics / Computer Graphics / Programming Languages / DSA /
+  Other`, which was right when Horizon held one personal track and wrong the
+  moment a track could be about anything — a couch-to-5k plan filed every book
+  under "Other". Added general categories (Fundamentals, Technique, Practice,
+  Reference, Health & Fitness, Language, Business) and types (Podcast, Paper),
+  kept every original so existing materials keep their grouping, and surfaced
+  any category already in use so a value typed earlier never vanishes from the
+  dropdown. The materials UI and AI generation now share one source of truth,
+  so they cannot drift apart.
+
+### Fixed
+- **The roadmap step asked permission to overwrite text you never wrote.**
+  Leaving the Phases step auto-fills the box with a generated outline, and
+  "Draft this for me" then treated that as your own work and asked before
+  replacing it.
+
 ## [0.14.0] - 2026-07-27
 
 ### Added
