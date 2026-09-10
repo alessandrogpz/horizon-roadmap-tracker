@@ -3,6 +3,7 @@ import {
   addPhase,
   recommendedPhaseId,
   removePhase,
+  setMaterialArchived,
   setMaterialStatus,
   togglePortfolioProject,
   trackTotalDays,
@@ -88,6 +89,30 @@ describe("setMaterialStatus", () => {
   it("ignores an unknown material id", () => {
     const before = track();
     expect(setMaterialStatus(before, "nope", "Completed", "2026-07-06")).toBe(before);
+  });
+});
+
+describe("setMaterialArchived", () => {
+  it("archives a material and keeps its progress", () => {
+    const next = setMaterialArchived(track(), "m1", true);
+    expect(next.materials[0]).toMatchObject({ archived: true, status: "In Progress", currentPage: 10 });
+  });
+
+  it("stamps updatedAt, so the archive wins the per-item merge on sync", () => {
+    expect(setMaterialArchived(track(), "m1", true).materials[0].updatedAt).toBeGreaterThan(0);
+  });
+
+  it("unarchiving puts it back on the active list", () => {
+    const archived = setMaterialArchived(track(), "m1", true);
+    expect(setMaterialArchived(archived, "m1", false).materials[0].archived).toBe(false);
+  });
+
+  it("leaves the streak and other materials alone", () => {
+    const other = { ...track().materials[0], id: "m2", title: "Calculus" };
+    const next = setMaterialArchived(track({ materials: [...track().materials, other] }), "m1", true);
+    expect(next.materials[1]).toEqual(other);
+    expect(next.streakHistory).toEqual([]);
+    expect(next.completedItemsHistory).toEqual({});
   });
 });
 

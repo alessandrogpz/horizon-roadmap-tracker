@@ -60,6 +60,13 @@ export const updateMaterial = (track: TrackState, materialId: string, fields: Pa
   materials: track.materials.map((m) => (m.id === materialId ? { ...m, ...fields, updatedAt: Date.now() } : m)),
 });
 
+/** Archiving takes a material off the active list without losing anything:
+ *  progress, notes and completion history stay, and unarchiving puts it back
+ *  as it was. It's an ordinary edit (it bumps `updatedAt`), so the per-item
+ *  merge in lib/merge.ts syncs it like any other change. */
+export const setMaterialArchived = (track: TrackState, materialId: string, archived: boolean): TrackState =>
+  updateMaterial(track, materialId, { archived });
+
 /** Ids are prefixed with the track id so they stay globally unique — notes
  *  sync matches files by note_<materialId>.md in one shared Drive folder. */
 export const addMaterial = (track: TrackState, material: Omit<Material, "id">): TrackState => ({

@@ -7,6 +7,22 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.15.0] - 2026-09-10
+
+### Added
+- **Archive a material instead of deleting it.** Finishing a book used to leave
+  two options: let it clutter the list, or delete it and lose its progress and
+  notes with it. Every material now has an **Archive** button. Archived
+  materials move to a collapsed **Archived** group at the bottom of the panel,
+  where their notes stay readable, and **Unarchive** puts them back exactly as
+  they were. It's an ordinary per-item edit, so it syncs between devices like
+  any other change.
+
+### Notes
+- Archived materials still count in the Materials figure of the progress
+  stats — a finished book is still finished work. They no longer fetch repo
+  stats, which saves GitHub API budget.
+
 ## [0.14.4] - 2026-09-10
 
 ### Security
