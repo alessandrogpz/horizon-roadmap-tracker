@@ -7,6 +7,29 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.21.1] - 2026-09-10
+
+### Security
+- **Continuous integration.** Every push now runs, on GitHub: type checks,
+  lint, the unit tests, a production build, the database tests on a real
+  three-member replica set, a dependency audit that also verifies every
+  package's registry signature, a scan of the whole git history for leaked
+  secrets, and static analysis for security bugs. The pipeline's own token
+  can only read, and every action and scanner is pinned to an exact version
+  that can't be swapped underneath it.
+- **Dependabot** proposes updates for npm packages, the CI actions and the
+  database image.
+- A scan of all 149 commits found no leaked secrets; static analysis found
+  nothing either.
+
+### Added
+- `npm run db:backup`: a compressed backup of the database into `backups/`,
+  readable only by you, keeping the latest 14. Restoring one has been
+  tested end to end.
+- `SECURITY.md`, and in `docs/security/`: every implemented security measure
+  with where it lives and how it's verified, and a runbook for incidents
+  (revoking sessions, rotating a password, restoring a backup, and more).
+
 ## [0.21.0] - 2026-09-10
 
 ### Added

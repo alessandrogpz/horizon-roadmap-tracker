@@ -33,6 +33,7 @@ The other documents, and what each one is for:
 9. [Search and statistics in the database (0.20.0)](#9-search-and-statistics-in-the-database-0200)
 10. [Data at scale: seeding, explain() and failover (0.20.1)](#10-data-at-scale-seeding-explain-and-failover-0201)
 11. [Deleting an account (0.21.0)](#11-deleting-an-account-0210)
+12. [Securing the development life cycle (0.21.1)](#12-securing-the-development-life-cycle-0211)
 
 ---
 
@@ -734,3 +735,65 @@ and the app still shows your tracks. `npm run test:db` includes the four deletio
 
 **Files.** `lib/server/account/handlers.ts`, `app/api/account/route.ts`, `components/AccountRow.tsx`,
 `lib/__tests__/account.db.test.ts`.
+
+---
+
+## 12. Securing the development life cycle (0.21.1)
+
+**What changed.** Every push to GitHub now runs a CI pipeline with four jobs: type checks, lint, tests,
+build and a dependency audit; the database tests on a real replica set; a secret scan of the whole git
+history; and static analysis. Dependabot proposes dependency updates. `npm run db:backup` makes backups,
+and a restore has been tested. The security documentation is complete: `SECURITY.md`,
+`docs/security/MEASURES.md` (every measure, where it lives, how it's verified) and
+`docs/security/RUNBOOK.md` (what to do when something goes wrong).
+
+**Why.** Secure code isn't enough if the way it's built and shipped isn't: a leaked password in git, an
+unreviewed dependency, a push that skips the tests, a database with no backup. The Cyber Security module
+asks for a secured development life cycle and operations.
+
+**Concepts.**
+- **CI (continuous integration).** A server re-runs every check on every push, in a clean environment,
+  so "it works on my machine" is replaced by evidence. A *ruleset* on `main` can then refuse any change
+  whose checks fail.
+- **Supply chain security.** Most of Horizon's code is other people's. The defences:
+  - A lockfile (`npm ci` installs exactly those versions).
+  - `npm audit` (known vulnerabilities).
+  - `npm audit signatures`: each package is verified as signed by the npm registry, and 111 also carry
+    *provenance*, proof of which source and build produced them.
+  - Dependabot, which proposes updates.
+  - In the pipeline itself: GitHub Actions pinned to a commit hash (a tag like `v7` can be moved to
+    other code; a hash can't), scanner images pinned by digest, and a job token that can only read.
+- **Secret scanning.** gitleaks searches every commit ever made for things that look like passwords,
+  keys and tokens. Deleting a secret in a later commit doesn't remove it from history, so the scan covers
+  all 149 commits. Result: none. The real protection against a leak is *rotation* (RUNBOOK §3).
+- **SAST (static application security testing).** Semgrep reads the code, without running it, for known
+  dangerous patterns: injection, unsafe `eval`, hard-coded secrets, OWASP Top 10 issues. 113 rules on 147
+  files: 0 findings. GitHub's own CodeQL isn't available for private repositories on a personal account,
+  so this is the open alternative.
+- **Backups are only real once restored.** The first restore attempt "succeeded" and restored nothing: a
+  database name in the connection string silently overrode the target. Found on test data, fixed, and
+  written into the runbook, rather than discovered during an emergency. The second restore brought back
+  all 587,578 documents.
+- **A runbook** turns panic into steps: revoke sessions, rotate a password, restore a backup, handle a
+  vulnerable dependency.
+- **Least privilege, everywhere.** The CI token reads only; each database user reaches one database; the
+  backup file is readable only by its owner.
+
+**See it yourself.**
+- GitHub → the repository → **Actions**: each push's four jobs.
+- `npm audit`, then `npm audit signatures`.
+- The same scans CI runs, locally: the two `docker run` commands in `.github/workflows/ci.yml`.
+- `npm run db:backup`, then the restore command from RUNBOOK §4 into a scratch database.
+
+**Exam questions.**
+- *How do you secure your development life cycle?* CI on every push, dependency audit and signatures,
+  Dependabot, secret scanning, SAST, pinned actions, a read-only CI token, and a protected `main`.
+- *What would you do if a password leaked into git?* Rotate it first, then remove it from the history
+  and re-scan (RUNBOOK §3).
+- *How do you know your backups work?* A restore was tested, and the first attempt revealed a real
+  pitfall.
+- *What is a software supply chain attack, and what's your defence?* Malicious code arriving through a
+  dependency or the build. The defences are the ones listed above.
+
+**Files.** `.github/workflows/ci.yml`, `.github/dependabot.yml`, `scripts/backup.ts`, `SECURITY.md`,
+`docs/security/MEASURES.md`, `docs/security/RUNBOOK.md`.

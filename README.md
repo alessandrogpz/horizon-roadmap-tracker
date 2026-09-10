@@ -68,7 +68,8 @@ no business logic.
 ├── docker/mongo-init.js          # Sets up the replica set and its users
 ├── scripts/dev-env.mjs           # Generates the local database's secrets
 ├── docs/nosql/                   # Data model, dataset, performance, replication (SE_06)
-├── docs/security/                # Threat model
+├── docs/security/                # Threat model, implemented measures, operations runbook
+├── .github/                      # CI (checks, database tests, secret scan, SAST), Dependabot
 └── docs/LEARNING_LOG.md          # What each step of the database & security work teaches
 ```
 
@@ -131,6 +132,7 @@ mongodb://horizon_app:<password>@localhost:27017,localhost:27018,localhost:27019
 | `npm run db:reset` | Stop it and **delete all local data** |
 | `npm run db:shell` | Open `mongosh` as `horizon_app`; paste `MONGO_APP_PASSWORD` from `.env.docker` when asked |
 | `npm run test:db` | Run the database tests, as `horizon_test` on a database of their own (`npm test` doesn't need the database) |
+| `npm run db:backup` | Back up the database to `backups/` (git-ignored, readable only by you); restoring: `docs/security/RUNBOOK.md` |
 
 *   It listens on `127.0.0.1` only, so no other device can connect.
 *   To browse the data in a GUI, paste `MONGODB_URI` from `.env.local` into
