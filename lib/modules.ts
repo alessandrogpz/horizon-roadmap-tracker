@@ -26,6 +26,8 @@ export const MODULES = [
   { id: "pomodoroTimer", label: "Focus Timer", homeColumn: "left" },
   { id: "portfolioTracker", label: "Portfolio Deliverables", homeColumn: "right" },
   { id: "materialsTracker", label: "Materials", homeColumn: "right" },
+  { id: "notepad", label: "Notepad", homeColumn: "right" },
+  { id: "todoList", label: "To-do List", homeColumn: "right" },
 ] as const satisfies readonly ModuleDefinition[];
 
 export type ModuleId = (typeof MODULES)[number]["id"];

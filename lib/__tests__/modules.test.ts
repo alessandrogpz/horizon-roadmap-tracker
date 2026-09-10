@@ -28,7 +28,7 @@ describe("resolveTrackLayout", () => {
     const stored = { left: ["weeklyPlan"], right: ["materialsTracker"] };
     const track = {
       panelColumns: stored,
-      hiddenPanels: ["phaseTracker", "streakGraph", "pomodoroTimer", "portfolioTracker"],
+      hiddenPanels: ["phaseTracker", "streakGraph", "pomodoroTimer", "portfolioTracker", "notepad", "todoList"],
     };
     const { columns, hidden } = resolveTrackLayout(track);
     expect(columns.left).toEqual(["weeklyPlan"]);
