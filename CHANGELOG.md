@@ -7,6 +7,26 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.17.0] - 2026-09-10
+
+### Added
+- **A Notepad panel.** One plain text box per track for getting something down
+  before it has a proper home. It saves as you type.
+- **A To-do List panel.** One per track: add, tick, delete, and "Clear done" —
+  nothing more.
+- Both open by default on every track; close either from the Modules menu. They
+  live with the material notes rather than in the track record, so typing in
+  them never bumps the track's config. Each syncs to Drive as its own
+  `note_notepad_<trackId>.md` / `note_todo_<trackId>.md` (newest edit wins),
+  comes along in every backup, and shows up in the .zip export under
+  `notepads/` and `todos/`, named after the track. The to-do list is stored as
+  a markdown checklist, so those files stay readable.
+
+### Notes
+- An open panel re-reads its note after every Drive sync or restore, so it
+  can't save a stale copy over something newer from another device — unless
+  you're mid-edit, in which case your edit is the newest and wins.
+
 ## [0.16.0] - 2026-09-10
 
 ### Removed
