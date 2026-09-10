@@ -1,6 +1,6 @@
 {
   "name": "horizon-roadmap-tracker",
-  "version": "0.18.0",
+  "version": "0.18.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:db": "vitest run --config vitest.db.config.ts",
+    "test:db": "vitest run --config vitest.db.config.mts",
     "db:up": "node scripts/dev-env.mjs && docker compose up -d && docker compose wait init",
     "db:down": "docker compose down",
     "db:reset": "docker compose down --volumes",
@@ -24,7 +24,7 @@
     "jose": "^6.2.12",
     "lucide-react": "^1.26.0",
     "mongoose": "^9.9.5",
-    "next": "16.2.7",
+    "next": "16.3.4",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "zod": "^4.6.1"
@@ -35,7 +35,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.2.7",
+    "eslint-config-next": "16.3.4",
     "fake-indexeddb": "^6.2.5",
     "tailwindcss": "^4",
     "typescript": "^5",

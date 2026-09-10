@@ -170,6 +170,10 @@ export default function TopBarMenu({
             label={roadmapEnabled ? "Full roadmap" : "Full roadmap (locked)"}
             disabled={!roadmapEnabled}
             hint={roadmapEnabled ? undefined : "Connect Google Drive to unlock"}
+            // A full page load on purpose: it fires `pagehide`, which flushes any
+            // pending save in WorkspaceProvider. router.push would unmount the
+            // provider without that flush and could drop the last edit.
+            // eslint-disable-next-line @next/next/no-location-assign-relative-destination
             onClick={run(() => window.location.assign("/roadmap"))}
           />
           <Item icon={<Plus size={15} strokeWidth={2} />} label="New track" onClick={run(onNewTrack)} />

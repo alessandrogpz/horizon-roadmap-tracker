@@ -7,6 +7,28 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.18.1] - 2026-09-10
+
+### Security
+- **Next.js 16.3.4** (from 16.2.7), and `npm audit fix` for the rest:
+  `npm audit` now reports 0 known vulnerabilities, down from 10 (one
+  critical). Neither of the serious Next.js advisories could be exploited in
+  Horizon, which uses no middleware or proxy and no Server Actions, but they're
+  closed before anything is built on top.
+
+### Added
+- `docs/LEARNING_LOG.md`: what each step of the database and security work
+  built, why, and the ideas behind it, with ways to see it working and the
+  exam questions it answers.
+
+### Notes
+- Next 16.3.4's lint rules flag two `window.location.assign()` calls. Both
+  full page loads are deliberate (one makes sure pending edits are saved, the
+  other restarts the app after "Delete local data"), so the warnings are
+  suppressed with the reason next to each.
+- The test configs are now `vitest.config.mts` and `vitest.db.config.mts`, as
+  the updated Vite expects.
+
 ## [0.18.0] - 2026-09-10
 
 ### Added

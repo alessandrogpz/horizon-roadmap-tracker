@@ -1,7 +1,8 @@
 # Horizon threat model
 
-**Version 1.2, 2026-09-10** (1.1 added the local database from 0.17.1; 1.2 marks
-sign-in with Google, from 0.18.0, as built, and adds S6). Models Horizon v0.18.0 *and* the planned sign-in
+**Version 1.3, 2026-09-10** (1.1 added the local database from 0.17.1; 1.2 marks
+sign-in with Google, from 0.18.0, as built, and adds S6; 1.3 updates T8 for the
+0.18.1 dependency upgrade). Models Horizon v0.18.1 *and* the planned sign-in
 with Google plus MongoDB sync (`MODULES_PLAN.md`, Step 4), so that
 security is designed in before the server is built. Parts that don't exist yet
 are marked **planned**. Revisit after Step 4 ships, and whenever a route, a
@@ -255,7 +256,7 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 | T5 | Traffic between the browser and Vercel changed in transit | F2, F4 | 1 | 3 | Medium | HTTPS only: plain HTTP gets a 308 redirect to HTTPS, and HSTS (`max-age=63072000`, two years) keeps browsers on HTTPS | Implemented (Vercel; checked live 2026-09-10) |
 | T6 | Traffic between Vercel and Atlas changed in transit | F5 | 1 | 3 | Medium | Atlas only accepts TLS connections | Planned (4a) |
 | T7 | A crafted backup file restored through Settings | B, IDB | 1 | 2 | Low | Its shape is checked before restore (`lib/import.ts`), the user confirms first, and content is shown through the escaping markdown renderer. Gap: note contents aren't checked to be strings | Implemented; gap Open |
-| T8 | A compromised npm package runs during the build or in users' browsers | CI, B, A | 2 | 3 | High | Few dependencies (9 at runtime), exact versions pinned in `package-lock.json`. `npm ci` and `npm audit` in CI, and Dependabot alerts. The CSP limits where injected code can send data (but see I3) | Lockfile Implemented; rest Planned (Step 6) |
+| T8 | A compromised npm package runs during the build or in users' browsers | CI, B, A | 2 | 3 | High | Few dependencies (9 at runtime), exact versions pinned in `package-lock.json`. `npm ci` and `npm audit` in CI, and Dependabot alerts. The CSP limits where injected code can send data (but see I3) | Lockfile Implemented; `npm audit` clean since 0.18.1 (Next 16.2.7 → 16.3.4); npm blocks dependencies' install scripts unless allowed; CI audit and Dependabot Planned (Step 6) |
 | T9 | Someone who gets into the GitHub or Vercel account pushes malicious code, which deploys automatically | F11, CI | 1 | 3 | Medium | Two-factor authentication on GitHub and Vercel. A ruleset on `main`: pull request and passing CI required, no force pushes | Planned (Step 6) |
 
 ### Repudiation: denying an action, with no way to prove it

@@ -186,6 +186,9 @@ export default function SettingsModal({
     if (googleClientId()) await signOut().catch(() => {});
     await wipeLocalData();
     onRestored();
+    // A full page load on purpose: the app must start again from nothing, with
+    // no in-memory copy of the data that was just wiped.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.assign("/");
   };
 
