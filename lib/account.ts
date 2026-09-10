@@ -39,3 +39,33 @@ export async function signOut(): Promise<void> {
   const res = await fetch(ENDPOINT, { method: "DELETE" });
   if (!res.ok) throw new Error("Couldn't sign out. Please try again.");
 }
+
+// ── Who is signed in, shared across the app ──────────────────────────────
+// Settings' Account row and the top bar's sync button both need to know,
+// and must agree. `undefined` means not asked yet; `null`, signed out.
+
+type Listener = () => void;
+let current: Account | null | undefined;
+const listeners = new Set<Listener>();
+
+export const accountStore = {
+  get: (): Account | null | undefined => current,
+  set(account: Account | null) {
+    current = account;
+    listeners.forEach((listener) => listener());
+  },
+  subscribe(listener: Listener): () => void {
+    listeners.add(listener);
+    return () => listeners.delete(listener);
+  },
+  /** Asks the server, once accounts are switched on. Leaves the store
+   *  unknown if the server can't answer. */
+  async refresh(): Promise<void> {
+    if (!googleClientId()) return accountStore.set(null);
+    try {
+      accountStore.set(await fetchAccount());
+    } catch {
+      // Unreachable or not configured: stay unknown, so nothing assumes a session.
+    }
+  },
+};

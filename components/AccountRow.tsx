@@ -2,16 +2,12 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { UserRound } from "lucide-react";
-import { AccountsUnavailableError, fetchAccount, googleClientId, signIn, signOut, type Account } from "@/lib/account";
+import { accountStore, AccountsUnavailableError, fetchAccount, googleClientId, signIn, signOut } from "@/lib/account";
 import { getGoogleAccountsId } from "@/lib/googleSignIn";
 import { loadGoogleGisScript } from "@/lib/googleDrive";
 import { resolvedTheme } from "@/lib/theme";
-
-type State =
-  | { status: "loading" }
-  | { status: "signed-out" }
-  | { status: "signed-in"; account: Account }
-  | { status: "unavailable" };
+import { useAccount } from "@/components/useAccount";
+import { useWorkspaceActions } from "@/components/workspace/WorkspaceProvider";
 
 const quietButton =
   "rounded-[var(--radius-control)] border border-card-border bg-surface-muted px-3 py-1.5 text-[0.78rem] text-foreground cursor-pointer transition-colors hover:border-card-border-hover hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-50";
@@ -21,33 +17,40 @@ const quietButton =
  * account and a sign-out button when signed in. Only rendered when the
  * deployment has a client ID (see googleClientId).
  *
- * Signing in only creates the account for now. Syncing tracks through it
- * comes next (MODULES_PLAN.md step 4f); until then Drive sync is unchanged.
+ * Signed in, the top bar's sync button syncs through the account instead of
+ * Drive. Signing in runs that first sync straight away, so the account gets
+ * this device's data (or, on a device with nothing of its own yet, this device
+ * gets the account's).
  */
 export default function AccountRow() {
-  const [state, setState] = useState<State>({ status: "loading" });
+  const account = useAccount(false);
+  const { syncAccount } = useWorkspaceActions();
+  const [unavailable, setUnavailable] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const buttonRef = useRef<HTMLDivElement>(null);
 
+  // Ask afresh each time Settings opens: the session may have ended elsewhere.
   useEffect(() => {
     let cancelled = false;
     fetchAccount()
-      .then((account) => {
-        if (!cancelled) setState(account ? { status: "signed-in", account } : { status: "signed-out" });
+      .then((fresh) => {
+        if (!cancelled) accountStore.set(fresh);
       })
       .catch(() => {
-        if (!cancelled) setState({ status: "unavailable" });
+        if (!cancelled) setUnavailable(true);
       });
     return () => {
       cancelled = true;
     };
   }, []);
 
+  const signedOut = account === null && !unavailable;
+
   // Google renders its own button, in an iframe, into this div. The ID token
   // it returns goes straight to our server, which verifies it.
   useEffect(() => {
-    if (state.status !== "signed-out") return;
+    if (!signedOut) return;
     let cancelled = false;
     loadGoogleGisScript()
       .then(() => {
@@ -61,10 +64,10 @@ export default function AccountRow() {
             setBusy(true);
             setError("");
             try {
-              const account = await signIn(credential);
-              setState({ status: "signed-in", account });
+              accountStore.set(await signIn(credential));
+              void syncAccount();
             } catch (err) {
-              if (err instanceof AccountsUnavailableError) setState({ status: "unavailable" });
+              if (err instanceof AccountsUnavailableError) setUnavailable(true);
               else setError(err instanceof Error ? err.message : "Sign-in failed.");
             } finally {
               setBusy(false);
@@ -85,7 +88,7 @@ export default function AccountRow() {
     return () => {
       cancelled = true;
     };
-  }, [state.status]);
+  }, [signedOut, syncAccount]);
 
   const handleSignOut = async () => {
     setBusy(true);
@@ -93,7 +96,7 @@ export default function AccountRow() {
     try {
       await signOut();
       getGoogleAccountsId()?.disableAutoSelect();
-      setState({ status: "signed-out" });
+      accountStore.set(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't sign out.");
     } finally {
@@ -101,12 +104,13 @@ export default function AccountRow() {
     }
   };
 
-  const hint =
-    state.status === "signed-in"
-      ? `Signed in as ${state.account.name || state.account.email} (${state.account.email}).`
-      : state.status === "unavailable"
-        ? "Accounts aren't available on this server right now."
-        : "Sign in with Google to create your Horizon account. Syncing your tracks through it is coming; until then, Cloud sync below works as before.";
+  const hint = unavailable
+    ? "Accounts aren't available on this server right now."
+    : account
+      ? `Signed in as ${account.name || account.email} (${account.email}). The sync button at the top syncs through this account; your data stays on this device too.`
+      : account === null
+        ? "Sign in with Google to sync your tracks and notes through your own Horizon account. Signed out, Cloud sync below works through Drive as before."
+        : "Checking…";
 
   return (
     <div className="flex flex-col gap-2 border-b border-card-border py-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
@@ -121,8 +125,8 @@ export default function AccountRow() {
         </div>
       </div>
       <div className="flex shrink-0 items-center gap-2">
-        {state.status === "signed-out" && <div ref={buttonRef} aria-busy={busy} />}
-        {state.status === "signed-in" && (
+        {signedOut && <div ref={buttonRef} aria-busy={busy} />}
+        {account && (
           <button onClick={handleSignOut} disabled={busy} className={quietButton}>
             {busy ? "Signing out…" : "Sign out"}
           </button>

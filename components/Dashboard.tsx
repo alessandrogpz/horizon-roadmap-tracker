@@ -28,6 +28,7 @@ import {
   setGoogleClientId,
 } from "@/lib/googleDrive";
 import { useWorkspace, useWorkspaceActions } from "@/components/workspace/WorkspaceProvider";
+import { useAccount } from "@/components/useAccount";
 import { panelFor, type PanelContext } from "@/components/panels/registry";
 import PanelErrorBoundary from "@/components/panels/PanelErrorBoundary";
 import DashboardHeader from "@/components/DashboardHeader";
@@ -58,7 +59,10 @@ function FullScreenMessage({ children }: { children: React.ReactNode }) {
 
 export default function Dashboard() {
   const { workspace, track, status, error, syncStatus, syncError } = useWorkspace();
-  const { updateTrack, commitTrack, commitWorkspace, switchTrack, addTrack, sync, reload } = useWorkspaceActions();
+  const { updateTrack, commitTrack, commitWorkspace, switchTrack, addTrack, sync, syncAccount, reload } = useWorkspaceActions();
+  // Signed in: the sync button goes through the account. Signed out (or
+  // accounts switched off): Drive, exactly as before. Never both.
+  const account = useAccount();
 
   const [selectedScheduleDay, setSelectedScheduleDay] = useState<WeekDay | null>(null);
   // null = closed. { rotationId: null } = create new. { rotationId: "<id>" } = view/edit that one.
@@ -191,6 +195,10 @@ export default function Dashboard() {
 
   const handleSyncWorkspace = () => {
     if (syncStatus === "syncing") return;
+    if (account) {
+      void syncAccount();
+      return;
+    }
     const clientId = getGoogleClientId();
     if (!clientId) {
       setDriveModalMode("connect");
@@ -300,6 +308,7 @@ export default function Dashboard() {
             workspace={workspace}
             syncStatus={syncStatus}
             syncError={syncError}
+            syncTarget={account ? "account" : "drive"}
             onSync={handleSyncWorkspace}
             onOpenCloudMenu={() => setDriveModalMode("manage")}
             onSwitchTrack={(trackId) => void switchTrack(trackId)}

@@ -13,11 +13,11 @@
 > yet. That's fine while the repo is private (§7 Q6). Strip those details before
 > it ever goes public.
 >
-> **Progress:** Steps 0, 1 and 3 are done, plus the local half of 4a (0.17.1)
-> and 4b, sign-in with Google (0.18.0). 4b's last check, a real sign-in, is the
-> user's to do. Next is 4c–4f: authorization, validation, the model and sync.
-> Next was upgraded to 16.3.4 in 0.18.1 (security; see Step 6). The plan moved
-> from `temp/` to the repo root in 0.17.1. What each step teaches:
+> **Progress:** Steps 0, 1 and 3 are done; 4a's local half (0.17.1); 4b,
+> sign-in with Google (0.18.0, the user signed in for real); Next 16.3.4
+> (0.18.1); and 4c–4g, sync through the account (0.19.0). Next is 4h (rate
+> limiting) with the small local-routes fixes, then Step 5. The plan moved from
+> `temp/` to the repo root in 0.17.1. What each step teaches:
 > `docs/LEARNING_LOG.md`, updated with every step.
 
 ---
@@ -611,6 +611,83 @@ leave them unsharded or shard on hashed `_id`.
   already passed a zod schema.
 - Cache the connection across serverless invocations: done in
   `lib/server/db.ts` (0.18.0).
+
+*4c–4g DONE in 0.19.0 (2026-09-10).* What was built:
+- **Server, `lib/server/sync/`:**
+  - `schema.ts`: strict zod schemas for the whole request (workspace plus
+    notes), 2 MB body limit, and caps per field and per array. Keys that
+    become MongoDB field names (weekday names, focus-type keys) must match
+    `[A-Za-z0-9_-]`. A track's map key must equal its `meta.id`.
+  - `model.ts`: `splitWorkspace` / `assembleWorkspace` between the app's
+    shape and the documents. Per-day maps become `completions` buckets whose
+    items are `{id, done, updatedAt}`; `done: false` keeps an untick and its
+    time. Accomplishments become `{title, description?, plain?, done,
+    updatedAt}`, so free-text titles are values, never field names.
+    `clampWorkspace` handles T3. `stableStringify` lets the store write only
+    the documents that changed.
+  - `collections.ts`: `$jsonSchema` validators and indexes for `tracks`,
+    `completions`, `notes` and `auditLog` (TTL 90 days), created once per
+    process. `readWrite` can create a collection with its validator but not
+    `collMod` it, so a changed validator only logs a warning until an admin
+    applies it.
+  - `store.ts`: `inTransaction` (snapshot reads, majority commits, the
+    driver's automatic retry), `loadUserData`, and `saveUserData` (bulk
+    `replaceOne` upserts for changed tracks and days through the native
+    driver, per-note LWW upserts through the Mongoose `Note` model, then
+    `users.activeTrackId` and an audit entry).
+  - `handlers.ts`: GET and PUT `/api/sync`. PUT runs, in order: same origin,
+    session, body, track-id check, `migrateWorkspace`, clamp, then in the
+    transaction load → assemble → decide → save.
+  - Three modes: `first` (a new account stores the device's data), `adopt`
+    (`!device.isSynced`: an untouched starter takes the account's data, as
+    Drive does), and `merge` (`mergeWorkspace(device, stored)`).
+- **Client:**
+  - `lib/serverSync.ts`: `syncWithServer()` returns `SyncResult`. It writes
+    notes before the workspace, in one Dexie transaction, and if the user
+    edited during the request it merges the answer into the newer local copy
+    and keeps `hasUnsyncedChanges`.
+  - `accountStore` and `useAccount` share the signed-in state.
+  - WorkspaceProvider has `syncAccount`, sharing a `runSync` with Drive.
+  - The header's sync button uses the account when signed in, otherwise
+    Drive; never both. Signing in runs a first sync.
+- **Decisions and findings:**
+  - `streakHistory` is derived, not stored. The app itself rebuilds it from
+    accomplishments on every change and merge (`lib/streak.ts`). The
+    fixture's copy predates that rule and lists three days without
+    accomplishments; the app drops those at its next change anyway.
+  - `mergeAppState` stamps `hasUnsyncedChanges` and `lastSyncTime` onto
+    every track, so real merged data carries them. The schema accepts them
+    and `NOT_IN_TRACK_DOC` keeps them out of the documents. A database test
+    caught this: without the fix, a track was rewritten on every sync and the
+    next sync of merged data would have been refused.
+  - `notes.updatedAt` is the device's millisecond timestamp, stored as a
+    number (the plan said Date), so LWW compares device clocks with device
+    clocks.
+  - The workspace's `activeTrackId` is embedded in the `users` document: a
+    one-to-one fact, so embedding is the textbook choice.
+- **Tests:**
+  - `syncModel.test.ts` (13): the real fixture round-trips; unticks, legacy
+    ticks and plain strings survive; no stored key contains `.` or starts
+    with `$`; merged data passes the schema; clamping; the schema accepts
+    real data and refuses smuggled fields and operators.
+  - `sync.db.test.ts` (13): 401 and 403; first sync plus GET; the audit
+    entry; a repeat sync writes nothing; two devices tick different boxes on
+    the same day; two simultaneous syncs lose nothing; a new device adopts;
+    two users with the same legacy track id stay apart; a smuggled `userId`
+    gets 400; notes LWW both ways; future stamps are clamped; the validators
+    refuse bad documents (code 121).
+- **Verified in the real app** on a production build, pointed at
+  `horizon_test` with a test session: the header read "Synced with account";
+  the first sync stored the starter; after adding a project and typing in
+  the Notepad, a second sync stored config v1 and the `notepad` note; the
+  audit log shows both syncs; sign-out switched the header back to Drive and
+  deleted the session.
+- **Follow-ups:**
+  - The header's "Unsynced" state only updates on reload, because the
+    in-memory workspace never gets `hasUnsyncedChanges`. This predates the
+    work and affects Drive sync the same way.
+  - A notepad or to-do note whose track was dropped by `adopt` stays stored
+    as an orphan, like with Drive.
 
 **4h. Security measures this step adds** (copy them into the measures list):
 - OIDC token verification.
