@@ -1,0 +1,165 @@
+{
+  "explainVersion": "1",
+  "queryPlanner": {
+    "namespace": "horizon_perf.completions",
+    "parsedQuery": {
+      "userId": {
+        "$eq": "67bd1790a5ed09e050e1495d"
+      }
+    },
+    "indexFilterSet": false,
+    "queryHash": "42B819E8",
+    "planCacheShapeHash": "42B819E8",
+    "planCacheKey": "F46B3161",
+    "optimizationTimeMillis": 0,
+    "maxIndexedOrSolutionsReached": false,
+    "maxIndexedAndSolutionsReached": false,
+    "maxScansToExplodeReached": false,
+    "prunedSimilarIndexes": false,
+    "winningPlan": {
+      "isCached": false,
+      "stage": "FETCH",
+      "inputStage": {
+        "stage": "IXSCAN",
+        "keyPattern": {
+          "userId": 1,
+          "trackId": 1,
+          "date": 1
+        },
+        "indexName": "user_track_date",
+        "isMultiKey": false,
+        "multiKeyPaths": {
+          "userId": [],
+          "trackId": [],
+          "date": []
+        },
+        "isUnique": true,
+        "isSparse": false,
+        "isPartial": false,
+        "indexVersion": 2,
+        "direction": "forward",
+        "indexBounds": {
+          "userId": [
+            "[ObjectId('67bd1790a5ed09e050e1495d'), ObjectId('67bd1790a5ed09e050e1495d')]"
+          ],
+          "trackId": [
+            "[MinKey, MaxKey]"
+          ],
+          "date": [
+            "[MinKey, MaxKey]"
+          ]
+        }
+      }
+    },
+    "rejectedPlans": []
+  },
+  "executionStats": {
+    "executionSuccess": true,
+    "nReturned": 998,
+    "executionTimeMillis": 1,
+    "totalKeysExamined": 998,
+    "totalDocsExamined": 998,
+    "executionStages": {
+      "isCached": false,
+      "stage": "FETCH",
+      "nReturned": 998,
+      "executionTimeMillisEstimate": 0,
+      "works": 999,
+      "advanced": 998,
+      "needTime": 0,
+      "needYield": 0,
+      "saveState": 0,
+      "restoreState": 0,
+      "isEOF": 1,
+      "docsExamined": 998,
+      "alreadyHasObj": 0,
+      "inputStage": {
+        "stage": "IXSCAN",
+        "nReturned": 998,
+        "executionTimeMillisEstimate": 0,
+        "works": 999,
+        "advanced": 998,
+        "needTime": 0,
+        "needYield": 0,
+        "saveState": 0,
+        "restoreState": 0,
+        "isEOF": 1,
+        "keyPattern": {
+          "userId": 1,
+          "trackId": 1,
+          "date": 1
+        },
+        "indexName": "user_track_date",
+        "isMultiKey": false,
+        "multiKeyPaths": {
+          "userId": [],
+          "trackId": [],
+          "date": []
+        },
+        "isUnique": true,
+        "isSparse": false,
+        "isPartial": false,
+        "indexVersion": 2,
+        "direction": "forward",
+        "indexBounds": {
+          "userId": [
+            "[ObjectId('67bd1790a5ed09e050e1495d'), ObjectId('67bd1790a5ed09e050e1495d')]"
+          ],
+          "trackId": [
+            "[MinKey, MaxKey]"
+          ],
+          "date": [
+            "[MinKey, MaxKey]"
+          ]
+        },
+        "keysExamined": 998,
+        "seeks": 1,
+        "dupsTested": 0,
+        "dupsDropped": 0
+      }
+    }
+  },
+  "queryShapeHash": "B586F6BB252A05DCE3D3890BF540F2D845DC04C12310EB1DCA40CB65B73208AC",
+  "command": {
+    "find": "completions",
+    "filter": {
+      "userId": "67bd1790a5ed09e050e1495d"
+    },
+    "$db": "horizon_perf"
+  },
+  "serverInfo": {
+    "host": "CachyOSM2",
+    "port": 27018,
+    "version": "8.0.30",
+    "gitVersion": "360770fbc9b6a893748150d2ab2799e119b9fac9"
+  },
+  "serverParameters": {
+    "internalQueryFacetBufferSizeBytes": 104857600,
+    "internalQueryFacetMaxOutputDocSizeBytes": 104857600,
+    "internalLookupStageIntermediateDocumentMaxSizeBytes": 104857600,
+    "internalDocumentSourceGroupMaxMemoryBytes": 104857600,
+    "internalQueryMaxBlockingSortMemoryUsageBytes": 104857600,
+    "internalQueryProhibitBlockingMergeOnMongoS": 0,
+    "internalQueryMaxAddToSetBytes": 104857600,
+    "internalDocumentSourceSetWindowFieldsMaxMemoryBytes": 104857600,
+    "internalQueryFrameworkControl": "trySbeRestricted",
+    "internalQueryPlannerIgnoreIndexWithCollationForRegex": 1
+  },
+  "ok": 1,
+  "$clusterTime": {
+    "clusterTime": {
+      "$timestamp": "7683977009743003649"
+    },
+    "signature": {
+      "hash": "ZDRcvKIqkKIMTgVCqjBZwPplE4A=",
+      "keyId": {
+        "high": 1789047850,
+        "low": 6,
+        "unsigned": false
+      }
+    }
+  },
+  "operationTime": {
+    "$timestamp": "7683977009743003649"
+  }
+}

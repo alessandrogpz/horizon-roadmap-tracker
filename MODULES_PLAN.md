@@ -17,9 +17,9 @@
 > sign-in with Google (0.18.0, the user signed in for real); Next 16.3.4
 > (0.18.1); 4c–4g, sync through the account (0.19.0); and 4h, rate limiting
 > plus the local-route fixes (0.19.1). Step 4 is done apart from Atlas, which
-> comes with deployment. Step 5's two use cases, search and stats, shipped in
-> 0.20.0; next are its generated data, `explain()` report and failover demo.
-> The plan moved from
+> comes with deployment. Step 5 is done: search and stats (0.20.0), and the
+> generated data, `explain()` report, failover demo and `docs/nosql/` (0.20.1).
+> Next: account deletion (a missing use case), then Step 6. The plan moved from
 > `temp/` to the repo root in 0.17.1. What each step teaches:
 > `docs/LEARNING_LOG.md`, updated with every step.
 
@@ -779,6 +779,48 @@ leave them unsharded or shard on hashed `_id`.
   to be a mistyped test token, not a bug. A logging proxy showed a different
   hash from the real token. Cookies for browser tests are now set from the
   token file by a helper, never retyped.
+
+*The rest of Step 5 DONE in 0.20.1 (2026-09-10):*
+- **Seed.** `scripts/seed.ts` (`npm run db:seed`, `tsx` added as a dev
+  dependency) writes to a new `horizon_perf` database with its own
+  least-privilege user (`MONGO_PERF_PASSWORD` / `MONGODB_PERF_URI`, created
+  by `mongo-init.js` / `dev-env.mjs`).
+  - Uses mulberry32 with seed 42 and a fixed end date, so ids are
+    deterministic too.
+  - Each user gets a habit profile: a base rate of 0.2–0.85, a weekend
+    factor, momentum, and 3–14-day lapses.
+  - Tracks come from `seedTrackFromTemplate`, materials from real book
+    titles, and documents from `splitWorkspace`, with the validators on.
+  - It waits 65 s for a WiredTiger checkpoint before measuring. It builds the
+    User and Session indexes with `createIndexes()`, since `init()` had
+    already run at connect, before the drop.
+  - Result: 2,000 users, 3,450 tracks, 572,152 days and 9,976 notes; 251 MB
+    of data, 48 MB on disk, 70 MB of indexes.
+- **Explain.** `scripts/explain.ts` (`npm run db:explain`) writes
+  `docs/nosql/PERFORMANCE.md` and `docs/nosql/explain/*.json`.
+  - "Without an index" is a `$natural` hint; for text search it's a regex.
+    It uses the busiest user, and the median of 5 runs.
+  - ESR is shown with a temporary `{date, userId, trackId}` index over a
+    month and a year: 1,421 keys examined for 336 results, against 336 for
+    336.
+- **Failover.** `scripts/failover.ts` (`npm run demo:failover`, `-- --crash`)
+  writes every 200 ms with `w: majority`.
+  - Graceful stop: new primary after 0.3 s (step-down, then quiesce mode;
+    Docker kills the process after 10 s).
+  - Crash: 10.8 s (the election timeout); the write in flight was retried
+    and succeeded.
+  - Both runs lost nothing. The first version used `execFileSync`, which
+    froze the writer during the stop; now asynchronous.
+- **Docs.** `docs/nosql/README.md` (use cases with status, the Level 1
+  objectives mapped, setup), `MODEL.md` (a Mermaid ER diagram, render-checked,
+  plus decisions, indexes, validation, consistency, schema versioning,
+  sharding, and relational and NoSQL-type comparisons), `DATA.md`,
+  `PERFORMANCE.md` and `RESILIENCE.md`.
+- **Not built:** `compose.sharded.yaml` (optional); the shard key design is
+  in MODEL.md §9.
+- **Found:** there's no way to delete an account and its server data (use
+  case 6). Implement next, since it's a privacy right (GDPR erasure) and a
+  good consistency example.
 
 - **Generated data.** `scripts/seed.ts` creates thousands of users, each with
   1–3 tracks seeded from `lib/templates` and a year of daily completions with
