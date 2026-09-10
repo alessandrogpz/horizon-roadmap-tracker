@@ -69,6 +69,8 @@ The Dexie (IndexedDB) database and Google Drive `database.json` used for daily p
 | Pure workspace queries | `lib/selectors.ts` |
 | App state + persistence timing | `components/workspace/WorkspaceProvider.tsx` |
 | Which dashboard modules exist | `lib/modules.ts` (data) + `components/panels/registry.tsx` (icon + panel) |
+| Local MongoDB (replica set, users, secrets) | `compose.yaml`, `docker/mongo-init.js`, `scripts/dev-env.mjs`; usage in the README |
+| Threats and how each is handled | `docs/security/THREAT_MODEL.md`: update it when adding a route, a data store or a third party |
 
 Rules of thumb: `lib/` stays free of React, components stay free of business
 rules. A new mutation belongs in `lib/trackActions.ts` as a pure

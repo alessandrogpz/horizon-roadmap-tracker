@@ -7,6 +7,28 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.17.1] - 2026-09-10
+
+### Added
+- **A local MongoDB for development**, groundwork for accounts and server
+  sync. `npm run db:up` starts a three-member replica set in Docker
+  (`compose.yaml`). Access control is on: the members share a generated key
+  file, and there are two users, `root` and `horizon_app`. `horizon_app` can
+  read and write the `horizon` database and nothing else. Passwords are
+  generated per machine into git-ignored files, the app is only ever given
+  `horizon_app`'s, and the database listens on `127.0.0.1` only. Stopping one
+  member shows failover: the other two elect a new primary within seconds.
+  Nothing in the app uses the database yet. Setup is in the README.
+- **A threat model**, `docs/security/THREAT_MODEL.md`. It covers the system as
+  it will be once sign-in with Google and MongoDB sync exist: a data-flow
+  diagram with its trust boundaries, 41 threats rated by likelihood and impact
+  and tracked to a fix or an accepted risk, and the same threats by network
+  layer and by security goal.
+
+### Notes
+- The university modules plan moved from `temp/` to the repo root as
+  `MODULES_PLAN.md`.
+
 ## [0.17.0] - 2026-09-10
 
 ### Added
