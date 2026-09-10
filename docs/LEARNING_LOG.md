@@ -29,6 +29,7 @@ The other documents, and what each one is for:
 5. [Sign in with Google (0.18.0)](#5-sign-in-with-google-0180)
 6. [Upgrading Next.js for security (0.18.1)](#6-upgrading-nextjs-for-security-0181)
 7. [Syncing through the account (0.19.0)](#7-syncing-through-the-account-0190)
+8. [Rate limiting, and closing the small holes (0.19.1)](#8-rate-limiting-and-closing-the-small-holes-0191)
 
 ---
 
@@ -477,3 +478,72 @@ Account):
 `store.ts`, `handlers.ts`), `app/api/sync/route.ts`, `lib/serverSync.ts`,
 `components/useAccount.ts`, `lib/__tests__/syncModel.test.ts`,
 `lib/__tests__/sync.db.test.ts`.
+
+---
+
+## 8. Rate limiting, and closing the small holes (0.19.1)
+
+**What changed.** Sign-in, the session check and sync now each allow only a
+set number of requests per minute. Beyond that, the server answers
+"429 Too Many Requests" and says when to try again. The four small issues the
+threat model found in the local routes and in backup restore are fixed.
+
+**Why.** Without a limit, anyone can hammer the sign-in endpoint or send
+syncs in a loop: guessing, running up costs, or exhausting the free
+database's 100 operations per second (threat D2). The small holes were each
+low risk, but "found, rated, fixed and tested" is exactly what the security
+exam wants to see.
+
+**Concepts.**
+- **Fixed-window rate limiting.** Time is cut into one-minute windows, and
+  each client gets a counter per window. The counter is a MongoDB document
+  whose `_id` names the route, the client and the window.
+- **Atomic operations.** `$inc` with an upsert adds 1 and returns the new
+  count in a single step on the server. Without that, two requests at once
+  could both read "9", both write "10", and both get in. The test fires 20
+  requests at once against a limit of 10: exactly 10 get through.
+- **TTL indexes, again.** Old counters delete themselves, as sessions do.
+- **Privacy by design.** The counter stores a SHA-256 of the IP address,
+  never the address, and lives for two minutes.
+- **Trusting headers.** The client's address comes from a header. On Vercel
+  that header is set by Vercel's edge and can't be forged; behind a different
+  proxy it could be. Knowing *why* a value can be trusted is part of the
+  design.
+- **Information leaks through differences.** `/api/git` used to answer 404
+  for a missing path and 403 for a forbidden one, so its answer told you
+  whether *any* path on the computer existed. Now the permission check runs
+  first, so every forbidden path gets the same answer. This is the same idea
+  as "invalid username or password" instead of saying which was wrong.
+- **Argument injection.** `/api/open` passes the link to `xdg-open` without
+  a shell, which stops shell injection, but a link starting with `-` would
+  still be read as an *option*. Refusing those closes it.
+- **Validate at every way in.** A backup file is input too: note contents
+  must be text, and note ids must look like ids the app makes.
+- **Log refusals, but not floods.** Only the first refusal per client per
+  window is logged, and without the address, so an attack can be spotted
+  without the logs becoming the next problem.
+
+**See it yourself.** With the app running on port 3007 (`npx next start -p
+3007`):
+```bash
+for i in $(seq 1 11); do curl -s -o /dev/null -w "%{http_code} " -X POST -H 'Origin: http://localhost:3007' -H 'Content-Type: application/json' --data '{"credential":"x"}' http://localhost:3007/api/auth/session; done; echo
+```
+Ten 401s, then a 429. Then look at `rateLimits` in Compass: one small
+document, deleted within two minutes.
+
+**Exam questions.**
+- *How do you protect against brute force and denial of service?* Rate
+  limits per address and per account, counted atomically in MongoDB, plus
+  Vercel's platform protection in front.
+- *Why is `$inc` important here?* It's atomic: concurrent requests can't
+  lose counts. A read-then-write would.
+- *Give an example of an information leak you fixed.* The 404-versus-403
+  difference in `/api/git`.
+- *What's argument injection, and how is it different from shell
+  injection?* No shell is involved, but the called program still parses
+  options, so a value starting with `-` changes what it does.
+
+**Files.** `lib/server/rateLimit.ts`, `lib/server/collections.ts`,
+`app/api/git/route.ts`, `app/api/open/route.ts`, `app/api/notes/route.ts`,
+`lib/import.ts`, `lib/__tests__/rateLimit.db.test.ts`,
+`lib/__tests__/localRoutes.test.ts`.

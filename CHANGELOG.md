@@ -7,6 +7,22 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.19.1] - 2026-09-10
+
+### Security
+- **Rate limits** on signing in (10 attempts a minute per address), checking
+  the session (60) and syncing (30 a minute per account). Past the limit, the
+  server answers "Too many requests" with the seconds to wait. The counters
+  hold a hash of the address rather than the address, and disappear within
+  minutes.
+- `/api/git` no longer reveals whether a path exists outside `~/Documents`:
+  every forbidden path now gets the same answer, and the answer no longer
+  names your home folder. It and `/api/notes` return generic errors instead
+  of internal messages.
+- `/api/open` refuses a link that isn't plain text, is absurdly long, or
+  starts with `-` (which `xdg-open` would read as an option).
+- Restoring a backup checks that every note is text under a proper id.
+
 ## [0.19.0] - 2026-09-10
 
 ### Added

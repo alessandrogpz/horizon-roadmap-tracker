@@ -35,7 +35,8 @@ export async function GET(req: NextRequest) {
     const content = fs.readFileSync(filePath, "utf-8");
     return NextResponse.json({ content });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to read notes";
-    return NextResponse.json({ error: message }, { status: 500 });
+    // Details stay in the server log; the client gets a generic message (I4).
+    console.error("/api/notes failed:", error);
+    return NextResponse.json({ error: "Failed to read notes" }, { status: 500 });
   }
 }

@@ -15,8 +15,9 @@
 >
 > **Progress:** Steps 0, 1 and 3 are done; 4a's local half (0.17.1); 4b,
 > sign-in with Google (0.18.0, the user signed in for real); Next 16.3.4
-> (0.18.1); and 4c–4g, sync through the account (0.19.0). Next is 4h (rate
-> limiting) with the small local-routes fixes, then Step 5. The plan moved from
+> (0.18.1); 4c–4g, sync through the account (0.19.0); and 4h, rate limiting
+> plus the local-route fixes (0.19.1). Step 4 is done apart from Atlas, which
+> comes with deployment. Next is Step 5. The plan moved from
 > `temp/` to the repo root in 0.17.1. What each step teaches:
 > `docs/LEARNING_LOG.md`, updated with every step.
 
@@ -703,6 +704,30 @@ leave them unsharded or shard on hashed `_id`.
 - TLS to Atlas.
 - Rate limiting on `/api/auth/*` and `/api/sync` (mechanism: §7).
 - Generic error responses; no tokens in logs.
+
+*4h DONE in 0.19.1 (2026-09-10):*
+- `lib/server/rateLimit.ts`: fixed windows in a `rateLimits` collection,
+  where each `_id` is `bucket:sha256(key)[0..32]:windowStart`. An atomic
+  `$inc` upsert counts each request, a TTL index on `expiresAt` deletes old
+  windows, and a validator checks every counter.
+- Limits: sign-in 10/min per address, session GET and DELETE 60/min per
+  address, sync 30/min per account. The address is `x-real-ip` or the first
+  `x-forwarded-for` entry, which Vercel overwrites and so can be trusted
+  there.
+- Answers 429 with Retry-After, and logs the first refusal per window, by
+  bucket only.
+- `collections.ts` moved up to `lib/server/`, and `openDb()` (connect, then
+  create the collections) is what every route calls.
+- The local-route fixes: I4 (generic errors), I5 (the path check before the
+  existence check, and again after symlinks), E4 (`link` validation), and T7
+  (backup notes must be strings with safe ids).
+- Vitest now resolves `@/`, so `localRoutes.test.ts` tests the route files
+  directly.
+- Tests: `rateLimit.db.test.ts` (7, including 20 simultaneous hits with
+  exactly 10 allowed), `localRoutes.test.ts` (6), and 1 more in
+  `import.test.ts`.
+- Not done: the audit log's optional per-route entries for sign-in (R1 covers
+  sync writes), and alerting (Step 6).
 
 **Ship.** Minor version bump + CHANGELOG.
 

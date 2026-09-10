@@ -6,7 +6,7 @@ import { NextRequest } from "next/server";
 import { connectDb, mongoose } from "../server/db";
 import { Session, User } from "../server/models";
 import { createSession, SESSION_COOKIE } from "../server/auth/session";
-import { AUDIT_LOG, COMPLETIONS, ensureSyncCollections, NOTES, TRACKS } from "../server/sync/collections";
+import { AUDIT_LOG, COMPLETIONS, ensureCollections, NOTES, RATE_LIMITS, TRACKS } from "../server/collections";
 import { handleSyncGet, handleSyncPut } from "../server/sync/handlers";
 import { blankTrack } from "../templates";
 import type { TrackState, Workspace } from "../types";
@@ -74,11 +74,11 @@ const ticked = (workspace: Workspace | null, trackId = "track_shared") =>
 beforeAll(async () => {
   await connectDb();
   await Promise.all([User.init(), Session.init()]);
-  await ensureSyncCollections(db());
+  await ensureCollections(db());
 });
 beforeEach(async () => {
   await Promise.all(
-    [User.collection, Session.collection, ...[TRACKS, COMPLETIONS, NOTES, AUDIT_LOG].map((n) => db().collection(n))].map((c) =>
+    [User.collection, Session.collection, ...[TRACKS, COMPLETIONS, NOTES, AUDIT_LOG, RATE_LIMITS].map((n) => db().collection(n))].map((c) =>
       c.deleteMany({})
     )
   );

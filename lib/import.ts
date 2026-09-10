@@ -63,13 +63,21 @@ export function parseBackup(text: string): BackupBundle {
     }
   }
 
-  const notes = isRecord(raw.notes) ? (raw.notes as Record<string, string>) : {};
+  // Every note must be text, under an id like the app makes: letters, digits,
+  // "_" and "-" (threat T7). A crafted file can't slip another type into the
+  // notes table, and an id account sync would refuse can't break later syncs.
+  const notes = isRecord(raw.notes) ? raw.notes : {};
+  for (const [id, content] of Object.entries(notes)) {
+    if (!/^[A-Za-z0-9_-]{1,200}$/.test(id) || typeof content !== "string") {
+      throw new InvalidBackupError("That backup has a malformed note in it.");
+    }
+  }
 
   return {
     exportedAt: typeof raw.exportedAt === "string" ? raw.exportedAt : new Date().toISOString(),
     version: 1,
     workspace: workspace as unknown as Workspace,
-    notes,
+    notes: notes as Record<string, string>, // checked just above
   };
 }
 
