@@ -14,7 +14,7 @@ The project has been refactored into a modular, type-safe Next.js PWA:
 *   **Styling:** Tailwind CSS v4 & PostCSS (using CSS-native `@import` and custom theme extensions)
 *   **Database (Local-first):** Dexie.js (IndexedDB wrapper) for offline persistence
 *   **Storage & Sync:** Google Drive API (sandboxed `appDataFolder` scope) with a custom, day-level logical-version conflict resolution engine.
-*   **Server (in progress):** Next.js route handlers and MongoDB (Mongoose) for accounts: sign in with Google, verified server-side, with server-side sessions. Syncing tracks through the account comes next.
+*   **Server:** Next.js route handlers and MongoDB (Mongoose plus the native driver) for accounts: sign in with Google, server-side sessions, and sync through the account, merged on the server inside a transaction.
 *   **Tests:** Vitest for testing date-helpers and state merge algorithms.
 
 ### Directory Structure
@@ -30,6 +30,7 @@ no business logic.
 │   ├── page.tsx                  # Mounts the workspace provider + dashboard
 │   ├── roadmap/page.tsx          # Per-track markdown roadmap editor
 │   ├── api/auth/session/         # Sign in / out: Google ID token → session cookie
+│   ├── api/sync/                 # Sync through the account (merge on the server)
 │   └── manifest.ts               # PWA manifest configuration
 ├── components/
 │   ├── Dashboard.tsx             # Layout, drag-and-drop, modal orchestration
@@ -42,7 +43,8 @@ no business logic.
 │   ├── PhaseTracker.tsx          # Roadmap phases list
 │   └── PomodoroTimer.tsx         # Focus timer component
 ├── lib/                          # Framework-free logic
-│   ├── server/                   # Server only: MongoDB, sign-in, sessions, request checks
+│   ├── server/                   # Server only: MongoDB, sign-in, sessions, sync, request checks
+│   ├── serverSync.ts             # The device's side of account sync
 │   ├── workspaceRepo.ts          # The only reader/writer of the stored workspace
 │   ├── localDb.ts                # Dexie schema
 │   ├── migrations/               # Versioned, append-only shape upgrades
@@ -154,7 +156,7 @@ You can install the tracker as a native standalone application on your Android/i
 *   **Consistency Streak:** GitHub-style contributions graph (rounded squares) tracking your revisions in real-time.
 *   **Portfolio Tracker:** Displays repository checklists and pulls live git statistics (branch, modified status, last commit message) from local git repos or GitHub.
 *   **Materials & Notes:** Track references, edit study notes in a Markdown editor with a live Preview pane, and query repo statistics.
-*   **Cloud Sync:** All data lives in your browser (IndexedDB) and syncs bidirectionally to a hidden app folder in your own Google Drive. 
+*   **Cloud Sync:** All data lives in your browser (IndexedDB). Signed in, it syncs through your Horizon account (MongoDB on the server); signed out, bidirectionally to a hidden app folder in your own Google Drive. 
     *   *Click to sync; Shift+Click to manage/disconnect the connection.*
 
 ---

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import type { TrackState, Workspace } from "@/lib/types";
+import type { SyncResult, TrackState, Workspace } from "@/lib/types";
 import { createTrack, ensureStarterTrack, fetchWorkspace, updateWorkspace } from "@/lib/workspaceRepo";
 import { activeTrack, visibleTracks, withActiveTrack } from "@/lib/selectors";
 import { applyDailyResetIfNeeded } from "@/lib/dailyReset";
@@ -11,6 +11,8 @@ import {
   isGoogleAuthenticated,
   syncWithGoogleDrive,
 } from "@/lib/googleDrive";
+import { syncWithServer } from "@/lib/serverSync";
+import { accountStore } from "@/lib/account";
 
 /** How long a high-frequency edit (typing, a checkbox) waits before hitting
  *  IndexedDB. Long enough to coalesce a burst of keystrokes, short enough
@@ -52,6 +54,8 @@ export interface WorkspaceActions {
   addTrack: (track: TrackState) => Promise<void>;
   /** Runs a full Drive sync and reloads the merged result. */
   sync: (clientId: string) => Promise<void>;
+  /** The same through the signed-in Horizon account (MongoDB on the server). */
+  syncAccount: () => Promise<void>;
   /** Re-reads the workspace from storage. For changes made underneath the
    *  provider — a restored backup, a wiped database — rather than through it. */
   reload: () => Promise<void>;
@@ -216,8 +220,9 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     [flush, reload, switchTrack]
   );
 
-  const sync = useCallback(
-    async (clientId: string) => {
+  /** Shared by both sync targets: status, the pre-sync flush, the reload. */
+  const runSync = useCallback(
+    async (run: () => Promise<SyncResult>) => {
       setSyncStatus("syncing");
       setSyncError("");
       try {
@@ -226,14 +231,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         // this sync can push a snapshot missing the very change the user made
         // and then clicked Sync to send.
         await flush();
-        if (!isGoogleAuthenticated()) await authenticateGoogleDrive(clientId);
-
-        let res = await syncWithGoogleDrive();
-        if (!res.success && res.authRequired) {
-          // Token expired or was revoked mid-session: re-authenticate and retry once.
-          await authenticateGoogleDrive(clientId);
-          res = await syncWithGoogleDrive();
-        }
+        const res = await run();
         if (!res.success) throw new Error(res.error || "Unknown sync error");
 
         setSyncStatus("success");
@@ -247,6 +245,32 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       }
     },
     [flush, reload]
+  );
+
+  const sync = useCallback(
+    (clientId: string) =>
+      runSync(async () => {
+        if (!isGoogleAuthenticated()) await authenticateGoogleDrive(clientId);
+        let res = await syncWithGoogleDrive();
+        if (!res.success && res.authRequired) {
+          // Token expired or was revoked mid-session: re-authenticate and retry once.
+          await authenticateGoogleDrive(clientId);
+          res = await syncWithGoogleDrive();
+        }
+        return res;
+      }),
+    [runSync]
+  );
+
+  const syncAccount = useCallback(
+    () =>
+      runSync(async () => {
+        const res = await syncWithServer();
+        // The session ended (expired, or signed out elsewhere): show it.
+        if (res.authRequired) accountStore.set(null);
+        return res;
+      }),
+    [runSync]
   );
 
   // Initial load: adopt the stored workspace, fall back off an archived active
@@ -320,8 +344,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   );
 
   const actions = useMemo<WorkspaceActions>(
-    () => ({ updateTrack, commitTrack, commitWorkspace, flush, switchTrack, addTrack, sync, reload }),
-    [updateTrack, commitTrack, commitWorkspace, flush, switchTrack, addTrack, sync, reload]
+    () => ({ updateTrack, commitTrack, commitWorkspace, flush, switchTrack, addTrack, sync, syncAccount, reload }),
+    [updateTrack, commitTrack, commitWorkspace, flush, switchTrack, addTrack, sync, syncAccount, reload]
   );
 
   return (

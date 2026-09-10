@@ -7,6 +7,37 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.19.0] - 2026-09-10
+
+### Added
+- **Sync through your Horizon account.** Signed in (Settings → Account), the
+  sync button at the top sends this device's tracks, progress and notes to
+  your account, and brings back whatever your other devices added. Signing in
+  runs the first sync straight away. Signed out, sync goes through Google Drive
+  exactly as before; a device never uses both at once.
+  - The server merges, not the device: two devices ticking different boxes on
+    the same day both keep their ticks, even if they sync at the same moment.
+  - A new device with nothing of its own yet takes the account's data,
+    instead of adding a stray "My Track" to it (the same rule as Drive).
+  - Your data stays on the device too, and the app works offline as before.
+    An edit made while a sync is in flight is kept and goes up next time.
+  - Notes, including each track's Notepad and To-do List, sync one by one:
+    the newest copy of each note wins.
+- In the database, tracks keep their settings in one document each, and each
+  day of progress gets a small document of its own. `docs/LEARNING_LOG.md`
+  explains why.
+
+### Security
+- Every sync reads and writes only the signed-in account's data. The account
+  comes from the session cookie, never from the request.
+- Every sync request is checked against a strict schema, down to the last
+  field, and refused if anything is unexpected, malformed or oversized (2 MB).
+  MongoDB checks every stored document against a schema of its own as well.
+- Timestamps from the future are pulled back to the present, so a device with
+  a wrong clock can't win every merge.
+- Each sync that changes something is recorded in an audit log, kept for 90
+  days.
+
 ## [0.18.1] - 2026-09-10
 
 ### Security
