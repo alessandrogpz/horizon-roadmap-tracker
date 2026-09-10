@@ -6,6 +6,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import { NextRequest } from "next/server";
 import { connectDb, mongoose } from "../server/db";
 import { Session, User } from "../server/models";
+import { ensureCollections, RATE_LIMITS } from "../server/collections";
 import { handleGetSession, handleSignIn, handleSignOut } from "../server/auth/handlers";
 import { InvalidIdTokenError, type GoogleIdentity } from "../server/auth/googleIdToken";
 import { hashSessionToken, SESSION_COOKIE } from "../server/auth/session";
@@ -42,10 +43,11 @@ const signIn = () => handleSignIn(call("POST", { body: { credential: "good-token
 beforeAll(async () => {
   await connectDb();
   await Promise.all([User.init(), Session.init()]); // indexes, including the unique one
+  await ensureCollections(mongoose.connection.db!);
 });
 beforeEach(async () => {
   verifyIdToken.mockClear();
-  await Promise.all([User.deleteMany({}), Session.deleteMany({})]);
+  await Promise.all([User.deleteMany({}), Session.deleteMany({}), mongoose.connection.db!.collection(RATE_LIMITS).deleteMany({})]);
 });
 afterAll(() => mongoose.disconnect());
 

@@ -15,7 +15,7 @@
 import type { mongo } from "mongoose";
 import { mongoose } from "../db";
 import { Note } from "../models";
-import { AUDIT_LOG, COMPLETIONS, NOTES, TRACKS } from "./collections";
+import { AUDIT_LOG, COMPLETIONS, NOTES, TRACKS } from "../collections";
 import { splitWorkspace, stableStringify, type StoredDay, type StoredTrack } from "./model";
 import type { SyncNote } from "./schema";
 import type { Workspace } from "../../types";

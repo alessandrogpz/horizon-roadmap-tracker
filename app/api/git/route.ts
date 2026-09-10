@@ -26,21 +26,25 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Path parameter is required" }, { status: 400 });
   }
 
-  const expandedPath = resolveHomePath(targetPath);
+  // Restricted to ~/Documents. Exact prefix match on a path boundary — a bare
+  // startsWith would also let sibling dirs like "~/Documents-private" through.
+  const homeDocumentsDir = path.join(os.homedir(), "Documents");
+  const inside = (p: string) => p === homeDocumentsDir || p.startsWith(homeDocumentsDir + path.sep);
+  const denied = () => NextResponse.json({ error: "Access denied." }, { status: 403 });
 
-  // Check if directory exists first
-  if (!fs.existsSync(expandedPath)) {
+  // Checked on the path as written *before* asking whether it exists, so the
+  // answer never reveals whether some path outside ~/Documents exists (threat
+  // I5). The message doesn't name the directory either (I4).
+  const requestedPath = path.resolve(resolveHomePath(targetPath));
+  if (!inside(requestedPath)) return denied();
+
+  if (!fs.existsSync(requestedPath)) {
     return NextResponse.json({ error: "Directory does not exist" }, { status: 404 });
   }
 
-  // Security check: restrict paths to subdirectories of ~/Documents
-  const homeDocumentsDir = path.join(os.homedir(), "Documents");
-  const resolvedPath = fs.realpathSync(expandedPath);
-  // Exact prefix match on a path boundary — a bare startsWith would also let
-  // sibling dirs like "~/Documents-private" through.
-  if (resolvedPath !== homeDocumentsDir && !resolvedPath.startsWith(homeDocumentsDir + path.sep)) {
-    return NextResponse.json({ error: `Access denied: Path must be within ${homeDocumentsDir}` }, { status: 403 });
-  }
+  // And again after following symlinks: a link inside ~/Documents may point out.
+  const resolvedPath = fs.realpathSync(requestedPath);
+  if (!inside(resolvedPath)) return denied();
 
   try {
     // 1. Check if it's a git repo
@@ -99,7 +103,8 @@ export async function GET(req: NextRequest) {
       lastCommitTime,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to query Git repository";
-    return NextResponse.json({ error: message }, { status: 500 });
+    // Details stay in the server log; the client gets a generic message (I4).
+    console.error("/api/git failed:", error);
+    return NextResponse.json({ error: "Failed to query Git repository" }, { status: 500 });
   }
 }

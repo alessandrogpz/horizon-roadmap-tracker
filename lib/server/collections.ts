@@ -1,4 +1,5 @@
-// The sync collections, their indexes, and their $jsonSchema validators.
+// The server's collections (beyond Mongoose's users and sessions): their
+// indexes and their $jsonSchema validators.
 //
 // The validators are a second layer behind the zod schemas (threat T1): even
 // if a bug in the server let a malformed document through, MongoDB itself
@@ -13,6 +14,7 @@
 
 // The driver's types, via Mongoose, which pins the driver version.
 import type { mongo } from "mongoose";
+import { connectDb, mongoose } from "./db";
 
 type Db = mongo.Db;
 type Document = mongo.Document;
@@ -22,6 +24,7 @@ export const TRACKS = "tracks";
 export const COMPLETIONS = "completions";
 export const NOTES = "notes";
 export const AUDIT_LOG = "auditLog";
+export const RATE_LIMITS = "rateLimits";
 
 const number = { bsonType: "number", minimum: 0 };
 const string = (maxLength: number) => ({ bsonType: "string", maxLength });
@@ -142,13 +145,27 @@ export const SPECS: Record<string, CollectionSpec> = {
     },
     indexes: [{ key: { at: 1 }, name: "expire_after_90_days", expireAfterSeconds: 90 * 24 * 60 * 60 }],
   },
+
+  // Request counters for rate limiting (threat D2, see rateLimit.ts). Each
+  // lives for two windows, then MongoDB deletes it.
+  [RATE_LIMITS]: {
+    validator: {
+      $jsonSchema: {
+        bsonType: "object",
+        required: ["_id", "count", "expiresAt"],
+        additionalProperties: false,
+        properties: { _id: string(200), count: { bsonType: "number", minimum: 1 }, expiresAt: { bsonType: "date" } },
+      },
+    },
+    indexes: [{ key: { expiresAt: 1 }, name: "expire_when_due", expireAfterSeconds: 0 }],
+  },
 };
 
 const ensured = new WeakMap<Db, Promise<void>>();
 
 /** Creates any missing collection with its validator, and its indexes. Once
  *  per process per database; both operations are idempotent. */
-export function ensureSyncCollections(db: Db): Promise<void> {
+export function ensureCollections(db: Db): Promise<void> {
   let promise = ensured.get(db);
   if (!promise) {
     promise = createAll(db).catch((error) => {
@@ -184,4 +201,13 @@ async function createAll(db: Db): Promise<void> {
     }
     await db.collection(name).createIndexes(spec.indexes);
   }
+}
+
+/** Connects, and makes sure every collection exists with its validator and
+ *  indexes. What each route calls before touching the database. */
+export async function openDb(): Promise<Db> {
+  await connectDb();
+  const db = mongoose.connection.db!;
+  await ensureCollections(db);
+  return db;
 }

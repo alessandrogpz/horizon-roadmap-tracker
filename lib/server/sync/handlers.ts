@@ -9,11 +9,11 @@
 // overwrite each other (threat T4).
 
 import type { NextRequest } from "next/server";
-import { connectDb, mongoose } from "../db";
 import { errorResponse, isSameOrigin, jsonResponse, readJsonBody } from "../http";
 import { findSessionUser, SESSION_COOKIE } from "../auth/session";
 import type { UserRecord } from "../models";
-import { ensureSyncCollections } from "./collections";
+import { openDb } from "../collections";
+import { hit, LIMITS, tooManyRequests } from "../rateLimit";
 import { assembleWorkspace, clampWorkspace, markSynced } from "./model";
 import { MAX_SYNC_BYTES, SyncRequestSchema, type SyncNote } from "./schema";
 import { inTransaction, loadUserData, saveUserData } from "./store";
@@ -37,9 +37,11 @@ const assembled = (data: Awaited<ReturnType<typeof loadUserData>>): Workspace | 
 
 export async function handleSyncGet(request: NextRequest): Promise<Response> {
   try {
-    await connectDb();
+    await openDb();
     const user = await requireUser(request);
     if (!user) return errorResponse(401, "Sign in to sync.");
+    const limited = await hit(LIMITS.sync, user._id.toString());
+    if (!limited.allowed) return tooManyRequests(limited.retryAfterSeconds);
     const data = await loadUserData(user._id);
     return jsonResponse({
       workspace: assembled(data),
@@ -56,9 +58,12 @@ export async function handleSyncPut(request: NextRequest): Promise<Response> {
   if (!isSameOrigin(request)) return errorResponse(403, "Forbidden.");
 
   try {
-    await connectDb();
+    await openDb();
     const user = await requireUser(request);
     if (!user) return errorResponse(401, "Sign in to sync.");
+    // Per account: a sync is the heaviest request there is (threat D2).
+    const limited = await hit(LIMITS.sync, user._id.toString());
+    if (!limited.allowed) return tooManyRequests(limited.retryAfterSeconds);
 
     const body = await readJsonBody(request, SyncRequestSchema, MAX_SYNC_BYTES);
     if (!body.ok) return body.response;
@@ -72,8 +77,6 @@ export async function handleSyncPut(request: NextRequest): Promise<Response> {
     // then pull any timestamps from the future back to now (threat T3).
     const device = clampWorkspace(migrateWorkspace(body.data.workspace as Workspace).workspace, now);
     const deviceNotes: SyncNote[] = body.data.notes.map((n) => ({ ...n, updatedAt: Math.min(n.updatedAt, now + 5 * 60 * 1000) }));
-
-    await ensureSyncCollections(mongoose.connection.db!);
 
     const outcome = await inTransaction(async (session) => {
       const before = await loadUserData(user._id, session);

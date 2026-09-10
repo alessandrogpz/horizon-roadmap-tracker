@@ -8,7 +8,9 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
-import { connectDb, DbUnavailableError } from "../db";
+import { DbUnavailableError } from "../db";
+import { openDb } from "../collections";
+import { clientAddress, hit, LIMITS, tooManyRequests } from "../rateLimit";
 import { User, type UserRecord } from "../models";
 import { errorResponse, isSameOrigin, jsonResponse, readJsonBody } from "../http";
 import { InvalidIdTokenError, type GoogleIdentity } from "./googleIdToken";
@@ -47,7 +49,9 @@ const unavailable = (error: unknown): Response => {
 
 export async function handleGetSession(request: NextRequest): Promise<Response> {
   try {
-    await connectDb();
+    await openDb();
+    const limited = await hit(LIMITS.session, clientAddress(request));
+    if (!limited.allowed) return tooManyRequests(limited.retryAfterSeconds);
     const user = await findSessionUser(request.cookies.get(SESSION_COOKIE)?.value);
     return jsonResponse({ account: user ? toView(user) : null });
   } catch (error) {
@@ -57,6 +61,16 @@ export async function handleGetSession(request: NextRequest): Promise<Response> 
 
 export async function handleSignIn(request: NextRequest, deps: SignInDeps): Promise<Response> {
   if (!isSameOrigin(request)) return errorResponse(403, "Forbidden.");
+
+  // Counted before anything else costs time: each attempt below means a
+  // signature check and, on success, a database write (threat D2).
+  try {
+    await openDb();
+    const limited = await hit(LIMITS.signIn, clientAddress(request));
+    if (!limited.allowed) return tooManyRequests(limited.retryAfterSeconds);
+  } catch (error) {
+    return unavailable(error);
+  }
 
   const body = await readJsonBody(request, SignInBody, MAX_SIGN_IN_BYTES);
   if (!body.ok) return body.response;
@@ -71,7 +85,6 @@ export async function handleSignIn(request: NextRequest, deps: SignInDeps): Prom
   }
 
   try {
-    await connectDb();
     const user = await upsertUser(identity);
     const { token, expiresAt } = await createSession(user._id);
 
@@ -86,7 +99,9 @@ export async function handleSignIn(request: NextRequest, deps: SignInDeps): Prom
 export async function handleSignOut(request: NextRequest): Promise<Response> {
   if (!isSameOrigin(request)) return errorResponse(403, "Forbidden.");
   try {
-    await connectDb();
+    await openDb();
+    const limited = await hit(LIMITS.session, clientAddress(request));
+    if (!limited.allowed) return tooManyRequests(limited.retryAfterSeconds);
     await deleteSession(request.cookies.get(SESSION_COOKIE)?.value);
   } catch (error) {
     if (!(error instanceof DbUnavailableError)) return unavailable(error);
