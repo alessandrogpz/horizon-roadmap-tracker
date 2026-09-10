@@ -7,6 +7,32 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.14.4] - 2026-09-10
+
+### Security
+- **Other websites can no longer reach the local-only routes.** `/api/open`,
+  `/api/git` and `/api/notes` only checked the `Host` header. That stops other
+  devices on the LAN and DNS rebinding, but not a page on any website you have
+  open: the browser sends `Host: localhost` for it. A no-cors `POST` with a
+  `text/plain` body skips the CORS preflight, and `/api/open` parsed it as JSON
+  anyway — so while the dev server was running, any site you visited could make
+  your machine `xdg-open` a URL or file of its choosing. Confirmed from a real
+  browser, from a page on another origin. The guard now also refuses requests
+  whose `Origin` isn't this exact origin or whose `Sec-Fetch-Site` says they came
+  from another site, and `/api/open` only accepts `application/json`, which other
+  sites can't send without a preflight that Next's automatic `OPTIONS` never
+  approves.
+
+### Fixed
+- **`[::1]` was never recognised as localhost.** The guard split the `Host`
+  header on `:`, so an IPv6 loopback request read as `[` and was refused. The
+  header is parsed as a URL now.
+
+### Notes
+- Still open, and documented in `lib/server/localRequest.ts`: with
+  `npm run dev:lan`, someone on the LAN with a raw HTTP client can forge every
+  header. Only a firewall closes that.
+
 ## [0.14.3] - 2026-07-27
 
 ### Added
