@@ -28,6 +28,7 @@ The other documents, and what each one is for:
 4. [A local MongoDB replica set (0.17.1)](#4-a-local-mongodb-replica-set-0171)
 5. [Sign in with Google (0.18.0)](#5-sign-in-with-google-0180)
 6. [Upgrading Next.js for security (0.18.1)](#6-upgrading-nextjs-for-security-0181)
+7. [Syncing through the account (0.19.0)](#7-syncing-through-the-account-0190)
 
 ---
 
@@ -354,3 +355,125 @@ npm audit
   test, and ship.
 
 **Files.** `package.json`, `package-lock.json`.
+
+---
+
+## 7. Syncing through the account (0.19.0)
+
+**What changed.** Signed in, the sync button at the top sends this device's
+tracks and notes to the server, which merges them with the account's copy in
+MongoDB and sends back the result. Two devices signed in to the same account
+now stay in step. Signed out, Drive sync works as before.
+
+**Why.** This is the heart of the NoSQL module: a real data layer, in a
+working app, with a model you can defend.
+
+**Concepts.**
+- **Modelling for how the data is used.** In a document database you shape
+  documents around the reads and writes, not around tables:
+  - `tracks`: one document per track, with its phases, materials, rotations
+    and schedule **embedded**. Those lists are small, always read and written
+    together, and belong to the track.
+  - `completions`: one small document per track per day (the **bucket
+    pattern**). History grows forever, and a document can't exceed 16 MB.
+    Ticking one box also shouldn't rewrite the whole track.
+  - `notes`: one document per note, since notes can be long and change
+    independently.
+  - **Why not one document per user?** It would grow forever toward the
+    16 MB cap, and every checkbox would rewrite everything.
+- **Embedding vs referencing.** Embed what is owned, small and read together
+  (a track's phases; the user's active track, kept in the `users` document).
+  Reference what is large, unbounded or shared (a completion day refers to
+  its track by `trackId`).
+- **Never let user input become a field name.** On the device, a day's
+  accomplishments are a map keyed by *title*. A title like `Read ch. 3`
+  contains a `.`, which MongoDB reads as a path, and `$where` would look like
+  an operator. The server turns those maps into arrays of values:
+  `{title, done, updatedAt}`. Only fixed or strictly checked keys, such as
+  weekday names, ever become field names.
+- **Two layers of validation.** zod checks every request (strict: unknown
+  fields are refused). MongoDB's own **`$jsonSchema` validators** check every
+  stored document, so even a server bug can't store a malformed day. Error
+  code 121 means a validator refused a document.
+- **Indexes.** A compound unique index `{userId, trackId, date}` makes "one
+  bucket per user, track and day" a rule the database enforces, and serves
+  every query the sync makes.
+- **Transactions (ACID).** The whole sync (read, merge, write tracks, days
+  and notes, audit entry) is one transaction:
+  - *Atomic*: all of it or none of it.
+  - *Consistent*: validators and unique indexes hold after it.
+  - *Isolated*: it reads a snapshot; if another transaction changed a
+    document this one also writes, the commit fails and the driver reruns
+    the whole thing on the newer data. That's how two devices syncing at the
+    same moment both keep their changes; a test proves it.
+  - *Durable*: `writeConcern: majority` means a commit is on at least two of
+    the three servers, so a failover can't undo it.
+- **Last-write-wins, per item.** Each tick carries the time it was made, so
+  merging two devices keeps the newer state *of each box*, not of the whole
+  day. An untick is kept as `done: false` with its time, otherwise a merge
+  couldn't tell "unticked" from "never ticked".
+- **Clocks lie.** A device whose clock runs fast would win every merge. The
+  server pulls timestamps from the future back to now plus five minutes.
+- **Merge on the server.** If each device merged and uploaded the result, two
+  devices could overwrite each other (a *lost update*). With the merge inside
+  the server's transaction, they can't.
+- **Offline-first.** The device keeps its full copy and works without the
+  server. An edit made while a sync is in flight isn't lost: the answer is
+  merged into the newer local copy, and the next sync sends it.
+- **Two access styles, each for a reason.** Mongoose, with schemas, casting
+  and `sanitizeFilter`, for users, sessions and notes. The native driver for
+  bulk writes of whole track and day documents in the transaction. Native
+  queries don't get `sanitizeFilter`, so their only inputs are the session's
+  user id and values zod already checked.
+- **Authorization (IDOR).** Every query includes the signed-in user's id,
+  taken from the session, never from the request. Track ids are only unique
+  per user (every migrated old workspace has the same one), so without that
+  filter two users' data would mix. A test with two users sharing a track id
+  proves they don't.
+- **Audit log with a TTL.** Each sync that changed something writes who,
+  when and how many documents, and MongoDB deletes entries after 90 days.
+  That's non-repudiation within limits: whoever runs the database could still
+  edit the log.
+- **Schema versioning.** Each track document records the schema version it
+  was written at, and the app's migrations upgrade old shapes as they're
+  read. That's MongoDB's *schema versioning pattern*.
+
+**See it yourself.** With `npm run db:up` running and signed in (Settings →
+Account):
+- Click the sync button; it says "Synced with account".
+- In Compass (`MONGODB_URI` from `.env.local`), database `horizon`:
+  - `tracks`: your track, with everything embedded.
+  - `completions`: one document per day you ticked something.
+  - `notes`: material notes, notepads and to-do lists.
+  - `auditLog`: one entry per sync that changed something.
+- Tick a box, sync, and watch that day's document change.
+- Failover during sync: stop the primary (see entry 4), then sync. The driver
+  finds the new primary and the sync still succeeds.
+- `npm run test:db` runs the two-device, two-user and simultaneous-sync
+  tests.
+
+**Exam questions.**
+- *Walk me through your data model.* Four collections; embedded config;
+  one bucket per day; notes separate; why each choice; which indexes.
+- *Embedding or referencing: how did you decide?* By size, growth and access
+  pattern. Owned, small, read together: embed. Unbounded or independent:
+  separate documents.
+- *Why not one document per user?* The 16 MB cap, and write amplification:
+  one tick would rewrite everything.
+- *How do you keep data consistent without joins and foreign keys?* One
+  transaction per sync, unique indexes, and validators. Cross-collection
+  consistency is the application's job, which the transaction makes safe.
+- *What happens when two devices sync at once?* Snapshot isolation plus a
+  write conflict makes one retry on the newer data. Both changes survive; a
+  test does exactly this.
+- *How do you validate data?* zod on every request, `$jsonSchema` in the
+  database, and no user input ever used as a field name.
+- *Mongoose or the native driver?* Both, each where it fits, as above.
+- *Relational vs document for this app?* See `MODULES_PLAN.md` Appendix A:
+  a relational version needs about ten tables and a mapper; the document
+  version matches the app's shape.
+
+**Files.** `lib/server/sync/` (`schema.ts`, `model.ts`, `collections.ts`,
+`store.ts`, `handlers.ts`), `app/api/sync/route.ts`, `lib/serverSync.ts`,
+`components/useAccount.ts`, `lib/__tests__/syncModel.test.ts`,
+`lib/__tests__/sync.db.test.ts`.

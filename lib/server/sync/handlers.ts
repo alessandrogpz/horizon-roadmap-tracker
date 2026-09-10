@@ -1,0 +1,120 @@
+// The sync API, /api/sync:
+//   GET  the signed-in user's stored workspace and notes
+//   PUT  send this device's workspace and notes; the server merges them with
+//        what it has, stores the result, and sends back the merged workspace
+//        plus any notes the device is missing
+//
+// The merge runs on the server, inside a transaction, with the same
+// mergeWorkspace the Drive sync uses, so two devices syncing at once can't
+// overwrite each other (threat T4).
+
+import type { NextRequest } from "next/server";
+import { connectDb, mongoose } from "../db";
+import { errorResponse, isSameOrigin, jsonResponse, readJsonBody } from "../http";
+import { findSessionUser, SESSION_COOKIE } from "../auth/session";
+import type { UserRecord } from "../models";
+import { ensureSyncCollections } from "./collections";
+import { assembleWorkspace, clampWorkspace, markSynced } from "./model";
+import { MAX_SYNC_BYTES, SyncRequestSchema, type SyncNote } from "./schema";
+import { inTransaction, loadUserData, saveUserData } from "./store";
+import { migrateWorkspace } from "../../migrations";
+import { mergeWorkspace } from "../../merge";
+import type { Workspace } from "../../types";
+
+/** The signed-in user, from the session cookie. Every sync query is scoped
+ *  to this user's id, and nothing in a request can change which user that is
+ *  (threats I1, T2). */
+export const requireUser = (request: NextRequest): Promise<UserRecord | null> =>
+  findSessionUser(request.cookies.get(SESSION_COOKIE)?.value);
+
+const unavailable = (error: unknown): Response => {
+  console.error("Sync unavailable:", error instanceof Error ? error.name : "unknown error");
+  return errorResponse(503, "Sync isn't available right now.");
+};
+
+const assembled = (data: Awaited<ReturnType<typeof loadUserData>>): Workspace | null =>
+  data.tracks.length ? migrateWorkspace(assembleWorkspace(data.tracks, data.days, data.activeTrackId)).workspace : null;
+
+export async function handleSyncGet(request: NextRequest): Promise<Response> {
+  try {
+    await connectDb();
+    const user = await requireUser(request);
+    if (!user) return errorResponse(401, "Sign in to sync.");
+    const data = await loadUserData(user._id);
+    return jsonResponse({
+      workspace: assembled(data),
+      notes: data.notes.map((n) => ({ id: n.noteId, content: n.content, updatedAt: n.updatedAt })),
+    });
+  } catch (error) {
+    return unavailable(error);
+  }
+}
+
+export type SyncMode = "first" | "adopt" | "merge";
+
+export async function handleSyncPut(request: NextRequest): Promise<Response> {
+  if (!isSameOrigin(request)) return errorResponse(403, "Forbidden.");
+
+  try {
+    await connectDb();
+    const user = await requireUser(request);
+    if (!user) return errorResponse(401, "Sign in to sync.");
+
+    const body = await readJsonBody(request, SyncRequestSchema, MAX_SYNC_BYTES);
+    if (!body.ok) return body.response;
+    // A track's map key is its id; one pretending to be another is refused.
+    for (const [key, track] of Object.entries(body.data.workspace.tracks)) {
+      if (track.meta.id !== key) return errorResponse(400, "Malformed request.");
+    }
+
+    const now = Date.now();
+    // An older device may send an older shape: bring it up to date first,
+    // then pull any timestamps from the future back to now (threat T3).
+    const device = clampWorkspace(migrateWorkspace(body.data.workspace as Workspace).workspace, now);
+    const deviceNotes: SyncNote[] = body.data.notes.map((n) => ({ ...n, updatedAt: Math.min(n.updatedAt, now + 5 * 60 * 1000) }));
+
+    await ensureSyncCollections(mongoose.connection.db!);
+
+    const outcome = await inTransaction(async (session) => {
+      const before = await loadUserData(user._id, session);
+      const stored = assembled(before);
+
+      let mode: SyncMode;
+      let merged: Workspace;
+      if (!stored) {
+        // A new account: this device's data becomes the account's.
+        mode = "first";
+        merged = markSynced(device, now);
+      } else if (!device.isSynced) {
+        // This device has only an untouched starter track: replace it with the
+        // account's data instead of merging a stray "My Track" into it (the
+        // same rule as Drive sync, see lib/workspaceRepo.ts ensureStarterTrack).
+        mode = "adopt";
+        merged = markSynced(stored, now);
+      } else {
+        mode = "merge";
+        // Device first: it keeps today's Drive semantics (see MODULES_PLAN.md 4f).
+        merged = mergeWorkspace(device, stored).data;
+      }
+
+      const saved = await saveUserData(user._id, merged, before, deviceNotes, session, now);
+      return { mode, merged, saved };
+    });
+
+    const { mode, merged, saved } = outcome;
+    return jsonResponse({
+      workspace: merged,
+      notes: saved.notesForDevice,
+      log: [
+        mode === "first"
+          ? "First sync for this account: stored this device's data."
+          : mode === "adopt"
+            ? "This device had no data of its own yet: loaded the account's."
+            : "Merged this device's changes with the account's.",
+        `Stored ${saved.tracksWritten} track(s), ${saved.daysWritten} day(s) and ${saved.notesWritten} note(s); sent back ${saved.notesForDevice.length} note(s).`,
+      ],
+    });
+  } catch (error) {
+    return unavailable(error);
+  }
+}
