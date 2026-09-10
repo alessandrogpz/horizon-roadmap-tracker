@@ -7,10 +7,12 @@
 // 3. Create `root`, unless it exists. Until a database has its first user,
 //    MongoDB's "localhost exception" lets a client on localhost do exactly that
 //    and nothing else; creating the user closes the exception for good.
-// 4. Log in as root, and create or update `horizon_app`: readWrite on the
-//    `horizon` database and nothing more. The app can't manage users, touch
+// 4. Log in as root, and create or update the app's users, each with readWrite
+//    on one database and nothing more. `horizon_app` can't manage users, touch
 //    other databases, or drop its own. That's least privilege: a bug or an
-//    injection in the app can only reach the app's own data.
+//    injection in the app can only reach the app's own data. `horizon_test`
+//    is the same for `npm run test:db`, which gets a database of its own so
+//    tests can wipe collections without touching development data.
 //
 // Passwords come from .env.docker (see scripts/dev-env.mjs) and are never
 // printed.
@@ -18,8 +20,10 @@
 const RS = "rs0";
 const MEMBERS = ["localhost:27017", "localhost:27018", "localhost:27019"];
 const ROOT_USER = "root";
-const APP_USER = "horizon_app";
-const APP_DB = "horizon";
+const APP_USERS = [
+  { user: "horizon_app", db: "horizon", passwordVar: "MONGO_APP_PASSWORD" },
+  { user: "horizon_test", db: "horizon_test", passwordVar: "MONGO_TEST_PASSWORD" },
+];
 
 const requireEnv = (name) => {
   const value = process.env[name];
@@ -29,7 +33,7 @@ const requireEnv = (name) => {
   return value;
 };
 const rootPassword = requireEnv("MONGO_ROOT_PASSWORD");
-const appPassword = requireEnv("MONGO_APP_PASSWORD");
+const appUsers = APP_USERS.map((spec) => ({ ...spec, password: requireEnv(spec.passwordVar) }));
 
 // 1. `hello` needs no login, and names the set once it exists.
 if (!db.hello().setName) {
@@ -69,14 +73,16 @@ if (!loggedIn()) {
   if (!loggedIn()) throw new Error(`Created ${ROOT_USER}, but couldn't log in as it.`);
 }
 
-// 4. Updating on every run keeps the stored password in step with the file.
-const appRoles = [{ role: "readWrite", db: APP_DB }];
-if (admin.getUser(APP_USER)) {
-  admin.updateUser(APP_USER, { pwd: appPassword, roles: appRoles });
-  print(`Updated user ${APP_USER}.`);
-} else {
-  admin.createUser({ user: APP_USER, pwd: appPassword, roles: appRoles });
-  print(`Created user ${APP_USER} (readWrite on ${APP_DB}).`);
+// 4. Updating on every run keeps the stored passwords in step with the file.
+for (const { user, db: dbName, password } of appUsers) {
+  const roles = [{ role: "readWrite", db: dbName }];
+  if (admin.getUser(user)) {
+    admin.updateUser(user, { pwd: password, roles });
+    print(`Updated user ${user}.`);
+  } else {
+    admin.createUser({ user, pwd: password, roles });
+    print(`Created user ${user} (readWrite on ${dbName}).`);
+  }
 }
 
 print(`Local MongoDB is ready: replica set ${RS}, primary ${primary}.`);

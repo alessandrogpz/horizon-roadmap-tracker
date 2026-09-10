@@ -7,6 +7,46 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.18.0] - 2026-09-10
+
+### Added
+- **Sign in with Google**, in Settings → Account. This is the first half of
+  accounts: signing in creates your Horizon account on the server. Syncing
+  your tracks through it comes next; until then Cloud sync (Drive) works
+  exactly as before.
+  - The server doesn't take the browser's word for who you are. It checks
+    Google's signature on the ID token against Google's published keys, that
+    the token was issued to Horizon and not some other app, that it hasn't
+    expired, and that Google has verified the email.
+  - Signing in starts a server-side session. The browser gets a random 256-bit
+    token in a cookie that page scripts can't read, sent only over HTTPS and
+    never with other sites' requests. The database stores only the token's
+    hash. Signing out deletes the session on the server, so a copied cookie
+    stops working. Sessions last 30 days.
+  - Shown only where the deployment sets a Google client ID, so nothing
+    changes on horizonroadmap.com until accounts are switched on there.
+- `npm run test:db`: tests that run against the local MongoDB, as their own
+  user on their own database. Sign-in and sessions are covered end to end.
+
+### Security
+- The Content-Security-Policy no longer lets the page load images from other
+  sites. The app never did, and an open rule would have let injected script
+  send data out inside an image URL.
+- The account API refuses requests from other sites' pages, anything that
+  isn't JSON, oversized bodies and unexpected fields. Its errors are generic,
+  and its logs never contain tokens.
+- MongoDB queries made through Mongoose neutralise operator injection: a
+  `{"$ne": null}` smuggled in where a plain value belongs is refused rather
+  than run.
+- "Delete local data" also signs this browser out.
+
+### Notes
+- New dependencies: `mongoose`, `jose` (checks Google's tokens; no
+  dependencies of its own) and `zod` (validates request bodies).
+- `npm audit` reports advisories for Next.js 16.2.7 that predate this release.
+  Neither applies to Horizon, which has no middleware or proxy and no Server
+  Actions, but the upgrade to 16.3.4 is next.
+
 ## [0.17.1] - 2026-09-10
 
 ### Added

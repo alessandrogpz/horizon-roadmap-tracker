@@ -14,6 +14,7 @@ The project has been refactored into a modular, type-safe Next.js PWA:
 *   **Styling:** Tailwind CSS v4 & PostCSS (using CSS-native `@import` and custom theme extensions)
 *   **Database (Local-first):** Dexie.js (IndexedDB wrapper) for offline persistence
 *   **Storage & Sync:** Google Drive API (sandboxed `appDataFolder` scope) with a custom, day-level logical-version conflict resolution engine.
+*   **Server (in progress):** Next.js route handlers and MongoDB (Mongoose) for accounts: sign in with Google, verified server-side, with server-side sessions. Syncing tracks through the account comes next.
 *   **Tests:** Vitest for testing date-helpers and state merge algorithms.
 
 ### Directory Structure
@@ -28,6 +29,7 @@ no business logic.
 │   ├── layout.tsx                # Global HTML wrapper (with JetBrains Mono font)
 │   ├── page.tsx                  # Mounts the workspace provider + dashboard
 │   ├── roadmap/page.tsx          # Per-track markdown roadmap editor
+│   ├── api/auth/session/         # Sign in / out: Google ID token → session cookie
 │   └── manifest.ts               # PWA manifest configuration
 ├── components/
 │   ├── Dashboard.tsx             # Layout, drag-and-drop, modal orchestration
@@ -40,6 +42,7 @@ no business logic.
 │   ├── PhaseTracker.tsx          # Roadmap phases list
 │   └── PomodoroTimer.tsx         # Focus timer component
 ├── lib/                          # Framework-free logic
+│   ├── server/                   # Server only: MongoDB, sign-in, sessions, request checks
 │   ├── workspaceRepo.ts          # The only reader/writer of the stored workspace
 │   ├── localDb.ts                # Dexie schema
 │   ├── migrations/               # Versioned, append-only shape upgrades
@@ -122,6 +125,7 @@ mongodb://horizon_app:<password>@localhost:27017,localhost:27018,localhost:27019
 | `npm run db:down` | Stop it, keeping the data |
 | `npm run db:reset` | Stop it and **delete all local data** |
 | `npm run db:shell` | Open `mongosh` as `horizon_app`; paste `MONGO_APP_PASSWORD` from `.env.docker` when asked |
+| `npm run test:db` | Run the database tests, as `horizon_test` on a database of their own (`npm test` doesn't need the database) |
 
 *   It listens on `127.0.0.1` only, so no other device can connect.
 *   To browse the data in a GUI, paste `MONGODB_URI` from `.env.local` into
@@ -167,4 +171,5 @@ You can install the tracker as a native standalone application on your Android/i
         localStorage.setItem("github_token", "<token>")
         ```
 *   **Local-only Endpoints:** `/api/git` (local filesystem repo status), `/api/open` (opening PDF/source links locally) and `/api/notes` (one-time import of notes from an older on-disk format) only accept requests addressed to `localhost` and sent by the app's own pages — not from other devices when the dev server is exposed on a LAN, and not from other websites open in your browser (see `lib/server/localRequest.ts`).
-*   **Automated Tests:** Run `npm test` to execute the Vitest test suite verifying the date handlers and the conflict resolution merge logic.
+*   **Accounts:** "Sign in with Google" lives in Settings → Account, shown only when `NEXT_PUBLIC_GOOGLE_CLIENT_ID` is set. The server checks Google's signature on the ID token, and that it was issued to Horizon, then keeps a server-side session: the browser holds a random token in an HttpOnly cookie, and the database stores only its hash. Every threat and how it's handled: [`docs/security/THREAT_MODEL.md`](docs/security/THREAT_MODEL.md).
+*   **Automated Tests:** Run `npm test` to execute the Vitest test suite (dates, merge logic, sign-in token checks, request validation). `npm run test:db` runs the tests that need the local MongoDB.
