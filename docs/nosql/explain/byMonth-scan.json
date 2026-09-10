@@ -1,0 +1,445 @@
+{
+  "explainVersion": "1",
+  "stages": [
+    {
+      "$cursor": {
+        "queryPlanner": {
+          "namespace": "horizon_perf.completions",
+          "parsedQuery": {
+            "userId": {
+              "$eq": "67bd1790a5ed09e050e1495d"
+            }
+          },
+          "indexFilterSet": false,
+          "queryHash": "0956EA2A",
+          "planCacheShapeHash": "0956EA2A",
+          "planCacheKey": "E1585EA0",
+          "optimizationTimeMillis": 0,
+          "maxIndexedOrSolutionsReached": false,
+          "maxIndexedAndSolutionsReached": false,
+          "maxScansToExplodeReached": false,
+          "prunedSimilarIndexes": false,
+          "winningPlan": {
+            "isCached": false,
+            "stage": "PROJECTION_DEFAULT",
+            "transformBy": {
+              "_id": true,
+              "trackId": true,
+              "date": true,
+              "day": {
+                "$dateFromString": {
+                  "dateString": "$date",
+                  "format": {
+                    "$const": "%Y-%m-%d"
+                  }
+                }
+              },
+              "accomplished": {
+                "$size": [
+                  {
+                    "$filter": {
+                      "input": "$accomplishments",
+                      "as": "this",
+                      "cond": "$$this.done"
+                    }
+                  }
+                ]
+              },
+              "ticks": {
+                "$add": [
+                  {
+                    "$size": [
+                      {
+                        "$filter": {
+                          "input": "$tasks",
+                          "as": "this",
+                          "cond": "$$this.done"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "$size": [
+                      {
+                        "$filter": {
+                          "input": "$revisions",
+                          "as": "this",
+                          "cond": "$$this.done"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "inputStage": {
+              "stage": "COLLSCAN",
+              "filter": {
+                "userId": {
+                  "$eq": "67bd1790a5ed09e050e1495d"
+                }
+              },
+              "direction": "forward"
+            }
+          },
+          "rejectedPlans": []
+        },
+        "executionStats": {
+          "executionSuccess": true,
+          "nReturned": 998,
+          "executionTimeMillis": 210,
+          "totalKeysExamined": 0,
+          "totalDocsExamined": 572152,
+          "executionStages": {
+            "isCached": false,
+            "stage": "PROJECTION_DEFAULT",
+            "nReturned": 998,
+            "executionTimeMillisEstimate": 206,
+            "works": 572153,
+            "advanced": 998,
+            "needTime": 571154,
+            "needYield": 0,
+            "saveState": 16,
+            "restoreState": 16,
+            "isEOF": 1,
+            "transformBy": {
+              "_id": true,
+              "trackId": true,
+              "date": true,
+              "day": {
+                "$dateFromString": {
+                  "dateString": "$date",
+                  "format": {
+                    "$const": "%Y-%m-%d"
+                  }
+                }
+              },
+              "accomplished": {
+                "$size": [
+                  {
+                    "$filter": {
+                      "input": "$accomplishments",
+                      "as": "this",
+                      "cond": "$$this.done"
+                    }
+                  }
+                ]
+              },
+              "ticks": {
+                "$add": [
+                  {
+                    "$size": [
+                      {
+                        "$filter": {
+                          "input": "$tasks",
+                          "as": "this",
+                          "cond": "$$this.done"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "$size": [
+                      {
+                        "$filter": {
+                          "input": "$revisions",
+                          "as": "this",
+                          "cond": "$$this.done"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            "inputStage": {
+              "stage": "COLLSCAN",
+              "filter": {
+                "userId": {
+                  "$eq": "67bd1790a5ed09e050e1495d"
+                }
+              },
+              "nReturned": 998,
+              "executionTimeMillisEstimate": 197,
+              "works": 572153,
+              "advanced": 998,
+              "needTime": 571154,
+              "needYield": 0,
+              "saveState": 16,
+              "restoreState": 16,
+              "isEOF": 1,
+              "direction": "forward",
+              "docsExamined": 572152
+            }
+          }
+        }
+      },
+      "nReturned": 998,
+      "executionTimeMillisEstimate": 207
+    },
+    {
+      "$group": {
+        "_id": "$date",
+        "date": {
+          "$first": "$date"
+        },
+        "day": {
+          "$first": "$day"
+        },
+        "accomplished": {
+          "$sum": "$accomplished"
+        },
+        "ticks": {
+          "$sum": "$ticks"
+        }
+      },
+      "maxAccumulatorMemoryUsageBytes": {
+        "date": 26280,
+        "day": 26280,
+        "accomplished": 46720,
+        "ticks": 46720
+      },
+      "totalOutputDataSizeBytes": 124465,
+      "usedDisk": false,
+      "spills": 0,
+      "spilledDataStorageSize": 0,
+      "numBytesSpilledEstimate": 0,
+      "spilledRecords": 0,
+      "nReturned": 365,
+      "executionTimeMillisEstimate": 208
+    },
+    {
+      "$group": {
+        "_id": {
+          "$substrBytes": [
+            "$date",
+            {
+              "$const": 0
+            },
+            {
+              "$const": 7
+            }
+          ]
+        },
+        "activeDays": {
+          "$sum": {
+            "$cond": [
+              {
+                "$gt": [
+                  "$accomplished",
+                  {
+                    "$const": 0
+                  }
+                ]
+              },
+              {
+                "$const": 1
+              },
+              {
+                "$const": 0
+              }
+            ]
+          }
+        },
+        "accomplishments": {
+          "$sum": "$accomplished"
+        },
+        "ticks": {
+          "$sum": "$ticks"
+        }
+      },
+      "maxAccumulatorMemoryUsageBytes": {
+        "activeDays": 1664,
+        "accomplishments": 1664,
+        "ticks": 1664
+      },
+      "totalOutputDataSizeBytes": 4017,
+      "usedDisk": false,
+      "spills": 0,
+      "spilledDataStorageSize": 0,
+      "numBytesSpilledEstimate": 0,
+      "spilledRecords": 0,
+      "nReturned": 13,
+      "executionTimeMillisEstimate": 208
+    },
+    {
+      "$sort": {
+        "sortKey": {
+          "_id": -1
+        },
+        "limit": 12
+      },
+      "totalDataSizeSortedBytesEstimate": 3804,
+      "usedDisk": false,
+      "spills": 0,
+      "spilledDataStorageSize": 0,
+      "nReturned": 12,
+      "executionTimeMillisEstimate": 208
+    },
+    {
+      "$sort": {
+        "sortKey": {
+          "_id": 1
+        }
+      },
+      "totalDataSizeSortedBytesEstimate": 3804,
+      "usedDisk": false,
+      "spills": 0,
+      "spilledDataStorageSize": 0,
+      "nReturned": 12,
+      "executionTimeMillisEstimate": 208
+    }
+  ],
+  "queryShapeHash": "DE1CBD24C89EC74702158806B21D7F20F1A8EEF0923D0A9C3A5D54C19B1D0AE0",
+  "serverInfo": {
+    "host": "CachyOSM2",
+    "port": 27018,
+    "version": "8.0.30",
+    "gitVersion": "360770fbc9b6a893748150d2ab2799e119b9fac9"
+  },
+  "serverParameters": {
+    "internalQueryFacetBufferSizeBytes": 104857600,
+    "internalQueryFacetMaxOutputDocSizeBytes": 104857600,
+    "internalLookupStageIntermediateDocumentMaxSizeBytes": 104857600,
+    "internalDocumentSourceGroupMaxMemoryBytes": 104857600,
+    "internalQueryMaxBlockingSortMemoryUsageBytes": 104857600,
+    "internalQueryProhibitBlockingMergeOnMongoS": 0,
+    "internalQueryMaxAddToSetBytes": 104857600,
+    "internalDocumentSourceSetWindowFieldsMaxMemoryBytes": 104857600,
+    "internalQueryFrameworkControl": "trySbeRestricted",
+    "internalQueryPlannerIgnoreIndexWithCollationForRegex": 1
+  },
+  "command": {
+    "aggregate": "completions",
+    "pipeline": [
+      {
+        "$match": {
+          "userId": "67bd1790a5ed09e050e1495d"
+        }
+      },
+      {
+        "$project": {
+          "trackId": 1,
+          "date": 1,
+          "day": {
+            "$dateFromString": {
+              "dateString": "$date",
+              "format": "%Y-%m-%d"
+            }
+          },
+          "accomplished": {
+            "$size": {
+              "$filter": {
+                "input": "$accomplishments",
+                "cond": "$$this.done"
+              }
+            }
+          },
+          "ticks": {
+            "$add": [
+              {
+                "$size": {
+                  "$filter": {
+                    "input": "$tasks",
+                    "cond": "$$this.done"
+                  }
+                }
+              },
+              {
+                "$size": {
+                  "$filter": {
+                    "input": "$revisions",
+                    "cond": "$$this.done"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "$group": {
+          "_id": "$date",
+          "date": {
+            "$first": "$date"
+          },
+          "day": {
+            "$first": "$day"
+          },
+          "accomplished": {
+            "$sum": "$accomplished"
+          },
+          "ticks": {
+            "$sum": "$ticks"
+          }
+        }
+      },
+      {
+        "$group": {
+          "_id": {
+            "$substrBytes": [
+              "$date",
+              0,
+              7
+            ]
+          },
+          "activeDays": {
+            "$sum": {
+              "$cond": [
+                {
+                  "$gt": [
+                    "$accomplished",
+                    0
+                  ]
+                },
+                1,
+                0
+              ]
+            }
+          },
+          "accomplishments": {
+            "$sum": "$accomplished"
+          },
+          "ticks": {
+            "$sum": "$ticks"
+          }
+        }
+      },
+      {
+        "$sort": {
+          "_id": -1
+        }
+      },
+      {
+        "$limit": 12
+      },
+      {
+        "$sort": {
+          "_id": 1
+        }
+      }
+    ],
+    "hint": {
+      "$natural": 1
+    },
+    "cursor": {},
+    "$db": "horizon_perf"
+  },
+  "ok": 1,
+  "$clusterTime": {
+    "clusterTime": {
+      "$timestamp": "7683977009743003649"
+    },
+    "signature": {
+      "hash": "ZDRcvKIqkKIMTgVCqjBZwPplE4A=",
+      "keyId": {
+        "high": 1789047850,
+        "low": 6,
+        "unsigned": false
+      }
+    }
+  },
+  "operationTime": {
+    "$timestamp": "7683977009743003649"
+  }
+}

@@ -1,0 +1,166 @@
+{
+  "explainVersion": "1",
+  "queryPlanner": {
+    "namespace": "horizon_perf.completions",
+    "parsedQuery": {
+      "$and": [
+        {
+          "trackId": {
+            "$eq": "track_1362_0"
+          }
+        },
+        {
+          "userId": {
+            "$eq": "67bd1790a5ed09e050e1495d"
+          }
+        },
+        {
+          "date": {
+            "$lte": "2026-08-31"
+          }
+        },
+        {
+          "date": {
+            "$gte": "2026-08-01"
+          }
+        }
+      ]
+    },
+    "indexFilterSet": false,
+    "queryHash": "2D1C3C99",
+    "planCacheShapeHash": "2D1C3C99",
+    "planCacheKey": "3FC503F9",
+    "optimizationTimeMillis": 0,
+    "maxIndexedOrSolutionsReached": false,
+    "maxIndexedAndSolutionsReached": false,
+    "maxScansToExplodeReached": false,
+    "prunedSimilarIndexes": false,
+    "winningPlan": {
+      "isCached": false,
+      "stage": "COLLSCAN",
+      "filter": {
+        "$and": [
+          {
+            "trackId": {
+              "$eq": "track_1362_0"
+            }
+          },
+          {
+            "userId": {
+              "$eq": "67bd1790a5ed09e050e1495d"
+            }
+          },
+          {
+            "date": {
+              "$lte": "2026-08-31"
+            }
+          },
+          {
+            "date": {
+              "$gte": "2026-08-01"
+            }
+          }
+        ]
+      },
+      "direction": "forward"
+    },
+    "rejectedPlans": []
+  },
+  "executionStats": {
+    "executionSuccess": true,
+    "nReturned": 27,
+    "executionTimeMillis": 208,
+    "totalKeysExamined": 0,
+    "totalDocsExamined": 572152,
+    "executionStages": {
+      "isCached": false,
+      "stage": "COLLSCAN",
+      "filter": {
+        "$and": [
+          {
+            "trackId": {
+              "$eq": "track_1362_0"
+            }
+          },
+          {
+            "userId": {
+              "$eq": "67bd1790a5ed09e050e1495d"
+            }
+          },
+          {
+            "date": {
+              "$lte": "2026-08-31"
+            }
+          },
+          {
+            "date": {
+              "$gte": "2026-08-01"
+            }
+          }
+        ]
+      },
+      "nReturned": 27,
+      "executionTimeMillisEstimate": 206,
+      "works": 572153,
+      "advanced": 27,
+      "needTime": 572125,
+      "needYield": 0,
+      "saveState": 10,
+      "restoreState": 10,
+      "isEOF": 1,
+      "direction": "forward",
+      "docsExamined": 572152
+    }
+  },
+  "queryShapeHash": "89A75202DDD0DB01BDAACC3D2478D07385E3934EAC0015E8CD0E2BEE37CA4672",
+  "command": {
+    "find": "completions",
+    "filter": {
+      "userId": "67bd1790a5ed09e050e1495d",
+      "trackId": "track_1362_0",
+      "date": {
+        "$gte": "2026-08-01",
+        "$lte": "2026-08-31"
+      }
+    },
+    "hint": {
+      "$natural": 1
+    },
+    "$db": "horizon_perf"
+  },
+  "serverInfo": {
+    "host": "CachyOSM2",
+    "port": 27018,
+    "version": "8.0.30",
+    "gitVersion": "360770fbc9b6a893748150d2ab2799e119b9fac9"
+  },
+  "serverParameters": {
+    "internalQueryFacetBufferSizeBytes": 104857600,
+    "internalQueryFacetMaxOutputDocSizeBytes": 104857600,
+    "internalLookupStageIntermediateDocumentMaxSizeBytes": 104857600,
+    "internalDocumentSourceGroupMaxMemoryBytes": 104857600,
+    "internalQueryMaxBlockingSortMemoryUsageBytes": 104857600,
+    "internalQueryProhibitBlockingMergeOnMongoS": 0,
+    "internalQueryMaxAddToSetBytes": 104857600,
+    "internalDocumentSourceSetWindowFieldsMaxMemoryBytes": 104857600,
+    "internalQueryFrameworkControl": "trySbeRestricted",
+    "internalQueryPlannerIgnoreIndexWithCollationForRegex": 1
+  },
+  "ok": 1,
+  "$clusterTime": {
+    "clusterTime": {
+      "$timestamp": "7683977005448036357"
+    },
+    "signature": {
+      "hash": "GzSwovtgSTDjF2Z+8danRtLLPCg=",
+      "keyId": {
+        "high": 1789047850,
+        "low": 6,
+        "unsigned": false
+      }
+    }
+  },
+  "operationTime": {
+    "$timestamp": "7683977005448036357"
+  }
+}

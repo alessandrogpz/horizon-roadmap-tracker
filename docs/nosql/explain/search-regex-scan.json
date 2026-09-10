@@ -1,0 +1,226 @@
+{
+  "explainVersion": "1",
+  "queryPlanner": {
+    "namespace": "horizon_perf.tracks",
+    "parsedQuery": {
+      "$and": [
+        {
+          "$or": [
+            {
+              "materials.author": {
+                "$regex": "interpretation",
+                "$options": "i"
+              }
+            },
+            {
+              "materials.title": {
+                "$regex": "interpretation",
+                "$options": "i"
+              }
+            },
+            {
+              "phases.title": {
+                "$regex": "interpretation",
+                "$options": "i"
+              }
+            },
+            {
+              "roadmapContent": {
+                "$regex": "interpretation",
+                "$options": "i"
+              }
+            }
+          ]
+        },
+        {
+          "userId": {
+            "$eq": "67bd1790a5ed09e050e1495d"
+          }
+        }
+      ]
+    },
+    "indexFilterSet": false,
+    "queryHash": "43081D5E",
+    "planCacheShapeHash": "43081D5E",
+    "planCacheKey": "D46E055C",
+    "optimizationTimeMillis": 0,
+    "maxIndexedOrSolutionsReached": false,
+    "maxIndexedAndSolutionsReached": false,
+    "maxScansToExplodeReached": false,
+    "prunedSimilarIndexes": false,
+    "winningPlan": {
+      "isCached": false,
+      "stage": "COLLSCAN",
+      "filter": {
+        "$and": [
+          {
+            "$or": [
+              {
+                "materials.author": {
+                  "$regex": "interpretation",
+                  "$options": "i"
+                }
+              },
+              {
+                "materials.title": {
+                  "$regex": "interpretation",
+                  "$options": "i"
+                }
+              },
+              {
+                "phases.title": {
+                  "$regex": "interpretation",
+                  "$options": "i"
+                }
+              },
+              {
+                "roadmapContent": {
+                  "$regex": "interpretation",
+                  "$options": "i"
+                }
+              }
+            ]
+          },
+          {
+            "userId": {
+              "$eq": "67bd1790a5ed09e050e1495d"
+            }
+          }
+        ]
+      },
+      "direction": "forward"
+    },
+    "rejectedPlans": []
+  },
+  "executionStats": {
+    "executionSuccess": true,
+    "nReturned": 1,
+    "executionTimeMillis": 18,
+    "totalKeysExamined": 0,
+    "totalDocsExamined": 3450,
+    "executionStages": {
+      "isCached": false,
+      "stage": "COLLSCAN",
+      "filter": {
+        "$and": [
+          {
+            "$or": [
+              {
+                "materials.author": {
+                  "$regex": "interpretation",
+                  "$options": "i"
+                }
+              },
+              {
+                "materials.title": {
+                  "$regex": "interpretation",
+                  "$options": "i"
+                }
+              },
+              {
+                "phases.title": {
+                  "$regex": "interpretation",
+                  "$options": "i"
+                }
+              },
+              {
+                "roadmapContent": {
+                  "$regex": "interpretation",
+                  "$options": "i"
+                }
+              }
+            ]
+          },
+          {
+            "userId": {
+              "$eq": "67bd1790a5ed09e050e1495d"
+            }
+          }
+        ]
+      },
+      "nReturned": 1,
+      "executionTimeMillisEstimate": 12,
+      "works": 3451,
+      "advanced": 1,
+      "needTime": 3449,
+      "needYield": 0,
+      "saveState": 1,
+      "restoreState": 1,
+      "isEOF": 1,
+      "direction": "forward",
+      "docsExamined": 3450
+    }
+  },
+  "queryShapeHash": "87F6B85A8DE9C397A5319F6048FD7E0732F56FD2AE7987A724EB50B35835E91B",
+  "command": {
+    "find": "tracks",
+    "filter": {
+      "userId": "67bd1790a5ed09e050e1495d",
+      "$or": [
+        {
+          "materials.title": {
+            "$regex": "interpretation",
+            "$options": "i"
+          }
+        },
+        {
+          "materials.author": {
+            "$regex": "interpretation",
+            "$options": "i"
+          }
+        },
+        {
+          "phases.title": {
+            "$regex": "interpretation",
+            "$options": "i"
+          }
+        },
+        {
+          "roadmapContent": {
+            "$regex": "interpretation",
+            "$options": "i"
+          }
+        }
+      ]
+    },
+    "hint": {
+      "$natural": 1
+    },
+    "$db": "horizon_perf"
+  },
+  "serverInfo": {
+    "host": "CachyOSM2",
+    "port": 27018,
+    "version": "8.0.30",
+    "gitVersion": "360770fbc9b6a893748150d2ab2799e119b9fac9"
+  },
+  "serverParameters": {
+    "internalQueryFacetBufferSizeBytes": 104857600,
+    "internalQueryFacetMaxOutputDocSizeBytes": 104857600,
+    "internalLookupStageIntermediateDocumentMaxSizeBytes": 104857600,
+    "internalDocumentSourceGroupMaxMemoryBytes": 104857600,
+    "internalQueryMaxBlockingSortMemoryUsageBytes": 104857600,
+    "internalQueryProhibitBlockingMergeOnMongoS": 0,
+    "internalQueryMaxAddToSetBytes": 104857600,
+    "internalDocumentSourceSetWindowFieldsMaxMemoryBytes": 104857600,
+    "internalQueryFrameworkControl": "trySbeRestricted",
+    "internalQueryPlannerIgnoreIndexWithCollationForRegex": 1
+  },
+  "ok": 1,
+  "$clusterTime": {
+    "clusterTime": {
+      "$timestamp": "7683977009743003649"
+    },
+    "signature": {
+      "hash": "ZDRcvKIqkKIMTgVCqjBZwPplE4A=",
+      "keyId": {
+        "high": 1789047850,
+        "low": 6,
+        "unsigned": false
+      }
+    }
+  },
+  "operationTime": {
+    "$timestamp": "7683977009743003649"
+  }
+}

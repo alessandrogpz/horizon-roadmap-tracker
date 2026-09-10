@@ -7,6 +7,28 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.20.1] - 2026-09-10
+
+### Added
+- **A generated dataset** for testing at scale: `npm run db:seed` creates
+  2,000 users with a year of realistic activity (572,152 days of progress) in
+  a separate database, the same every time.
+- **Measured query performance**: `npm run db:explain` runs the app's
+  queries against that dataset with and without their indexes and writes
+  `docs/nosql/PERFORMANCE.md`. Per-user queries read only that user's data:
+  1 to 7 ms, instead of about 200 ms scanning everything.
+- **A failover demo**: `npm run demo:failover` stops the database's primary
+  server in the middle of a stream of writes. A new primary takes over (in
+  0.3 s after a graceful stop, 10.8 s after a crash) and not one
+  acknowledged write is lost.
+- **`docs/nosql/`**: the data model with its diagram, the design decisions,
+  the dataset, the measurements, and how replication keeps the data safe.
+
+### Notes
+- New development dependency: `tsx`, to run the TypeScript scripts.
+- The generated data lives in its own `horizon_perf` database, with its own
+  user, so it never mixes with development data.
+
 ## [0.20.0] - 2026-09-10
 
 ### Added
