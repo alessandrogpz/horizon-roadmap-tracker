@@ -64,7 +64,8 @@ no business logic.
 ├── compose.yaml                  # Local MongoDB replica set (npm run db:up)
 ├── docker/mongo-init.js          # Sets up the replica set and its users
 ├── scripts/dev-env.mjs           # Generates the local database's secrets
-└── docs/security/                # Threat model
+├── docs/security/                # Threat model
+└── docs/LEARNING_LOG.md          # What each step of the database & security work teaches
 ```
 
 ### The logo
