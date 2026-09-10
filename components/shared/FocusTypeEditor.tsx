@@ -12,7 +12,7 @@ interface FocusTypeEditorProps {
 
 /** The "Customize Pool" panel — add/edit/delete focus types, keeping weekSchedule's
  *  labels and fallback assignments in sync. Extracted so both ScheduleDayModal and
- *  the onboarding wizard's rhythm step can reuse the exact same editor. */
+ *  WeeklyRhythmModal use the exact same editor. */
 export default function FocusTypeEditor({ focusTypes, weekSchedule, onChange }: FocusTypeEditorProps) {
   const [draft, setDraft] = useState({ label: "", color: "#0ea5e9" });
 

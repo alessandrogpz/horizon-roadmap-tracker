@@ -2,7 +2,7 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { TrackState, Workspace } from "@/lib/types";
-import { fetchWorkspace, updateWorkspace } from "@/lib/workspaceRepo";
+import { createTrack, ensureStarterTrack, fetchWorkspace, updateWorkspace } from "@/lib/workspaceRepo";
 import { activeTrack, visibleTracks, withActiveTrack } from "@/lib/selectors";
 import { applyDailyResetIfNeeded } from "@/lib/dailyReset";
 import { todayYMD } from "@/lib/dates";
@@ -17,7 +17,7 @@ import {
  *  that the flush-on-hide safety net rarely has to do anything. */
 const SAVE_DEBOUNCE_MS = 1000;
 
-export type WorkspaceStatus = "loading" | "ready" | "empty" | "error";
+export type WorkspaceStatus = "loading" | "ready" | "error";
 export type SyncStatus = "idle" | "syncing" | "success" | "error";
 
 export interface WorkspaceState {
@@ -48,12 +48,22 @@ export interface WorkspaceActions {
   flush: () => Promise<void>;
   /** Makes another track active, applying its daily reset if one is due. */
   switchTrack: (trackId: string) => Promise<void>;
+  /** Adds a new track and makes it active. */
+  addTrack: (track: TrackState) => Promise<void>;
   /** Runs a full Drive sync and reloads the merged result. */
   sync: (clientId: string) => Promise<void>;
   /** Re-reads the workspace from storage. For changes made underneath the
    *  provider — a restored backup, a wiped database — rather than through it. */
   reload: () => Promise<void>;
 }
+
+/** Reads the stored workspace, first giving it a starter track if there's
+ *  nothing to show — a fresh install, or every track archived — so the app
+ *  always opens onto a usable dashboard. */
+const loadWorkspace = async (): Promise<Workspace> => {
+  const loaded = await fetchWorkspace();
+  return visibleTracks(loaded).length > 0 ? loaded : ensureStarterTrack(todayYMD());
+};
 
 const StateContext = createContext<WorkspaceState | null>(null);
 const ActionsContext = createContext<WorkspaceActions | null>(null);
@@ -190,10 +200,21 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   );
 
   const reload = useCallback(async () => {
-    const loaded = await fetchWorkspace();
-    applyWorkspace(loaded);
-    setStatus(visibleTracks(loaded).length === 0 ? "empty" : "ready");
+    applyWorkspace(await loadWorkspace());
+    setStatus("ready");
   }, [applyWorkspace]);
+
+  const addTrack = useCallback(
+    async (track: TrackState) => {
+      // createTrack builds on what's stored, so an edit still waiting in the
+      // debounce has to land first or the new track's write would drop it.
+      await flush();
+      await createTrack(track);
+      await reload();
+      await switchTrack(track.meta.id); // applies its first daily reset
+    },
+    [flush, reload, switchTrack]
+  );
 
   const sync = useCallback(
     async (clientId: string) => {
@@ -233,16 +254,11 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false;
 
-    fetchWorkspace()
+    loadWorkspace()
       .then(async (loaded) => {
         if (cancelled) return;
 
         const visible = visibleTracks(loaded);
-        if (visible.length === 0) {
-          applyWorkspace(loaded);
-          setStatus("empty");
-          return;
-        }
 
         // The active track may have been archived from another device since
         // this one last synced — fall back to the first visible track rather
@@ -304,8 +320,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   );
 
   const actions = useMemo<WorkspaceActions>(
-    () => ({ updateTrack, commitTrack, commitWorkspace, flush, switchTrack, sync, reload }),
-    [updateTrack, commitTrack, commitWorkspace, flush, switchTrack, sync, reload]
+    () => ({ updateTrack, commitTrack, commitWorkspace, flush, switchTrack, addTrack, sync, reload }),
+    [updateTrack, commitTrack, commitWorkspace, flush, switchTrack, addTrack, sync, reload]
   );
 
   return (
