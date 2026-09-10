@@ -27,6 +27,8 @@ import type { BackupBundle } from "@/lib/export";
 import { updateSettings } from "@/lib/settings";
 import { useAppSettings } from "@/lib/useAppSettings";
 import { getThemePreference, setThemePreference, type ThemePreference } from "@/lib/theme";
+import { googleClientId, signOut } from "@/lib/account";
+import AccountRow from "./AccountRow";
 
 /**
  * App-level settings: the choices that belong to this device rather than to a
@@ -179,6 +181,9 @@ export default function SettingsModal({
   };
 
   const doWipe = async () => {
+    // The session cookie is a credential in this browser too. Best effort: a
+    // server that can't be reached shouldn't stop the local wipe.
+    if (googleClientId()) await signOut().catch(() => {});
     await wipeLocalData();
     onRestored();
     window.location.assign("/");
@@ -264,6 +269,8 @@ export default function SettingsModal({
         </Row>
 
         {/* ── Data ───────────────────────────────────────────────────── */}
+        {googleClientId() && <AccountRow />}
+
         <Row
           icon={<HardDrive size={16} strokeWidth={2} />}
           title="Cloud sync"
@@ -366,8 +373,8 @@ export default function SettingsModal({
             <div className="flex flex-col gap-0.5">
               <span className="text-[0.9rem] font-semibold text-foreground">Delete local data</span>
               <span className="text-[0.78rem] leading-snug text-muted-foreground">
-                Clears every track, note and credential from this browser. Anything already synced
-                stays in your Drive; this device just forgets it.
+                Clears every track, note and credential from this browser, and signs it out.
+                Anything already synced stays in your Drive; this device just forgets it.
               </span>
             </div>
           </div>

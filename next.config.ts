@@ -17,7 +17,7 @@ import type { NextConfig } from "next";
  */
 const CONNECT_SRC = [
   "'self'",
-  // Google Drive sync and its auth.
+  // Google Drive sync, Drive authorization and sign-in with Google.
   "https://www.googleapis.com",
   "https://accounts.google.com",
   // Repo stats shown on materials and portfolio entries.
@@ -32,11 +32,14 @@ const CSP = [
   // flash. It weakens XSS defence, which is why the markdown renderer escapes
   // all input and allowlists URL schemes rather than leaning on CSP for it.
   "script-src 'self' 'unsafe-inline' https://accounts.google.com",
-  "style-src 'self' 'unsafe-inline'",
-  // data: for inline icons, blob: for generated backup downloads.
-  "img-src 'self' data: blob: https:",
+  // Google's sign-in button loads its stylesheet from here.
+  "style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style",
+  // data: for inline icons, blob: for generated backup downloads. No remote
+  // hosts: the app shows no external images, and an open img-src would let
+  // injected script smuggle data out in an image URL, around connect-src.
+  "img-src 'self' data: blob:",
   "font-src 'self' data:",
-  // Google Identity renders its consent flow in an iframe.
+  // Google Identity renders its consent flow and the sign-in button in iframes.
   "frame-src https://accounts.google.com",
   // Nothing here should ever post a form anywhere, or be framed by anyone.
   "form-action 'self'",
