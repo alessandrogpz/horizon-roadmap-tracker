@@ -2,12 +2,14 @@ import { zipSync, strToU8 } from "fflate";
 import { fetchWorkspace } from "./workspaceRepo";
 import { db } from "./localDb";
 import type { Workspace } from "./types";
+import { notepadNoteId, todoNoteId } from "./quickNotes";
 
 export interface BackupBundle {
   exportedAt: string;
   version: 1;
   workspace: Workspace;
-  /** materialId -> note markdown content */
+  /** note id -> markdown content: material notes (keyed by material id), plus
+   *  each track's notepad and to-do list (lib/quickNotes.ts). */
   notes: Record<string, string>;
 }
 
@@ -77,6 +79,10 @@ export function buildZipFiles(bundle: BackupBundle): Record<string, Uint8Array> 
         addFile("notes", `${track.meta.name}-${material.title}`, material.id, content);
       }
     });
+    const notepad = bundle.notes[notepadNoteId(track.meta.id)];
+    if (notepad?.trim()) addFile("notepads", track.meta.name, track.meta.id, notepad);
+    const todos = bundle.notes[todoNoteId(track.meta.id)];
+    if (todos?.trim()) addFile("todos", track.meta.name, track.meta.id, todos);
   });
 
   return files;

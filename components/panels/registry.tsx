@@ -1,17 +1,20 @@
 "use client";
 
 import React from "react";
-import { Activity, BookOpen, CalendarDays, FolderGit2, Milestone, Timer } from "lucide-react";
+import { Activity, BookOpen, CalendarDays, FolderGit2, ListTodo, Milestone, NotebookPen, Timer } from "lucide-react";
 import type { ModuleId } from "@/lib/modules";
 import type { Phase, WeekDay } from "@/lib/types";
 import MaterialsPanel from "./MaterialsPanel";
 import PortfolioPanel from "./PortfolioPanel";
 import PhaseTracker from "@/components/PhaseTracker";
+import Notepad from "@/components/Notepad";
 import PomodoroTimer from "@/components/PomodoroTimer";
 import StreakGraph from "@/components/StreakGraph";
+import TodoList from "@/components/TodoList";
 import WeeklyPlan from "@/components/WeeklyPlan";
 import { useWorkspace, useWorkspaceActions } from "@/components/workspace/WorkspaceProvider";
 import { addPhase } from "@/lib/trackActions";
+import { notepadNoteId, todoNoteId } from "@/lib/quickNotes";
 
 /** Everything a panel needs from the dashboard that isn't workspace data:
  *  which week is being viewed, and how to open the various modals. Panels
@@ -91,6 +94,22 @@ function PomodoroPanel() {
   return <PomodoroTimer />;
 }
 
+// Keyed by note id so switching tracks remounts them: a save still waiting
+// then lands in the track it was typed into (see components/useQuickNote.ts).
+function NotepadPanel() {
+  const { track } = useWorkspace();
+  if (!track) return null;
+  const noteId = notepadNoteId(track.meta.id);
+  return <Notepad key={noteId} noteId={noteId} />;
+}
+
+function TodoListPanel() {
+  const { track } = useWorkspace();
+  if (!track) return null;
+  const noteId = todoNoteId(track.meta.id);
+  return <TodoList key={noteId} noteId={noteId} />;
+}
+
 // --- Registry ----------------------------------------------------------
 
 /** Typed as a full map over ModuleId, so adding an entry to lib/modules.ts
@@ -106,6 +125,8 @@ export const PANEL_REGISTRY: Record<ModuleId, PanelDefinition> = {
   pomodoroTimer: { icon: Timer, Panel: PomodoroPanel },
   portfolioTracker: { icon: FolderGit2, Panel: PortfolioPanel },
   materialsTracker: { icon: BookOpen, Panel: MaterialsPanel },
+  notepad: { icon: NotebookPen, Panel: NotepadPanel },
+  todoList: { icon: ListTodo, Panel: TodoListPanel },
 };
 
 export const panelFor = (id: string): PanelDefinition | undefined =>

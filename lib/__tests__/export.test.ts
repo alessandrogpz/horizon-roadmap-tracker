@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 import { buildBackupBundle, buildZipFiles, slugify, type BackupBundle } from "../export";
 import { createTrack } from "../workspaceRepo";
 import { db } from "../localDb";
+import { notepadNoteId, todoNoteId } from "../quickNotes";
 import type { TrackState } from "../types";
 
 const baseTrack = (id: string, overrides: Partial<TrackState> = {}): TrackState => ({
@@ -68,6 +69,15 @@ describe("buildZipFiles", () => {
     const track = baseTrack("t1");
     const files = buildZipFiles(makeBundle(track));
     expect(files["database.json"]).toBeDefined();
+  });
+
+  it("writes each track's notepad and to-do list out under the track's name, when they have content", () => {
+    const files = buildZipFiles(makeBundle(baseTrack("t1"), { [notepadNoteId("t1")]: "idea", [todoNoteId("t1")]: "- [ ] thing" }));
+    expect(new TextDecoder().decode(files["notepads/land-a-pm-role.md"])).toBe("idea");
+    expect(new TextDecoder().decode(files["todos/land-a-pm-role.md"])).toBe("- [ ] thing");
+
+    const empty = buildZipFiles(makeBundle(baseTrack("t1"), { [notepadNoteId("t1")]: "  " }));
+    expect(Object.keys(empty).some((p) => p.startsWith("notepads/") || p.startsWith("todos/"))).toBe(false);
   });
 
   it("adds a roadmap file only when roadmapContent is non-empty", () => {
