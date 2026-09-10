@@ -13,6 +13,8 @@ import TrackSettingsModal from "@/components/TrackSettingsModal";
 import ThemeToggle from "@/components/ThemeToggle";
 import TopBarMenu, { type ModuleState } from "@/components/TopBarMenu";
 import SettingsModal from "@/components/SettingsModal";
+import InsightsModal from "@/components/InsightsModal";
+import { useAccount } from "@/components/useAccount";
 import StatDetailModal, { type StatMetric } from "@/components/StatDetailModal";
 
 /** Re-exported for the header's own consumers; the provider owns the type. */
@@ -154,6 +156,8 @@ function StatTile({
 export default function DashboardHeader({ data, workspace, syncStatus, syncError, syncTarget = "drive", onSync, onOpenCloudMenu, onSwitchTrack, onNewTrack, onEditTrack, onDeleteTrack, canDeleteTrack, moduleState, onToggleModule, onEditRhythm, onNewRotation, onReloadWorkspace }: DashboardHeaderProps) {
   const [showTrackSettings, setShowTrackSettings] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showInsights, setShowInsights] = useState(false);
+  const account = useAccount();
 
   // A new track starts blank as "New Track", so go straight to its settings:
   // that's where it gets a real name, colour, start date and length.
@@ -255,6 +259,7 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
             onNewTrack={() => void handleNewTrack()}
             onOpenCloud={onOpenCloudMenu}
             onOpenSettings={() => setShowSettings(true)}
+            onOpenInsights={account ? () => setShowInsights(true) : undefined}
           />
         </div>
       </div>
@@ -315,6 +320,8 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
       {openStat && (
         <StatDetailModal metric={openStat} track={data} onClose={() => setOpenStat(null)} />
       )}
+
+      {showInsights && <InsightsModal onClose={() => setShowInsights(false)} onOpenTrack={onSwitchTrack} />}
 
       {showSettings && (
         <SettingsModal

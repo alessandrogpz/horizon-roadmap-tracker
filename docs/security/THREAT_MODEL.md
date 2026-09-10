@@ -1,9 +1,10 @@
 # Horizon threat model
 
-**Version 1.5, 2026-09-10** (1.1 added the local database from 0.17.1; 1.2 marks
+**Version 1.6, 2026-09-10** (1.1 added the local database from 0.17.1; 1.2 marks
 sign-in with Google, from 0.18.0, as built, and adds S6; 1.3 updates T8 for the
 0.18.1 dependency upgrade; 1.4 marks sync, from 0.19.0, as built;
-1.5 adds rate limiting and the local-route fixes from 0.19.1). Models Horizon v0.19.1 *and* the planned sign-in
+1.5 adds rate limiting and the local-route fixes from 0.19.1;
+1.6 adds the read-only search and stats routes from 0.20.0). Models Horizon v0.20.0 *and* the planned sign-in
 with Google plus MongoDB sync (`MODULES_PLAN.md`, Step 4), so that
 security is designed in before the server is built. Parts that don't exist yet
 are marked **planned**. Revisit after Step 4 ships, and whenever a route, a
@@ -165,7 +166,7 @@ flowchart LR
 | D | Local dev server: `/api/open`, `/api/git`, `/api/notes` (only on the user's own computer; production refuses them, checked live 2026-09-10) | Process | Exists |
 | H | The computer's operating system: `xdg-open`, `git`, files | Process | Exists |
 | L | Other devices on the same network | External | |
-| A | Horizon API on Vercel: `/api/auth/session`, `/api/sync` | Process | Both exist and run locally (0.18.0, 0.19.0); deployed with Atlas in week 5 |
+| A | Horizon API on Vercel: `/api/auth/session`, `/api/sync`, `/api/search`, `/api/stats` | Process | All exist and run locally (0.18.0–0.20.0); deployed with Atlas in week 5 |
 | ENV | Vercel environment variables, and `.env.local` locally: `MONGODB_URI` | Data store | Planned (4a) |
 | DB | MongoDB: Atlas in production, a three-member Docker replica set locally | Data store | Local exists (0.17.1); Atlas planned (4a) |
 | G | Google Identity: Drive authorization today, sign-in later | External | Exists |
@@ -271,7 +272,7 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 
 | ID | Threat | Where | L | I | Risk | Mitigation | Status |
 |---|---|---|---|---|---|---|---|
-| I1 | IDOR: user A asks for a track by its id and gets user B's. Track ids are only unique per user, and every migrated legacy workspace has the same one (`track_legacy_engine_graphics`), so even a bug without an attacker would mix users' data | F4, A, DB | 3 | 3 | High | Every query filters by the session's `userId`. A unique index on `{userId, trackId}`. Tests that user A can't read or write user B's tracks, completions or notes, even with the same track id | Implemented (0.19.0: every sync query filters by the session's `userId`; unique `{userId, trackId}`; tested with two users sharing `track_legacy_engine_graphics`) |
+| I1 | IDOR: user A asks for a track by its id and gets user B's. Track ids are only unique per user, and every migrated legacy workspace has the same one (`track_legacy_engine_graphics`), so even a bug without an attacker would mix users' data | F4, A, DB | 3 | 3 | High | Every query filters by the session's `userId`. A unique index on `{userId, trackId}`. Tests that user A can't read or write user B's tracks, completions or notes, even with the same track id | Implemented (0.19.0 sync; 0.20.0 search and stats: every query and every `$lookup` filters by the session's `userId`; compound text indexes start with `userId`; tested with two users sharing `track_legacy_engine_graphics`) |
 | I2 | Cross-site scripting (XSS): injected script reads the Drive token, the GitHub token and everything in IndexedDB, or sends requests as the signed-in user | B, LS, IDB | 1 | 3 | Medium | React escapes what it renders. The markdown renderer escapes all HTML and allows only safe link schemes (`lib/markdown.ts`). The session cookie is `HttpOnly`. The CSP limits where data can be sent, within the limits described in I3 | Implemented |
 | I3 | The CSP's `connect-src` allowlist doesn't cover every way out. Injected script could still send data inside an image URL (`img-src https:` allows any HTTPS host), or by navigating the page away | B | 1 | 3 | Medium | Narrow `img-src` to `'self' data: blob:`; the app loads no external images today. Add Google's avatar host only if the UI shows one. No CSP rule can restrict navigation, so preventing XSS (I2) remains the real defence | Implemented (0.18.0: `img-src 'self' data: blob:`) |
 | I4 | Error messages reveal internals: `/api/git` and `/api/notes` return the raw `error.message`, and `/api/git`'s 403 names the home directory | D | 1 | 1 | Low | Generic messages to the client, details only in server logs. New routes do this from the start | Implemented (0.19.1: `/api/git` and `/api/notes` return generic messages and log details server-side; the 403 no longer names the home directory; tested) |
@@ -290,7 +291,7 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 | ID | Threat | Where | L | I | Risk | Mitigation | Status |
 |---|---|---|---|---|---|---|---|
 | D1 | Huge sync bodies exhaust the server's memory or the free tier's 512 MB | F4, A, DB | 2 | 2 | Medium | Reject bodies over a size limit before parsing them (real data is about 28 KB), and cap array lengths in the schemas | Implemented (sign-in 8 KB, sync 2 MB, plus per-field and per-array caps in the schemas; tested) |
-| D2 | Floods of requests against sign-in and sync: brute force, or using up Atlas's 100 operations per second | A | 2 | 2 | Medium | Rate limits per IP and per user, counted in MongoDB (a fixed window, cleaned up by a TTL index). Vercel's platform-level DDoS protection | Implemented (0.19.1: fixed-window counters in MongoDB with an atomic `$inc` and a TTL index: sign-in 10/min per address, session 60/min per address, sync 30/min per account; 429 with Retry-After; addresses stored only as hashes; tested, including a burst of 20 simultaneous requests). Unauthenticated floods still cost one indexed session lookup each; Vercel's platform DDoS protection sits in front |
+| D2 | Floods of requests against sign-in and sync: brute force, or using up Atlas's 100 operations per second | A | 2 | 2 | Medium | Rate limits per IP and per user, counted in MongoDB (a fixed window, cleaned up by a TTL index). Vercel's platform-level DDoS protection | Implemented (0.19.1: fixed-window counters in MongoDB with an atomic `$inc` and a TTL index: sign-in 10/min per address, session 60/min per address, sync 30/min and search/stats 120/min per account; 429 with Retry-After; addresses stored only as hashes; tested, including a burst of 20 simultaneous requests). Unauthenticated floods still cost one indexed session lookup each; Vercel's platform DDoS protection sits in front |
 | D3 | Atlas unavailable: the free cluster pauses after 30 days without connections, or hits its throughput limit | DB | 2 | 1 | Low | Horizon is offline-first: every device keeps a full copy in IndexedDB and keeps working. Only syncing fails until the database is back | Accepted (by design) |
 | D4 | Data loss: the Atlas free tier has no backups | DB | 1 | 3 | Medium | Every device holds a full copy, the .zip export exists, and a scheduled `mongodump` | Planned (Step 6) |
 | D5 | One database server fails | DB | 2 | 2 | Medium | A replica set of three members: the others elect a new primary, and retryable writes carry the app through | Planned (4a; demonstrated in Step 5) |

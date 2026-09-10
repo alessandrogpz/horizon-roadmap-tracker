@@ -17,7 +17,9 @@
 > sign-in with Google (0.18.0, the user signed in for real); Next 16.3.4
 > (0.18.1); 4c–4g, sync through the account (0.19.0); and 4h, rate limiting
 > plus the local-route fixes (0.19.1). Step 4 is done apart from Atlas, which
-> comes with deployment. Next is Step 5. The plan moved from
+> comes with deployment. Step 5's two use cases, search and stats, shipped in
+> 0.20.0; next are its generated data, `explain()` report and failover demo.
+> The plan moved from
 > `temp/` to the repo root in 0.17.1. What each step teaches:
 > `docs/LEARNING_LOG.md`, updated with every step.
 
@@ -739,6 +741,45 @@ leave them unsharded or shard on hashed `_id`.
 - **Use case: history and stats.** Aggregation pipelines over `completions`:
   activity per week and month, completion rate per weekday, per-track totals,
   and the longest streak (a gaps-and-islands query with `$setWindowFields`).
+*Search and stats DONE in 0.20.0 (2026-09-10):*
+- **Search:** `lib/server/insights/search.ts`, `GET /api/search?q=`.
+  - Compound text indexes `{userId: 1, <text fields>}` on `tracks`
+    (weights: materials.title 10, phases.title 8, meta.name and
+    materials.author 5, phases.description 2, roadmapContent 1) and on
+    `notes.content`, with English stemming. `language_override` points at a
+    field that never exists.
+  - Results are sorted by `textScore`, and the matching materials and phases
+    are picked out for display.
+  - zod-checked query (1–100 characters), per-account limit of 120/min.
+- **Stats:** `lib/server/insights/stats.ts`, `GET /api/stats`. Aggregation
+  pipelines (exported for `explain`): `totals`, `byWeekday`, `byWeek`,
+  `byMonth`, `byTrack` (with a `$lookup` to tracks scoped by `userId` *and*
+  `trackId`), and `longestStreaks` (gaps and islands with `$setWindowFields`
+  and `$documentNumber`).
+  - Active days are counted per distinct date across tracks.
+  - The weekday rate is active days divided by that weekday's occurrences
+    since the first recorded day.
+- **UI:** `components/InsightsModal.tsx`, "Search & insights…" in the menu,
+  shown only when signed in. It has search as you type (300 ms, older
+  requests cancelled), stat tiles, two column charts (weekday rate, active
+  days per month) that follow the dataviz skill's specs with a table toggle,
+  and a per-track table. Clicking a track result opens that track.
+- **Tests:** `insights.db.test.ts` (8): search points at the right materials,
+  phases and notes; scoping; stemming; weighted ranking; `explain` shows
+  `user_track_text`; 400/401; stats on a hand-checkable calendar (distinct
+  dates, weekday rates, per-track streaks, a `$lookup` that can't pick up
+  another user's track); and the streak pipeline against a brute-force loop
+  on a year of random days.
+- **Verified in the real app** against `horizon_test` with a test session and
+  three months of data synced through `/api/sync`: tiles, charts, tooltip on
+  focus, table, and search results all correct. Two layout fixes came from
+  it: room above charts so the tooltip doesn't cover the title, and a
+  shorter "Since" value.
+- **Test-harness lesson:** a `null` account in the in-app browser turned out
+  to be a mistyped test token, not a bug. A logging proxy showed a different
+  hash from the real token. Cookies for browser tests are now set from the
+  token file by a helper, never retyped.
+
 - **Generated data.** `scripts/seed.ts` creates thousands of users, each with
   1–3 tracks seeded from `lib/templates` and a year of daily completions with
   realistic patterns (weekday effects, streaks, lapses). Use a fixed random seed

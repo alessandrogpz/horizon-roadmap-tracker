@@ -12,6 +12,7 @@ import {
   Pencil,
   Plus,
   Repeat,
+  Search,
   Settings,
 } from "lucide-react";
 import { panelFor } from "@/components/panels/registry";
@@ -44,6 +45,8 @@ interface TopBarMenuProps {
   onNewTrack: () => void;
   onOpenCloud: () => void;
   onOpenSettings: () => void;
+  /** Only when signed in: search and history come from the account. */
+  onOpenInsights?: () => void;
 }
 
 function Item({
@@ -92,6 +95,7 @@ export default function TopBarMenu({
   onNewTrack,
   onOpenCloud,
   onOpenSettings,
+  onOpenInsights,
 }: TopBarMenuProps) {
   const [open, setOpen] = useState(false);
   // Which edge the popover aligns to, chosen on open so it always lands fully
@@ -217,6 +221,9 @@ export default function TopBarMenu({
 
           <div className="mt-1 border-t border-card-border pt-0.5">
             <SectionLabel>This device</SectionLabel>
+            {onOpenInsights && (
+              <Item icon={<Search size={15} strokeWidth={2} />} label="Search & insights…" onClick={run(onOpenInsights)} />
+            )}
             <Item icon={<Cloud size={15} strokeWidth={2} />} label="Cloud & backup…" onClick={run(onOpenCloud)} />
             <Item icon={<Settings size={15} strokeWidth={2} />} label="Settings…" onClick={run(onOpenSettings)} />
           </div>

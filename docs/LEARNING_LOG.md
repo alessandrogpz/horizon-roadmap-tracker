@@ -30,6 +30,7 @@ The other documents, and what each one is for:
 6. [Upgrading Next.js for security (0.18.1)](#6-upgrading-nextjs-for-security-0181)
 7. [Syncing through the account (0.19.0)](#7-syncing-through-the-account-0190)
 8. [Rate limiting, and closing the small holes (0.19.1)](#8-rate-limiting-and-closing-the-small-holes-0191)
+9. [Search and statistics in the database (0.20.0)](#9-search-and-statistics-in-the-database-0200)
 
 ---
 
@@ -547,3 +548,77 @@ document, deleted within two minutes.
 `app/api/git/route.ts`, `app/api/open/route.ts`, `app/api/notes/route.ts`,
 `lib/import.ts`, `lib/__tests__/rateLimit.db.test.ts`,
 `lib/__tests__/localRoutes.test.ts`.
+
+---
+
+## 9. Search and statistics in the database (0.20.0)
+
+**What changed.** Signed in, the menu has **Search & insights**. It offers
+full-text search across your tracks, materials, phases, roadmaps and notes,
+and your history: active days, how often each weekday is active, active days
+per month, and each track's longest streak. MongoDB computes both on the
+server.
+
+**Why.** The NoSQL module asks for a query or full-text search function, and
+for real use of the database's own processing power. These are the two use
+cases the model was designed around.
+
+**Concepts.**
+- **Text indexes and `$text`.** A text index splits text into words, drops
+  common ones ("the", "and"), and **stems** the rest ("books" becomes
+  "book"), so a search finds the idea, not just the exact spelling. `$text`
+  returns documents with a relevance score (`textScore`) to sort by.
+- **Field weights.** The same word counts ten times more in a material's
+  title than in the roadmap text, so results rank the way you'd expect.
+- **Compound text index.** The index starts with `userId`, so every search
+  must name the user, and only that user's entries are scanned. It's faster,
+  and it's authorization built into the index. MongoDB allows one text index
+  per collection, so choosing its fields is a real design decision.
+- **The aggregation pipeline.** A query as a list of stages, each feeding the
+  next, like an assembly line: `$match` (filter), `$project` (compute
+  fields), `$group` (sum per weekday, per month, per track), `$sort`,
+  `$limit`. The work happens in the database, next to the data; only the
+  small result travels.
+- **`$lookup` is a join, and needs the same care.** The per-track totals join
+  in each track's name. Track ids are only unique per user, so the join
+  matches on user *and* track, or it could fetch someone else's track name.
+- **Gaps and islands.** The longest streak is a classic puzzle: find the
+  longest run of consecutive dates. `$setWindowFields` numbers each active
+  day within its track (1, 2, 3, …). On a run of consecutive days, *day
+  number minus that rank* stays the same; any gap changes it. So grouping by
+  that difference gives one group per run, and the biggest group is the
+  streak. A test checks it against a plain loop over a year of random days.
+- **Counting what you mean.** A date active on two tracks is still one active
+  day. The first version double-counted; a stage that groups per date first
+  fixed it, before anyone saw a wrong number.
+- **Charts that say the same thing to everyone.** A single series in one
+  colour, bars growing from a common baseline, and a tooltip on hover *and*
+  keyboard focus. Every chart has a table view, so no number depends on a
+  mouse.
+
+**See it yourself.**
+- Sign in, sync, then menu → **Search & insights**. Type a word from a book
+  title; try its plural too.
+- In `mongosh` (`npm run db:shell`), look at the plan for a search:
+  `db.tracks.find({ userId: ObjectId("…"), $text: { $search: "rendering" } }).explain("queryPlanner")`.
+  The winning plan uses the index `user_track_text`.
+- The pipelines are in `lib/server/insights/stats.ts`, one stage per line.
+  Paste one into Compass's Aggregations tab to watch each stage's output.
+
+**Exam questions.**
+- *How does full-text search work in MongoDB?* A text index (tokenised,
+  stop words removed, stemmed), `$text` queries, `textScore` for ranking,
+  and field weights.
+- *Why does the text index start with `userId`?* The search only scans that
+  user's entries, and it can't return anyone else's.
+- *Walk me through an aggregation pipeline.* `byMonth`: match the user,
+  compute per-day figures, group per date, then per month, sort, and limit to
+  12.
+- *How do you find the longest streak?* Gaps and islands with
+  `$setWindowFields`, as above.
+- *Is there a join in MongoDB?* `$lookup`. It's here, scoped by user as well
+  as track.
+
+**Files.** `lib/server/insights/search.ts`, `lib/server/insights/stats.ts`,
+`lib/server/insights/handlers.ts`, `lib/server/collections.ts` (the text
+indexes), `components/InsightsModal.tsx`, `lib/__tests__/insights.db.test.ts`.
