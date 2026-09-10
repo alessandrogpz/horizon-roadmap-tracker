@@ -1,6 +1,6 @@
 {
   "name": "horizon-roadmap-tracker",
-  "version": "0.21.0",
+  "version": "0.21.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -13,6 +13,7 @@
     "db:up": "node scripts/dev-env.mjs && docker compose up -d && docker compose wait init",
     "db:down": "docker compose down",
     "db:reset": "docker compose down --volumes",
+    "db:backup": "tsx scripts/backup.ts",
     "db:seed": "tsx scripts/seed.ts",
     "db:explain": "tsx scripts/explain.ts",
     "demo:failover": "tsx scripts/failover.ts",

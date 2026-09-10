@@ -61,3 +61,6 @@ data/notes/
 # the harness; the failure cases worth keeping are already Vitest fixtures in
 # lib/__tests__/aiValidate.test.ts.
 temp/ai-eval/results/
+
+# Database backups hold personal data (npm run db:backup).
+/backups/

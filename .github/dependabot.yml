@@ -1,0 +1,29 @@
+# Dependabot opens pull requests to keep dependencies current (threat T8). They
+# target `development`, like any other change, and CI checks each one before
+# it can reach main.
+
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    target-branch: development
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # One pull request for the routine updates; majors come one by one.
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: development
+    schedule:
+      interval: weekly
+
+  # The mongo image in compose.yaml.
+  - package-ecosystem: docker-compose
+    directory: /
+    target-branch: development
+    schedule:
+      interval: monthly

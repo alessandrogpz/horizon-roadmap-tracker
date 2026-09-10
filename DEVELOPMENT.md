@@ -74,6 +74,8 @@ The Dexie (IndexedDB) database and Google Drive `database.json` used for daily p
 | Search and stats | `lib/server/insights/` (queries and pipelines), `app/api/search`, `app/api/stats`, `components/InsightsModal.tsx` |
 | Generated dataset, query measurements, failover demo | `scripts/seed.ts`, `scripts/explain.ts`, `scripts/failover.ts` (run with `tsx`, against `horizon_perf`); results in `docs/nosql/` |
 | Tests that need MongoDB | `*.db.test.ts`, run by `npm run test:db` (`vitest.db.config.mts`) against `horizon_test`; `npm test` skips them |
+| CI and dependency updates | `.github/workflows/ci.yml` (checks, database tests, gitleaks, Semgrep), `.github/dependabot.yml` |
+| Security measures, and what to do in an incident | `docs/security/MEASURES.md`, `docs/security/RUNBOOK.md`, `SECURITY.md` |
 | Threats and how each is handled | `docs/security/THREAT_MODEL.md`: update it when adding a route, a data store or a third party |
 | What each step teaches (for the exams) | `docs/LEARNING_LOG.md`: add an entry with every step of `MODULES_PLAN.md` |
 

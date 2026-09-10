@@ -1,11 +1,12 @@
 # Horizon threat model
 
-**Version 1.7, 2026-09-10** (1.1 added the local database from 0.17.1; 1.2 marks
+**Version 1.8, 2026-09-10** (1.1 added the local database from 0.17.1; 1.2 marks
 sign-in with Google, from 0.18.0, as built, and adds S6; 1.3 updates T8 for the
 0.18.1 dependency upgrade; 1.4 marks sync, from 0.19.0, as built;
 1.5 adds rate limiting and the local-route fixes from 0.19.1;
 1.6 adds the read-only search and stats routes from 0.20.0;
-1.7 adds account deletion from 0.21.0 and T10). Models Horizon v0.21.0 *and* the planned sign-in
+1.7 adds account deletion from 0.21.0 and T10;
+1.8 marks the 0.21.1 development life cycle measures). Models Horizon v0.21.1 *and* the planned sign-in
 with Google plus MongoDB sync (`MODULES_PLAN.md`, Step 4), so that
 security is designed in before the server is built. Parts that don't exist yet
 are marked **planned**. Revisit after Step 4 ships, and whenever a route, a
@@ -259,8 +260,8 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 | T5 | Traffic between the browser and Vercel changed in transit | F2, F4 | 1 | 3 | Medium | HTTPS only: plain HTTP gets a 308 redirect to HTTPS, and HSTS (`max-age=63072000`, two years) keeps browsers on HTTPS | Implemented (Vercel; checked live 2026-09-10) |
 | T6 | Traffic between Vercel and Atlas changed in transit | F5 | 1 | 3 | Medium | Atlas only accepts TLS connections | Planned (4a) |
 | T7 | A crafted backup file restored through Settings | B, IDB | 1 | 2 | Low | Its shape is checked before restore (`lib/import.ts`), the user confirms first, and content is shown through the escaping markdown renderer. Gap: note contents aren't checked to be strings | Implemented (0.19.1: every note must be a string under an id of `[A-Za-z0-9_-]`, or the restore is refused; tested) |
-| T8 | A compromised npm package runs during the build or in users' browsers | CI, B, A | 2 | 3 | High | Few dependencies (9 at runtime), exact versions pinned in `package-lock.json`. `npm ci` and `npm audit` in CI, and Dependabot alerts. The CSP limits where injected code can send data (but see I3) | Lockfile Implemented; `npm audit` clean since 0.18.1 (Next 16.2.7 → 16.3.4); npm blocks dependencies' install scripts unless allowed; CI audit and Dependabot Planned (Step 6) |
-| T9 | Someone who gets into the GitHub or Vercel account pushes malicious code, which deploys automatically | F11, CI | 1 | 3 | Medium | Two-factor authentication on GitHub and Vercel. A ruleset on `main`: pull request and passing CI required, no force pushes | Planned (Step 6) |
+| T8 | A compromised npm package runs during the build or in users' browsers | CI, B, A | 2 | 3 | High | Few dependencies (9 at runtime), exact versions pinned in `package-lock.json`. `npm ci` and `npm audit` in CI, and Dependabot alerts. The CSP limits where injected code can send data (but see I3) | Implemented (0.21.1: CI runs `npm audit --audit-level=high` and `npm audit signatures` on every push; Dependabot configured for npm, Actions and the mongo image; Semgrep SAST in CI; actions pinned by SHA and scanner images by digest; a lockfile and `npm ci`; npm blocks install scripts; audit clean since 0.18.1) |
+| T9 | Someone who gets into the GitHub or Vercel account pushes malicious code, which deploys automatically | F11, CI | 1 | 3 | Medium | Two-factor authentication on GitHub and Vercel. A ruleset on `main`: pull request and passing CI required, no force pushes | CI on every push (0.21.1): types, lint, tests, build and database tests. A ruleset on `main` requiring it, and 2FA on every account: owner's actions (RUNBOOK §1; the ruleset needs GitHub Pro, active from about 2026-09-13) |
 | T10 | A stolen session is used to delete the account and everything it stored on the server | F4, A, DB | 1 | 2 | Low | The session is hard to steal (S3: HttpOnly, Secure, SameSite, server-side revocation), deletion needs a same-origin request, and every device keeps a full copy, so the data can be synced into a new account. Asking for a fresh Google sign-in just before deleting (*step-up authentication*) would close it | Accepted (0.21.0); step-up authentication is the option if the risk changes |
 
 ### Repudiation: denying an action, with no way to prove it
@@ -268,7 +269,7 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 | ID | Threat | Where | L | I | Risk | Mitigation | Status |
 |---|---|---|---|---|---|---|---|
 | R1 | No record of which session changed or deleted data ("I never deleted that track") | A, DB | 2 | 1 | Low | An `auditLog` of sync writes (user, time, action, counts), deleted after about 90 days by a TTL index. Its limit: whoever runs the database could edit it. Proof that holds even against the operator would need digital signatures | Implemented (0.19.0: `auditLog`, one entry per sync that changed something, 90-day TTL). The limit stands: whoever runs the database could edit it. Deleting an account also deletes its audit entries: the right to erasure outweighs the record; the server log keeps only the counts deleted |
-| R2 | Failed sign-ins and rate-limit hits go unrecorded, so an attack can't be noticed or reconstructed | A | 2 | 2 | Medium | Log auth failures and rate-limit hits (never tokens) and alert on spikes | Sign-in rejections logged by reason code (0.18.0); the first refusal per client per window logged by bucket, without the address (0.19.1); alerts Planned (Step 6) |
+| R2 | Failed sign-ins and rate-limit hits go unrecorded, so an attack can't be noticed or reconstructed | A | 2 | 2 | Medium | Log auth failures and rate-limit hits (never tokens) and alert on spikes | Sign-in rejections logged by reason code (0.18.0); the first rate-limit refusal per window logged by bucket, without the address (0.19.1); alerting on spikes needs the deployed platform's log tooling (Step 6, at deployment) |
 
 ### Information disclosure: data reaching someone who shouldn't see it
 
@@ -280,7 +281,7 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 | I4 | Error messages reveal internals: `/api/git` and `/api/notes` return the raw `error.message`, and `/api/git`'s 403 names the home directory | D | 1 | 1 | Low | Generic messages to the client, details only in server logs. New routes do this from the start | Implemented (0.19.1: `/api/git` and `/api/notes` return generic messages and log details server-side; the 403 no longer names the home directory; tested) |
 | I5 | `/api/git` checks whether a path exists *before* applying the `~/Documents` restriction, so a 404 vs a 403 reveals whether any path on the computer exists | D, H | 1 | 1 | Low | Check the path against `~/Documents` first, then whether it exists, then its real path (to catch symlinks) | Implemented (0.19.1: the `~/Documents` check runs on the path as written before any existence check, and again after following symlinks; tested) |
 | I6 | Tokens or cookies written to logs | A | 2 | 3 | High | Never log request bodies or headers on the auth and sync routes | Implemented (sign-in 0.18.0, sync 0.19.0: generic errors; logs carry reason codes or error names only) |
-| I7 | The database password leaks: committed to git, or pasted somewhere | ENV, CI | 2 | 3 | High | `.env*` files are git-ignored. Secrets live only in Vercel's environment variables and `.env.local`; only `.env.example`, with placeholders, is committed. Scan the git history with gitleaks and rotate anything found | `.gitignore` Implemented; rest Planned (4a, Step 6) |
+| I7 | The database password leaks: committed to git, or pasted somewhere | ENV, CI | 2 | 3 | High | `.env*` files are git-ignored. Secrets live only in Vercel's environment variables and `.env.local`; only `.env.example`, with placeholders, is committed. Scan the git history with gitleaks and rotate anything found | Implemented (`.gitignore`; per-machine secrets in mode-600 files; gitleaks over the whole history found nothing, 149 commits, 2026-09-10, and runs on every push since 0.21.1; rotation steps in RUNBOOK §3). Atlas credentials go in Vercel only (4a, at deployment) |
 | I8 | Anyone on the internet can try to connect to the Atlas cluster. The free tier has no private networking and Vercel's outgoing IP addresses change, so the access list has to allow `0.0.0.0/0` | DB | 1 | 3 | Medium | A long random password, TLS, a database user limited to `readWrite` on one database, and separate users for production and preview | Network exposure Accepted; the rest Planned (4a) |
 | I9 | A copy of the database leaks: an Atlas breach, or a stray `mongodump` file | DB | 1 | 3 | Medium | Atlas encrypts storage at rest. Sessions are stored only as hashes, and there are no passwords to steal, because Google handles sign-in. Dumps stay out of the repo | Planned (4a, Step 6) |
 | I10 | Someone with physical access to a computer reads browser data, tokens and `.env.local` | Disk | 1 | 2 | Low | Development desktop: the Linux disk isn't encrypted (checked 2026-09-10). The laptop used for the exam demo needs full-disk encryption and a screen lock | Desktop Accepted; laptop Open |
@@ -295,7 +296,7 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 | D1 | Huge sync bodies exhaust the server's memory or the free tier's 512 MB | F4, A, DB | 2 | 2 | Medium | Reject bodies over a size limit before parsing them (real data is about 28 KB), and cap array lengths in the schemas | Implemented (sign-in 8 KB, sync 2 MB, plus per-field and per-array caps in the schemas; tested) |
 | D2 | Floods of requests against sign-in and sync: brute force, or using up Atlas's 100 operations per second | A | 2 | 2 | Medium | Rate limits per IP and per user, counted in MongoDB (a fixed window, cleaned up by a TTL index). Vercel's platform-level DDoS protection | Implemented (0.19.1: fixed-window counters in MongoDB with an atomic `$inc` and a TTL index: sign-in 10/min per address, session 60/min per address, sync 30/min and search/stats 120/min per account; 429 with Retry-After; addresses stored only as hashes; tested, including a burst of 20 simultaneous requests). Unauthenticated floods still cost one indexed session lookup each; Vercel's platform DDoS protection sits in front |
 | D3 | Atlas unavailable: the free cluster pauses after 30 days without connections, or hits its throughput limit | DB | 2 | 1 | Low | Horizon is offline-first: every device keeps a full copy in IndexedDB and keeps working. Only syncing fails until the database is back | Accepted (by design) |
-| D4 | Data loss: the Atlas free tier has no backups | DB | 1 | 3 | Medium | Every device holds a full copy, the .zip export exists, and a scheduled `mongodump` | Planned (Step 6) |
+| D4 | Data loss: the Atlas free tier has no backups | DB | 1 | 3 | Medium | Every device holds a full copy, the .zip export exists, and a scheduled `mongodump` | Implemented (0.21.1: `npm run db:backup` with `mongodump`, private folder, 14 kept; restore tested with 587,578 documents matching). Scheduling it against Atlas comes with deployment |
 | D5 | One database server fails | DB | 2 | 2 | Medium | A replica set of three members: the others elect a new primary, and retryable writes carry the app through | Planned (4a; demonstrated in Step 5) |
 
 ### Elevation of privilege: doing more than you're allowed to
@@ -364,10 +365,10 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 - [x] Check note contents are strings when restoring a backup (T7)
 
 **Plan step 6** (secure development and operations):
-- [ ] CI with `npm audit`, Dependabot alerts (T8)
+- [x] CI with `npm audit` and signatures, Dependabot, Semgrep (T8), 0.21.1
 - [ ] Two-factor authentication on GitHub and Vercel; a ruleset on `main` (T9, E7)
-- [ ] gitleaks scan of the history (I7)
-- [ ] Scheduled `mongodump` (D4)
+- [x] gitleaks scan of the history, and on every push (I7), 0.21.1
+- [x] `mongodump` backups with a tested restore (D4), 0.21.1; scheduling against Atlas at deployment
 - [ ] Logging and alerts for auth failures (R2)
 
 **For the owner:**
