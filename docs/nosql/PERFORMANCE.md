@@ -16,11 +16,11 @@ The number that matters most is **documents examined** compared with **returned*
 
 | Run | Plan | Index keys examined | Documents examined | Returned | Median time |
 |---|---|---|---|---|---|
-| A month, no index (collection scan) | `COLLSCAN` | 0 | 572,152 | 27 | 206.1 ms |
+| A month, no index (collection scan) | `COLLSCAN` | 0 | 572,152 | 27 | 189.0 ms |
 | A month, index `{date, userId, trackId}` (range first) | `IXSCAN date_first → FETCH` | 117 | 27 | 27 | 0.7 ms |
 | A month, index `{userId, trackId, date}` (the app's) | `IXSCAN user_track_date → FETCH` | 27 | 27 | 27 | 0.6 ms |
-| A year, index `{date, userId, trackId}` (range first) | `IXSCAN date_first → FETCH` | 1,421 | 336 | 336 | 5.5 ms |
-| A year, index `{userId, trackId, date}` (the app's) | `IXSCAN user_track_date → FETCH` | 336 | 336 | 336 | 3.8 ms |
+| A year, index `{date, userId, trackId}` (range first) | `IXSCAN date_first → FETCH` | 1,421 | 336 | 336 | 5.4 ms |
+| A year, index `{userId, trackId, date}` (the app's) | `IXSCAN user_track_date → FETCH` | 336 | 336 | 336 | 3.7 ms |
 
 The **ESR rule** in action: in a compound index, **E**quality fields go first, then **S**ort, then
 **R**ange. With `date` first, the index is ordered by day, so this track's entries are scattered: one
@@ -34,7 +34,7 @@ contiguous stretch of the index, and MongoDB reads exactly the keys it returns.
 
 | Run | Plan | Index keys examined | Documents examined | Returned | Median time |
 |---|---|---|---|---|---|
-| No index (collection scan) | `COLLSCAN` | 0 | 572,152 | 998 | 203.1 ms |
+| No index (collection scan) | `COLLSCAN` | 0 | 572,152 | 998 | 177.7 ms |
 | Prefix of `{userId, trackId, date}` | `IXSCAN user_track_date → FETCH` | 998 | 998 | 998 | 5.6 ms |
 
 No separate `{userId}` index is needed: a compound index serves any query on a *prefix* of its fields.
@@ -43,7 +43,7 @@ No separate `{userId}` index is needed: a compound index serves any query on a *
 
 | Run | Plan | Index keys examined | Documents examined | Returned | Median time |
 |---|---|---|---|---|---|
-| Regex, no index (collection scan) | `COLLSCAN` | 0 | 3,450 | 1 | 17.8 ms |
+| Regex, no index (collection scan) | `COLLSCAN` | 0 | 3,450 | 1 | 18.0 ms |
 | Regex, `{userId, trackId}` index | `IXSCAN user_track → FETCH` | 3 | 3 | 1 | 0.4 ms |
 | `$text`, compound text index (the app's) | `IXSCAN user_track_text → FETCH → TEXT_MATCH user_track_text` | 1 | 1 | 1 | 0.4 ms |
 
@@ -55,10 +55,10 @@ A regex can do neither, and a leading-wildcard regex can't use an ordinary index
 
 | Run | Plan | Index keys examined | Documents examined | Returned | Median time |
 |---|---|---|---|---|---|
-| `byMonth`, no index (collection scan) | `COLLSCAN → PROJECTION_DEFAULT` | 0 | 572,152 | 998 | 203.5 ms |
-| `byMonth`, with the index | `IXSCAN user_track_date → FETCH → PROJECTION_DEFAULT` | 998 | 998 | 998 | 5.4 ms |
-| `longestStreaks`, no index (collection scan) | `COLLSCAN → PROJECTION_DEFAULT` | 0 | 572,152 | 998 | 206.9 ms |
-| `longestStreaks`, with the index | `IXSCAN user_track_date → FETCH → PROJECTION_DEFAULT` | 998 | 998 | 998 | 7.3 ms |
+| `byMonth`, no index (collection scan) | `COLLSCAN → PROJECTION_DEFAULT` | 0 | 572,152 | 998 | 179.6 ms |
+| `byMonth`, with the index | `IXSCAN user_track_date → FETCH → PROJECTION_DEFAULT` | 998 | 998 | 998 | 5.8 ms |
+| `longestStreaks`, no index (collection scan) | `COLLSCAN → PROJECTION_DEFAULT` | 0 | 572,152 | 998 | 186.8 ms |
+| `longestStreaks`, with the index | `IXSCAN user_track_date → FETCH → PROJECTION_DEFAULT` | 998 | 998 | 998 | 7.5 ms |
 
 Each pipeline starts with `$match: { userId }`, so the index hands it only this user's days; the
 `$group`, `$setWindowFields` and `$lookup` stages then work on a few hundred documents instead

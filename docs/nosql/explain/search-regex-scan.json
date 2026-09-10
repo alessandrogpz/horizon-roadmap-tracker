@@ -139,7 +139,7 @@
         ]
       },
       "nReturned": 1,
-      "executionTimeMillisEstimate": 12,
+      "executionTimeMillisEstimate": 14,
       "works": 3451,
       "advanced": 1,
       "needTime": 3449,
@@ -189,8 +189,8 @@
     "$db": "horizon_perf"
   },
   "serverInfo": {
-    "host": "CachyOSM2",
-    "port": 27018,
+    "host": "localhost",
+    "port": 27017,
     "version": "8.0.30",
     "gitVersion": "360770fbc9b6a893748150d2ab2799e119b9fac9"
   },
@@ -209,10 +209,10 @@
   "ok": 1,
   "$clusterTime": {
     "clusterTime": {
-      "$timestamp": "7683977009743003649"
+      "$timestamp": "7683979191586390017"
     },
     "signature": {
-      "hash": "ZDRcvKIqkKIMTgVCqjBZwPplE4A=",
+      "hash": "U9eb0Y6TbZpaHpfeTJtKzfRrkYY=",
       "keyId": {
         "high": 1789047850,
         "low": 6,
@@ -221,6 +221,6 @@
     }
   },
   "operationTime": {
-    "$timestamp": "7683977009743003649"
+    "$timestamp": "7683979191586390017"
   }
 }

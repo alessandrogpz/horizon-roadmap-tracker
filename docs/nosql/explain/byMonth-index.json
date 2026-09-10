@@ -112,14 +112,14 @@
         "executionStats": {
           "executionSuccess": true,
           "nReturned": 998,
-          "executionTimeMillis": 6,
+          "executionTimeMillis": 5,
           "totalKeysExamined": 998,
           "totalDocsExamined": 998,
           "executionStages": {
             "isCached": false,
             "stage": "PROJECTION_DEFAULT",
             "nReturned": 998,
-            "executionTimeMillisEstimate": 0,
+            "executionTimeMillisEstimate": 2,
             "works": 999,
             "advanced": 998,
             "needTime": 0,
@@ -239,7 +239,7 @@
         }
       },
       "nReturned": 998,
-      "executionTimeMillisEstimate": 6
+      "executionTimeMillisEstimate": 5
     },
     {
       "$group": {
@@ -270,7 +270,7 @@
       "numBytesSpilledEstimate": 0,
       "spilledRecords": 0,
       "nReturned": 365,
-      "executionTimeMillisEstimate": 6
+      "executionTimeMillisEstimate": 5
     },
     {
       "$group": {
@@ -324,7 +324,7 @@
       "numBytesSpilledEstimate": 0,
       "spilledRecords": 0,
       "nReturned": 13,
-      "executionTimeMillisEstimate": 6
+      "executionTimeMillisEstimate": 5
     },
     {
       "$sort": {
@@ -338,7 +338,7 @@
       "spills": 0,
       "spilledDataStorageSize": 0,
       "nReturned": 12,
-      "executionTimeMillisEstimate": 6
+      "executionTimeMillisEstimate": 5
     },
     {
       "$sort": {
@@ -351,13 +351,13 @@
       "spills": 0,
       "spilledDataStorageSize": 0,
       "nReturned": 12,
-      "executionTimeMillisEstimate": 6
+      "executionTimeMillisEstimate": 5
     }
   ],
   "queryShapeHash": "DE1CBD24C89EC74702158806B21D7F20F1A8EEF0923D0A9C3A5D54C19B1D0AE0",
   "serverInfo": {
-    "host": "CachyOSM2",
-    "port": 27018,
+    "host": "localhost",
+    "port": 27017,
     "version": "8.0.30",
     "gitVersion": "360770fbc9b6a893748150d2ab2799e119b9fac9"
   },
@@ -489,10 +489,10 @@
   "ok": 1,
   "$clusterTime": {
     "clusterTime": {
-      "$timestamp": "7683977009743003649"
+      "$timestamp": "7683979191586390017"
     },
     "signature": {
-      "hash": "ZDRcvKIqkKIMTgVCqjBZwPplE4A=",
+      "hash": "U9eb0Y6TbZpaHpfeTJtKzfRrkYY=",
       "keyId": {
         "high": 1789047850,
         "low": 6,
@@ -501,6 +501,6 @@
     }
   },
   "operationTime": {
-    "$timestamp": "7683977009743003649"
+    "$timestamp": "7683979191586390017"
   }
 }

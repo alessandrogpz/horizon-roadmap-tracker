@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { UserRound } from "lucide-react";
-import { accountStore, AccountsUnavailableError, fetchAccount, googleClientId, signIn, signOut } from "@/lib/account";
+import { accountStore, AccountsUnavailableError, deleteAccount, fetchAccount, googleClientId, signIn, signOut } from "@/lib/account";
 import { getGoogleAccountsId } from "@/lib/googleSignIn";
 import { loadGoogleGisScript } from "@/lib/googleDrive";
 import { resolvedTheme } from "@/lib/theme";
@@ -28,6 +28,8 @@ export default function AccountRow() {
   const [unavailable, setUnavailable] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleted, setDeleted] = useState(false);
   const buttonRef = useRef<HTMLDivElement>(null);
 
   // Ask afresh each time Settings opens: the session may have ended elsewhere.
@@ -104,16 +106,32 @@ export default function AccountRow() {
     }
   };
 
+  const handleDelete = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      await deleteAccount();
+      getGoogleAccountsId()?.disableAutoSelect();
+      setConfirmDelete(false);
+      setDeleted(true);
+      accountStore.set(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't delete the account.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const hint = unavailable
     ? "Accounts aren't available on this server right now."
     : account
       ? `Signed in as ${account.name || account.email} (${account.email}). The sync button at the top syncs through this account; your data stays on this device too.`
       : account === null
-        ? "Sign in with Google to sync your tracks and notes through your own Horizon account. Signed out, Cloud sync below works through Drive as before."
+        ? `${deleted ? "Your account and everything it stored on the server are deleted; this device keeps its own copy. " : ""}Sign in with Google to sync your tracks and notes through your own Horizon account. Signed out, Cloud sync below works through Drive as before.`
         : "Checking…";
 
   return (
-    <div className="flex flex-col gap-2 border-b border-card-border py-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+    <div className="flex flex-col gap-2 border-b border-card-border py-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-x-6 sm:gap-y-3">
       <div className="flex gap-2.5">
         <span className="mt-0.5 text-muted-foreground">
           <UserRound size={16} strokeWidth={2} />
@@ -127,11 +145,43 @@ export default function AccountRow() {
       <div className="flex shrink-0 items-center gap-2">
         {signedOut && <div ref={buttonRef} aria-busy={busy} />}
         {account && (
-          <button onClick={handleSignOut} disabled={busy} className={quietButton}>
-            {busy ? "Signing out…" : "Sign out"}
-          </button>
+          <>
+            <button onClick={handleSignOut} disabled={busy} className={quietButton}>
+              {busy && !confirmDelete ? "Signing out…" : "Sign out"}
+            </button>
+            {!confirmDelete && (
+              <button
+                onClick={() => setConfirmDelete(true)}
+                disabled={busy}
+                className="cursor-pointer rounded-[var(--radius-control)] border border-red-500/30 bg-transparent px-3 py-1.5 text-[0.78rem] text-red-400 transition-colors hover:bg-red-500/10"
+              >
+                Delete account…
+              </button>
+            )}
+          </>
         )}
       </div>
+      {account && confirmDelete && (
+        <div className="flex basis-full flex-col gap-2 rounded-[var(--radius-inner)] border border-red-500/30 bg-red-500/[0.05] px-3 py-2.5 sm:order-last">
+          <span className="text-[0.78rem] leading-snug text-foreground">
+            Delete your Horizon account and everything it stores on the server: tracks, progress, notes and
+            history, from every device. This can&apos;t be undone. The data on this device stays, and the app keeps
+            working without an account.
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={handleDelete}
+              disabled={busy}
+              className="cursor-pointer rounded-[var(--radius-control)] border border-red-500/40 bg-red-500/15 px-3 py-1.5 text-[0.78rem] font-semibold text-red-400 disabled:opacity-50"
+            >
+              {busy ? "Deleting…" : "Yes, delete my account"}
+            </button>
+            <button onClick={() => setConfirmDelete(false)} disabled={busy} className={quietButton}>
+              Keep it
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

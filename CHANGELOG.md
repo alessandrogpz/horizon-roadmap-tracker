@@ -7,6 +7,19 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.21.0] - 2026-09-10
+
+### Added
+- **Delete your account**, in Settings → Account. It removes the account and
+  everything it stored on the server (tracks, progress, notes, history and
+  sessions, from every device) in one go, after you confirm. The data on this
+  device stays, and the app keeps working without an account. Signing in
+  again later starts a new, empty account.
+
+### Notes
+- The `explain()` measurements in `docs/nosql/explain/` no longer record the
+  name of the computer they ran on.
+
 ## [0.20.1] - 2026-09-10
 
 ### Added
