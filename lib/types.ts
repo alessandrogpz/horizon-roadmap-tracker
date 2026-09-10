@@ -50,6 +50,10 @@ export interface Material {
   link: string;
   localPath?: string;
   repoUrl?: string;
+  /** Off the active list, e.g. a finished book. Progress, notes and completion
+   *  history are all kept, and unarchiving restores it as it was. Absent means
+   *  active. */
+  archived?: boolean;
   /** Bumped on every local edit; drives last-write-wins merging in lib/merge.ts. */
   updatedAt?: number;
 }

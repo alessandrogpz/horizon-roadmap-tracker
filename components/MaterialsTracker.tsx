@@ -15,6 +15,7 @@ interface MaterialsTrackerProps {
   onProgressChange: (id: string, fields: Partial<Material>) => void;
   onAddMaterial: (material: Omit<Material, "id">) => void;
   onDeleteMaterial: (id: string) => void;
+  onArchiveChange: (id: string, archived: boolean) => void;
   onOpenLink: (link: string) => void;
 }
 
@@ -42,6 +43,7 @@ export default function MaterialsTracker({
   onProgressChange,
   onAddMaterial,
   onDeleteMaterial,
+  onArchiveChange,
   onOpenLink,
 }: MaterialsTrackerProps) {
   // Add / Edit form states
@@ -71,6 +73,11 @@ export default function MaterialsTracker({
 
   // Collapsed category groups
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(readCollapsedCategories()));
+  // The archived group starts folded: it's history, not today's reading list.
+  const [showArchived, setShowArchived] = useState(false);
+
+  const activeMaterials = materials.filter(mat => !mat.archived);
+  const archivedMaterials = materials.filter(mat => mat.archived);
 
   const toggleCategory = (category: string) => {
     setCollapsed(prev => {
@@ -103,9 +110,10 @@ export default function MaterialsTracker({
   // keys on this rather than on `materials`, whose identity changes on every
   // unrelated workspace edit — that made the stats re-fetch on every ticked
   // checkbox and burned the GitHub API's 60-requests/hour budget.
-  // repoUrl (injected by migration) is the primary source.
+  // repoUrl (injected by migration) is the primary source. Archived materials
+  // don't show stats, so they don't spend any of that budget either.
   const gitSourceKey = serializeGitSources(
-    materials.map(mat => ({ id: mat.id, source: mat.repoUrl || mat.localPath || "" }))
+    activeMaterials.map(mat => ({ id: mat.id, source: mat.repoUrl || mat.localPath || "" }))
   );
 
   useEffect(() => {
@@ -128,7 +136,7 @@ export default function MaterialsTracker({
   const categories = categoriesFor(materials);
   const types = MATERIAL_TYPES;
 
-  const grouped = materials.reduce((acc, mat) => {
+  const grouped = activeMaterials.reduce((acc, mat) => {
     const cat = mat.category || "Other";
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(mat);
@@ -574,6 +582,13 @@ export default function MaterialsTracker({
                         >
                           Edit
                         </button>
+                        <button
+                          onClick={() => onArchiveChange(mat.id, true)}
+                          className="bg-transparent border-none text-muted-foreground cursor-pointer text-[0.7rem] px-1 py-px font-[inherit]"
+                          title="Move to Archived. Nothing is deleted, and you can unarchive it any time."
+                        >
+                          Archive
+                        </button>
                         <span className={`text-[0.7rem] uppercase font-mono font-bold tracking-[0.05em] px-1.5 py-0.5 border rounded whitespace-nowrap ${
                           mat.status === "Completed"
                             ? "text-success border-success/20 bg-success/5"
@@ -614,6 +629,63 @@ export default function MaterialsTracker({
           </div>
           );
         })}
+
+        {archivedMaterials.length > 0 && (
+          <div>
+            <h3 className={showArchived ? "mb-3" : ""}>
+              <button
+                type="button"
+                onClick={() => setShowArchived(open => !open)}
+                aria-expanded={showArchived}
+                aria-controls="materials-group-archived"
+                className="flex w-full items-center gap-1.5 py-0.5 text-xs text-muted-foreground uppercase tracking-[0.05em] border-l-2 border-card-border pl-2 font-bold bg-transparent text-left cursor-pointer hover:text-foreground transition-colors"
+              >
+                <ChevronDown
+                  size={13}
+                  strokeWidth={3}
+                  className={`shrink-0 transition-transform duration-200 ${showArchived ? "" : "-rotate-90"}`}
+                />
+                <span>Archived</span>
+                <span className="font-mono font-normal">({archivedMaterials.length})</span>
+              </button>
+            </h3>
+            <div
+              id="materials-group-archived"
+              className={`${showArchived ? "flex" : "hidden"} flex-col border border-card-border rounded-md bg-surface-muted overflow-hidden`}
+            >
+              {archivedMaterials.map((mat, idx) => (
+                <div
+                  key={mat.id}
+                  className={`flex justify-between items-start gap-4 px-4 py-3 ${idx === archivedMaterials.length - 1 ? "" : "border-b border-card-border"}`}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-[0.9rem] text-muted-foreground">{mat.title}</div>
+                    {mat.author && (
+                      <div className="text-[0.75rem] text-muted-foreground mt-0.5">{mat.author}</div>
+                    )}
+                    <div className="text-[0.65rem] text-muted-foreground uppercase tracking-[0.05em] font-mono mt-0.5">
+                      {mat.type} · {mat.category || "Other"} · {mat.status}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => openNotes(mat.id, mat.title)}
+                      className="bg-transparent border-none text-accent cursor-pointer text-[0.7rem] px-1 py-px font-[inherit] font-medium"
+                    >
+                      Notes
+                    </button>
+                    <button
+                      onClick={() => onArchiveChange(mat.id, false)}
+                      className="bg-transparent border-none text-muted-foreground cursor-pointer text-[0.7rem] px-1 py-px font-[inherit]"
+                    >
+                      Unarchive
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Both of these are position:fixed and stay mounted (closed means
