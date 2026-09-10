@@ -24,7 +24,7 @@ This folder documents the database side, for the SE_06 NoSQL module.
 | 3 | Search every track, material, phase, roadmap and note | **Implemented** (0.20.0) | `lib/server/insights/search.ts`, Search & insights |
 | 4 | History: active days, weekday habits, months, per-track totals and longest streaks | **Implemented** (0.20.0) | `lib/server/insights/stats.ts`, Search & insights |
 | 5 | Use the app without an account, offline | **Implemented** (IndexedDB, before this module) | `lib/localDb.ts` |
-| 6 | Delete my account and all its data from the server | **Not yet implemented** | planned |
+| 6 | Delete my account and all its data from the server | **Implemented** (0.21.0) | `lib/server/account/`, Settings → Account |
 | 7 | Share a track with someone else | **Not planned** (the model keeps every user's data separate) | — |
 
 Level 1 objectives, and where each is met:
@@ -56,7 +56,7 @@ including `mongosh` and MongoDB Compass, is in the main [README](../../README.md
 |---|---|
 | `npm run db:up` / `db:down` / `db:reset` | Start / stop / wipe the local database |
 | `npm run db:shell` | `mongosh` as the app's user |
-| `npm run test:db` | Database tests: sync, search, stats, rate limits (against `horizon_test`) |
+| `npm run test:db` | Database tests: sign-in, sync, search, stats, rate limits, account deletion (against `horizon_test`) |
 | `npm run db:seed` | Generate the large dataset into `horizon_perf` (2,000 users, a year each) |
 | `npm run db:explain` | Measure the queries on it, and rewrite `PERFORMANCE.md` |
 | `npm run demo:failover` | Stop the primary mid-writes, and show nothing is lost (`-- --crash` to kill it) |

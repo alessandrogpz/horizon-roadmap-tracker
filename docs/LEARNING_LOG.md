@@ -32,6 +32,7 @@ The other documents, and what each one is for:
 8. [Rate limiting, and closing the small holes (0.19.1)](#8-rate-limiting-and-closing-the-small-holes-0191)
 9. [Search and statistics in the database (0.20.0)](#9-search-and-statistics-in-the-database-0200)
 10. [Data at scale: seeding, explain() and failover (0.20.1)](#10-data-at-scale-seeding-explain-and-failover-0201)
+11. [Deleting an account (0.21.0)](#11-deleting-an-account-0210)
 
 ---
 
@@ -688,3 +689,48 @@ Then read `docs/nosql/PERFORMANCE.md` and open any file in `docs/nosql/explain/`
 - *How would you shard this?* Hashed `userId`, and why.
 
 **Files.** `scripts/seed.ts`, `scripts/explain.ts`, `scripts/failover.ts`, `docs/nosql/`.
+
+---
+
+## 11. Deleting an account (0.21.0)
+
+**What changed.** Settings → Account → **Delete account…** deletes the account and everything it stored
+on the server: tracks, progress, notes, history and sessions, from every device. The data on the device
+stays, and the app keeps working without an account.
+
+**Why.** Under the GDPR, people have a right to have their personal data erased (article 17). It was also
+the one missing use case in the NoSQL documentation.
+
+**Concepts.**
+- **No cascading deletes in MongoDB.** A relational database with foreign keys can delete a user's rows
+  everywhere with `ON DELETE CASCADE`. MongoDB has no foreign keys, so deleting a user leaves every
+  document that points at it behind, unless the application removes them itself. Here it does, collection
+  by collection, for every one that holds a `userId`.
+- **Atomicity, again.** That cascade is one transaction. If anything fails halfway, nothing is deleted,
+  and the account is never left half-gone.
+- **Destructive actions and CSRF.** Deletion is the most damaging request the API accepts. It gets the same
+  protections as sync: same-origin only, a session, a rate limit.
+- **Step-up authentication.** Banks ask for your PIN again before a transfer, even when you're logged in.
+  Horizon could ask for a fresh Google sign-in before deleting. It doesn't yet, and the threat model
+  records why that's acceptable for now (T10): a session is hard to steal, and devices keep full copies.
+- **Erasure vs. the audit log.** Deleting the account also deletes its audit entries. Keeping them would
+  keep personal data the user asked to erase. The server log keeps only *how many* documents were
+  deleted, with no id or email.
+- **Keep the user's own copy.** Offline-first design pays off: deleting the account doesn't delete the
+  user's data from their device, so nothing is lost by accident.
+
+**See it yourself.** Sign in, sync, then Settings → Account → Delete account… → Yes. In Compass, the
+account's documents are gone from `users`, `sessions`, `tracks`, `completions`, `notes` and `auditLog`,
+and the app still shows your tracks. `npm run test:db` includes the four deletion tests.
+
+**Exam questions.**
+- *How do you implement "delete my data" without foreign keys?* An application-level cascade over every
+  collection with the user's id, inside one transaction.
+- *What stops someone else from deleting my account?* The session cookie (HttpOnly, Secure, SameSite),
+  the same-origin check, and the rate limit. A fresh sign-in first would be the next step (step-up
+  authentication).
+- *GDPR: which rights does the app support?* Erasure (this), and access/portability through the
+  .json/.zip export.
+
+**Files.** `lib/server/account/handlers.ts`, `app/api/account/route.ts`, `components/AccountRow.tsx`,
+`lib/__tests__/account.db.test.ts`.

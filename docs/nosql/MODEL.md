@@ -255,7 +255,9 @@ Within a document, the merge is last-write-wins *per item* (each tick box, each 
 material has its own timestamp), so the retried merge keeps both devices' changes.
 
 Without foreign keys, cross-collection rules are the application's job, and the transaction is what makes
-that safe.
+that safe. Deleting an account is the clearest case: MongoDB won't cascade the delete, so
+`lib/server/account/handlers.ts` removes the user's documents from every collection that holds a `userId`,
+and then the user, in one transaction. Either everything goes, or nothing does.
 
 ## 8. Schema evolution
 

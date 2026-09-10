@@ -40,6 +40,16 @@ export async function signOut(): Promise<void> {
   if (!res.ok) throw new Error("Couldn't sign out. Please try again.");
 }
 
+/** Deletes the account and everything stored for it on the server. The data
+ *  on this device stays. */
+export async function deleteAccount(): Promise<void> {
+  const res = await fetch("/api/account", { method: "DELETE" });
+  if (!res.ok) {
+    const { error } = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(error || "Couldn't delete the account. Please try again.");
+  }
+}
+
 // ── Who is signed in, shared across the app ──────────────────────────────
 // Settings' Account row and the top bar's sync button both need to know,
 // and must agree. `undefined` means not asked yet; `null`, signed out.

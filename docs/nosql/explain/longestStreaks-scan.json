@@ -87,20 +87,20 @@
         "executionStats": {
           "executionSuccess": true,
           "nReturned": 998,
-          "executionTimeMillis": 210,
+          "executionTimeMillis": 215,
           "totalKeysExamined": 0,
           "totalDocsExamined": 572152,
           "executionStages": {
             "isCached": false,
             "stage": "PROJECTION_DEFAULT",
             "nReturned": 998,
-            "executionTimeMillisEstimate": 197,
+            "executionTimeMillisEstimate": 176,
             "works": 572153,
             "advanced": 998,
             "needTime": 571154,
             "needYield": 0,
-            "saveState": 17,
-            "restoreState": 17,
+            "saveState": 16,
+            "restoreState": 16,
             "isEOF": 1,
             "transformBy": {
               "_id": true,
@@ -160,13 +160,13 @@
                 }
               },
               "nReturned": 998,
-              "executionTimeMillisEstimate": 193,
+              "executionTimeMillisEstimate": 175,
               "works": 572153,
               "advanced": 998,
               "needTime": 571154,
               "needYield": 0,
-              "saveState": 17,
-              "restoreState": 17,
+              "saveState": 16,
+              "restoreState": 16,
               "isEOF": 1,
               "direction": "forward",
               "docsExamined": 572152
@@ -175,7 +175,7 @@
         }
       },
       "nReturned": 998,
-      "executionTimeMillisEstimate": 205
+      "executionTimeMillisEstimate": 204
     },
     {
       "$match": {
@@ -184,7 +184,7 @@
         }
       },
       "nReturned": 998,
-      "executionTimeMillisEstimate": 205
+      "executionTimeMillisEstimate": 204
     },
     {
       "$sort": {
@@ -198,7 +198,7 @@
       "spills": 0,
       "spilledDataStorageSize": 0,
       "nReturned": 998,
-      "executionTimeMillisEstimate": 205
+      "executionTimeMillisEstimate": 204
     },
     {
       "$_internalSetWindowFields": {
@@ -218,7 +218,7 @@
       "maxTotalMemoryUsageBytes": 1098,
       "usedDisk": false,
       "nReturned": 998,
-      "executionTimeMillisEstimate": 205
+      "executionTimeMillisEstimate": 204
     },
     {
       "$set": {
@@ -244,7 +244,7 @@
         }
       },
       "nReturned": 998,
-      "executionTimeMillisEstimate": 205
+      "executionTimeMillisEstimate": 204
     },
     {
       "$group": {
@@ -276,7 +276,7 @@
       "numBytesSpilledEstimate": 0,
       "spilledRecords": 0,
       "nReturned": 53,
-      "executionTimeMillisEstimate": 205
+      "executionTimeMillisEstimate": 214
     },
     {
       "$sort": {
@@ -290,7 +290,7 @@
       "spills": 0,
       "spilledDataStorageSize": 0,
       "nReturned": 53,
-      "executionTimeMillisEstimate": 205
+      "executionTimeMillisEstimate": 214
     },
     {
       "$group": {
@@ -317,7 +317,7 @@
       "numBytesSpilledEstimate": 0,
       "spilledRecords": 0,
       "nReturned": 3,
-      "executionTimeMillisEstimate": 205
+      "executionTimeMillisEstimate": 214
     },
     {
       "$sort": {
@@ -330,13 +330,13 @@
       "spills": 0,
       "spilledDataStorageSize": 0,
       "nReturned": 3,
-      "executionTimeMillisEstimate": 205
+      "executionTimeMillisEstimate": 214
     }
   ],
   "queryShapeHash": "2C9928524C7E81B30AF68F8D0F5D283F19D5CFCE98F0CA4A2D71B8046BFE30A7",
   "serverInfo": {
-    "host": "CachyOSM2",
-    "port": 27018,
+    "host": "localhost",
+    "port": 27017,
     "version": "8.0.30",
     "gitVersion": "360770fbc9b6a893748150d2ab2799e119b9fac9"
   },
@@ -489,10 +489,10 @@
   "ok": 1,
   "$clusterTime": {
     "clusterTime": {
-      "$timestamp": "7683977009743003649"
+      "$timestamp": "7683979191586390017"
     },
     "signature": {
-      "hash": "ZDRcvKIqkKIMTgVCqjBZwPplE4A=",
+      "hash": "U9eb0Y6TbZpaHpfeTJtKzfRrkYY=",
       "keyId": {
         "high": 1789047850,
         "low": 6,
@@ -501,6 +501,6 @@
     }
   },
   "operationTime": {
-    "$timestamp": "7683977009743003649"
+    "$timestamp": "7683979191586390017"
   }
 }

@@ -172,6 +172,8 @@ Each pipeline starts with \`$match: { userId }\`, so the index hands it only thi
 of all ${total.toLocaleString("en")}.`);
 
   for (const [name, explain] of Object.entries(raw)) {
+    // explain() names the machine it ran on; that doesn't belong in the repo.
+    if (explain.serverInfo) explain.serverInfo.host = "localhost";
     writeFileSync(`docs/nosql/explain/${name}.json`, JSON.stringify(explain, null, 2) + "\n");
   }
 
