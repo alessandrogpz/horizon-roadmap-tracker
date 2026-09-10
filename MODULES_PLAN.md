@@ -688,9 +688,11 @@ leave them unsharded or shard on hashed `_id`.
   audit log shows both syncs; sign-out switched the header back to Drive and
   deleted the session.
 - **Follow-ups:**
-  - The header's "Unsynced" state only updates on reload, because the
-    in-memory workspace never gets `hasUnsyncedChanges`. This predates the
-    work and affects Drive sync the same way.
+  - The header's "Unsynced" state only updated on reload, because the
+    in-memory workspace never got `hasUnsyncedChanges`. **Fixed in 0.21.2:**
+    `updateWorkspace` returns the flag it decided, and
+    `WorkspaceProvider.persist` copies it onto the newest in-memory workspace
+    (flag only).
   - A notepad or to-do note whose track was dropped by `adopt` stays stored
     as an orphan, like with Drive.
 

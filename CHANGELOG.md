@@ -7,6 +7,14 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.21.2] - 2026-09-11
+
+### Fixed
+- **The top bar now says "Unsynced" as soon as you change something.** It
+  used to keep saying "Synced" until the page was reloaded: the save recorded
+  that there were changes to sync, but the screen never heard about it. This
+  affected Drive and account sync alike.
+
 ## [0.21.1] - 2026-09-10
 
 ### Security

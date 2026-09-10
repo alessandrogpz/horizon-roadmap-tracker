@@ -66,6 +66,20 @@ describe("updateWorkspace config-change detection", () => {
     expect(after.tracks[track.meta.id].configVersion).toBe(1);
   });
 
+  it("reports whether the save left unsynced changes, for the header's sync status", async () => {
+    await db.workspace.clear(); // earlier tests in this block leave the flag set
+    const track = baseTrack("track_test_unsynced_flag");
+    await createTrack(track);
+
+    const before = await fetchWorkspace();
+    const unchanged = await updateWorkspace({ ...before });
+    expect(unchanged.hasUnsyncedChanges).toBe(false);
+
+    const renamed: TrackState = { ...before.tracks[track.meta.id], meta: { ...before.tracks[track.meta.id].meta, name: "Renamed" } };
+    const edited = await updateWorkspace({ ...before, tracks: { ...before.tracks, [track.meta.id]: renamed } });
+    expect(edited.hasUnsyncedChanges).toBe(true);
+  });
+
   it("does not bump configVersion when nothing structural changed", async () => {
     const track = baseTrack("track_test_noop");
     await createTrack(track);
