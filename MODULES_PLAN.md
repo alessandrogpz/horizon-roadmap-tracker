@@ -13,9 +13,11 @@
 > yet. That's fine while the repo is private (§7 Q6). Strip those details before
 > it ever goes public.
 >
-> **Progress:** Steps 0, 1 and 3 are done, plus the local half of 4a (0.17.1).
-> Next is 4b, Google sign-in. The plan moved from `temp/` to the repo root in
-> 0.17.1.
+> **Progress:** Steps 0, 1 and 3 are done, plus the local half of 4a (0.17.1)
+> and 4b, sign-in with Google (0.18.0). 4b's last check, a real sign-in, is the
+> user's to do. Next is 4c–4f: authorization, validation, the model and sync.
+> Before that, upgrade Next to 16.3.4 (security; see Step 6). The plan moved
+> from `temp/` to the repo root in 0.17.1.
 
 ---
 
@@ -284,7 +286,7 @@ UI-only changes don't affect this plan.
 ### Step 3: Threat model (security): DONE (v1, 2026-09-10)
 
 **Written:** `docs/security/THREAT_MODEL.md`, which contains a Mermaid
-data-flow diagram with six trust boundaries, 41 STRIDE threats rated
+data-flow diagram with six trust boundaries, 42 STRIDE threats (S6 added in v1.2) rated
 likelihood × impact, a view by layer and by security goal, accepted risks, an
 action checklist and a glossary. Revisit it after Step 4.
 
@@ -446,6 +448,66 @@ to do.
   is what the exam asks about. Reconsider if Next 16 compatibility makes the
   hand-rolled path painful.
 
+*DONE in 0.18.0 (2026-09-10).* What was built:
+- **Dependencies:** `mongoose` 9, `jose` 6 and `zod` 4. `jose` was chosen over
+  `google-auth-library` for zero dependencies (threat T8) and because its steps
+  are visible in the code, which is what the exam asks about.
+- **Server, `lib/server/`:**
+  - `db.ts`: a cached Mongoose connection with `sanitizeFilter` and
+    `strictQuery: "throw"`, `maxPoolSize` 5, and a 5-second server-selection
+    timeout.
+  - `models.ts`: `users` (unique `googleSub`) and `sessions` (`_id` = SHA-256
+    of the token, TTL on `expiresAt`), both `strict: "throw"`.
+  - `auth/googleIdToken.ts`: RS256 only; `iss`, `aud`, `exp` (30 s
+    tolerance) and `email_verified`.
+  - `auth/session.ts`: 256-bit tokens, a `__Host-horizon_session` cookie that
+    is HttpOnly, Secure and SameSite=Lax, 30-day absolute expiry.
+  - `http.ts`: `isSameOrigin` (Origin plus Sec-Fetch-Site), and `readJsonBody`
+    (JSON only, size limit, strict zod schema), both reusable for sync.
+  - `auth/handlers.ts`: GET, POST and DELETE on `/api/auth/session`, with
+    generic errors. Logs carry reason codes and error names only.
+- **Browser:**
+  - `lib/account.ts` and `lib/googleSignIn.ts`, plus `components/AccountRow.tsx`
+    in Settings: Google's own button when signed out, the account and "Sign
+    out" when signed in.
+  - Shown only when `NEXT_PUBLIC_GOOGLE_CLIENT_ID` is set, so production stays
+    unchanged until it's configured at deploy time.
+  - "Delete local data" also signs out.
+- **CSP:** `style-src` adds `https://accounts.google.com/gsi/style`, and
+  `img-src` is narrowed to `'self' data: blob:` (threat I3). The existing
+  `script-src`, `connect-src` and `frame-src` entries for
+  `https://accounts.google.com` already cover GIS.
+- **Tests:**
+  - 25 unit tests: forged key, other app's `aud`, other issuer, expired,
+    unverified email, no subject, `alg: none`, HS256 keyed with the public
+    key, the same-origin check, and body limits.
+  - `npm run test:db` (`vitest.db.config.ts`, files `*.db.test.ts`, excluded
+    from `npm test`): 14 tests against the local set, as `horizon_test` on its
+    own database. They cover sign-in, reuse by `sub`, token-never-stored, an
+    expired session, the TTL index, real revocation on sign-out, 403
+    cross-site and 400 mass assignment.
+  - One test shows `{"$ne": null}` matching a user through the raw driver and
+    being refused through Mongoose.
+- **Verified live** on a production build (port 3007):
+  - Hostile requests got the right status each time: 401, 403, 415, 400 and
+    413. A forged JWT made the server fetch Google's real JWKS and fail with
+    `ERR_JWKS_NO_MATCHING_KEY`.
+  - Responses are `no-store`, and the CSP headers are as intended.
+  - The GIS button renders in Settings, with no CSP or GSI console errors.
+    The only console error was the service worker failing to register in the
+    in-app browser (`sw.js` is served 200 and allowed by the CSP).
+- **Findings for later:**
+  - Mongoose's global `sanitizeFilter` can't be switched off per query (good),
+    but it doesn't cover native-driver queries. Validate with zod before every
+    native query in 4f and 4g.
+  - The GIS button follows the browser's language (German here).
+- **Still open:**
+  - A real sign-in with the user's Google account.
+  - Rate limiting (4h).
+  - Setting `NEXT_PUBLIC_GOOGLE_CLIENT_ID` and `MONGODB_URI` in Vercel at
+    deploy time.
+  - An ID-token nonce, which is accepted as S6.
+
 **4c. Authorization.**
 - One helper (e.g. `requireUser(request)`) turns the session into a `userId`.
   Every query filters by that `userId`. Ownership never comes from the request body.
@@ -543,7 +605,11 @@ leave them unsharded or shard on hashed `_id`.
   `notes`, and simple track reads and writes.
 - The native driver (`mongoose.connection.getClient()`, or one shared
   `MongoClient`) for sync transactions and `bulkWrite`, aggregations, and text search.
-- Cache the connection across serverless invocations.
+  Mongoose's `sanitizeFilter` doesn't apply there (`lib/__tests__/auth.db.test.ts`
+  shows the difference), so every native query must use values that have
+  already passed a zod schema.
+- Cache the connection across serverless invocations: done in
+  `lib/server/db.ts` (0.18.0).
 
 **4h. Security measures this step adds** (copy them into the measures list):
 - OIDC token verification.
@@ -601,6 +667,19 @@ leave them unsharded or shard on hashed `_id`.
     threat E7.
 - CI in `.github/workflows/ci.yml`: `npm ci`, `npx tsc --noEmit`,
   `npm run lint`, `npm test`, `npm run build`, `npm audit --audit-level=high`.
+  Add `npm run db:up` plus `npm run test:db`: GitHub's Linux runners have
+  Docker, and the compose file's host networking works there.
+- **Dependency audit (2026-09-10, before 0.18.0's new packages and unchanged
+  by them):** 10 advisories.
+  - `next` 16.2.7 has a critical one (a middleware/proxy bypass with
+    Turbopack) and a Server Actions DoS; both are fixed in 16.3.4. Horizon has
+    neither middleware/proxy nor Server Actions, so neither is exploitable
+    today, but upgrade anyway, as its own patch release, before 4c.
+  - The rest are dev tooling (vitest, brace-expansion, js-yaml, nanoid) or
+    come through `next` (postcss, sharp).
+  - npm also blocks dependencies' install scripts unless allowed (it blocked
+    `sharp` and `unrs-resolver`). That's a supply-chain measure worth naming
+    under T8.
 - Secrets: commit `.env.example`; scan git history for leaked secrets (e.g.
   gitleaks) and rotate anything found.
 - Optional: signed commits (SSH signing), a digital-signature example in daily use.

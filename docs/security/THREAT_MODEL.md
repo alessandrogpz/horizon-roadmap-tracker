@@ -1,7 +1,7 @@
 # Horizon threat model
 
-**Version 1.1, 2026-09-10** (1.1 adds the local database from 0.17.1). Models
-Horizon v0.17.1 *and* the planned sign-in
+**Version 1.2, 2026-09-10** (1.1 added the local database from 0.17.1; 1.2 marks
+sign-in with Google, from 0.18.0, as built, and adds S6). Models Horizon v0.18.0 *and* the planned sign-in
 with Google plus MongoDB sync (`MODULES_PLAN.md`, Step 4), so that
 security is designed in before the server is built. Parts that don't exist yet
 are marked **planned**. Revisit after Step 4 ships, and whenever a route, a
@@ -163,7 +163,7 @@ flowchart LR
 | D | Local dev server: `/api/open`, `/api/git`, `/api/notes` (only on the user's own computer; production refuses them, checked live 2026-09-10) | Process | Exists |
 | H | The computer's operating system: `xdg-open`, `git`, files | Process | Exists |
 | L | Other devices on the same network | External | |
-| A | Horizon API on Vercel: `/api/auth/session`, `/api/sync` | Process | Planned (4b–4f) |
+| A | Horizon API on Vercel: `/api/auth/session`, `/api/sync` | Process | `/api/auth/session` exists (0.18.0, running locally); `/api/sync` Planned (4c–4f) |
 | ENV | Vercel environment variables, and `.env.local` locally: `MONGODB_URI` | Data store | Planned (4a) |
 | DB | MongoDB: Atlas in production, a three-member Docker replica set locally | Data store | Local exists (0.17.1); Atlas planned (4a) |
 | G | Google Identity: Drive authorization today, sign-in later | External | Exists |
@@ -175,9 +175,9 @@ flowchart LR
 
 | ID | From → to | What | Status |
 |---|---|---|---|
-| F1 | B → G → B | Sign in with Google; Google returns a signed ID token | Planned |
-| F2 | B → A | The ID token is posted to `/api/auth/session`; a session cookie comes back | Planned |
-| F3 | A → G | The API fetches Google's public signing keys | Planned |
+| F1 | B → G → B | Sign in with Google; Google returns a signed ID token | Exists (0.18.0) |
+| F2 | B → A | The ID token is posted to `/api/auth/session`; a session cookie comes back | Exists (0.18.0) |
+| F3 | A → G | The API fetches Google's public signing keys | Exists (0.18.0) |
 | F4 | B ↔ A | `GET` and `PUT /api/sync`, authenticated by the session cookie | Planned |
 | F5 | A ↔ DB | Queries and transactions over TLS | Planned |
 | F6 | B ↔ GD | Drive sync, with a one-hour OAuth access token | Exists |
@@ -237,18 +237,19 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 
 | ID | Threat | Where | L | I | Risk | Mitigation | Status |
 |---|---|---|---|---|---|---|---|
-| S1 | Forged ID token: an attacker builds a token that claims to be a victim's Google account | F2, A | 2 | 3 | High | Verify the token's RS256 signature against Google's published keys, and check `iss`, `exp` and `email_verified`. Identify users by `sub` (Google's permanent ID), never by email | Planned (4b) |
-| S2 | A real ID token that Google issued to another app, replayed to Horizon | F2, A | 2 | 3 | High | Check that `aud` equals Horizon's client ID | Planned (4b) |
-| S3 | A stolen session cookie used from another browser | F4, A | 2 | 3 | High | The cookie is `HttpOnly` (scripts can't read it), `Secure` (HTTPS only) and `SameSite=Lax`. Sessions expire (TTL index), and signing out deletes the session on the server, so a copied cookie stops working | Planned (4b) |
-| S4 | A guessable or reused session ID | A, DB | 1 | 3 | Medium | A 256-bit random token from `crypto`, new at every sign-in. The database stores only its SHA-256 hash, so a leaked `sessions` collection contains no usable cookies | Planned (4b) |
+| S1 | Forged ID token: an attacker builds a token that claims to be a victim's Google account | F2, A | 2 | 3 | High | Verify the token's RS256 signature against Google's published keys, and check `iss`, `exp` and `email_verified`. Identify users by `sub` (Google's permanent ID), never by email | Implemented (0.18.0: `lib/server/auth/googleIdToken.ts`, with `jose`; tested with forged, unsigned and algorithm-confusion tokens, and live against Google's keys) |
+| S2 | A real ID token that Google issued to another app, replayed to Horizon | F2, A | 2 | 3 | High | Check that `aud` equals Horizon's client ID | Implemented (0.18.0; tested) |
+| S3 | A stolen session cookie used from another browser | F4, A | 2 | 3 | High | The cookie is `HttpOnly` (scripts can't read it), `Secure` (HTTPS only) and `SameSite=Lax`. Sessions expire (TTL index), and signing out deletes the session on the server, so a copied cookie stops working | Implemented (0.18.0: `lib/server/auth/session.ts`, `__Host-` cookie; tested, including that a copied cookie stops working after sign-out) |
+| S4 | A guessable or reused session ID | A, DB | 1 | 3 | Medium | A 256-bit random token from `crypto`, new at every sign-in. The database stores only its SHA-256 hash, so a leaked `sessions` collection contains no usable cookies | Implemented (0.18.0; tested that the token appears nowhere in the database) |
 | S5 | Another site uses Horizon's client ID to pose as Horizon on Google's sign-in | G | 1 | 2 | Low | Google accepts the client ID only from its listed origins: the localhost ports and `https://horizonroadmap.com` | Implemented (Google Cloud client settings) |
+| S6 | A captured ID token replayed to Horizon within its hour, to get a session | F2, A | 1 | 3 | Medium | Tokens travel only over TLS between the browser, Google and Horizon, and are never logged (I6). The realistic way to capture one is XSS in the page (I2), which can already act as the user, so replay adds little. A nonce tied to the browser (issued by the server, echoed in the token) would close it | Accepted; the nonce is an option if the risk changes |
 
 ### Tampering: changing data or code without permission
 
 | ID | Threat | Where | L | I | Risk | Mitigation | Status |
 |---|---|---|---|---|---|---|---|
-| T1 | NoSQL operator injection: a body like `{"trackId": {"$ne": null}}` turns "find this track" into "find any track" | F4, A, DB | 2 | 3 | High | zod schemas, so a field that must be a string can't be an object. Reject keys that start with `$` or contain `.`. Never pass a request body straight into a query filter; turn on Mongoose's `sanitizeFilter` | Planned (4d) |
-| T2 | Mass assignment: the body carries `userId` or `_id` to write into someone else's data | F4, A | 2 | 3 | High | `userId` only ever comes from the session (`requireUser`). The server builds each document from the fields it allows | Planned (4c) |
+| T1 | NoSQL operator injection: a body like `{"trackId": {"$ne": null}}` turns "find this track" into "find any track" | F4, A, DB | 2 | 3 | High | zod schemas, so a field that must be a string can't be an object. Reject keys that start with `$` or contain `.`. Never pass a request body straight into a query filter; turn on Mongoose's `sanitizeFilter` | Implemented for sign-in (0.18.0: zod, plus Mongoose's `sanitizeFilter` on every Mongoose query; tested). Sync bodies Planned (4d). The native driver bypasses `sanitizeFilter`, so zod must come first there |
+| T2 | Mass assignment: the body carries `userId` or `_id` to write into someone else's data | F4, A | 2 | 3 | High | `userId` only ever comes from the session (`requireUser`). The server builds each document from the fields it allows | Implemented for sign-in (0.18.0: user fields come only from the verified token; extra keys refused; tested). Sync Planned (4c) |
 | T3 | Timestamps in the future (a wrong device clock, or a crafted body) win every last-write-wins merge forever | F4, A | 2 | 1 | Low | Validation rejects or clamps timestamps later than server time plus a small allowance, and bounds `configVersion` | Planned (4d) |
 | T4 | Lost update: two devices sync at the same moment and one silently overwrites the other | F4, A, DB | 2 | 2 | Medium | Merge on the server inside one transaction, with write concern `majority`. Add a version check if the transaction alone doesn't cover it | Planned (4f) |
 | T5 | Traffic between the browser and Vercel changed in transit | F2, F4 | 1 | 3 | Medium | HTTPS only: plain HTTP gets a 308 redirect to HTTPS, and HSTS (`max-age=63072000`, two years) keeps browsers on HTTPS | Implemented (Vercel; checked live 2026-09-10) |
@@ -262,7 +263,7 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 | ID | Threat | Where | L | I | Risk | Mitigation | Status |
 |---|---|---|---|---|---|---|---|
 | R1 | No record of which session changed or deleted data ("I never deleted that track") | A, DB | 2 | 1 | Low | An `auditLog` of sync writes (user, time, action, counts), deleted after about 90 days by a TTL index. Its limit: whoever runs the database could edit it. Proof that holds even against the operator would need digital signatures | Planned (4, optional) |
-| R2 | Failed sign-ins and rate-limit hits go unrecorded, so an attack can't be noticed or reconstructed | A | 2 | 2 | Medium | Log auth failures and rate-limit hits (never tokens) and alert on spikes | Planned (Step 6) |
+| R2 | Failed sign-ins and rate-limit hits go unrecorded, so an attack can't be noticed or reconstructed | A | 2 | 2 | Medium | Log auth failures and rate-limit hits (never tokens) and alert on spikes | Sign-in rejections logged by reason code, never the token (0.18.0); rate-limit hits and alerts Planned (4h, Step 6) |
 
 ### Information disclosure: data reaching someone who shouldn't see it
 
@@ -270,10 +271,10 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 |---|---|---|---|---|---|---|---|
 | I1 | IDOR: user A asks for a track by its id and gets user B's. Track ids are only unique per user, and every migrated legacy workspace has the same one (`track_legacy_engine_graphics`), so even a bug without an attacker would mix users' data | F4, A, DB | 3 | 3 | High | Every query filters by the session's `userId`. A unique index on `{userId, trackId}`. Tests that user A can't read or write user B's tracks, completions or notes, even with the same track id | Planned (4c) |
 | I2 | Cross-site scripting (XSS): injected script reads the Drive token, the GitHub token and everything in IndexedDB, or sends requests as the signed-in user | B, LS, IDB | 1 | 3 | Medium | React escapes what it renders. The markdown renderer escapes all HTML and allows only safe link schemes (`lib/markdown.ts`). The session cookie is `HttpOnly`. The CSP limits where data can be sent, within the limits described in I3 | Implemented |
-| I3 | The CSP's `connect-src` allowlist doesn't cover every way out. Injected script could still send data inside an image URL (`img-src https:` allows any HTTPS host), or by navigating the page away | B | 1 | 3 | Medium | Narrow `img-src` to `'self' data: blob:`; the app loads no external images today. Add Google's avatar host only if the UI shows one. No CSP rule can restrict navigation, so preventing XSS (I2) remains the real defence | Planned (4b, with the CSP changes for sign-in) |
+| I3 | The CSP's `connect-src` allowlist doesn't cover every way out. Injected script could still send data inside an image URL (`img-src https:` allows any HTTPS host), or by navigating the page away | B | 1 | 3 | Medium | Narrow `img-src` to `'self' data: blob:`; the app loads no external images today. Add Google's avatar host only if the UI shows one. No CSP rule can restrict navigation, so preventing XSS (I2) remains the real defence | Implemented (0.18.0: `img-src 'self' data: blob:`) |
 | I4 | Error messages reveal internals: `/api/git` and `/api/notes` return the raw `error.message`, and `/api/git`'s 403 names the home directory | D | 1 | 1 | Low | Generic messages to the client, details only in server logs. New routes do this from the start | Planned |
 | I5 | `/api/git` checks whether a path exists *before* applying the `~/Documents` restriction, so a 404 vs a 403 reveals whether any path on the computer exists | D, H | 1 | 1 | Low | Check the path against `~/Documents` first, then whether it exists, then its real path (to catch symlinks) | Planned |
-| I6 | Tokens or cookies written to logs | A | 2 | 3 | High | Never log request bodies or headers on the auth and sync routes | Planned (4h) |
+| I6 | Tokens or cookies written to logs | A | 2 | 3 | High | Never log request bodies or headers on the auth and sync routes | Implemented for sign-in (0.18.0: logs carry only a reason code or an error's name); sync Planned (4h) |
 | I7 | The database password leaks: committed to git, or pasted somewhere | ENV, CI | 2 | 3 | High | `.env*` files are git-ignored. Secrets live only in Vercel's environment variables and `.env.local`; only `.env.example`, with placeholders, is committed. Scan the git history with gitleaks and rotate anything found | `.gitignore` Implemented; rest Planned (4a, Step 6) |
 | I8 | Anyone on the internet can try to connect to the Atlas cluster. The free tier has no private networking and Vercel's outgoing IP addresses change, so the access list has to allow `0.0.0.0/0` | DB | 1 | 3 | Medium | A long random password, TLS, a database user limited to `readWrite` on one database, and separate users for production and preview | Network exposure Accepted; the rest Planned (4a) |
 | I9 | A copy of the database leaks: an Atlas breach, or a stray `mongodump` file | DB | 1 | 3 | Medium | Atlas encrypts storage at rest. Sessions are stored only as hashes, and there are no passwords to steal, because Google handles sign-in. Dumps stay out of the repo | Planned (4a, Step 6) |
@@ -286,7 +287,7 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 
 | ID | Threat | Where | L | I | Risk | Mitigation | Status |
 |---|---|---|---|---|---|---|---|
-| D1 | Huge sync bodies exhaust the server's memory or the free tier's 512 MB | F4, A, DB | 2 | 2 | Medium | Reject bodies over a size limit before parsing them (real data is about 28 KB), and cap array lengths in the schemas | Planned (4d) |
+| D1 | Huge sync bodies exhaust the server's memory or the free tier's 512 MB | F4, A, DB | 2 | 2 | Medium | Reject bodies over a size limit before parsing them (real data is about 28 KB), and cap array lengths in the schemas | Implemented for sign-in (0.18.0: 8 KB limit; tested live); sync Planned (4d) |
 | D2 | Floods of requests against sign-in and sync: brute force, or using up Atlas's 100 operations per second | A | 2 | 2 | Medium | Rate limits per IP and per user, counted in MongoDB (a fixed window, cleaned up by a TTL index). Vercel's platform-level DDoS protection | Planned (4h) |
 | D3 | Atlas unavailable: the free cluster pauses after 30 days without connections, or hits its throughput limit | DB | 2 | 1 | Low | Horizon is offline-first: every device keeps a full copy in IndexedDB and keeps working. Only syncing fails until the database is back | Accepted (by design) |
 | D4 | Data loss: the Atlas free tier has no backups | DB | 1 | 3 | Medium | Every device holds a full copy, the .zip export exists, and a scheduled `mongodump` | Planned (Step 6) |
@@ -311,7 +312,7 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 | Physical | A stolen or borrowed computer; an unencrypted disk | I10 |
 | Network | Who can reach what: Atlas open to the internet, the dev server on the LAN, the local database, request floods | I8, I13, E2, D2 |
 | Transport | Traffic read or changed in transit | T5, T6 |
-| Application | Sign-in, sessions, authorization, validation, XSS, CSRF, errors, logs | S1–S5, T1–T4, T7, R1–R2, I1–I6, I12, D1, E1, E3–E5 |
+| Application | Sign-in, sessions, authorization, validation, XSS, CSRF, errors, logs | S1–S6, T1–T4, T7, R1–R2, I1–I6, I12, D1, E1, E3–E5 |
 | Development and operations | Dependencies, accounts, secrets, deploys, backups | T8, T9, I7, I9, D4, E6, E7 |
 
 ## 8. By security goal
@@ -321,7 +322,7 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 | Confidentiality | Only the right people see the data | I1–I13 |
 | Integrity | Data and code change only in allowed ways | T1–T9 |
 | Availability | It works when it's needed | D1–D5 |
-| Authenticity | Everyone is who they claim to be | S1–S5 |
+| Authenticity | Everyone is who they claim to be | S1–S6 |
 | Non-repudiation | Actions can be proven afterwards | R1–R2 |
 | Authorization | Everyone does only what they're allowed to | E1–E7, I1, T2 |
 
@@ -337,13 +338,14 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 | Sync unavailable while Atlas is down (D3) | Offline-first: nothing is lost and the app keeps working |
 | Planted `.git/config` (E3) | Guarding `/api/git` wouldn't help, because the same repo runs the command through a git-aware shell prompt |
 | `docker` group membership (E6) | A single-user development machine |
+| Replay of a captured ID token (S6) | Capturing one takes XSS, which can already act as the user; a nonce would add a round trip for little gain |
 
 ## 10. Actions
 
 **Plan step 4** (sign-in and MongoDB sync):
 - [x] 4a, local: replica set with access control, a least-privilege app user, secrets per machine, `.env.example` (E5, I13)
 - [ ] 4a, Atlas: least-privilege users per environment, TLS, secrets in Vercel only (E5, T6, I7, I8)
-- [ ] 4b: token verification, hashed sessions, cookie flags, CSP entries for Google sign-in, narrower `img-src` (S1–S4, I3)
+- [x] 4b: token verification, hashed sessions, cookie flags, CSP entries for Google sign-in, narrower `img-src` (S1–S4, I3)
 - [ ] 4c: `requireUser`, plus tests that one user can't reach another's data (I1, T2)
 - [ ] 4d: zod schemas, body size limit, timestamp bounds (T1, T3, D1)
 - [ ] 4f: sync inside one transaction (T4)

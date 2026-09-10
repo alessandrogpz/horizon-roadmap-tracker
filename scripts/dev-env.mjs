@@ -1,20 +1,34 @@
-// Makes sure the local database's secrets exist, generating whatever is
-// missing. Runs before every `npm run db:up`; values already there are never
-// changed. Both files are git-ignored (.env*), and only key names are printed.
+// Makes sure local development has its settings and secrets, generating
+// whatever is missing. Runs before every `npm run db:up`; values already there
+// are never changed. Both files are git-ignored (.env*), and only key names
+// are printed.
 //
-//   .env.docker  MONGO_ROOT_PASSWORD, MONGO_APP_PASSWORD
+//   .env.docker  MONGO_ROOT_PASSWORD, MONGO_APP_PASSWORD, MONGO_TEST_PASSWORD
 //                Read only by compose.yaml's `init` service, which creates the
-//                users with them.
-//   .env.local   MONGODB_URI
-//                Read by Next.js. It holds the app user's password but never
-//                root's, so the app runs with only the access it needs.
+//                database users with them.
+//   .env.local   MONGODB_URI, MONGODB_TEST_URI, NEXT_PUBLIC_GOOGLE_CLIENT_ID
+//                Read by Next.js (and the database tests). It holds the app
+//                users' passwords but never root's, so the app runs with only
+//                the access it needs. The client ID is public and is copied
+//                from .env.example.
 
 import { randomBytes } from "node:crypto";
 import { appendFileSync, existsSync, readFileSync } from "node:fs";
 
 const DOCKER_FILE = ".env.docker";
 const APP_FILE = ".env.local";
+const EXAMPLE_FILE = ".env.example";
 const HOSTS = "localhost:27017,localhost:27018,localhost:27019";
+
+/** Each app-side database user: its password in .env.docker, its connection
+ *  string in .env.local. Must match APP_USERS in docker/mongo-init.js. */
+const USERS = [
+  { user: "horizon_app", db: "horizon", passwordKey: "MONGO_APP_PASSWORD", uriKey: "MONGODB_URI" },
+  { user: "horizon_test", db: "horizon_test", passwordKey: "MONGO_TEST_PASSWORD", uriKey: "MONGODB_TEST_URI" },
+];
+
+/** Public settings copied from .env.example when .env.local lacks them. */
+const COPIED_FROM_EXAMPLE = ["NEXT_PUBLIC_GOOGLE_CLIENT_ID"];
 
 const read = (file) => {
   const values = {};
@@ -29,43 +43,50 @@ const read = (file) => {
 /** 24 random bytes as base64url: 32 characters, safe inside a URI unescaped. */
 const secret = () => randomBytes(24).toString("base64url");
 
-const appUri = (password) =>
-  `mongodb://horizon_app:${password}@${HOSTS}/horizon?replicaSet=rs0&authSource=admin`;
+const uriFor = ({ user, db }, password) =>
+  `mongodb://${user}:${password}@${HOSTS}/${db}?replicaSet=rs0&authSource=admin`;
 
-const passwordInUri = (uri) => uri.match(/^mongodb:\/\/[^:/@]+:([^@]+)@/)?.[1];
+const passwordInUri = (uri) => uri?.match(/^mongodb:\/\/[^:/@]+:([^@]+)@/)?.[1];
 
 const docker = read(DOCKER_FILE);
 const app = read(APP_FILE);
+const example = read(EXAMPLE_FILE);
 
-// The app password lives in both files. If only the URI has it, reuse it rather
-// than inventing a second one.
-const appPassword = docker.MONGO_APP_PASSWORD || (app.MONGODB_URI && passwordInUri(app.MONGODB_URI)) || secret();
+const dockerEntries = { MONGO_ROOT_PASSWORD: docker.MONGO_ROOT_PASSWORD || secret() };
+const appEntries = {};
 
-const isLocal = app.MONGODB_URI?.includes(`@${HOSTS}/`);
-if (isLocal && passwordInUri(app.MONGODB_URI) !== appPassword) {
-  console.error(
-    `MONGODB_URI in ${APP_FILE} and MONGO_APP_PASSWORD in ${DOCKER_FILE} hold different passwords. ` +
-      "Make them match, or delete both lines to generate new ones."
-  );
-  process.exit(1);
+for (const spec of USERS) {
+  const uri = app[spec.uriKey];
+  // The password lives in both files. If only the URI has it, reuse it rather
+  // than inventing a second one.
+  const password = docker[spec.passwordKey] || passwordInUri(uri) || secret();
+  if (uri?.includes(`@${HOSTS}/`) && passwordInUri(uri) !== password) {
+    console.error(
+      `${spec.uriKey} in ${APP_FILE} and ${spec.passwordKey} in ${DOCKER_FILE} hold different passwords. ` +
+        "Make them match, or delete both lines to generate new ones."
+    );
+    process.exit(1);
+  }
+  dockerEntries[spec.passwordKey] = password;
+  appEntries[spec.uriKey] = uri || uriFor(spec, password);
+}
+
+for (const key of COPIED_FROM_EXAMPLE) {
+  if (example[key]) appEntries[key] = app[key] || example[key];
 }
 
 const append = (file, header, entries) => {
-  const missing = Object.entries(entries).filter(([key]) => !(key in read(file)));
+  const existingKeys = read(file);
+  const missing = Object.entries(entries).filter(([key]) => !(key in existingKeys));
   if (missing.length === 0) return;
   const existing = existsSync(file) ? readFileSync(file, "utf8") : "";
   const lead = existing && !existing.endsWith("\n") ? "\n" : "";
-  // Quoted, so a shell can `source` the file too: the URI's `&` would otherwise
+  // Quoted, so a shell can `source` the file too: a URI's `&` would otherwise
   // end the command. Next.js and Compose both strip the quotes.
   const lines = missing.map(([key, value]) => `${key}="${value}"`).join("\n");
   appendFileSync(file, `${lead}\n# ${header}\n${lines}\n`, { mode: 0o600 });
   console.log(`${file}: added ${missing.map(([key]) => key).join(", ")}`);
 };
 
-append(DOCKER_FILE, "Local MongoDB users (generated by scripts/dev-env.mjs)", {
-  MONGO_ROOT_PASSWORD: docker.MONGO_ROOT_PASSWORD || secret(),
-  MONGO_APP_PASSWORD: appPassword,
-});
-append(APP_FILE, "Local MongoDB, as the app user (generated by scripts/dev-env.mjs)", {
-  MONGODB_URI: app.MONGODB_URI || appUri(appPassword),
-});
+append(DOCKER_FILE, "Local MongoDB users (generated by scripts/dev-env.mjs)", dockerEntries);
+append(APP_FILE, "Local development (generated by scripts/dev-env.mjs)", appEntries);
