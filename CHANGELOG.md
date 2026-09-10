@@ -7,6 +7,16 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.21.3] - 2026-09-11
+
+### Added
+- `docs/ORAL_PREP.md`: preparing the two oral exams. A checklist for the day
+  before, the 5-minute security talk part by part, a 10-minute NoSQL demo
+  using the real app and scripts, and short answers to the likely questions.
+- `docs/DEPLOY.md`: switching accounts and sync on at horizonroadmap.com, step
+  by step (the Atlas user and network, Vercel's variables and region, the
+  release, and the checks afterwards).
+
 ## [0.21.2] - 2026-09-11
 
 ### Fixed

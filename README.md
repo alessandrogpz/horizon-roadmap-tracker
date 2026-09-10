@@ -70,7 +70,9 @@ no business logic.
 ├── docs/nosql/                   # Data model, dataset, performance, replication (SE_06)
 ├── docs/security/                # Threat model, implemented measures, operations runbook
 ├── .github/                      # CI (checks, database tests, secret scan, SAST), Dependabot
-└── docs/LEARNING_LOG.md          # What each step of the database & security work teaches
+├── docs/LEARNING_LOG.md          # What each step of the database & security work teaches
+├── docs/ORAL_PREP.md             # Exam day: the security talk, the NoSQL demo, the questions
+└── docs/DEPLOY.md                # Putting accounts and sync live (Atlas + Vercel)
 ```
 
 ### The logo
