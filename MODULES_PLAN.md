@@ -16,8 +16,9 @@
 > **Progress:** Steps 0, 1 and 3 are done, plus the local half of 4a (0.17.1)
 > and 4b, sign-in with Google (0.18.0). 4b's last check, a real sign-in, is the
 > user's to do. Next is 4c–4f: authorization, validation, the model and sync.
-> Before that, upgrade Next to 16.3.4 (security; see Step 6). The plan moved
-> from `temp/` to the repo root in 0.17.1.
+> Next was upgraded to 16.3.4 in 0.18.1 (security; see Step 6). The plan moved
+> from `temp/` to the repo root in 0.17.1. What each step teaches:
+> `docs/LEARNING_LOG.md`, updated with every step.
 
 ---
 
@@ -481,7 +482,7 @@ to do.
   - 25 unit tests: forged key, other app's `aud`, other issuer, expired,
     unverified email, no subject, `alg: none`, HS256 keyed with the public
     key, the same-origin check, and body limits.
-  - `npm run test:db` (`vitest.db.config.ts`, files `*.db.test.ts`, excluded
+  - `npm run test:db` (`vitest.db.config.mts`, files `*.db.test.ts`, excluded
     from `npm test`): 14 tests against the local set, as `horizon_test` on its
     own database. They cover sign-in, reuse by `sub`, token-never-stored, an
     expired session, the TTL index, real revocation on sign-out, 403
@@ -674,7 +675,11 @@ leave them unsharded or shard on hashed `_id`.
   - `next` 16.2.7 has a critical one (a middleware/proxy bypass with
     Turbopack) and a Server Actions DoS; both are fixed in 16.3.4. Horizon has
     neither middleware/proxy nor Server Actions, so neither is exploitable
-    today, but upgrade anyway, as its own patch release, before 4c.
+    today, but upgrade anyway, as its own patch release, before 4c. **Done in
+    0.18.1:** `next` and `eslint-config-next` 16.3.4, plus `npm audit fix`,
+    leaving 0 vulnerabilities. The new lint rule
+    `no-location-assign-relative-destination` flags two deliberate full page
+    loads, suppressed with their reasons.
   - The rest are dev tooling (vitest, brace-expansion, js-yaml, nanoid) or
     come through `next` (postcss, sharp).
   - npm also blocks dependencies' install scripts unless allowed (it blocked
