@@ -55,6 +55,14 @@ describe("parseBackup", () => {
     expect(() => parseBackup("not json at all")).toThrow(InvalidBackupError);
   });
 
+  it("rejects a note that isn't text, or whose id the app would never make (T7)", () => {
+    const withNotes = (notes: unknown) => JSON.stringify({ ...bundle(), notes });
+    expect(() => parseBackup(withNotes({ m1: { $ne: null } }))).toThrow(InvalidBackupError);
+    expect(() => parseBackup(withNotes({ m1: 42 }))).toThrow(InvalidBackupError);
+    expect(() => parseBackup(withNotes({ "../../etc/passwd": "x" }))).toThrow(InvalidBackupError);
+    expect(() => parseBackup(withNotes({ "notepad_track_1": "fine", m_2: "" }))).not.toThrow();
+  });
+
   it("rejects JSON that isn't a backup", () => {
     expect(() => parseBackup('{"hello":"world"}')).toThrow(/no workspace/i);
   });

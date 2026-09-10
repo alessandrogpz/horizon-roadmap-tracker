@@ -28,6 +28,11 @@ export async function POST(request: Request) {
     if (!link) {
       return NextResponse.json({ error: 'No link provided' }, { status: 400 });
     }
+    // A string of sane length, and not one xdg-open would read as an option
+    // such as "--help" (threat E4: argument injection).
+    if (typeof link !== 'string' || link.length > 4096 || link.trimStart().startsWith('-')) {
+      return NextResponse.json({ error: 'Invalid link' }, { status: 400 });
+    }
 
     const target = resolveHomePath(link);
 

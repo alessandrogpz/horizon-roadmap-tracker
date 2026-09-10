@@ -41,7 +41,7 @@ const sessionSchema = new Schema(
 /** One document per note: material notes, and each track's Notepad and To-do
  *  List. Written through this model (so Mongoose casts and checks every
  *  value) inside the sync transaction. The collection itself, with its
- *  $jsonSchema validator and indexes, is created by sync/collections.ts, so
+ *  $jsonSchema validator and indexes, is created by collections.ts, so
  *  Mongoose's own automatic creation is off. */
 const noteSchema = new Schema(
   {
