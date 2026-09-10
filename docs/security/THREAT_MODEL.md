@@ -1,10 +1,11 @@
 # Horizon threat model
 
-**Version 1.6, 2026-09-10** (1.1 added the local database from 0.17.1; 1.2 marks
+**Version 1.7, 2026-09-10** (1.1 added the local database from 0.17.1; 1.2 marks
 sign-in with Google, from 0.18.0, as built, and adds S6; 1.3 updates T8 for the
 0.18.1 dependency upgrade; 1.4 marks sync, from 0.19.0, as built;
 1.5 adds rate limiting and the local-route fixes from 0.19.1;
-1.6 adds the read-only search and stats routes from 0.20.0). Models Horizon v0.20.0 *and* the planned sign-in
+1.6 adds the read-only search and stats routes from 0.20.0;
+1.7 adds account deletion from 0.21.0 and T10). Models Horizon v0.21.0 *and* the planned sign-in
 with Google plus MongoDB sync (`MODULES_PLAN.md`, Step 4), so that
 security is designed in before the server is built. Parts that don't exist yet
 are marked **planned**. Revisit after Step 4 ships, and whenever a route, a
@@ -166,7 +167,7 @@ flowchart LR
 | D | Local dev server: `/api/open`, `/api/git`, `/api/notes` (only on the user's own computer; production refuses them, checked live 2026-09-10) | Process | Exists |
 | H | The computer's operating system: `xdg-open`, `git`, files | Process | Exists |
 | L | Other devices on the same network | External | |
-| A | Horizon API on Vercel: `/api/auth/session`, `/api/sync`, `/api/search`, `/api/stats` | Process | All exist and run locally (0.18.0–0.20.0); deployed with Atlas in week 5 |
+| A | Horizon API on Vercel: `/api/auth/session`, `/api/sync`, `/api/search`, `/api/stats`, `/api/account` | Process | All exist and run locally (0.18.0–0.21.0); deployed with Atlas in week 5 |
 | ENV | Vercel environment variables, and `.env.local` locally: `MONGODB_URI` | Data store | Planned (4a) |
 | DB | MongoDB: Atlas in production, a three-member Docker replica set locally | Data store | Local exists (0.17.1); Atlas planned (4a) |
 | G | Google Identity: Drive authorization today, sign-in later | External | Exists |
@@ -260,12 +261,13 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 | T7 | A crafted backup file restored through Settings | B, IDB | 1 | 2 | Low | Its shape is checked before restore (`lib/import.ts`), the user confirms first, and content is shown through the escaping markdown renderer. Gap: note contents aren't checked to be strings | Implemented (0.19.1: every note must be a string under an id of `[A-Za-z0-9_-]`, or the restore is refused; tested) |
 | T8 | A compromised npm package runs during the build or in users' browsers | CI, B, A | 2 | 3 | High | Few dependencies (9 at runtime), exact versions pinned in `package-lock.json`. `npm ci` and `npm audit` in CI, and Dependabot alerts. The CSP limits where injected code can send data (but see I3) | Lockfile Implemented; `npm audit` clean since 0.18.1 (Next 16.2.7 → 16.3.4); npm blocks dependencies' install scripts unless allowed; CI audit and Dependabot Planned (Step 6) |
 | T9 | Someone who gets into the GitHub or Vercel account pushes malicious code, which deploys automatically | F11, CI | 1 | 3 | Medium | Two-factor authentication on GitHub and Vercel. A ruleset on `main`: pull request and passing CI required, no force pushes | Planned (Step 6) |
+| T10 | A stolen session is used to delete the account and everything it stored on the server | F4, A, DB | 1 | 2 | Low | The session is hard to steal (S3: HttpOnly, Secure, SameSite, server-side revocation), deletion needs a same-origin request, and every device keeps a full copy, so the data can be synced into a new account. Asking for a fresh Google sign-in just before deleting (*step-up authentication*) would close it | Accepted (0.21.0); step-up authentication is the option if the risk changes |
 
 ### Repudiation: denying an action, with no way to prove it
 
 | ID | Threat | Where | L | I | Risk | Mitigation | Status |
 |---|---|---|---|---|---|---|---|
-| R1 | No record of which session changed or deleted data ("I never deleted that track") | A, DB | 2 | 1 | Low | An `auditLog` of sync writes (user, time, action, counts), deleted after about 90 days by a TTL index. Its limit: whoever runs the database could edit it. Proof that holds even against the operator would need digital signatures | Implemented (0.19.0: `auditLog`, one entry per sync that changed something, 90-day TTL). The limit stands: whoever runs the database could edit it |
+| R1 | No record of which session changed or deleted data ("I never deleted that track") | A, DB | 2 | 1 | Low | An `auditLog` of sync writes (user, time, action, counts), deleted after about 90 days by a TTL index. Its limit: whoever runs the database could edit it. Proof that holds even against the operator would need digital signatures | Implemented (0.19.0: `auditLog`, one entry per sync that changed something, 90-day TTL). The limit stands: whoever runs the database could edit it. Deleting an account also deletes its audit entries: the right to erasure outweighs the record; the server log keeps only the counts deleted |
 | R2 | Failed sign-ins and rate-limit hits go unrecorded, so an attack can't be noticed or reconstructed | A | 2 | 2 | Medium | Log auth failures and rate-limit hits (never tokens) and alert on spikes | Sign-in rejections logged by reason code (0.18.0); the first refusal per client per window logged by bucket, without the address (0.19.1); alerts Planned (Step 6) |
 
 ### Information disclosure: data reaching someone who shouldn't see it
@@ -323,7 +325,7 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 | Goal | Meaning | Threats |
 |---|---|---|
 | Confidentiality | Only the right people see the data | I1–I13 |
-| Integrity | Data and code change only in allowed ways | T1–T9 |
+| Integrity | Data and code change only in allowed ways | T1–T10 |
 | Availability | It works when it's needed | D1–D5 |
 | Authenticity | Everyone is who they claim to be | S1–S6 |
 | Non-repudiation | Actions can be proven afterwards | R1–R2 |
@@ -342,6 +344,7 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 | Planted `.git/config` (E3) | Guarding `/api/git` wouldn't help, because the same repo runs the command through a git-aware shell prompt |
 | `docker` group membership (E6) | A single-user development machine |
 | Replay of a captured ID token (S6) | Capturing one takes XSS, which can already act as the user; a nonce would add a round trip for little gain |
+| Account deletion without re-authentication (T10) | Needs a stolen session first, and devices keep full copies; step-up authentication stays an option |
 
 ## 10. Actions
 

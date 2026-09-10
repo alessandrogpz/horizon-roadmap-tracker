@@ -19,7 +19,7 @@
 > plus the local-route fixes (0.19.1). Step 4 is done apart from Atlas, which
 > comes with deployment. Step 5 is done: search and stats (0.20.0), and the
 > generated data, `explain()` report, failover demo and `docs/nosql/` (0.20.1).
-> Next: account deletion (a missing use case), then Step 6. The plan moved from
+> Account deletion (use case 6) shipped in 0.21.0. Next is Step 6. The plan moved from
 > `temp/` to the repo root in 0.17.1. What each step teaches:
 > `docs/LEARNING_LOG.md`, updated with every step.
 
@@ -821,6 +821,23 @@ leave them unsharded or shard on hashed `_id`.
 - **Found:** there's no way to delete an account and its server data (use
   case 6). Implement next, since it's a privacy right (GDPR erasure) and a
   good consistency example.
+
+*Account deletion DONE in 0.21.0:* `DELETE /api/account`
+(`lib/server/account/handlers.ts`).
+- Checks run in order: same origin, the session rate limit, a session.
+- One transaction runs `deleteMany({userId})` on tracks, completions,
+  notes, auditLog and sessions, then `deleteOne` on the user, and clears the
+  cookie. The server log keeps counts only.
+- UI: "Delete account…" in Settings → Account, with an inline confirmation.
+  The device's data stays.
+- `account.db.test.ts` (4): every collection is emptied for that user,
+  another user sharing the same track id is untouched, the old cookie is
+  dead, and 401/403 are refused.
+- Checked in the real app (the confirmation, then the signed-out state).
+- New threat T10 (a stolen session could delete the account), accepted;
+  step-up authentication is the option.
+- The explain JSON no longer records the machine's host name
+  (`scripts/explain.ts` replaces `serverInfo.host`).
 
 - **Generated data.** `scripts/seed.ts` creates thousands of users, each with
   1–3 tracks seeded from `lib/templates` and a year of daily completions with
