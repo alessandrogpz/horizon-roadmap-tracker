@@ -116,13 +116,24 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     setWorkspace(next);
   }, []);
 
-  const persist = useCallback(async (next: Workspace, context: string) => {
-    try {
-      await updateWorkspace(next);
-    } catch (err) {
-      console.error(`Failed to save ${context}`, err);
-    }
-  }, []);
+  const persist = useCallback(
+    async (next: Workspace, context: string) => {
+      try {
+        const { hasUnsyncedChanges } = await updateWorkspace(next);
+        // The header's sync status reads this flag from memory, but only the
+        // save decides it (it sets it when something really changed). Copy it
+        // onto the newest in-memory workspace: just the flag, so an edit made
+        // in the meantime isn't overwritten.
+        const current = workspaceRef.current;
+        if (hasUnsyncedChanges && current && !current.hasUnsyncedChanges) {
+          applyWorkspace({ ...current, hasUnsyncedChanges: true });
+        }
+      } catch (err) {
+        console.error(`Failed to save ${context}`, err);
+      }
+    },
+    [applyWorkspace]
+  );
 
   const flush = useCallback(async () => {
     if (!saveTimeoutRef.current) return;
