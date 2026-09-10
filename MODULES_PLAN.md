@@ -19,7 +19,9 @@
 > plus the local-route fixes (0.19.1). Step 4 is done apart from Atlas, which
 > comes with deployment. Step 5 is done: search and stats (0.20.0), and the
 > generated data, `explain()` report, failover demo and `docs/nosql/` (0.20.1).
-> Account deletion (use case 6) shipped in 0.21.0. Next is Step 6. The plan moved from
+> Account deletion (use case 6) shipped in 0.21.0, and Step 6's in-repo work in 0.21.1
+> (CI, Dependabot, gitleaks, Semgrep, backups, MEASURES.md, RUNBOOK.md). What's left:
+> the owner's GitHub settings (RUNBOOK §1), deployment with Atlas, and Step 7's oral prep. The plan moved from
 > `temp/` to the repo root in 0.17.1. What each step teaches:
 > `docs/LEARNING_LOG.md`, updated with every step.
 
@@ -868,6 +870,42 @@ leave them unsharded or shard on hashed `_id`.
     private repos may need paid GitHub security products. If they're not
     available, run gitleaks and Semgrep in CI instead. The assessor's access is
     threat E7.
+*In-repo work DONE in 0.21.1 (2026-09-10):*
+- **`.github/workflows/ci.yml`:** four jobs.
+  - `checks`: `npm ci`, `npm audit --audit-level=high`, `npm audit
+    signatures`, tsc, lint, test and build.
+  - `database`: `db:up` with throwaway passwords, then `test:db`.
+  - `secrets`: gitleaks v8.30.1, whole history.
+  - `sast`: Semgrep 1.176.0 with the typescript, nodejs, secrets,
+    owasp-top-ten and react packs.
+  - Hardening: `permissions: contents: read`, actions pinned by SHA
+    (checkout v7.0.1 `3d3c42e5…`, setup-node v7.0.0 `82076278…`), scanner
+    images pinned by digest, `persist-credentials: false`, and cancelled
+    runs when a newer one supersedes them.
+- **`.github/dependabot.yml`:** npm (minor and patch grouped), GitHub
+  Actions and docker-compose, all targeting `development`.
+- **Local results:** gitleaks found no leaks in 149 commits; Semgrep ran 113
+  rules on 147 files with 0 findings; `npm audit signatures` verified every
+  package (111 attestations).
+- **`scripts/backup.ts`** (`npm run db:backup`, `--uri-env` for any
+  database): `mongodump` through the mongo image, the URI passed in an
+  environment variable, `backups/` git-ignored and mode 700, files mode 600,
+  14 kept.
+  - Restore tested into `horizon_test`: 587,578 documents, counts and
+    indexes matching.
+  - Pitfall found and documented: mongorestore takes a database name in the
+    URI as its target, so a URI with one restores nothing.
+- **Docs:** `SECURITY.md`; `docs/security/MEASURES.md` (every measure with
+  its threat, file and verification); `docs/security/RUNBOOK.md` (GitHub,
+  Atlas and Vercel settings click by click, revoking sessions, rotating a
+  password, restoring, a vulnerable dependency, an outage, erasure).
+- **Can't be verified from here:** CI's first run on GitHub (no `gh`, and
+  the repo is private). The owner checks the Actions tab.
+- **Still the owner's:** the ruleset (GitHub Pro from about 2026-09-13), 2FA,
+  Dependabot alerts, secret scanning if the plan offers it, signed commits
+  (optional), and, at deployment, the Atlas users, Vercel env vars, a
+  scheduled backup and log alerts.
+
 - CI in `.github/workflows/ci.yml`: `npm ci`, `npx tsc --noEmit`,
   `npm run lint`, `npm test`, `npm run build`, `npm audit --audit-level=high`.
   Add `npm run db:up` plus `npm run test:db`: GitHub's Linux runners have
