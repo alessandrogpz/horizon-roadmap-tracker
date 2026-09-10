@@ -174,8 +174,14 @@ export const putWorkspace = async (workspace: Workspace): Promise<void> => {
 
 /** Saves a user-initiated change: runs each track's edit bookkeeping, then
  *  persists. Pass `isReset` on the workspace for system-initiated writes
- *  (the daily reset) that must not bump any configVersion. */
-export const updateWorkspace = async (newWorkspace: Workspace): Promise<{ success: true }> => {
+ *  (the daily reset) that must not bump any configVersion.
+ *
+ *  Returns whether the stored workspace now has unsynced changes: only this
+ *  save can tell (it compares with what was stored), and the header's sync
+ *  status needs to know. */
+export const updateWorkspace = async (
+  newWorkspace: Workspace
+): Promise<{ success: true; hasUnsyncedChanges: boolean }> => {
   try {
     const record = await db.workspace.get("current");
     const oldWorkspace = record?.data;
@@ -210,7 +216,7 @@ export const updateWorkspace = async (newWorkspace: Workspace): Promise<{ succes
     }
 
     await putWorkspace(finalWorkspace);
-    return { success: true };
+    return { success: true, hasUnsyncedChanges: !!finalWorkspace.hasUnsyncedChanges };
   } catch (error) {
     console.error("updateWorkspace local error:", error);
     throw error;
