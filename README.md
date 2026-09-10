@@ -58,6 +58,10 @@ no business logic.
 │   └── icon-*.png                # PWA icons, rendered from app/icon.svg
 ├── brand/                        # Logo sources & the script that renders them
 │   └── build-icons.sh            # Regenerates every PNG/ICO from the SVGs
+├── compose.yaml                  # Local MongoDB replica set (npm run db:up)
+├── docker/mongo-init.js          # Sets up the replica set and its users
+├── scripts/dev-env.mjs           # Generates the local database's secrets
+└── docs/security/                # Threat model
 ```
 
 ### The logo
@@ -85,6 +89,48 @@ To run only on your local computer:
 npm run dev
 ```
 *   **URL:** [http://localhost:3000](http://localhost:3000)
+
+### Local Database (MongoDB)
+
+Accounts and server-side sync (in progress) keep their data in MongoDB. For
+development it runs in Docker as a three-member **replica set**: three servers
+holding the same data, so if one stops, the other two elect a new primary and
+carry on. That's the same shape MongoDB Atlas runs in production.
+
+**Needs:** Docker with Compose. On Linux, add yourself to the `docker` group
+(`sudo usermod -aG docker $USER`, then log in again). On Docker Desktop (macOS,
+Windows), turn on host networking in its settings first.
+
+```bash
+npm run db:up
+```
+
+The first run generates the database passwords into `.env.docker`, which only
+the database containers read, and the app's connection string into
+`.env.local`. Both files are git-ignored and readable only by you. It then
+starts the set and creates two users: `root` for administration, and
+`horizon_app`, which can read and write the `horizon` database and nothing
+else. The app connects as `horizon_app`:
+
+```
+mongodb://horizon_app:<password>@localhost:27017,localhost:27018,localhost:27019/horizon?replicaSet=rs0&authSource=admin
+```
+
+| Command | What it does |
+|---|---|
+| `npm run db:up` | Start the database (and set it up, the first time) |
+| `npm run db:down` | Stop it, keeping the data |
+| `npm run db:reset` | Stop it and **delete all local data** |
+| `npm run db:shell` | Open `mongosh` as `horizon_app`; paste `MONGO_APP_PASSWORD` from `.env.docker` when asked |
+
+*   It listens on `127.0.0.1` only, so no other device can connect.
+*   To browse the data in a GUI, paste `MONGODB_URI` from `.env.local` into
+    [MongoDB Compass](https://www.mongodb.com/products/tools/compass).
+*   Failover: `docker compose stop mongo1` stops the primary, and the other two
+    elect a new one within seconds. `docker compose start mongo1` brings it back
+    as a secondary.
+*   How it's built: `compose.yaml` (the servers), `docker/mongo-init.js` (the
+    replica set and users), `scripts/dev-env.mjs` (the passwords).
 
 ---
 

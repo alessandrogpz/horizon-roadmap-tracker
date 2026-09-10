@@ -1,0 +1,96 @@
+# Local MongoDB for development: a three-member replica set named "rs0".
+#
+# Three members, not one, because sync needs what only a replica set offers
+# (multi-document transactions, retryable writes), and because stopping one
+# member is the failover demo: `docker compose stop mongo1`, and the other two
+# elect a new primary. Atlas runs the same three-member shape, so development
+# and production behave alike.
+#
+# Networking: the members share the host's network and listen on 127.0.0.1
+# only, ports 27017-27019. A replica set hands clients its members' addresses
+# ("localhost:2701x" here), and those must work both for the app on the host and
+# for the members talking to each other, which on the host network they do.
+# Nothing outside this computer can connect.
+#
+# Security: access control is on. Members prove they belong to the set with a
+# shared key file, generated once into its own volume by `keyfile`. Clients log
+# in as one of two users, created by `init` (see docker/mongo-init.js): `root`
+# for administration, and `horizon_app`, which can read and write the `horizon`
+# database and nothing else. scripts/dev-env.mjs generates their passwords per
+# machine into git-ignored files; none is ever committed.
+#
+# npm run db:up     start it (generates the passwords on first run)
+# npm run db:down   stop it, keeping the data
+# npm run db:reset  stop it and delete all local data, key file included
+# npm run db:shell  open mongosh as horizon_app (asks for MONGO_APP_PASSWORD)
+
+name: horizon
+
+x-member: &member
+  image: mongo:8.0
+  network_mode: host
+  depends_on:
+    keyfile:
+      condition: service_completed_successfully
+
+services:
+  keyfile:
+    image: mongo:8.0
+    volumes:
+      - keyfile:/keyfile
+    # 756 random bytes, base64-encoded: 1008 characters, inside MongoDB's limit
+    # of 1024. Made once, then kept. mongod refuses a key file that anyone else
+    # can read, so it belongs to the image's mongodb user (uid 999), mode 400.
+    entrypoint:
+      - bash
+      - -c
+      - |
+        set -e
+        if [ ! -s /keyfile/key ]; then head -c 756 /dev/urandom | base64 -w 0 > /keyfile/key; fi
+        chown 999:999 /keyfile/key
+        chmod 400 /keyfile/key
+
+  mongo1:
+    <<: *member
+    command: [mongod, --replSet, rs0, --port, "27017", --bind_ip, 127.0.0.1, --keyFile, /keyfile/key]
+    volumes:
+      - mongo1:/data/db
+      - keyfile:/keyfile:ro
+
+  mongo2:
+    <<: *member
+    command: [mongod, --replSet, rs0, --port, "27018", --bind_ip, 127.0.0.1, --keyFile, /keyfile/key]
+    volumes:
+      - mongo2:/data/db
+      - keyfile:/keyfile:ro
+
+  mongo3:
+    <<: *member
+    command: [mongod, --replSet, rs0, --port, "27019", --bind_ip, 127.0.0.1, --keyFile, /keyfile/key]
+    volumes:
+      - mongo3:/data/db
+      - keyfile:/keyfile:ro
+
+  # One-shot: initiates the set and creates the users, then exits. Runs on every
+  # `up` and changes only what's missing.
+  init:
+    image: mongo:8.0
+    network_mode: host
+    depends_on: [mongo1, mongo2, mongo3]
+    # Only this container sees the passwords. The app gets MONGODB_URI from
+    # .env.local, and never the root password.
+    env_file: .env.docker
+    volumes:
+      - ./docker/mongo-init.js:/mongo-init.js:ro
+    entrypoint:
+      - bash
+      - -c
+      - |
+        until mongosh --quiet --port 27017 --eval 'db.runCommand({ ping: 1 })' > /dev/null 2>&1; do sleep 1; done
+        exec mongosh --quiet --port 27017 /mongo-init.js
+
+volumes:
+  keyfile:
+  mongo1:
+  mongo2:
+  mongo3:
