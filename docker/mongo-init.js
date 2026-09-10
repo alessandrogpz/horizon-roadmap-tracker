@@ -12,7 +12,8 @@
 //    other databases, or drop its own. That's least privilege: a bug or an
 //    injection in the app can only reach the app's own data. `horizon_test`
 //    is the same for `npm run test:db`, which gets a database of its own so
-//    tests can wipe collections without touching development data.
+//    tests can wipe collections without touching development data, and
+//    `horizon_perf` for the generated dataset (`npm run db:seed`).
 //
 // Passwords come from .env.docker (see scripts/dev-env.mjs) and are never
 // printed.
@@ -23,6 +24,8 @@ const ROOT_USER = "root";
 const APP_USERS = [
   { user: "horizon_app", db: "horizon", passwordVar: "MONGO_APP_PASSWORD" },
   { user: "horizon_test", db: "horizon_test", passwordVar: "MONGO_TEST_PASSWORD" },
+  // For the generated dataset and its measurements (npm run db:seed, db:explain).
+  { user: "horizon_perf", db: "horizon_perf", passwordVar: "MONGO_PERF_PASSWORD" },
 ];
 
 const requireEnv = (name) => {

@@ -67,6 +67,7 @@ no business logic.
 ├── compose.yaml                  # Local MongoDB replica set (npm run db:up)
 ├── docker/mongo-init.js          # Sets up the replica set and its users
 ├── scripts/dev-env.mjs           # Generates the local database's secrets
+├── docs/nosql/                   # Data model, dataset, performance, replication (SE_06)
 ├── docs/security/                # Threat model
 └── docs/LEARNING_LOG.md          # What each step of the database & security work teaches
 ```
@@ -139,6 +140,9 @@ mongodb://horizon_app:<password>@localhost:27017,localhost:27018,localhost:27019
     as a secondary.
 *   How it's built: `compose.yaml` (the servers), `docker/mongo-init.js` (the
     replica set and users), `scripts/dev-env.mjs` (the passwords).
+*   The data model, a generated test dataset (`npm run db:seed`), measured query
+    performance (`npm run db:explain`) and a failover demo (`npm run demo:failover`):
+    see [`docs/nosql/`](docs/nosql/README.md).
 
 ---
 

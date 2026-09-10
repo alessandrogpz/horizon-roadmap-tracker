@@ -1,0 +1,192 @@
+{
+  "explainVersion": "1",
+  "queryPlanner": {
+    "namespace": "horizon_perf.tracks",
+    "parsedQuery": {
+      "$and": [
+        {
+          "userId": {
+            "$eq": "67bd1790a5ed09e050e1495d"
+          }
+        },
+        {
+          "$text": {
+            "$search": "interpretation",
+            "$language": "english",
+            "$caseSensitive": false,
+            "$diacriticSensitive": false
+          }
+        }
+      ]
+    },
+    "indexFilterSet": false,
+    "queryHash": "F2D497AE",
+    "planCacheShapeHash": "F2D497AE",
+    "planCacheKey": "E6D1600F",
+    "optimizationTimeMillis": 0,
+    "maxIndexedOrSolutionsReached": false,
+    "maxIndexedAndSolutionsReached": false,
+    "maxScansToExplodeReached": false,
+    "prunedSimilarIndexes": false,
+    "winningPlan": {
+      "isCached": false,
+      "stage": "TEXT_MATCH",
+      "indexPrefix": {
+        "userId": "67bd1790a5ed09e050e1495d"
+      },
+      "indexName": "user_track_text",
+      "parsedTextQuery": {
+        "terms": [
+          "interpret"
+        ],
+        "negatedTerms": [],
+        "phrases": [],
+        "negatedPhrases": []
+      },
+      "textIndexVersion": 3,
+      "inputStage": {
+        "stage": "FETCH",
+        "inputStage": {
+          "stage": "IXSCAN",
+          "keyPattern": {
+            "userId": 1,
+            "_fts": "text",
+            "_ftsx": 1
+          },
+          "indexName": "user_track_text",
+          "isMultiKey": true,
+          "isUnique": false,
+          "isSparse": false,
+          "isPartial": false,
+          "indexVersion": 2,
+          "direction": "backward",
+          "indexBounds": {}
+        }
+      }
+    },
+    "rejectedPlans": []
+  },
+  "executionStats": {
+    "executionSuccess": true,
+    "nReturned": 1,
+    "executionTimeMillis": 0,
+    "totalKeysExamined": 1,
+    "totalDocsExamined": 1,
+    "executionStages": {
+      "isCached": false,
+      "stage": "TEXT_MATCH",
+      "nReturned": 1,
+      "executionTimeMillisEstimate": 0,
+      "works": 2,
+      "advanced": 1,
+      "needTime": 0,
+      "needYield": 0,
+      "saveState": 0,
+      "restoreState": 0,
+      "isEOF": 1,
+      "indexPrefix": {
+        "userId": "67bd1790a5ed09e050e1495d"
+      },
+      "indexName": "user_track_text",
+      "parsedTextQuery": {
+        "terms": [
+          "interpret"
+        ],
+        "negatedTerms": [],
+        "phrases": [],
+        "negatedPhrases": []
+      },
+      "textIndexVersion": 3,
+      "docsRejected": 0,
+      "inputStage": {
+        "stage": "FETCH",
+        "nReturned": 1,
+        "executionTimeMillisEstimate": 0,
+        "works": 2,
+        "advanced": 1,
+        "needTime": 0,
+        "needYield": 0,
+        "saveState": 0,
+        "restoreState": 0,
+        "isEOF": 1,
+        "docsExamined": 1,
+        "alreadyHasObj": 0,
+        "inputStage": {
+          "stage": "IXSCAN",
+          "nReturned": 1,
+          "executionTimeMillisEstimate": 0,
+          "works": 2,
+          "advanced": 1,
+          "needTime": 0,
+          "needYield": 0,
+          "saveState": 0,
+          "restoreState": 0,
+          "isEOF": 1,
+          "keyPattern": {
+            "userId": 1,
+            "_fts": "text",
+            "_ftsx": 1
+          },
+          "indexName": "user_track_text",
+          "isMultiKey": true,
+          "isUnique": false,
+          "isSparse": false,
+          "isPartial": false,
+          "indexVersion": 2,
+          "direction": "backward",
+          "indexBounds": {},
+          "keysExamined": 1,
+          "seeks": 1,
+          "dupsTested": 1,
+          "dupsDropped": 0
+        }
+      }
+    }
+  },
+  "queryShapeHash": "6BE97E9BA322BF95C8CABF12DD42B7AD72722D40326EDAA32CD8DA290D83326A",
+  "command": {
+    "find": "tracks",
+    "filter": {
+      "userId": "67bd1790a5ed09e050e1495d",
+      "$text": {
+        "$search": "interpretation"
+      }
+    },
+    "$db": "horizon_perf"
+  },
+  "serverInfo": {
+    "host": "CachyOSM2",
+    "port": 27018,
+    "version": "8.0.30",
+    "gitVersion": "360770fbc9b6a893748150d2ab2799e119b9fac9"
+  },
+  "serverParameters": {
+    "internalQueryFacetBufferSizeBytes": 104857600,
+    "internalQueryFacetMaxOutputDocSizeBytes": 104857600,
+    "internalLookupStageIntermediateDocumentMaxSizeBytes": 104857600,
+    "internalDocumentSourceGroupMaxMemoryBytes": 104857600,
+    "internalQueryMaxBlockingSortMemoryUsageBytes": 104857600,
+    "internalQueryProhibitBlockingMergeOnMongoS": 0,
+    "internalQueryMaxAddToSetBytes": 104857600,
+    "internalDocumentSourceSetWindowFieldsMaxMemoryBytes": 104857600,
+    "internalQueryFrameworkControl": "trySbeRestricted",
+    "internalQueryPlannerIgnoreIndexWithCollationForRegex": 1
+  },
+  "ok": 1,
+  "$clusterTime": {
+    "clusterTime": {
+      "$timestamp": "7683977009743003649"
+    },
+    "signature": {
+      "hash": "ZDRcvKIqkKIMTgVCqjBZwPplE4A=",
+      "keyId": {
+        "high": 1789047850,
+        "low": 6,
+        "unsigned": false
+      }
+    }
+  },
+  "operationTime": {
+    "$timestamp": "7683977009743003649"
+  }
+}

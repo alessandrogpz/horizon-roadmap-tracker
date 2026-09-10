@@ -3,10 +3,10 @@
 // are never changed. Both files are git-ignored (.env*), and only key names
 // are printed.
 //
-//   .env.docker  MONGO_ROOT_PASSWORD, MONGO_APP_PASSWORD, MONGO_TEST_PASSWORD
+//   .env.docker  MONGO_ROOT_PASSWORD, and MONGO_{APP,TEST,PERF}_PASSWORD
 //                Read only by compose.yaml's `init` service, which creates the
 //                database users with them.
-//   .env.local   MONGODB_URI, MONGODB_TEST_URI, NEXT_PUBLIC_GOOGLE_CLIENT_ID
+//   .env.local   MONGODB_URI, MONGODB_TEST_URI, MONGODB_PERF_URI, NEXT_PUBLIC_GOOGLE_CLIENT_ID
 //                Read by Next.js (and the database tests). It holds the app
 //                users' passwords but never root's, so the app runs with only
 //                the access it needs. The client ID is public and is copied
@@ -25,6 +25,7 @@ const HOSTS = "localhost:27017,localhost:27018,localhost:27019";
 const USERS = [
   { user: "horizon_app", db: "horizon", passwordKey: "MONGO_APP_PASSWORD", uriKey: "MONGODB_URI" },
   { user: "horizon_test", db: "horizon_test", passwordKey: "MONGO_TEST_PASSWORD", uriKey: "MONGODB_TEST_URI" },
+  { user: "horizon_perf", db: "horizon_perf", passwordKey: "MONGO_PERF_PASSWORD", uriKey: "MONGODB_PERF_URI" },
 ];
 
 /** Public settings copied from .env.example when .env.local lacks them. */

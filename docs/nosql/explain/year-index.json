@@ -1,0 +1,225 @@
+{
+  "explainVersion": "1",
+  "queryPlanner": {
+    "namespace": "horizon_perf.completions",
+    "parsedQuery": {
+      "$and": [
+        {
+          "trackId": {
+            "$eq": "track_1362_0"
+          }
+        },
+        {
+          "userId": {
+            "$eq": "67bd1790a5ed09e050e1495d"
+          }
+        },
+        {
+          "date": {
+            "$lte": "2026-08-31"
+          }
+        },
+        {
+          "date": {
+            "$gte": "2025-09-01"
+          }
+        }
+      ]
+    },
+    "indexFilterSet": false,
+    "queryHash": "2D1C3C99",
+    "planCacheShapeHash": "2D1C3C99",
+    "planCacheKey": "3FC503F9",
+    "optimizationTimeMillis": 0,
+    "maxIndexedOrSolutionsReached": false,
+    "maxIndexedAndSolutionsReached": false,
+    "maxScansToExplodeReached": false,
+    "prunedSimilarIndexes": false,
+    "winningPlan": {
+      "isCached": true,
+      "stage": "FETCH",
+      "inputStage": {
+        "stage": "IXSCAN",
+        "keyPattern": {
+          "userId": 1,
+          "trackId": 1,
+          "date": 1
+        },
+        "indexName": "user_track_date",
+        "isMultiKey": false,
+        "multiKeyPaths": {
+          "userId": [],
+          "trackId": [],
+          "date": []
+        },
+        "isUnique": true,
+        "isSparse": false,
+        "isPartial": false,
+        "indexVersion": 2,
+        "direction": "forward",
+        "indexBounds": {
+          "userId": [
+            "[ObjectId('67bd1790a5ed09e050e1495d'), ObjectId('67bd1790a5ed09e050e1495d')]"
+          ],
+          "trackId": [
+            "[\"track_1362_0\", \"track_1362_0\"]"
+          ],
+          "date": [
+            "[\"2025-09-01\", \"2026-08-31\"]"
+          ]
+        }
+      }
+    },
+    "rejectedPlans": [
+      {
+        "isCached": false,
+        "stage": "FETCH",
+        "inputStage": {
+          "stage": "IXSCAN",
+          "keyPattern": {
+            "date": 1,
+            "userId": 1,
+            "trackId": 1
+          },
+          "indexName": "date_first",
+          "isMultiKey": false,
+          "multiKeyPaths": {
+            "date": [],
+            "userId": [],
+            "trackId": []
+          },
+          "isUnique": false,
+          "isSparse": false,
+          "isPartial": false,
+          "indexVersion": 2,
+          "direction": "forward",
+          "indexBounds": {
+            "date": [
+              "[\"2025-09-01\", \"2026-08-31\"]"
+            ],
+            "userId": [
+              "[ObjectId('67bd1790a5ed09e050e1495d'), ObjectId('67bd1790a5ed09e050e1495d')]"
+            ],
+            "trackId": [
+              "[\"track_1362_0\", \"track_1362_0\"]"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "executionStats": {
+    "executionSuccess": true,
+    "nReturned": 336,
+    "executionTimeMillis": 0,
+    "totalKeysExamined": 336,
+    "totalDocsExamined": 336,
+    "executionStages": {
+      "isCached": true,
+      "stage": "FETCH",
+      "nReturned": 336,
+      "executionTimeMillisEstimate": 0,
+      "works": 337,
+      "advanced": 336,
+      "needTime": 0,
+      "needYield": 0,
+      "saveState": 0,
+      "restoreState": 0,
+      "isEOF": 1,
+      "docsExamined": 336,
+      "alreadyHasObj": 0,
+      "inputStage": {
+        "stage": "IXSCAN",
+        "nReturned": 336,
+        "executionTimeMillisEstimate": 0,
+        "works": 337,
+        "advanced": 336,
+        "needTime": 0,
+        "needYield": 0,
+        "saveState": 0,
+        "restoreState": 0,
+        "isEOF": 1,
+        "keyPattern": {
+          "userId": 1,
+          "trackId": 1,
+          "date": 1
+        },
+        "indexName": "user_track_date",
+        "isMultiKey": false,
+        "multiKeyPaths": {
+          "userId": [],
+          "trackId": [],
+          "date": []
+        },
+        "isUnique": true,
+        "isSparse": false,
+        "isPartial": false,
+        "indexVersion": 2,
+        "direction": "forward",
+        "indexBounds": {
+          "userId": [
+            "[ObjectId('67bd1790a5ed09e050e1495d'), ObjectId('67bd1790a5ed09e050e1495d')]"
+          ],
+          "trackId": [
+            "[\"track_1362_0\", \"track_1362_0\"]"
+          ],
+          "date": [
+            "[\"2025-09-01\", \"2026-08-31\"]"
+          ]
+        },
+        "keysExamined": 336,
+        "seeks": 1,
+        "dupsTested": 0,
+        "dupsDropped": 0
+      }
+    }
+  },
+  "queryShapeHash": "89A75202DDD0DB01BDAACC3D2478D07385E3934EAC0015E8CD0E2BEE37CA4672",
+  "command": {
+    "find": "completions",
+    "filter": {
+      "userId": "67bd1790a5ed09e050e1495d",
+      "trackId": "track_1362_0",
+      "date": {
+        "$gte": "2025-09-01",
+        "$lte": "2026-08-31"
+      }
+    },
+    "$db": "horizon_perf"
+  },
+  "serverInfo": {
+    "host": "CachyOSM2",
+    "port": 27018,
+    "version": "8.0.30",
+    "gitVersion": "360770fbc9b6a893748150d2ab2799e119b9fac9"
+  },
+  "serverParameters": {
+    "internalQueryFacetBufferSizeBytes": 104857600,
+    "internalQueryFacetMaxOutputDocSizeBytes": 104857600,
+    "internalLookupStageIntermediateDocumentMaxSizeBytes": 104857600,
+    "internalDocumentSourceGroupMaxMemoryBytes": 104857600,
+    "internalQueryMaxBlockingSortMemoryUsageBytes": 104857600,
+    "internalQueryProhibitBlockingMergeOnMongoS": 0,
+    "internalQueryMaxAddToSetBytes": 104857600,
+    "internalDocumentSourceSetWindowFieldsMaxMemoryBytes": 104857600,
+    "internalQueryFrameworkControl": "trySbeRestricted",
+    "internalQueryPlannerIgnoreIndexWithCollationForRegex": 1
+  },
+  "ok": 1,
+  "$clusterTime": {
+    "clusterTime": {
+      "$timestamp": "7683977005448036357"
+    },
+    "signature": {
+      "hash": "GzSwovtgSTDjF2Z+8danRtLLPCg=",
+      "keyId": {
+        "high": 1789047850,
+        "low": 6,
+        "unsigned": false
+      }
+    }
+  },
+  "operationTime": {
+    "$timestamp": "7683977005448036357"
+  }
+}

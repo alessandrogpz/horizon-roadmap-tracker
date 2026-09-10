@@ -31,6 +31,7 @@ The other documents, and what each one is for:
 7. [Syncing through the account (0.19.0)](#7-syncing-through-the-account-0190)
 8. [Rate limiting, and closing the small holes (0.19.1)](#8-rate-limiting-and-closing-the-small-holes-0191)
 9. [Search and statistics in the database (0.20.0)](#9-search-and-statistics-in-the-database-0200)
+10. [Data at scale: seeding, explain() and failover (0.20.1)](#10-data-at-scale-seeding-explain-and-failover-0201)
 
 ---
 
@@ -622,3 +623,68 @@ cases the model was designed around.
 **Files.** `lib/server/insights/search.ts`, `lib/server/insights/stats.ts`,
 `lib/server/insights/handlers.ts`, `lib/server/collections.ts` (the text
 indexes), `components/InsightsModal.tsx`, `lib/__tests__/insights.db.test.ts`.
+
+---
+
+## 10. Data at scale: seeding, explain() and failover (0.20.1)
+
+**What changed.** Three scripts, and the documents they produce in `docs/nosql/`:
+- `npm run db:seed` generates 2,000 users with a year of activity: 572,152 day documents.
+- `npm run db:explain` measures the app's queries on that data, with and without their indexes.
+- `npm run demo:failover` stops the primary server in the middle of a stream of writes, and proves
+  nothing is lost.
+
+Plus `MODEL.md` (the model, with its diagram) and `RESILIENCE.md`.
+
+**Why.** A model is only as good as its behaviour on real volumes, and the exam asks for data size, how
+it was generated, performance, and replication. Numbers beat claims.
+
+**Concepts.**
+- **Reproducible test data.** A seeded random generator produces the same "random" data every run, so
+  anyone can regenerate the exact dataset behind the documented numbers. The data is shaped like real
+  habits, not uniform noise, and built by the app's own code, so it has the real model's shape and passes
+  the real validators.
+- **Compression.** 231 MB of day documents take 43 MB on disk: the storage engine (WiredTiger) compresses
+  data blocks. Many similar small documents compress well.
+- **Indexes cost space.** On the generated data the tracks' text index is almost three times the size of
+  the tracks on disk. Every index also slows writes a little, so an index must pay for itself in reads.
+- **`explain()`** shows how MongoDB will run a query (`queryPlanner`) and how it went
+  (`executionStats`). The key numbers are keys examined, documents examined, and documents returned. A
+  good plan examines about as many as it returns. `COLLSCAN` means every document was read.
+- **The results.** The app's per-user queries go from reading all 572,152 documents (about 200 ms) to
+  reading only that user's (1 to 7 ms), 30 to 350 times faster. And it stays that fast however many users
+  there are.
+- **The ESR rule.** In a compound index, put **E**quality fields first, then **S**ort, then **R**ange.
+  Measured: over a year, an index starting with `date` examined 1,421 keys to return 336; the app's
+  `{userId, trackId, date}` examined exactly 336.
+- **Failover, measured.** A graceful stop elected a new primary in 0.3 s; a crash took 10.8 s (the
+  election timeout). Neither lost a single acknowledged write, because every write asked for `majority`,
+  and the one write caught mid-crash was retried by the driver (a retryable write) and succeeded.
+- **Write concern, read concern, read preference.** When a write counts as done, which data a read may
+  see, and which server answers. Explained with the app's own choices in `RESILIENCE.md`.
+- **Sharding.** Designed, not deployed: `{userId: "hashed"}`, so every query hits one shard and users
+  spread evenly. Why not the date: every new write would land on the same "last" shard.
+
+**See it yourself.**
+```bash
+npm run db:seed
+npm run db:explain
+npm run demo:failover
+npm run demo:failover -- --crash
+```
+Then read `docs/nosql/PERFORMANCE.md` and open any file in `docs/nosql/explain/`. They're the raw
+`explain()` output; look for `"stage"` and `"totalDocsExamined"`.
+
+**Exam questions.**
+- *How much data did you test with, and how was it generated?* 2,000 users and 572,152 day documents,
+  from `scripts/seed.ts` with a fixed seed, built by the app's own templates and mapping.
+- *Show me the effect of an index.* The tables in `PERFORMANCE.md`: 572,152 documents examined without
+  it, 27 with it, for the same 27 results.
+- *What is the ESR rule?* Equality, then sort, then range, with the measured example.
+- *What happens when the primary fails?* Election by majority: 0.3 s graceful, 10.8 s crash. Retryable
+  writes and `w: majority` mean nothing acknowledged is lost. Both measured.
+- *What's the difference between `w: 1` and `w: "majority"`?* A `w: 1` write can be rolled back after
+  a failover; a majority write can't.
+- *How would you shard this?* Hashed `userId`, and why.
+
+**Files.** `scripts/seed.ts`, `scripts/explain.ts`, `scripts/failover.ts`, `docs/nosql/`.
