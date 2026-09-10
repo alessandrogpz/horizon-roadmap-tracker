@@ -6,6 +6,9 @@ import { db } from "./localDb";
 import type { TrackId, TrackState, Workspace } from "./types";
 import { CURRENT_SCHEMA_VERSION, migrateWorkspace } from "./migrations";
 import { completedItemTitle } from "./streak";
+import { visibleTracks } from "./selectors";
+import { blankTrack } from "./templates";
+import { applyDailyResetIfNeeded } from "./dailyReset";
 
 /** Stamps `now` onto `${prefix}${id}` for every id whose presence in `newIds`
  *  differs from `oldIds`, so a later per-item merge (lib/merge.ts) knows
@@ -134,7 +137,8 @@ export const applyTrackBookkeeping = (
   return { track, changed: configChanged || hasChanges };
 };
 
-/** Fresh install: an empty workspace, which app/page.tsx treats as "redirect to onboarding". */
+/** Fresh install: an empty workspace. The provider gives it a starter track on
+ *  load (see ensureStarterTrack below). */
 const buildEmptyWorkspace = (): Workspace => ({
   activeTrackId: "",
   tracks: {},
@@ -196,6 +200,15 @@ export const updateWorkspace = async (newWorkspace: Workspace): Promise<{ succes
       finalWorkspace.hasUnsyncedChanges = oldWorkspace?.hasUnsyncedChanges ?? false;
     }
 
+    // `isSynced` only ever turns on here. The first real edit sets it: from
+    // then on this device's data is worth keeping, so a Drive sync merges it
+    // instead of replacing it with the Drive copy (ensureStarterTrack has the
+    // case this protects). The caller's copy may predate that write, so it
+    // must never switch the stored flag back off.
+    if ((anyChanged && !isReset) || oldWorkspace?.isSynced) {
+      finalWorkspace.isSynced = true;
+    }
+
     await putWorkspace(finalWorkspace);
     return { success: true };
   } catch (error) {
@@ -210,13 +223,37 @@ export const createTrack = async (track: TrackState): Promise<void> => {
     ...ws,
     tracks: { ...ws.tracks, [track.meta.id]: track },
     activeTrackId: track.meta.id,
-    // A wizard-created track is real local data. Mark the workspace synced so
-    // the first Sync takes the merge path — otherwise syncWithGoogleDrive's
-    // "unsynced: overwrite local with remote" branch would discard this new
-    // track when the Drive account already holds data from another device.
-    // (ConnectExistingAccount stays correct: it syncs before any track exists,
-    // so the workspace is still unsynced there and the overwrite is intended.)
-    isSynced: ws.isSynced ?? true,
+    // A track the user asked for is real local data. Mark the workspace synced
+    // so the first Sync takes the merge path — otherwise syncWithGoogleDrive's
+    // "unsynced: overwrite local with remote" branch would discard this track
+    // when the Drive account already holds data from another device.
+    isSynced: true,
   };
   await putWorkspace(nextWorkspace);
 };
+
+/**
+ * First run, or every track archived: adds a blank track so the app opens
+ * straight onto a usable dashboard. Transactional and idempotent, so React
+ * running the load effect twice, or two open tabs, can't add two.
+ *
+ * It leaves `isSynced` as it was. On a fresh install that means unset, so if
+ * this device is then connected to a Drive that already holds tracks, the
+ * first sync replaces the untouched starter with the real data instead of
+ * merging a stray "My Track" into it. The first real edit sets `isSynced`
+ * (see updateWorkspace), so nothing the user actually wrote is ever replaced.
+ */
+export const ensureStarterTrack = async (today: string): Promise<Workspace> =>
+  db.transaction("rw", db.workspace, async () => {
+    const ws = await fetchWorkspace();
+    if (visibleTracks(ws).length > 0) return ws;
+
+    const { data: starter } = applyDailyResetIfNeeded(blankTrack("My Track", today), today);
+    const next: Workspace = {
+      ...ws,
+      tracks: { ...ws.tracks, [starter.meta.id]: starter },
+      activeTrackId: starter.meta.id,
+    };
+    await putWorkspace(next);
+    return next;
+  });

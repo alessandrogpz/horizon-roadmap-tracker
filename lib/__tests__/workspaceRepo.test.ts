@@ -1,6 +1,6 @@
 import "fake-indexeddb/auto";
-import { describe, it, expect } from "vitest";
-import { fetchWorkspace, updateWorkspace, createTrack } from "../workspaceRepo";
+import { describe, it, expect, beforeEach } from "vitest";
+import { fetchWorkspace, updateWorkspace, createTrack, ensureStarterTrack } from "../workspaceRepo";
 import { db } from "../localDb";
 import type { TrackState, Workspace } from "../types";
 
@@ -185,5 +185,61 @@ describe("legacy rotationConfig -> rotations migration", () => {
     await createTrack(track);
     const loaded = await fetchWorkspace();
     expect(loaded.tracks[track.meta.id].rotations).toBeUndefined();
+  });
+});
+
+describe("starter track", () => {
+  beforeEach(async () => {
+    await db.workspace.clear();
+  });
+
+  it("gives a fresh install one ready-to-use track, and leaves isSynced unset", async () => {
+    const ws = await ensureStarterTrack("2026-09-10");
+    const tracks = Object.values(ws.tracks);
+    expect(tracks).toHaveLength(1);
+    expect(ws.activeTrackId).toBe(tracks[0].meta.id);
+    expect(tracks[0].meta.name).toBe("My Track");
+    expect(tracks[0].lastTasksResetDate).toBe("2026-09-10"); // today's plan already laid out
+    // Unset, so a first Drive sync replaces the untouched starter instead of
+    // merging it into the tracks already in Drive.
+    expect((await fetchWorkspace()).isSynced).toBeUndefined();
+  });
+
+  it("never adds a second one, even when asked twice at once", async () => {
+    await Promise.all([ensureStarterTrack("2026-09-10"), ensureStarterTrack("2026-09-10")]);
+    expect(Object.keys((await fetchWorkspace()).tracks)).toHaveLength(1);
+  });
+
+  it("leaves a workspace that already has a visible track alone", async () => {
+    await createTrack(baseTrack("track_existing"));
+    const ws = await ensureStarterTrack("2026-09-10");
+    expect(Object.keys(ws.tracks)).toEqual(["track_existing"]);
+  });
+
+  it("adds one when every track is archived", async () => {
+    const archived = baseTrack("track_archived");
+    await createTrack({ ...archived, meta: { ...archived.meta, archived: true } });
+    const ws = await ensureStarterTrack("2026-09-10");
+    expect(Object.keys(ws.tracks)).toHaveLength(2);
+    expect(ws.tracks[ws.activeTrackId].meta.archived).toBeFalsy();
+  });
+
+  it("a daily-reset save alone doesn't set isSynced", async () => {
+    const starter = await ensureStarterTrack("2026-09-10");
+    await updateWorkspace({ ...starter, isReset: true });
+    expect((await fetchWorkspace()).isSynced).toBeUndefined();
+  });
+
+  it("the first real edit sets isSynced, and a later save from a stale copy can't unset it", async () => {
+    const starter = await ensureStarterTrack("2026-09-10");
+    const track = starter.tracks[starter.activeTrackId];
+    const renamed = { ...track, meta: { ...track.meta, name: "Renamed" } };
+    await updateWorkspace({ ...starter, tracks: { [track.meta.id]: renamed } });
+    expect((await fetchWorkspace()).isSynced).toBe(true);
+
+    // `starter` still says unset: it predates the write, like the provider's
+    // in-memory copy does. Saving it again must not carry that into storage.
+    await updateWorkspace({ ...starter, tracks: { [track.meta.id]: renamed }, isReset: true });
+    expect((await fetchWorkspace()).isSynced).toBe(true);
   });
 });

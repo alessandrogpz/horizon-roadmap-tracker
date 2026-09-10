@@ -28,7 +28,6 @@ no business logic.
 │   ├── layout.tsx                # Global HTML wrapper (with JetBrains Mono font)
 │   ├── page.tsx                  # Mounts the workspace provider + dashboard
 │   ├── roadmap/page.tsx          # Per-track markdown roadmap editor
-│   ├── onboarding/page.tsx       # New-track wizard
 │   └── manifest.ts               # PWA manifest configuration
 ├── components/
 │   ├── Dashboard.tsx             # Layout, drag-and-drop, modal orchestration

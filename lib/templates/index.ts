@@ -47,12 +47,12 @@ const EMPTY_DAY_MAP = () => ({ Mon: [], Tue: [], Wed: [], Thu: [], Fri: [], Sat:
 
 /**
  * Builds a brand-new, fully mutable TrackState from a template plus the
- * wizard's answers. `meta.templateId` is set for provenance display only —
- * no other code path may ever read it to gate what's editable.
+ * answers that personalise it. `meta.templateId` is set for provenance
+ * display only — no other code path may ever read it to gate what's editable.
  *
- * isSynced is set true immediately: a wizard-completed track has real local
- * data from the moment it's created, so today's task is actionable right
- * away instead of showing a "connect Drive first" placeholder state.
+ * isSynced is set true immediately: a new track has real local data from the
+ * moment it's created, so today's task is actionable right away instead of
+ * showing a "connect Drive first" placeholder state.
  */
 export function seedTrackFromTemplate(template: TrackTemplate, answers: SeedAnswers): TrackState {
   const trackId = generateTrackId();
@@ -108,4 +108,19 @@ export function seedTrackFromTemplate(template: TrackTemplate, answers: SeedAnsw
     panelColumns: defaultPanelColumns(),
     hiddenPanels: [],
   };
+}
+
+/** A new track straight from the Custom skeleton — four placeholder phases and
+ *  a weekly rhythm, everything editable. What the app opens onto on first run,
+ *  and what "New Track" adds; the user names it and sets its horizon in Track
+ *  settings rather than in a setup wizard. */
+export function blankTrack(name: string, startDate: string): TrackState {
+  return seedTrackFromTemplate(customTemplate, {
+    name,
+    color: customTemplate.defaultColor,
+    startDate,
+    phases: customTemplate.buildPhases(customTemplate.defaultDurationDays),
+    weekSchedule: customTemplate.defaultWeekSchedule,
+    focusTypes: customTemplate.defaultFocusTypes,
+  });
 }

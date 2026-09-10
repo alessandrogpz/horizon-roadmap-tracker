@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { TEMPLATE_LIST, seedTrackFromTemplate } from "../templates";
+import { TEMPLATE_LIST, blankTrack, seedTrackFromTemplate } from "../templates";
 
 describe("templates", () => {
   TEMPLATE_LIST.forEach((template) => {
@@ -22,7 +22,7 @@ describe("templates", () => {
         expect(track.dailyTasks).toBeTruthy();
         expect(track.dailyRevisionItems).toBeTruthy();
 
-        // Live immediately: no placeholder/unsynced state for a wizard-seeded track.
+        // Live immediately: no placeholder/unsynced state for a newly seeded track.
         expect(track.isSynced).toBe(true);
 
         // Provenance only.
@@ -79,5 +79,15 @@ describe("templates", () => {
     const a = seedTrackFromTemplate(template, answers);
     const b = seedTrackFromTemplate(template, answers);
     expect(a.meta.id).not.toBe(b.meta.id);
+  });
+
+  it("blankTrack builds a usable Custom skeleton under the given name and start date", () => {
+    const track = blankTrack("New Track", "2026-09-10");
+    expect(track.meta).toMatchObject({ name: "New Track", templateId: "custom" });
+    expect(track.startDate).toBe("2026-09-10");
+    expect(track.phases.length).toBe(4);
+    expect(track.weekSchedule?.length).toBe(7);
+    expect(track.isSynced).toBe(true);
+    expect(track.materials).toEqual([]);
   });
 });

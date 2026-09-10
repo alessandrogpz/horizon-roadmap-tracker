@@ -74,21 +74,18 @@ const TRACKS = [
   {
     color: "#0ea5e9",
     name: "Graphics & engine dev",
-    template: "Learning",
     horizon: "13 months",
     detail: "Phases from fundamentals to a shipped renderer, with a reading list and repo deliverables attached.",
   },
   {
     color: "#f97316",
     name: "Half marathon in October",
-    template: "Fitness",
     horizon: "20 weeks",
     detail: "Strength, cardio and rest laid out across the week, building volume phase by phase.",
   },
   {
     color: "#a78bfa",
     name: "Land the senior role",
-    template: "Work",
     horizon: "6 months",
     detail: "Skill up, get visible, apply in volume, then close — each stage with its own checklist.",
   },
@@ -116,23 +113,23 @@ const COMPARISON = [
 const STEPS = [
   {
     n: "01",
-    title: "Pick a starting point",
-    body: "Learning, Fitness, Work — or Custom for a clean slate. A template only seeds your first phases and weekly rhythm; everything stays editable afterwards and nothing locks you in.",
+    title: "Open it and start",
+    body: "No sign-up and no setup screens. The first visit opens on a blank track — four placeholder phases and a weekly rhythm — ready to use.",
   },
   {
     n: "02",
     title: "Set the horizon",
-    body: "A start date and a real deadline. That single decision is what turns a wish list into a roadmap: from then on every day counts against something.",
+    body: "Name the track, then give it a start date and a real deadline in its settings. That single decision is what turns a wish list into a roadmap: from then on every day counts against something.",
   },
   {
     n: "03",
     title: "Shape the phases",
-    body: "Review the phases the template proposed, rewrite them, add your own, give each a deadline. Then write the full plan in markdown if you want one.",
+    body: "Rewrite the placeholder phases, add your own, give each a deadline. Then write the full plan in markdown if you want one.",
   },
   {
     n: "04",
     title: "Show up on rhythm",
-    body: "Say what each day of your week is for, seed the materials you'll work through, and start ticking. The dashboard takes it from there.",
+    body: "Say what each day of your week is for, add the materials you'll work through, and start ticking. The dashboard takes it from there.",
   },
 ];
 
@@ -322,9 +319,6 @@ export default function LandingPage() {
                   </div>
                   <div className="flex flex-wrap gap-1.5 font-mono text-[0.65rem] text-muted-foreground">
                     <span className="rounded-full border border-card-border bg-surface-muted px-2 py-0.5">
-                      {track.template}
-                    </span>
-                    <span className="rounded-full border border-card-border bg-surface-muted px-2 py-0.5">
                       {track.horizon}
                     </span>
                   </div>
@@ -336,8 +330,8 @@ export default function LandingPage() {
             </div>
 
             <p className="mt-6 text-[0.85rem] text-subtle-foreground">
-              Four templates ship with the app — Learning, Fitness, Work and Custom — and each
-              is only a starting point you rewrite.
+              Every new track starts as the same blank skeleton — four phases and a weekly
+              rhythm — and becomes whatever you rewrite it into.
             </p>
           </div>
         </section>
@@ -436,8 +430,8 @@ export default function LandingPage() {
                 From a vague ambition to a dated plan, in one sitting.
               </h2>
               <p className="text-[0.95rem] leading-relaxed text-muted-foreground">
-                The setup wizard walks the whole thing with you. Five minutes, and the track is
-                real.
+                No setup wizard: you land on a working dashboard and shape it as you go. Five
+                minutes, and the track is real.
               </p>
             </div>
 

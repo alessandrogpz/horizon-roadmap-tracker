@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   DndContext,
   closestCenter,
@@ -17,7 +16,8 @@ import { SortableContext, verticalListSortingStrategy, arrayMove, sortableKeyboa
 import { LayoutGrid, LoaderCircle } from "lucide-react";
 import type { PanelColumns, Phase, TrackState, WeekDay, Workspace } from "@/lib/types";
 import { visibleTracks } from "@/lib/selectors";
-import { daysSince } from "@/lib/dates";
+import { daysSince, todayYMD } from "@/lib/dates";
+import { blankTrack } from "@/lib/templates";
 import { MODULES, defaultPanelColumns, homeColumnFor, resolveTrackLayout } from "@/lib/modules";
 import { recommendedPhaseId, removePhase, setCurrentPhase, setWeeklyRhythm, updatePhase, updateTrackIdentity } from "@/lib/trackActions";
 import {
@@ -57,9 +57,8 @@ function FullScreenMessage({ children }: { children: React.ReactNode }) {
 }
 
 export default function Dashboard() {
-  const router = useRouter();
   const { workspace, track, status, error, syncStatus, syncError } = useWorkspace();
-  const { updateTrack, commitTrack, commitWorkspace, switchTrack, sync, reload } = useWorkspaceActions();
+  const { updateTrack, commitTrack, commitWorkspace, switchTrack, addTrack, sync, reload } = useWorkspaceActions();
 
   const [selectedScheduleDay, setSelectedScheduleDay] = useState<WeekDay | null>(null);
   // null = closed. { rotationId: null } = create new. { rotationId: "<id>" } = view/edit that one.
@@ -97,12 +96,6 @@ export default function Dashboard() {
     }
     loadGoogleGisScript().catch((err) => console.error("Failed to preload Google GIS:", err));
   }, []);
-
-  // No tracks yet: send the user through the onboarding wizard instead of
-  // rendering an empty/placeholder dashboard.
-  useEffect(() => {
-    if (status === "empty") router.replace("/onboarding");
-  }, [status, router]);
 
   const panelSensors = useSensors(
     // Mouse: small movement on the handle is enough — desktop users expect
@@ -236,7 +229,6 @@ export default function Dashboard() {
   };
 
   if (status === "loading") return <FullScreenMessage>Loading your Horizon workspace...</FullScreenMessage>;
-  if (status === "empty") return <FullScreenMessage>Setting up your workspace...</FullScreenMessage>;
 
   if (status === "error" || !track || !workspace) {
     return (
@@ -311,7 +303,7 @@ export default function Dashboard() {
             onSync={handleSyncWorkspace}
             onOpenCloudMenu={() => setDriveModalMode("manage")}
             onSwitchTrack={(trackId) => void switchTrack(trackId)}
-            onNewTrack={() => router.push("/onboarding?mode=add")}
+            onNewTrack={() => addTrack(blankTrack("New Track", todayYMD()))}
             onEditTrack={(fields) => void commitTrack((prev) => updateTrackIdentity(prev, fields), "track identity")}
             onDeleteTrack={handleDeleteTrack}
             canDeleteTrack={visibleTracks(workspace).length > 1}
