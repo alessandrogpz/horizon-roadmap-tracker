@@ -209,6 +209,20 @@ describe("mergeMaterials", () => {
     expect(merged[0].totalPages).toBe(320);
     expect(merged[0].currentSubject).toBe("Linear Algebra");
   });
+
+  it("an archive survives a merge with the other device's older copy, from either side", () => {
+    const archived = [material({ archived: true, updatedAt: 2000 })];
+    const stale = [material({ updatedAt: 1000 })];
+    expect(mergeMaterials(archived, stale)[0].archived).toBe(true);
+    expect(mergeMaterials(stale, archived)[0].archived).toBe(true);
+  });
+
+  it("a later unarchive beats an older archived copy", () => {
+    const unarchived = [material({ archived: false, updatedAt: 3000 })];
+    const archived = [material({ archived: true, updatedAt: 2000 })];
+    expect(mergeMaterials(unarchived, archived)[0].archived).toBe(false);
+    expect(mergeMaterials(archived, unarchived)[0].archived).toBe(false);
+  });
 });
 
 describe("mergePortfolio", () => {
