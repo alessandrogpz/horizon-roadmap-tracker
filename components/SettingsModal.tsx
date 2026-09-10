@@ -7,15 +7,11 @@ import {
   Download,
   HardDrive,
   Info,
-  LoaderCircle,
   Monitor,
   Moon,
-  Check,
-  Sparkles,
   Sun,
   Upload,
   X,
-  XCircle,
 } from "lucide-react";
 import packageJson from "../package.json";
 import { exportSingleFile, exportZipBundle } from "@/lib/export";
@@ -28,17 +24,8 @@ import {
   type BackupSummary,
 } from "@/lib/import";
 import type { BackupBundle } from "@/lib/export";
-import {
-  aiKeyFor,
-  aiModelFor,
-  setAIKeyFor,
-  setAIModelFor,
-  updateAISettings,
-  updateSettings,
-} from "@/lib/settings";
+import { updateSettings } from "@/lib/settings";
 import { useAppSettings } from "@/lib/useAppSettings";
-import { checkProvider, getProvider, PROVIDERS } from "@/lib/ai/provider";
-import type { AIModelInfo } from "@/lib/ai/types";
 import { getThemePreference, setThemePreference, type ThemePreference } from "@/lib/theme";
 
 /**
@@ -130,23 +117,6 @@ export default function SettingsModal({
   const [pending, setPending] = useState<{ bundle: BackupBundle; summary: BackupSummary } | null>(null);
   const [confirmWipe, setConfirmWipe] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-  const [models, setModels] = useState<AIModelInfo[]>([]);
-  const [keyCheck, setKeyCheck] = useState<"idle" | "checking" | "ok" | "error">("idle");
-  const [keyCheckMessage, setKeyCheckMessage] = useState("");
-
-  const activeAIProvider = getProvider(settings.ai.provider);
-
-  /** Verifies the key *and* that the selected model will actually answer.
-   *  Provider-agnostic — a provider without a model list simply reports the
-   *  generation result. */
-  const runKeyCheck = async () => {
-    setKeyCheck("checking");
-    setKeyCheckMessage("");
-    const result = await checkProvider();
-    setModels(result.models);
-    setKeyCheck(result.ok ? "ok" : "error");
-    setKeyCheckMessage(result.message);
-  };
 
   // How much this origin is actually holding — worth knowing before deciding
   // whether a backup matters. Async, so it lands after first paint.
@@ -292,107 +262,6 @@ export default function SettingsModal({
             ]}
           />
         </Row>
-
-        {/* ── AI ─────────────────────────────────────────────────────── */}
-        <Row
-          icon={<Sparkles size={16} strokeWidth={2} />}
-          title="AI roadmap drafting"
-          hint="Optional. Bring your own API key to generate a starting roadmap from a goal. Horizon runs no AI of its own — requests go from this browser straight to the provider you pick, and a Content-Security-Policy header blocks connections to anywhere else. Check it yourself in devtools; don't take our word for it."
-        >
-          <select
-            value={settings.ai.provider}
-            onChange={(e) => updateAISettings({ provider: e.target.value as typeof settings.ai.provider })}
-            className={selectClass}
-          >
-            <option value="">Off</option>
-            {PROVIDERS.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.label}
-              </option>
-            ))}
-          </select>
-        </Row>
-
-        {activeAIProvider && (
-          <>
-            <Row
-              title={`${activeAIProvider.label} API key`}
-              hint={`Stored on this device only, in this browser — never synced to Drive and never included in a backup. Restrict the key and set a spend limit at the provider: that protection is yours, not ours to promise.${
-                activeAIProvider.keyUrl ? ` Get one at ${activeAIProvider.keyUrl.replace(/^https?:\/\//, "")}.` : ""
-              }`}
-            >
-              <input
-                type="password"
-                value={aiKeyFor(settings.ai.provider, settings)}
-                onChange={(e) => {
-                  setAIKeyFor(settings.ai.provider, e.target.value);
-                  // The old result described a different key.
-                  setKeyCheck("idle");
-                  setKeyCheckMessage("");
-                }}
-                placeholder={activeAIProvider.keyPlaceholder ?? "API key"}
-                autoComplete="off"
-                spellCheck={false}
-                className={`${selectClass} w-[210px] font-mono`}
-              />
-            </Row>
-            <Row
-              title={`${activeAIProvider.label} model`}
-              hint="Check the key to confirm it works and that this model will actually answer — a model with no quota reports as a rate limit, which is confusing on a first try."
-            >
-              <div className="flex flex-col items-end gap-2">
-                {models.length > 0 ? (
-                  <select
-                    value={aiModelFor(settings.ai.provider, settings)}
-                    onChange={(e) => setAIModelFor(settings.ai.provider, e.target.value)}
-                    className={`${selectClass} w-[210px]`}
-                  >
-                    {models.some((m) => m.id === aiModelFor(settings.ai.provider, settings)) ? null : (
-                      <option value={aiModelFor(settings.ai.provider, settings)}>
-                        {aiModelFor(settings.ai.provider, settings)} (not listed)
-                      </option>
-                    )}
-                    {models.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.id}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    value={aiModelFor(settings.ai.provider, settings)}
-                    onChange={(e) => setAIModelFor(settings.ai.provider, e.target.value)}
-                    spellCheck={false}
-                    className={`${selectClass} w-[210px] font-mono`}
-                  />
-                )}
-                <div className="flex items-center gap-2">
-                  {keyCheck === "ok" && <Check size={15} strokeWidth={2.5} className="text-emerald-500" />}
-                  {keyCheck === "error" && <XCircle size={15} strokeWidth={2.5} className="text-red-500" />}
-                  <button onClick={runKeyCheck} disabled={keyCheck === "checking"} className={quietButton}>
-                    {keyCheck === "checking" ? (
-                      <span className="flex items-center gap-1.5">
-                        <LoaderCircle className="animate-spin" size={13} strokeWidth={2.5} /> Checking…
-                      </span>
-                    ) : (
-                      "Check key"
-                    )}
-                  </button>
-                </div>
-                {keyCheckMessage && (
-                  <span
-                    className={`max-w-[240px] text-right text-[0.74rem] leading-snug ${
-                      keyCheck === "error" ? "text-red-400" : "text-muted-foreground"
-                    }`}
-                  >
-                    {keyCheckMessage}
-                  </span>
-                )}
-              </div>
-            </Row>
-          </>
-        )}
 
         {/* ── Data ───────────────────────────────────────────────────── */}
         <Row

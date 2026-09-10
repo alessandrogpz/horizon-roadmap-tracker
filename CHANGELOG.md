@@ -7,6 +7,32 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.16.0] - 2026-09-10
+
+### Removed
+- **The setup wizard**, and the `/onboarding` route with it. A first visit now
+  opens straight onto the dashboard with a blank track — "My Track", four
+  placeholder phases and a weekly rhythm, all editable. **New Track** adds
+  another blank one, makes it active and opens its Track settings, which is
+  where it gets its name, colour, start date and length.
+- **AI roadmap generation** (0.14.0–0.14.3). It was only reachable through the
+  wizard. The AI settings are gone, any provider key saved in this browser is
+  deleted the first time the app loads, and the CSP no longer allows
+  connections to Gemini or OpenRouter.
+
+### Changed
+- **Restoring from Drive on a new device still works without the wizard's "I
+  already have an account" step.** The starter track counts as disposable until
+  you change something: connect Drive before your first edit and the first sync
+  replaces it with your real tracks, instead of merging a stray "My Track" into
+  them. From your first edit on, syncing merges as usual, so nothing you wrote
+  is ever overwritten.
+
+### Notes
+- The landing page no longer describes the wizard or pickable templates.
+- The Learning, Fitness and Work templates are still in `lib/templates`, but
+  nothing uses them now; the blank track comes from Custom.
+
 ## [0.15.0] - 2026-09-10
 
 ### Added

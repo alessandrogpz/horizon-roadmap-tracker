@@ -1,6 +1,6 @@
 /**
  * The Horizon mark, drawn plate-free in `currentColor` for use inside the app
- * (header, onboarding). Same shape language as the app icon in `app/icon.svg`:
+ * (header). Same shape language as the app icon in `app/icon.svg`:
  * a sun clearing the horizon, where the horizon line is a progress bar.
  *
  * Without the icon's dark plate there's nothing to hide the seam where the bar

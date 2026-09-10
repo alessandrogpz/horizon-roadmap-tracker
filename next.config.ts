@@ -3,23 +3,20 @@ import type { NextConfig } from "next";
 /**
  * Content-Security-Policy.
  *
- * The point of this is `connect-src`. Horizon asks users to paste an API key
- * for their own AI provider, and "we don't send your key anywhere" is worth
- * nothing as a promise — the operator controls the code the browser runs. A CSP
- * is different: the *browser* enforces it, the header is visible in devtools in
- * ten seconds, and no script on the page — ours, a dependency's, or one injected
- * through a hole we haven't found — can open a connection to an origin that
- * isn't listed here.
+ * The point of this is `connect-src`. The browser holds a Google Drive access
+ * token, an optional GitHub token and all of the user's data, and "we don't
+ * send it anywhere" is worth nothing as a promise — the operator controls the
+ * code the browser runs. A CSP is different: the *browser* enforces it, the
+ * header is visible in devtools in ten seconds, and no script on the page —
+ * ours, a dependency's, or one injected through a hole we haven't found — can
+ * open a connection to an origin that isn't listed here.
  *
- * Every origin below is one the app already talks to. Adding a provider means
- * adding its origin here too, and that is deliberate friction: the allowlist is
- * the guarantee, so widening it should be a visible decision.
+ * Every origin below is one the app already talks to. Adding one is deliberate
+ * friction: the allowlist is the guarantee, so widening it should be a visible
+ * decision.
  */
 const CONNECT_SRC = [
   "'self'",
-  // AI providers — the only destinations an API key is ever sent to.
-  "https://generativelanguage.googleapis.com", // Gemini
-  "https://openrouter.ai", // OpenRouter
   // Google Drive sync and its auth.
   "https://www.googleapis.com",
   "https://accounts.google.com",

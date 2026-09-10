@@ -26,7 +26,8 @@ interface DashboardHeaderProps {
   onSync: (e: React.MouseEvent) => void;
   onOpenCloudMenu: () => void;
   onSwitchTrack: (trackId: string) => void;
-  onNewTrack: () => void;
+  /** Resolves once the new track is active. */
+  onNewTrack: () => Promise<void>;
   onEditTrack: (fields: { name: string; color: string; startDate: string; totalDays: number }) => void;
   onDeleteTrack: () => void;
   canDeleteTrack: boolean;
@@ -151,6 +152,13 @@ function StatTile({
 export default function DashboardHeader({ data, workspace, syncStatus, syncError, onSync, onOpenCloudMenu, onSwitchTrack, onNewTrack, onEditTrack, onDeleteTrack, canDeleteTrack, moduleState, onToggleModule, onEditRhythm, onNewRotation, onReloadWorkspace }: DashboardHeaderProps) {
   const [showTrackSettings, setShowTrackSettings] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+
+  // A new track starts blank as "New Track", so go straight to its settings:
+  // that's where it gets a real name, colour, start date and length.
+  const handleNewTrack = async () => {
+    await onNewTrack();
+    setShowTrackSettings(true);
+  };
   // Which hero metric has its detail panel open, if any.
   const [openStat, setOpenStat] = useState<StatMetric | null>(null);
   const daysPassed = data.startDate && data.isSynced ? daysSince(data.startDate) : 0;
@@ -193,7 +201,7 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
             tracks={visibleTracks(workspace)}
             activeTrackId={workspace.activeTrackId}
             onSwitch={onSwitchTrack}
-            onNewTrack={onNewTrack}
+            onNewTrack={() => void handleNewTrack()}
           />
         </div>
 
@@ -231,7 +239,7 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
             onEditTrack={() => setShowTrackSettings(true)}
             onEditRhythm={onEditRhythm}
             onNewRotation={onNewRotation}
-            onNewTrack={onNewTrack}
+            onNewTrack={() => void handleNewTrack()}
             onOpenCloud={onOpenCloudMenu}
             onOpenSettings={() => setShowSettings(true)}
           />
