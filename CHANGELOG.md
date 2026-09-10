@@ -7,6 +7,26 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.20.0] - 2026-09-10
+
+### Added
+- **Search & insights**, in the menu when you're signed in.
+  - **Search** across every track, material, phase, roadmap and note your
+    account has synced, from every device. Results show which materials and
+    phases matched, and the passage of a note that did. "Books" finds "Book":
+    words are matched by their stem, and a hit in a title ranks above one
+    buried in a roadmap. Click a track to open it.
+  - **Your history**: active days, total accomplishments, your longest streak
+    and when it ran, how often each weekday is active, active days per month,
+    and the same per track. Every chart has a table view.
+- Both run in MongoDB on the server (a full-text index, and aggregation
+  pipelines), over what has been synced; `docs/LEARNING_LOG.md` explains how.
+
+### Security
+- Search and history only ever read the signed-in account's data, including
+  where the history joins in track names. They're rate-limited per account
+  (120 requests a minute), and a search is 1 to 100 characters.
+
 ## [0.19.1] - 2026-09-10
 
 ### Security

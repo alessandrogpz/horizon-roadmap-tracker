@@ -31,6 +31,7 @@ no business logic.
 │   ├── roadmap/page.tsx          # Per-track markdown roadmap editor
 │   ├── api/auth/session/         # Sign in / out: Google ID token → session cookie
 │   ├── api/sync/                 # Sync through the account (merge on the server)
+│   ├── api/search/, api/stats/   # Full-text search and history, computed by MongoDB
 │   └── manifest.ts               # PWA manifest configuration
 ├── components/
 │   ├── Dashboard.tsx             # Layout, drag-and-drop, modal orchestration
@@ -156,6 +157,7 @@ You can install the tracker as a native standalone application on your Android/i
 *   **Consistency Streak:** GitHub-style contributions graph (rounded squares) tracking your revisions in real-time.
 *   **Portfolio Tracker:** Displays repository checklists and pulls live git statistics (branch, modified status, last commit message) from local git repos or GitHub.
 *   **Materials & Notes:** Track references, edit study notes in a Markdown editor with a live Preview pane, and query repo statistics.
+*   **Search & insights (signed in):** Full-text search across your tracks, materials, phases, roadmaps and notes, and your history (active days, weekday habits, months, per-track streaks), both computed by MongoDB on the server.
 *   **Cloud Sync:** All data lives in your browser (IndexedDB). Signed in, it syncs through your Horizon account (MongoDB on the server); signed out, bidirectionally to a hidden app folder in your own Google Drive. 
     *   *Click to sync; Shift+Click to manage/disconnect the connection.*
 

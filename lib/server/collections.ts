@@ -72,7 +72,30 @@ export const SPECS: Record<string, CollectionSpec> = {
         },
       },
     },
-    indexes: [{ key: { userId: 1, trackId: 1 }, name: "user_track", unique: true }],
+    indexes: [
+      { key: { userId: 1, trackId: 1 }, name: "user_track", unique: true },
+      // Full-text search over a user's tracks (MongoDB allows one text index
+      // per collection). The userId prefix makes it a compound text index:
+      // every search must name the user, and only that user's entries are
+      // scanned. Weights rank a hit in a material's title above one buried in
+      // the roadmap text. English stemming lets "books" find "Book".
+      {
+        key: {
+          userId: 1,
+          "meta.name": "text",
+          "materials.title": "text",
+          "materials.author": "text",
+          "phases.title": "text",
+          "phases.description": "text",
+          roadmapContent: "text",
+        },
+        name: "user_track_text",
+        weights: { "materials.title": 10, "phases.title": 8, "meta.name": 5, "materials.author": 5, "phases.description": 2, roadmapContent: 1 },
+        default_language: "english",
+        // No stored field can switch a document's language by accident.
+        language_override: "textSearchLanguage",
+      },
+    ],
   },
 
   [COMPLETIONS]: {
@@ -130,7 +153,10 @@ export const SPECS: Record<string, CollectionSpec> = {
         },
       },
     },
-    indexes: [{ key: { userId: 1, noteId: 1 }, name: "user_note", unique: true }],
+    indexes: [
+      { key: { userId: 1, noteId: 1 }, name: "user_note", unique: true },
+      { key: { userId: 1, content: "text" }, name: "user_note_text", default_language: "english", language_override: "textSearchLanguage" },
+    ],
   },
 
   // One entry per sync that changed something (threat R1): who, when, and how

@@ -29,6 +29,8 @@ export const LIMITS = {
   session: { bucket: "session", max: 60, windowMs: 60_000 },
   /** A sync is the heaviest request there is. Counted per account. */
   sync: { bucket: "sync", max: 30, windowMs: 60_000 },
+  /** Search and stats, per account: a search box fires as you type. */
+  query: { bucket: "query", max: 120, windowMs: 60_000 },
 } satisfies Record<string, Limit>;
 
 /**
