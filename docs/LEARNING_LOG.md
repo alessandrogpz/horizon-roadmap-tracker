@@ -19,6 +19,8 @@ The other documents, and what each one is for:
 | `docs/security/THREAT_MODEL.md` | Every threat, how likely and how bad, and how it's handled |
 | `CHANGELOG.md` | What changed in each version, from a user's point of view |
 | This file | What each step teaches |
+| `docs/ORAL_PREP.md` | The exam day: checklist, the 5-minute security talk, the NoSQL demo, the question maps |
+| `docs/DEPLOY.md` | Putting accounts and sync live on horizonroadmap.com |
 
 ## Entries
 

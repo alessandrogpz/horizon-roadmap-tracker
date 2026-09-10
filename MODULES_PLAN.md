@@ -20,8 +20,10 @@
 > comes with deployment. Step 5 is done: search and stats (0.20.0), and the
 > generated data, `explain()` report, failover demo and `docs/nosql/` (0.20.1).
 > Account deletion (use case 6) shipped in 0.21.0, and Step 6's in-repo work in 0.21.1
-> (CI, Dependabot, gitleaks, Semgrep, backups, MEASURES.md, RUNBOOK.md). What's left:
-> the owner's GitHub settings (RUNBOOK §1), deployment with Atlas, and Step 7's oral prep. The plan moved from
+> (CI, Dependabot, gitleaks, Semgrep, backups, MEASURES.md, RUNBOOK.md). Step 7's guides
+> shipped in 0.21.3: `docs/ORAL_PREP.md` and `docs/DEPLOY.md`. What's left is the owner's:
+> GitHub settings (RUNBOOK §1), deploying with Atlas (DEPLOY.md, week 5), the hand-in, and
+> rehearsing. The plan moved from
 > `temp/` to the repo root in 0.17.1. What each step teaches:
 > `docs/LEARNING_LOG.md`, updated with every step.
 
@@ -957,6 +959,15 @@ leave them unsharded or shard on hashed `_id`.
   and the threat it answers (§3 list, Step 1, Step 4h, Step 6).
 - Code documentation: keep the existing habit of explaining security decisions
   in comments.
+
+*DONE in 0.21.3:* `docs/ORAL_PREP.md` (a checklist for the day before;
+the 5-minute security talk timed in seven parts; the security question map
+with short answers and a TLS-keys explanation; a 10-minute NoSQL demo in six
+parts with ready `mongosh` queries; the NoSQL questions) and `docs/DEPLOY.md`
+(Atlas `horizon_prod` user with readWrite on `horizon` only, `0.0.0.0/0`,
+production-only Vercel env vars marked Sensitive, `fra1`, fast-forward merge,
+live checks, weekly backup, Level 2 ideas). Preview deployments deliberately
+get no database: Google can't accept their changing origins anyway.
 
 **Hand-in admin (the user does these):** give `peterruppel` read access if the
 repo is private; submit through the Learning Platform form.
