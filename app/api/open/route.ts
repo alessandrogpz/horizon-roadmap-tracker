@@ -16,6 +16,13 @@ export async function POST(request: Request) {
   if (!isLocalRequest(request)) {
     return localOnlyResponse();
   }
+  // JSON only, as a second line behind isLocalRequest. Another site can only
+  // send this content type after a CORS preflight, and Next's automatic
+  // OPTIONS reply never approves one, so a stray form post or no-cors fetch
+  // is refused here even if a browser were to omit Origin.
+  if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) {
+    return NextResponse.json({ error: 'Expected application/json' }, { status: 415 });
+  }
   try {
     const { link } = await request.json();
     if (!link) {

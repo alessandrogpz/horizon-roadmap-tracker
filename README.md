@@ -121,5 +121,5 @@ You can install the tracker as a native standalone application on your Android/i
         ```js
         localStorage.setItem("github_token", "<token>")
         ```
-*   **Local-only Endpoints:** `/api/git` (local filesystem repo status), `/api/open` (opening PDF/source links locally) and `/api/notes` (one-time import of notes from an older on-disk format) only accept requests addressed to `localhost` to protect your filesystem when exposed on a LAN.
+*   **Local-only Endpoints:** `/api/git` (local filesystem repo status), `/api/open` (opening PDF/source links locally) and `/api/notes` (one-time import of notes from an older on-disk format) only accept requests addressed to `localhost` and sent by the app's own pages — not from other devices when the dev server is exposed on a LAN, and not from other websites open in your browser (see `lib/server/localRequest.ts`).
 *   **Automated Tests:** Run `npm test` to execute the Vitest test suite verifying the date handlers and the conflict resolution merge logic.
