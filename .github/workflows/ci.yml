@@ -1,5 +1,6 @@
-# Every push to development or main, and every pull request into main, runs
-# four jobs in parallel. A ruleset on main can require them all to pass
+# Every push to development or main, and every pull request into either, runs
+# four jobs in parallel. Dependabot aims its pull requests at development, so
+# without that branch here they would arrive with no checks of their own. A ruleset on main can require them all to pass
 # (see docs/security/RUNBOOK.md, "GitHub settings").
 #
 # Supply-chain hygiene in the workflow itself:
@@ -16,7 +17,7 @@ on:
   push:
     branches: [development, main]
   pull_request:
-    branches: [main]
+    branches: [development, main]
 
 permissions:
   contents: read

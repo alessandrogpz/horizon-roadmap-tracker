@@ -14,6 +14,17 @@ updates:
       # One pull request for the routine updates; majors come one by one.
       minor-and-patch:
         update-types: [minor, patch]
+    # Two majors that Next's own lint config can't take yet (tried 2026-09-22):
+    # typescript-eslint refuses TypeScript 7 outright, and ESLint 10 removed an
+    # API that the eslint-plugin-react bundled in eslint-config-next still
+    # calls, so linting dies on the first file. Minor and patch updates to both
+    # still arrive. Revisit when eslint-config-next ships support: a Next
+    # release that allows eslint 10, and typescript-eslint >= 8.x with TS 7.
+    ignore:
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
+      - dependency-name: eslint
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: github-actions
     directory: /
