@@ -7,6 +7,19 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.24.0] - 2026-09-22
+
+### Added
+- **A security page** at `/security`, written for the people using Horizon rather than for a reviewer:
+  no password to lose, sessions that can be revoked, data that is only ever your own, encryption in
+  transit and storage in the EU, backups nobody else can open, and deletion that really deletes. It
+  also says what is checked on every change, what Horizon deliberately doesn't do (no analytics, no
+  tracking, no sharing), and is honest that this is one person's project with a written list of risks
+  knowingly accepted.
+- Reachable from where people actually are: **Settings → This device** now has **Security**,
+  **Privacy** and **About** buttons, the landing page links it from the accounts section and the
+  footer, and both new pages link to each other.
+
 ## [0.23.2] - 2026-09-22
 
 ### Changed

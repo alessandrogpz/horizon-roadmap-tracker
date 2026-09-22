@@ -364,8 +364,16 @@ export default function SettingsModal({
           title="This device"
           hint={`Horizon v${packageJson.version}${storage ? ` · about ${storage} stored locally` : ""}`}
         >
+          {/* Plain links, not router pushes: these are separate pages outside
+              the app shell, and a full navigation is what should happen. */}
+          <a href="/security" className={quietButton}>
+            Security
+          </a>
+          <a href="/privacy" className={quietButton}>
+            Privacy
+          </a>
           <a href="/landing" className={quietButton}>
-            About Horizon
+            About
           </a>
         </Row>
 
