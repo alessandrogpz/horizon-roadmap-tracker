@@ -12,6 +12,7 @@ import { DbUnavailableError } from "../db";
 import { openDb } from "../collections";
 import { clientAddress, hit, LIMITS, tooManyRequests } from "../rateLimit";
 import { User, type UserRecord } from "../models";
+import { record } from "../securityEvents";
 import { errorResponse, isSameOrigin, jsonResponse, readJsonBody } from "../http";
 import { InvalidIdTokenError, type GoogleIdentity } from "./googleIdToken";
 import {
@@ -44,6 +45,7 @@ const SignInBody = z.object({ credential: z.string().min(1).max(4096) }).strict(
 const unavailable = (error: unknown): Response => {
   // The error's name only: messages can carry connection strings.
   console.error("Accounts unavailable:", error instanceof Error ? error.name : "unknown error");
+  void record("db-unavailable");
   return errorResponse(503, "Accounts aren't available right now.");
 };
 
@@ -81,6 +83,7 @@ export async function handleSignIn(request: NextRequest, deps: SignInDeps): Prom
   } catch (error) {
     // Logged for spotting attacks (threat R2), by reason only: never the token.
     console.warn("Sign-in rejected:", error instanceof InvalidIdTokenError ? error.reason : "verifier error");
+    void record("sign-in-rejected");
     return errorResponse(401, "Sign-in failed.");
   }
 

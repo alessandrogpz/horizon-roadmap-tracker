@@ -1,0 +1,44 @@
+# The daily look at the live database.
+#
+# Reads the security counters the server keeps (lib/server/securityEvents.ts)
+# and fails the run when one is out of character — rejected sign-ins, clients
+# hitting rate limits, bodies failing validation, writes the database refused.
+# A failed run emails the owner, which is the alerting chain: no paid log drain,
+# no third-party service, one secret.
+#
+# ATLAS_URI is a repository secret holding the production connection string.
+# It is never printed: the script takes it from the environment.
+
+name: Operations
+
+on:
+  schedule:
+    - cron: "15 6 * * *" # 06:15 UTC, daily
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Daily check (live database)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: What the last day held
+        env:
+          ATLAS_URI: ${{ secrets.ATLAS_URI }}
+        run: |
+          if [ -z "$ATLAS_URI" ]; then
+            echo "::error::ATLAS_URI isn't set. Add it under Settings → Secrets and variables → Actions (docs/security/RUNBOOK.md §8)."
+            exit 1
+          fi
+          npm run ops:check -- --uri-env ATLAS_URI

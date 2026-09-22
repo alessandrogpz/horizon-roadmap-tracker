@@ -1,0 +1,63 @@
+# The weekly backup of the live database, encrypted so that having it is not
+# the same as being able to read it.
+#
+# Atlas's free tier takes no backups at all (threat D4). This makes one with
+# mongodump and pipes it straight into gpg, encrypted to the public key in
+# `ops/backup-key.pub`. The matching private key lives on the owner's machine
+# and nowhere else, so GitHub — and anyone who can read this repository, now or
+# later — holds a file it cannot open. Restoring: docs/security/RUNBOOK.md §4.
+#
+# The archive is kept as a workflow artifact for 90 days, GitHub's maximum.
+# That is a safety net, not an archive: download one occasionally if you want a
+# copy that outlives it.
+
+name: Backup
+
+on:
+  schedule:
+    - cron: "45 3 * * 1" # Mondays, 03:45 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dump:
+    name: Encrypted backup (live database)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Dump and encrypt
+        env:
+          ATLAS_URI: ${{ secrets.ATLAS_URI }}
+        run: |
+          if [ -z "$ATLAS_URI" ]; then
+            echo "::error::ATLAS_URI isn't set. Add it under Settings → Secrets and variables → Actions (docs/security/RUNBOOK.md §8)."
+            exit 1
+          fi
+          if [ ! -f ops/backup-key.pub ]; then
+            echo "::error::No ops/backup-key.pub. An unencrypted backup of real accounts would be worse than none; see docs/security/RUNBOOK.md §8."
+            exit 1
+          fi
+          npm run db:backup -- --uri-env ATLAS_URI --encrypt-to ops/backup-key.pub
+      - name: Check it really is encrypted
+        run: |
+          file=$(ls -t backups/*.gpg | head -1)
+          # gpg names the key it was encrypted to; an unencrypted archive has no
+          # such packet, and the run fails rather than uploading it.
+          gpg --list-packets --list-only "$file" | head -3
+          echo "Encrypted archive: $(du -h "$file" | cut -f1)"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: horizon-backup
+          path: backups/*.gpg
+          retention-days: 90
+          if-no-files-found: error
