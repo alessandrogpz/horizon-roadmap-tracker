@@ -27,7 +27,7 @@
 name: horizon
 
 x-member: &member
-  image: mongo:8.0
+  image: mongo:8.3
   network_mode: host
   depends_on:
     keyfile:
@@ -35,7 +35,7 @@ x-member: &member
 
 services:
   keyfile:
-    image: mongo:8.0
+    image: mongo:8.3
     volumes:
       - keyfile:/keyfile
     # 756 random bytes, base64-encoded: 1008 characters, inside MongoDB's limit
@@ -74,7 +74,7 @@ services:
   # One-shot: initiates the set and creates the users, then exits. Runs on every
   # `up` and changes only what's missing.
   init:
-    image: mongo:8.0
+    image: mongo:8.3
     network_mode: host
     depends_on: [mongo1, mongo2, mongo3]
     # Only this container sees the passwords. The app gets MONGODB_URI from
