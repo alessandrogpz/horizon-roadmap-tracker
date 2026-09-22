@@ -187,6 +187,20 @@ describe("the sync request schema", () => {
     return { ...workspace, tracks: { [trackId]: change({ ...workspace.tracks[trackId] }) } };
   };
 
+  // Found on the day this went live (0.21.4): the author's oldest track still
+  // carried `lastUpdatedDates`, retired long before the changelog began. Strict
+  // objects refuse what they don't list, so every sync from that device failed
+  // with "Malformed request." The fixture above predates the field, which is
+  // exactly why nothing here caught it.
+  it("accepts a retired field an old track still carries, and keeps it (0.21.4)", () => {
+    const lastUpdatedDates = { "2026-07-19": 1784473045926, "2026-07-20": 1 };
+    const workspace = withTrack((track) => ({ ...track, lastUpdatedDates })) as unknown as Workspace;
+    expect(request(workspace).success).toBe(true);
+
+    const [trackId] = Object.keys(workspace.tracks);
+    expect(roundTrip(workspace).tracks[trackId].lastUpdatedDates).toEqual(lastUpdatedDates);
+  });
+
   it("refuses a field it doesn't know, such as a smuggled userId (T2)", () => {
     expect(request(withTrack((t) => ({ ...t, userId: "someone-else" }))).success).toBe(false);
     expect(request({ ...blankWorkspace(), userId: "someone-else" }).success).toBe(false);

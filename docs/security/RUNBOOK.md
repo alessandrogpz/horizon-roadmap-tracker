@@ -17,10 +17,25 @@ controls these accounts controls the deployed code and the data (threat T9).
 3. **Rules → Rulesets → New branch ruleset** (needs GitHub Pro for a private repository):
    - Name `protect main`, enforcement **Active**, target branch `main`.
    - Tick **Restrict deletions** and **Block force pushes**.
-   - Tick **Require a pull request before merging**.
-   - Tick **Require status checks to pass**, and add the four CI jobs: *Types, lint, tests, build,
-     dependencies*; *Database tests (three-member replica set)*; *Secret scan (gitleaks, whole
-     history)*; *Static analysis (Semgrep)*.
+   - Tick **Require a pull request before merging**, then add yourself to the **Bypass list** (Add
+     bypass -> your account, or "Repository admin", mode **Always**). A ruleset binds the repository's
+     owner too, so without a bypass the fast-forward push in `docs/DEPLOY.md` §3 is rejected. The
+     assessor, who gets write access, stays bound by it (threat E7).
+   - Tick **Require status checks to pass** and add these four names, pasting each one whole:
+
+     ```
+     Types, lint, tests, build, dependencies
+     Database tests (three-member replica set)
+     Secret scan (gitleaks, whole history)
+     Static analysis (Semgrep)
+     ```
+
+     They are the `name:` of each job in `.github/workflows/ci.yml`; the first is a single name that
+     happens to contain commas. A name that doesn't match a real job never reports, and GitHub treats a
+     never-reported required check as permanently pending, blocking every push. The search box only
+     suggests checks it has seen in the past week, so if CI last ran longer ago, type the name and click
+     "+ Add ...  Any source". Releasing by fast-forward carries `development`'s green checks to `main`
+     (it is the same commit), so nothing has to re-run.
 4. **Collaborators** (for the assessor): on a private repository you own personally, a collaborator
    always gets write access. With the ruleset above, they can't change `main`, which is what matters
    (threat E7).

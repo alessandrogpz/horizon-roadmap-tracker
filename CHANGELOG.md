@@ -7,6 +7,30 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.21.4] - 2026-09-22
+
+### Fixed
+- **Sync failed for a device holding a track made years ago.** The first sync after signing in
+  answered "Malformed request.": the track carried `lastUpdatedDates`, a field the app retired long
+  ago, and the sync schema refuses any key it doesn't list. It is now listed among the retired
+  fields it accepts, so old tracks sync and keep what they carry. A regression test covers it, and
+  both real backups the author holds now validate.
+
+### Security
+- A rejected request body now leaves a line in the **server** log saying which rule failed and where
+  (the first three path segments, never a value, so free text used as a key can't reach the log).
+  The client is still told only "Malformed request." (threats I4, I6).
+
+### Documentation
+- `docs/LEARNING_LOG.md` entry 13, "Going live": Atlas, Vercel, the protected `main`, what the live
+  checks proved, and the sync failure above with what it teaches.
+- `docs/security/RUNBOOK.md` §1: the four required status checks written out exactly as CI reports
+  them (the old wording read as five), and the bypass-list step without which the release push to
+  `main` is rejected.
+- `docs/DEPLOY.md`: the real cluster name, the connection string's two easy mistakes (a doubled
+  slash before the database name, and a missing database name), and a pre-flight check that proves
+  the string works before it reaches Vercel.
+
 ## [0.21.3] - 2026-09-11
 
 ### Added
