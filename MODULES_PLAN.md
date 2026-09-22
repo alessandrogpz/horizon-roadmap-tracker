@@ -21,9 +21,16 @@
 > generated data, `explain()` report, failover demo and `docs/nosql/` (0.20.1).
 > Account deletion (use case 6) shipped in 0.21.0, and Step 6's in-repo work in 0.21.1
 > (CI, Dependabot, gitleaks, Semgrep, backups, MEASURES.md, RUNBOOK.md). Step 7's guides
-> shipped in 0.21.3: `docs/ORAL_PREP.md` and `docs/DEPLOY.md`. What's left is the owner's:
-> GitHub settings (RUNBOOK §1), deploying with Atlas (DEPLOY.md, week 5), the hand-in, and
-> rehearsing. The plan moved from
+> shipped in 0.21.3: `docs/ORAL_PREP.md` and `docs/DEPLOY.md`.
+> **Live since 2026-09-22** (0.21.4), two weeks ahead of the week-5 slot: an Atlas free cluster in
+> Frankfurt with a `readWrite`-on-one-database user, Vercel's production variables and `fra1`
+> region, `main` protected by a ruleset requiring a pull request and the four CI checks, and the
+> live checks in DEPLOY.md §4 passing (cross-site requests refused with 403, unauthenticated ones
+> with 401, `/api/git` 403, CSP and HSTS present). The first real sync failed validation on a
+> retired field and was fixed in 0.21.4; learning log entry 13 tells that story. What's left is the
+> owner's: Dependabot's pull requests, the weekly Atlas backup, the hand-in, and rehearsing.
+> Securing a live application is the Cyber Security Level 2 objective, so Level 2 is now in reach.
+> The plan moved from
 > `temp/` to the repo root in 0.17.1. What each step teaches:
 > `docs/LEARNING_LOG.md`, updated with every step.
 
