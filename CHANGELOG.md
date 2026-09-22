@@ -7,6 +7,14 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.21.7] - 2026-09-22
+
+### Changed
+- **The server now runs in Frankfurt, beside the database.** `vercel.json` pins the function region
+  to `fra1`; the dashboard setting alone wasn't reaching deployments, which left every request
+  executing in Washington — each database round trip crossing the Atlantic, and personal data
+  processed outside the EU. The header `x-vercel-id: fra1::fra1::…` confirms it.
+
 ## [0.21.6] - 2026-09-22
 
 ### Fixed
