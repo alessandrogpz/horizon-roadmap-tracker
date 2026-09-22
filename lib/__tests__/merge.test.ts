@@ -191,6 +191,14 @@ describe("mergeMaterials", () => {
     expect(merged[0].currentPage).toBe(50);
   });
 
+  it("doesn't give a legacy material a timestamp it never had (0.21.6)", () => {
+    // Found live: neither side had an `updatedAt`, so the merge set the key to
+    // `undefined` — which BSON stores as null, and the collection validator
+    // refuses. Every sync from that device failed until this was fixed.
+    const merged = mergeMaterials([material({ status: "In Progress" })], [material({ status: "Completed" })]);
+    expect("updatedAt" in merged[0]).toBe(false);
+  });
+
   it("keeps a more recent local edit instead of reverting to a stale remote value", () => {
     // Regression test: editing totalPages/currentSubject locally and syncing
     // used to silently revert to the remote (older) values because the merge
