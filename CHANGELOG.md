@@ -7,6 +7,16 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.23.1] - 2026-09-22
+
+### Added
+- **A privacy page** at `/privacy`, linked from the landing footer and listed in the sitemap. It says
+  what Horizon stores and what it doesn't: nothing at all without an account; with one, the Google
+  account id, email and name, the synced data, hashed session records and per-sync counts. Where it
+  lives (Frankfurt, in the EU), who processes it (Google for sign-in, Vercel, Atlas — nobody else),
+  how long each thing is kept and which index enforces that, how to delete it in one click, and how
+  to export it. Every claim is checkable in the code.
+
 ## [0.23.0] - 2026-09-22
 
 ### Added
