@@ -16,6 +16,10 @@ import {
   Timer,
   Check,
   X,
+  RefreshCw,
+  Search,
+  Trash2,
+  ShieldCheck,
 } from "lucide-react";
 import HorizonMark from "@/components/HorizonMark";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -26,12 +30,12 @@ export const metadata: Metadata = {
   title: "Horizon — a roadmap tracker for the goals you're actually chasing",
   description:
     "Horizon isn't a to-do list. Give every goal its own track — a deadline, phases, a weekly rhythm, materials and deliverables — and watch it move day by day. Local-first, offline-capable, free.",
-  alternates: { canonical: "https://www.horizonroadmap.com/landing" },
+  alternates: { canonical: "https://horizonroadmap.com/landing" },
   openGraph: {
     title: "Horizon — a roadmap tracker, not a to-do list",
     description:
       "Give every goal its own track: a deadline, phases, a weekly rhythm, materials and deliverables. Local-first and offline-capable.",
-    url: "https://www.horizonroadmap.com/landing",
+    url: "https://horizonroadmap.com/landing",
     siteName: "Horizon",
     type: "website",
   },
@@ -133,16 +137,39 @@ const STEPS = [
   },
 ];
 
+const ACCOUNT_POINTS = [
+  {
+    icon: RefreshCw,
+    title: "The same tracks on every device",
+    body: "Sign in on your laptop and your phone and both see the same data. Edits are merged item by item on the server, inside a transaction, so two devices ticking different boxes on the same day keep both — no last-one-wins.",
+  },
+  {
+    icon: Search,
+    title: "Search and history, signed in",
+    body: "Full-text search across every track, material, phase, roadmap and note, and a history view — active days, weekday habits, months, longest streaks per track — computed by the database rather than your browser.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Only ever your own data",
+    body: "Every query is scoped to your account, the session lives in a cookie your browser can't read from JavaScript, and the server keeps only a hash of it. Nothing is shared between accounts, and there is nothing to share.",
+  },
+  {
+    icon: Trash2,
+    title: "Delete it in one click",
+    body: "Settings → Account → Delete account removes everything the account holds on the server, in a single transaction. Your device keeps its own copy, and the app carries on working offline as before.",
+  },
+];
+
 const DATA_POINTS = [
   {
     icon: HardDrive,
     title: "It lives in your browser",
-    body: "Everything is stored locally in IndexedDB. No sign-up, no server holding your goals, nothing to cancel.",
+    body: "Everything is stored locally in IndexedDB. Without an account, nothing ever leaves the device — there is no server copy to cancel or ask about.",
   },
   {
     icon: CloudOff,
-    title: "Sync stays yours",
-    body: "Connect your own Google Drive and Horizon syncs to a hidden app folder only it can read — with day-level conflict resolution across devices. Optional, always.",
+    title: "Or your own Google Drive",
+    body: "Signed out, you can still sync between devices through a hidden folder in your own Drive that only Horizon can read, with day-level conflict resolution. Optional, always.",
   },
   {
     icon: Smartphone,
@@ -153,6 +180,33 @@ const DATA_POINTS = [
     icon: Download,
     title: "Yours to take",
     body: "Export the whole workspace as one JSON file, or a zip with every roadmap, plan and note broken out as readable markdown.",
+  },
+];
+
+const FAQ = [
+  {
+    q: "Do I need an account?",
+    a: "No. The app opens straight into a working track and keeps everything in your browser. An account only exists to carry your data between devices, and you can add or remove one at any point without losing anything.",
+  },
+  {
+    q: "What does it cost?",
+    a: "Nothing. There is no paid tier, no trial, no ads and no analytics following you around. It is a personal project, not a business.",
+  },
+  {
+    q: "Where is my data kept?",
+    a: "In your browser, always. If you sign in, a copy also lives in a MongoDB database in Frankfurt, in the EU, reachable only by the app's own server with credentials scoped to that one database.",
+  },
+  {
+    q: "Can I use it on my phone?",
+    a: "Yes. Open it in your phone's browser and choose Add to Home Screen: it installs like an app, opens full-screen and works offline, with its own copy of your data on that device.",
+  },
+  {
+    q: "Can I get my data out?",
+    a: "At any time, in two shapes: one JSON file with the whole workspace, or a zip with every roadmap, plan and note as readable markdown. No export request, no waiting.",
+  },
+  {
+    q: "Is it finished?",
+    a: "No, and it says so — the version sits in the corner of every screen. It is used daily by the person building it, which is why the rough edges get fixed.",
   },
 ];
 
@@ -189,6 +243,12 @@ export default function LandingPage() {
             >
               How it works
             </a>
+            <a
+              href="#questions"
+              className="hidden text-[0.85rem] text-muted-foreground transition-colors hover:text-foreground md:block"
+            >
+              Questions
+            </a>
             <Link href="/" className="btn btn-sm btn-solid flex items-center gap-1.5">
               Open the app
               <ArrowRight size={14} strokeWidth={2.2} />
@@ -206,7 +266,7 @@ export default function LandingPage() {
           <div className="flex flex-col items-start gap-6">
             <span className="inline-flex items-center gap-2 rounded-full border border-card-border bg-surface-muted px-3 py-1 text-[0.7rem] text-muted-foreground">
               <span className="h-1.5 w-1.5 rounded-full bg-success" />
-              Local-first · works offline · no account
+              Local-first · works offline · account optional
             </span>
 
             <h1 className="text-[2.1rem] font-semibold leading-[1.1] tracking-tight sm:text-[2.9rem] lg:text-[3.4rem]">
@@ -453,6 +513,37 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* ── Accounts ──────────────────────────────────────────────────── */}
+        <section id="accounts" className="border-t border-card-border">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
+            <div className="flex flex-col gap-3 max-w-2xl">
+              <SectionLabel>Accounts</SectionLabel>
+              <h2 className="text-[1.6rem] font-semibold leading-tight tracking-tight sm:text-[2.1rem]">
+                No sign-up. An account only if you want one.
+              </h2>
+              <p className="text-[0.95rem] leading-relaxed text-muted-foreground">
+                Horizon opens and works with no account at all. Sign in with Google — from Settings,
+                whenever you feel like it — and the same tracks follow you between devices. Sign out and
+                nothing breaks; the app keeps running on the copy in your browser.
+              </p>
+            </div>
+
+            <div className="mt-10 grid gap-4 sm:grid-cols-2">
+              {ACCOUNT_POINTS.map(({ icon: Icon, title, body }) => (
+                <div key={title} className="glass-panel flex gap-4">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-control)] border border-card-border bg-surface-muted text-accent">
+                    <Icon size={17} strokeWidth={1.9} />
+                  </span>
+                  <div className="flex flex-col gap-1.5">
+                    <h3 className="text-[0.95rem] font-semibold">{title}</h3>
+                    <p className="text-[0.85rem] leading-relaxed text-muted-foreground">{body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* ── Your data ─────────────────────────────────────────────────── */}
         <section className="border-t border-card-border">
           <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
@@ -473,6 +564,27 @@ export default function LandingPage() {
                     <h3 className="text-[0.95rem] font-semibold">{title}</h3>
                     <p className="text-[0.85rem] leading-relaxed text-muted-foreground">{body}</p>
                   </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Questions ─────────────────────────────────────────────────── */}
+        <section id="questions" className="border-t border-card-border">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
+            <div className="flex flex-col gap-3 max-w-2xl">
+              <SectionLabel>Before you start</SectionLabel>
+              <h2 className="text-[1.6rem] font-semibold leading-tight tracking-tight sm:text-[2.1rem]">
+                The things worth knowing first.
+              </h2>
+            </div>
+
+            <div className="mt-10 grid gap-x-8 gap-y-7 sm:grid-cols-2">
+              {FAQ.map(({ q, a }) => (
+                <div key={q} className="flex flex-col gap-2">
+                  <h3 className="text-[0.95rem] font-semibold">{q}</h3>
+                  <p className="text-[0.88rem] leading-relaxed text-muted-foreground">{a}</p>
                 </div>
               ))}
             </div>
