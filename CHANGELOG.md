@@ -7,6 +7,25 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.25.0] - 2026-09-22
+
+### Added
+- **A phone app**, in `mobile/`: Expo (React Native), for the Mobile App Development module
+  (`MOBILE_PLAN.md`). It reads and writes the same workspace the website does, through the same
+  domain code — `lib/` is imported as `@shared/*` and runs unchanged, about 1,500 lines of types,
+  dates, completion rules, streaks, selectors, merge and migrations.
+- Storage behind one API with two implementations: SQLite on the phone, `localStorage` on web, the
+  bundler choosing on the `.web.ts` extension. Every edit is written as it happens, because Android
+  kills background processes without warning, and the app re-reads on resume so a phone left open
+  overnight shows the new day.
+- On screen: today's focus and revision items with working checkboxes, the streak, and a track
+  switcher. Verified through `react-native-web`: ticking an item records it, the streak goes from 0
+  to 1, and the change survives a restart.
+
+### Changed
+- The web app's `tsconfig.json` and ESLint config exclude `mobile/`, so the two toolchains can't
+  trip over each other. The web app's own checks are unaffected.
+
 ## [0.24.1] - 2026-09-22
 
 ### Documentation
