@@ -135,6 +135,7 @@ mongodb://horizon_app:<password>@localhost:27017,localhost:27018,localhost:27019
 | `npm run db:shell` | Open `mongosh` as `horizon_app`; paste `MONGO_APP_PASSWORD` from `.env.docker` when asked |
 | `npm run test:db` | Run the database tests, as `horizon_test` on a database of their own (`npm test` doesn't need the database) |
 | `npm run db:backup` | Back up the database to `backups/` (git-ignored, readable only by you); restoring: `docs/security/RUNBOOK.md` |
+| `npm run ops:check` | What the last day held: accounts, and the security counters the server keeps. Run every morning against the live database by CI |
 
 *   It listens on `127.0.0.1` only, so no other device can connect.
 *   To browse the data in a GUI, paste `MONGODB_URI` from `.env.local` into
@@ -185,4 +186,5 @@ You can install the tracker as a native standalone application on your Android/i
         ```
 *   **Local-only Endpoints:** `/api/git` (local filesystem repo status), `/api/open` (opening PDF/source links locally) and `/api/notes` (one-time import of notes from an older on-disk format) only accept requests addressed to `localhost` and sent by the app's own pages — not from other devices when the dev server is exposed on a LAN, and not from other websites open in your browser (see `lib/server/localRequest.ts`).
 *   **Accounts:** "Sign in with Google" lives in Settings → Account, shown only when `NEXT_PUBLIC_GOOGLE_CLIENT_ID` is set. The server checks Google's signature on the ID token, and that it was issued to Horizon, then keeps a server-side session: the browser holds a random token in an HttpOnly cookie, and the database stores only its hash. You can delete the account from the same row: everything it stored on the server goes, in one transaction; the device keeps its own copy. Every threat and how it's handled: [`docs/security/THREAT_MODEL.md`](docs/security/THREAT_MODEL.md).
+*   **Noticing things:** the server counts what it refuses — rejected sign-ins, rate limits reached, bodies and writes refused — as one document per kind per hour, with no address, account or value in them. A scheduled check reads those counters each morning, `/api/health` is asked every half hour, and either failing emails the owner. The weekly backup of the live database runs by itself, encrypted to a public key whose private half never leaves the owner's machine. What each alert means: [`docs/security/RUNBOOK.md`](docs/security/RUNBOOK.md) §7.
 *   **Automated Tests:** Run `npm test` to execute the Vitest test suite (dates, merge logic, sign-in token checks, request validation). `npm run test:db` runs the tests that need the local MongoDB.

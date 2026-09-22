@@ -1,0 +1,42 @@
+# Is the deployment actually serving requests?
+#
+# Every half hour, ask /api/health, which answers 200 only when the server can
+# reach the database. A failed run emails the owner: that is the alert. The
+# static page keeps loading from the CDN even when the database is unreachable,
+# so "the site loads" proves nothing on its own.
+#
+# The job needs nothing from the repository — no checkout, no token, no secret.
+
+name: Uptime
+
+on:
+  schedule:
+    # Every 30 minutes. GitHub runs scheduled jobs late when it is busy, which
+    # is fine here: this is a watchdog, not a stopwatch.
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: uptime
+  cancel-in-progress: true
+
+jobs:
+  health:
+    name: Health check (horizonroadmap.com)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: GET /api/health
+        run: |
+          set -o pipefail
+          for attempt in 1 2 3; do
+            code=$(curl -sS -o /tmp/health.json -w '%{http_code}' --max-time 20 https://horizonroadmap.com/api/health || echo 000)
+            body=$(cat /tmp/health.json 2>/dev/null || true)
+            echo "attempt $attempt: HTTP $code $body"
+            if [ "$code" = "200" ]; then exit 0; fi
+            sleep 20
+          done
+          echo "::error::Horizon is not healthy: last response HTTP $code $body"
+          exit 1

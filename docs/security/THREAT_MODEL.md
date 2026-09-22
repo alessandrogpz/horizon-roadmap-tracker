@@ -296,7 +296,7 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 | D1 | Huge sync bodies exhaust the server's memory or the free tier's 512 MB | F4, A, DB | 2 | 2 | Medium | Reject bodies over a size limit before parsing them (real data is about 28 KB), and cap array lengths in the schemas | Implemented (sign-in 8 KB, sync 2 MB, plus per-field and per-array caps in the schemas; tested) |
 | D2 | Floods of requests against sign-in and sync: brute force, or using up Atlas's 100 operations per second | A | 2 | 2 | Medium | Rate limits per IP and per user, counted in MongoDB (a fixed window, cleaned up by a TTL index). Vercel's platform-level DDoS protection | Implemented (0.19.1: fixed-window counters in MongoDB with an atomic `$inc` and a TTL index: sign-in 10/min per address, session 60/min per address, sync 30/min and search/stats 120/min per account; 429 with Retry-After; addresses stored only as hashes; tested, including a burst of 20 simultaneous requests). Unauthenticated floods still cost one indexed session lookup each; Vercel's platform DDoS protection sits in front |
 | D3 | Atlas unavailable: the free cluster pauses after 30 days without connections, or hits its throughput limit | DB | 2 | 1 | Low | Horizon is offline-first: every device keeps a full copy in IndexedDB and keeps working. Only syncing fails until the database is back | Accepted (by design) |
-| D4 | Data loss: the Atlas free tier has no backups | DB | 1 | 3 | Medium | Every device holds a full copy, the .zip export exists, and a scheduled `mongodump` | Implemented (0.21.1: `npm run db:backup` with `mongodump`, private folder, 14 kept; restore tested with 587,578 documents matching). Scheduling it against Atlas comes with deployment |
+| D4 | Data loss: the Atlas free tier has no backups | DB | 1 | 3 | Medium | Every device holds a full copy, the .zip export exists, and a scheduled `mongodump` | Implemented (0.21.1: `npm run db:backup` with `mongodump`, private folder, 14 kept; restore tested with 587,578 documents matching. 0.22.0: scheduled weekly against Atlas, encrypted to a public key whose private half stays with the owner; dump → encrypt → decrypt → restore tested end to end) |
 | D5 | One database server fails | DB | 2 | 2 | Medium | A replica set of three members: the others elect a new primary, and retryable writes carry the app through | Planned (4a; demonstrated in Step 5) |
 
 ### Elevation of privilege: doing more than you're allowed to
@@ -366,10 +366,10 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 
 **Plan step 6** (secure development and operations):
 - [x] CI with `npm audit` and signatures, Dependabot, Semgrep (T8), 0.21.1
-- [ ] Two-factor authentication on GitHub and Vercel; a ruleset on `main` (T9, E7)
+- [x] Two-factor authentication on GitHub and Vercel; a ruleset on `main` requiring a pull request and the four CI checks (T9, E7), 2026-09-22
 - [x] gitleaks scan of the history, and on every push (I7), 0.21.1
-- [x] `mongodump` backups with a tested restore (D4), 0.21.1; scheduling against Atlas at deployment
-- [ ] Logging and alerts for auth failures (R2)
+- [x] `mongodump` backups with a tested restore (D4), 0.21.1; scheduled and encrypted against Atlas, 0.22.0
+- [x] Logging and alerts for auth failures (R2), 0.22.0: counters per kind per hour in `securityEvents`, read by a daily scheduled check that emails on anything out of character; `/api/health` watched every 30 minutes. See `docs/security/RUNBOOK.md` §7
 
 **For the owner:**
 - [ ] Check the ufw rules before using `dev:lan` (E2)

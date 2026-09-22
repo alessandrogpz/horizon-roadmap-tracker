@@ -37,6 +37,7 @@ The other documents, and what each one is for:
 11. [Deleting an account (0.21.0)](#11-deleting-an-account-0210)
 12. [Securing the development life cycle (0.21.1)](#12-securing-the-development-life-cycle-0211)
 13. [Going live: Atlas, Vercel and a protected `main` (0.21.4)](#13-going-live-atlas-vercel-and-a-protected-main-0214)
+14. [Noticing: health checks, security counters and an encrypted backup (0.22.0)](#14-noticing-health-checks-security-counters-and-an-encrypted-backup-0220)
 
 ---
 
@@ -898,3 +899,81 @@ without a session they answer 401, and `/api/git` — the localhost-only route �
   logs for rejected sign-ins and rate limits, and a weekly backup that has been restored at least once.
 
 **Files.** `docs/DEPLOY.md`, `docs/security/RUNBOOK.md`, `lib/server/db.ts`, `lib/server/http.ts`.
+
+---
+
+## 14. Noticing: health checks, security counters and an encrypted backup (0.22.0)
+
+**What changed.** The server now counts what it refuses, two scheduled jobs watch the live system, and
+the weekly backup runs by itself and is encrypted. Concretely: a `securityEvents` collection counting
+rejected sign-ins, rate limits reached, bodies refused and writes refused; `/api/health`, asked every
+half hour; `npm run ops:check`, run every morning against the live database; and a Monday backup
+encrypted to a public key whose private half never leaves the laptop.
+
+**Why.** Everything built before this *prevents* things. None of it *notices* anything. The morning's
+two failures made the gap concrete: both were found because someone was looking, and both would have
+been invisible if they had happened at 3am to somebody else. Security has three jobs — prevent, detect,
+respond — and only the first one existed. Detection is also exactly what the Cyber Security module means
+by Level 2: securing a live application *and its operations*.
+
+**Concepts.**
+- **Prevent, detect, respond.** Prevention fails silently; detection is what turns a silent failure into
+  a known one. The runbook is the third part: each alert has an entry saying what it means and what to
+  do first.
+- **Counting, not logging.** A row per rejected sign-in would let anyone fill the database by failing on
+  purpose — the denial-of-service threat again (D2). One document per kind per hour, raised with an
+  atomic `$inc`, costs the same whether something happens twice or two million times. It is the bucket
+  pattern from the progress data, used for a different reason.
+- **Detection without personal data.** The counters hold a kind, an hour and a count. Not an address,
+  not an account, not a value from the request. You can see that sign-ins are being refused without
+  keeping a record of who was refused, and a TTL index removes each bucket after 30 days.
+- **An alert needs a channel.** Vercel's free plan has no log drains, and a dashboard nobody opens is
+  not monitoring. The channel here is a failing GitHub Actions run, because a failed run emails the
+  owner: no third-party service, no extra credential, and it can be demonstrated in an exam.
+- **Liveness is not the page loading.** The site is static and served by a CDN, so it loads perfectly
+  while the database is unreachable and every sync fails. `/api/health` answers 200 only when the server
+  can actually reach the database — and answers nothing else, since a health endpoint is a free map of
+  the system to anyone who asks (I4).
+- **Asymmetric encryption, doing real work.** The backup is encrypted with a public key committed to the
+  repository; only the private key, which never leaves the owner's machine, can open it. So a workflow
+  run can back up real accounts, and GitHub stores a file it cannot read. The public key is not a
+  secret — that is the whole point of publishing it — and the dump is piped straight into gpg, so the
+  plaintext never reaches a disk.
+- **A backup you cannot open is not a backup.** The private key surviving matters as much as the
+  archive. It goes in a password manager, and the decrypt-and-restore is tested once, before anything
+  depends on it.
+- **Thresholds are judgements.** "Fifty rejected sign-ins a day" is a guess about what is normal, not a
+  measurement. One refused write, though, is zero-tolerance: the database refusing the server's own
+  write is always a bug. That threshold would have caught the morning's 0.21.6 failure within a day.
+
+**See it yourself.**
+
+```bash
+npm run ops:check
+```
+
+Locally that reads the development database; `-- --uri-env ATLAS_URI` reads the live one. Force an
+alert by sending nonsense to the API and running it again: the `body-rejected` counter moves. The
+health endpoint answers `{"ok":true}`:
+
+```bash
+curl -s https://horizonroadmap.com/api/health
+```
+
+**Exam questions.**
+- *How would you know if your application broke?* A health check every 30 minutes and a daily read of
+  the security counters; both alert by failing a scheduled run, which emails me. Before this, I would
+  have found out from a user.
+- *How do you detect an attack?* The server counts every rejection by kind. A steady stream of refused
+  sign-ins or rate limits is visible the next morning, without keeping anything about who was refused.
+- *Why not log every event?* Because failures are attacker-controlled: a row each would be a
+  denial-of-service vector. Counters per hour are bounded.
+- *Your backups sit on GitHub — isn't that a risk?* They are encrypted to a public key; the private key
+  is on my machine and in my password manager. GitHub holds something it cannot read, and I have tested
+  decrypting and restoring it.
+- *What is the difference between prevention and detection?* Prevention stops what you anticipated;
+  detection tells you about what you didn't. Both fail; only detection tells you so.
+
+**Files.** `lib/server/securityEvents.ts`, `lib/server/health.ts`, `scripts/ops-check.ts`,
+`scripts/backup.ts`, `.github/workflows/{uptime,ops,backup}.yml`, `docs/security/RUNBOOK.md` §7–§8,
+`lib/__tests__/securityEvents.db.test.ts`.

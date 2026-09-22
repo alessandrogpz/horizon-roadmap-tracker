@@ -25,6 +25,7 @@ export const COMPLETIONS = "completions";
 export const NOTES = "notes";
 export const AUDIT_LOG = "auditLog";
 export const RATE_LIMITS = "rateLimits";
+export const SECURITY_EVENTS = "securityEvents";
 
 const number = { bsonType: "number", minimum: 0 };
 const string = (maxLength: number) => ({ bsonType: "string", maxLength });
@@ -184,6 +185,35 @@ export const SPECS: Record<string, CollectionSpec> = {
       },
     },
     indexes: [{ key: { expiresAt: 1 }, name: "expire_when_due", expireAfterSeconds: 0 }],
+  },
+
+  // Security events, counted by kind and hour (see securityEvents.ts). One
+  // document per kind per hour, however many times it happens: a flood of
+  // rejected sign-ins raises a counter instead of filling the database. No
+  // address, account or value is recorded, so a month of these says what has
+  // been happening without keeping anything personal (threats I6, D2).
+  [SECURITY_EVENTS]: {
+    validator: {
+      $jsonSchema: {
+        bsonType: "object",
+        required: ["_id", "kind", "hour", "count", "firstAt", "lastAt", "expiresAt"],
+        additionalProperties: false,
+        properties: {
+          _id: string(100),
+          kind: string(40),
+          hour: { bsonType: "date" },
+          count: { bsonType: "number", minimum: 1 },
+          firstAt: { bsonType: "date" },
+          lastAt: { bsonType: "date" },
+          expiresAt: { bsonType: "date" },
+        },
+      },
+    },
+    indexes: [
+      { key: { expiresAt: 1 }, name: "expire_when_due", expireAfterSeconds: 0 },
+      // What the daily check reads: one kind's hours, newest first.
+      { key: { kind: 1, hour: -1 }, name: "kind_hour" },
+    ],
   },
 };
 

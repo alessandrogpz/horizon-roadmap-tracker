@@ -7,6 +7,32 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.22.0] - 2026-09-22
+
+### Added
+- **The server now notices things, and says so.** Every rejection it already logged — a sign-in whose
+  token doesn't verify, a client past its rate limit, a body that fails validation, a write the
+  database refuses — also raises a counter in a new `securityEvents` collection: one document per kind
+  per hour, so a flood costs one document an hour rather than one per attempt. The counters hold a
+  kind, an hour and a count, and nothing else; a TTL index removes them after 30 days.
+- **A daily check** (`npm run ops:check`, and `.github/workflows/ops.yml` each morning) reads those
+  counters against thresholds and fails the run when something is out of character — which emails the
+  owner. That is the whole alerting chain: no paid log drain, no third-party service.
+- **`/api/health`**, asked every 30 minutes by `.github/workflows/uptime.yml`. It answers 200 only when
+  the server can reach the database, because the page itself keeps loading from the CDN even when
+  nothing works. It answers `{"ok":true}` or `{"ok":false}` and nothing else.
+- **A weekly encrypted backup** of the live database (`.github/workflows/backup.yml`), piped straight
+  from `mongodump` into gpg and encrypted to the public key in `ops/`. The private half never leaves
+  the owner's machine, so GitHub keeps a file it cannot read. Tested end to end: dumped from Atlas,
+  encrypted, decrypted, restored.
+- Runbook entries for each alert — what it means and the first move — and the one-time setup for the
+  `ATLAS_URI` secret and the backup key (`docs/security/RUNBOOK.md` §7–§8).
+
+### Changed
+- `@types/node` back to the 24 line, matching the Node that Vercel and CI actually run, with
+  `engines.node` recording it. Type definitions ahead of the runtime can let code compile that isn't
+  there when it runs.
+
 ## [0.21.9] - 2026-09-22
 
 ### Changed

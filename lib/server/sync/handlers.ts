@@ -9,6 +9,7 @@
 // overwrite each other (threat T4).
 
 import type { NextRequest } from "next/server";
+import { record } from "../securityEvents";
 import { errorResponse, isSameOrigin, jsonResponse, readJsonBody } from "../http";
 import { findSessionUser, SESSION_COOKIE } from "../auth/session";
 import type { UserRecord } from "../models";
@@ -52,7 +53,9 @@ const writeDetail = (error: unknown): string => {
 
 const unavailable = (error: unknown): Response => {
   const name = error instanceof Error ? error.name : "unknown error";
-  console.error(`Sync unavailable: ${name}${writeDetail(error)}`);
+  const refused = writeDetail(error);
+  console.error(`Sync unavailable: ${name}${refused}`);
+  void record(refused ? "write-refused" : "db-unavailable");
   return errorResponse(503, "Sync isn't available right now.");
 };
 

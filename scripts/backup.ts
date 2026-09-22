@@ -4,6 +4,14 @@
 //   npm run db:backup                         the local development database
 //   npm run db:backup -- --uri-env ATLAS_URI  any database whose connection
 //                                             string is in that env variable
+//   npm run db:backup -- --encrypt-to ops/backup-key.pub   encrypted (below)
+//
+// Encryption is asymmetric, which is the point: the public key encrypts, and
+// only the private key — which never leaves the owner's machine — decrypts. So
+// the scheduled backup in .github/workflows/backup.yml can make a backup of
+// real accounts without GitHub, or anyone who can read that repository, being
+// able to read it. The dump is piped straight into gpg, so the unencrypted
+// archive never touches a disk. Restoring: docs/security/RUNBOOK.md §4.
 //
 // Writes backups/<database>-<time>.archive.gz: one compressed archive of every
 // collection, its documents, indexes and validators. The folder is
@@ -24,7 +32,7 @@
 // every count, index and validator matching.
 
 import { spawn } from "node:child_process";
-import { chmodSync, createWriteStream, mkdirSync, readdirSync, statSync, unlinkSync } from "node:fs";
+import { chmodSync, createWriteStream, existsSync, mkdirSync, readdirSync, statSync, unlinkSync } from "node:fs";
 import { arg, loadEnvLocal } from "./env";
 
 const KEEP = 14;
@@ -36,21 +44,45 @@ async function main() {
   if (!uri) throw new Error(`${variable} isn't set.`);
   const database = uri.match(/\/([A-Za-z0-9_-]+)\?/)?.[1] ?? "database";
 
+  const recipient = arg("encrypt-to", "");
+  if (recipient && !existsSync(recipient)) throw new Error(`No public key at ${recipient}. Making an unencrypted backup instead would be worse; see docs/security/RUNBOOK.md §8.`);
+
   mkdirSync("backups", { recursive: true, mode: 0o700 });
   const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-  const file = `backups/${database}-${stamp}.archive.gz`;
+  const file = `backups/${database}-${stamp}.archive.gz${recipient ? ".gpg" : ""}`;
   const out = createWriteStream(file, { mode: 0o600 });
 
-  console.log(`Backing up ${database} to ${file}…`);
+  console.log(`Backing up ${database} to ${file}${recipient ? ` (encrypted to ${recipient})` : ""}…`);
   await new Promise<void>((resolve, reject) => {
     const dump = spawn(
       "docker",
-      ["run", "--rm", "--network", "host", "-e", "URI", "mongo:8.0", "sh", "-c", 'mongodump --uri="$URI" --archive --gzip --quiet'],
+      ["run", "--rm", "--network", "host", "-e", "URI", "mongo:8.3", "sh", "-c", 'mongodump --uri="$URI" --archive --gzip --quiet'],
       { env: { ...process.env, URI: uri }, stdio: ["ignore", "pipe", "inherit"] }
     );
-    dump.stdout.pipe(out);
     dump.on("error", reject);
-    dump.on("close", (code) => (code === 0 ? resolve() : reject(new Error(`mongodump exited with ${code}`))));
+
+    if (!recipient) {
+      dump.stdout.pipe(out);
+      dump.on("close", (code) => (code === 0 ? resolve() : reject(new Error(`mongodump exited with ${code}`))));
+      return;
+    }
+
+    // Straight from the dump into gpg: no plaintext copy anywhere on the way.
+    const gpg = spawn(
+      "gpg",
+      ["--batch", "--yes", "--trust-model", "always", "--recipient-file", recipient, "--encrypt", "--output", "-"],
+      { stdio: ["pipe", "pipe", "inherit"] }
+    );
+    dump.stdout.pipe(gpg.stdin);
+    gpg.stdout.pipe(out);
+    gpg.on("error", reject);
+    let dumped = false;
+    dump.on("close", (code) => (code === 0 ? (dumped = true) : reject(new Error(`mongodump exited with ${code}`))));
+    gpg.on("close", (code) => {
+      if (code !== 0) return reject(new Error(`gpg exited with ${code}`));
+      if (!dumped) return reject(new Error("gpg finished but mongodump didn't"));
+      resolve();
+    });
   });
   await new Promise((resolve) => out.close(resolve));
   chmodSync(file, 0o600);

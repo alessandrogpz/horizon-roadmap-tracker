@@ -64,6 +64,18 @@ Every security measure in Horizon: the threat it answers (IDs from
 | Three-member replica set; sync commits with `writeConcern: majority`; retryable writes | D5, T4 | `compose.yaml`, `lib/server/sync/store.ts` | `npm run demo:failover` (graceful and crash; nothing lost) |
 | Offline-first: every device keeps a full copy of its user's data | D3, D4 | the app's design | Sync tests |
 | Backups with `mongodump` to a private folder, 14 kept, restore tested | D4 | `scripts/backup.ts` | Restore test: 587,578 documents, every count and index matching |
+| The live database is backed up weekly by a scheduled workflow, encrypted to a public key whose private half never leaves the owner's machine — GitHub stores a file it cannot read | D4, I7 | `.github/workflows/backup.yml`, `scripts/backup.ts`, `ops/` | Dumped from Atlas, encrypted, decrypted and restored (70 documents), 2026-09-22 |
+
+## Detection and response
+
+| Measure | Threats | Where | Verified by |
+|---|---|---|---|
+| Security counters: every rejected sign-in, rate limit reached, refused body and refused write raises a counter, bucketed per kind per hour so a flood costs one document an hour | S1, S2, D2, T1 | `lib/server/securityEvents.ts` | `securityEvents.db.test.ts` (25 events, one document; the rejecting code raises it) |
+| The counters hold no address, account, email or value — a kind, an hour, a count — and a TTL index deletes them after 30 days | I6, privacy | `lib/server/collections.ts` | `securityEvents.db.test.ts` (exact key set; validator refuses anything else) |
+| A daily scheduled check reads them and fails the run when one is out of character, which emails the owner: alerting with no paid log drain and no third-party service | S1, D2, T1 | `scripts/ops-check.ts`, `.github/workflows/ops.yml` | Run against the live database |
+| `/api/health` reports whether the server can reach the database, watched every 30 minutes; it answers `{"ok":…}` and nothing else, so it can't be used to map the system | availability, I4 | `lib/server/health.ts`, `.github/workflows/uptime.yml` | Live: 200 when healthy |
+| A refused write names the failing rule and property in the server log, values excluded | I4, I6 | `lib/server/sync/handlers.ts` | Reproduced live (0.21.6) |
+| Runbook entries for each alert: what it means and the first move | — | `docs/security/RUNBOOK.md` §6–§8 | — |
 
 ## Development life cycle
 
