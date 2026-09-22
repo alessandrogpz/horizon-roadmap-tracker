@@ -7,6 +7,12 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.21.5] - 2026-09-22
+
+### Documentation
+- `MODULES_PLAN.md`: the progress note records the deployment — what is live, what the live checks
+  proved, and that Cyber Security Level 2 is now in reach.
+
 ## [0.21.4] - 2026-09-22
 
 ### Fixed
