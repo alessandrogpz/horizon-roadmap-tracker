@@ -217,6 +217,38 @@ describe("timestamps from the future (T3)", () => {
   });
 });
 
+describe("data older than the fields it lacks", () => {
+  /** A material from before per-item timestamps: no `updatedAt` at all. */
+  const withMaterial = (workspace: Workspace, status: string) => {
+    const [trackId] = Object.keys(workspace.tracks);
+    const material = {
+      id: "m_legacy", title: "Ray Tracer Challenge", category: "Graphics", type: "Book",
+      status, currentPage: 10, totalPages: 300, currentSubject: "", link: "",
+    };
+    return { ...workspace, tracks: { [trackId]: { ...workspace.tracks[trackId], materials: [material] } } };
+  };
+
+  // Found live on the day sync went public (0.21.6). The first sync stores the
+  // device's data untouched and succeeded; the second one merges, and the merge
+  // set `updatedAt` to `undefined` for a material where neither side had one.
+  // BSON has no undefined, so the driver wrote null, and the validator refused
+  // the whole track — every later sync from that device failed with a 503.
+  it("merges a material that never had a timestamp, and writes it", async () => {
+    const { token } = await signedIn("legacy-material");
+    expect((await sync(token, withMaterial(device(), "In Progress"))).status).toBe(200);
+
+    const second = await sync(token, withMaterial(device(), "Completed"));
+    expect(second.status).toBe(200);
+
+    expect(second.body.log[0]).toContain("Merged");
+
+    const stored = await db().collection(TRACKS).findOne({ trackId: "track_shared" });
+    const material = (stored!.materials as Record<string, unknown>[])[0];
+    expect(material.title).toBe("Ray Tracer Challenge");
+    expect("updatedAt" in material).toBe(false); // absent, not null
+  });
+});
+
 describe("the database's own validators (second layer)", () => {
   it("refuse a completions document the server would never write", async () => {
     const { userId } = await signedIn("ada");

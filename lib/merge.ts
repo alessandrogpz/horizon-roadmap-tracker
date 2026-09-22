@@ -51,7 +51,10 @@ export const mergeMaterials = (localMats: Material[] = [], remoteMats: Material[
         currentSubject: rm.currentSubject || lm.currentSubject,
         link: preferredLink ?? (rm.link || lm.link),
         localPath: rm.localPath || lm.localPath,
-        updatedAt: rm.updatedAt || lm.updatedAt,
+        // Only when one side actually has one. Writing the key as `undefined`
+        // would store it as null (see splitWorkspace's note on BSON), and a
+        // material that never had a timestamp shouldn't gain a null one.
+        ...(rm.updatedAt || lm.updatedAt ? { updatedAt: rm.updatedAt || lm.updatedAt } : {}),
       });
     }
   });

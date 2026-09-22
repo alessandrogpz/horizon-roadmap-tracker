@@ -7,6 +7,22 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.21.6] - 2026-09-22
+
+### Fixed
+- **Sync worked once, then failed every time afterwards.** A material old enough to have no
+  `updatedAt` of its own made the merge write that field as `undefined`, which the database stores
+  as `null` — and the collection's validator requires a number, so it refused the whole track. The
+  merge no longer invents a timestamp the data never had, and anything on its way into the database
+  now has its undefined fields dropped, since "optional" in the schema means absent. Query filters
+  are deliberately untouched: dropping a key there would widen the query instead of narrowing it.
+  Covered by a merge test and a database test that writes a timestamp-less material through the
+  real validator.
+
+### Security
+- When the database refuses a write, the server log now names the rule and the property that failed
+  (field names only, never values), instead of just `MongoBulkWriteError` (threats I4, I6).
+
 ## [0.21.5] - 2026-09-22
 
 ### Documentation

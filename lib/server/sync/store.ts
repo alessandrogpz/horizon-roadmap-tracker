@@ -89,6 +89,24 @@ const noteTrack = (noteId: string) => noteId.match(/^(?:notepad|todo)_(.+)$/)?.[
  * Writes the merged workspace and the device's notes. Only documents whose
  * content changed are written: a sync with nothing new writes nothing.
  */
+/** BSON has no `undefined`: the driver stores an explicit `undefined` field as
+ *  `null`, which a validator expecting a number or a string then refuses. The
+ *  documents here are built by merging data of every age, so a key can arrive
+ *  set-but-undefined. Absent is what the schema means by optional, so absent is
+ *  what gets written. Filters are never passed through this — dropping a key
+ *  from a filter would widen it, and every filter here scopes a query to one
+ *  user (threat I1). */
+function written<T>(document: T): T {
+  if (Array.isArray(document)) return document.map(written) as T;
+  if (document === null || typeof document !== "object" || document instanceof Date || document instanceof mongoose.Types.ObjectId)
+    return document;
+  const kept: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(document)) {
+    if (value !== undefined) kept[key] = written(value);
+  }
+  return kept as T;
+}
+
 export async function saveUserData(
   userId: ObjectId,
   merged: Workspace,
@@ -104,7 +122,7 @@ export async function saveUserData(
   const trackOps = next.tracks
     .filter((t) => oldTracks.get(t.trackId) !== stableStringify(t))
     .map((t) => ({
-      replaceOne: { filter: { userId, trackId: t.trackId }, replacement: { ...t, userId, updatedAt }, upsert: true },
+      replaceOne: { filter: { userId, trackId: t.trackId }, replacement: written({ ...t, userId, updatedAt }), upsert: true },
     }));
 
   const dayKey = (d: StoredDay) => `${d.trackId}|${d.date}`;
@@ -112,7 +130,7 @@ export async function saveUserData(
   const dayOps = next.days
     .filter((d) => oldDays.get(dayKey(d)) !== stableStringify(d))
     .map((d) => ({
-      replaceOne: { filter: { userId, trackId: d.trackId, date: d.date }, replacement: { ...d, userId, updatedAt }, upsert: true },
+      replaceOne: { filter: { userId, trackId: d.trackId, date: d.date }, replacement: written({ ...d, userId, updatedAt }), upsert: true },
     }));
 
   if (trackOps.length) await db().collection(TRACKS).bulkWrite(trackOps, { session, ordered: true });
@@ -130,7 +148,7 @@ export async function saveUserData(
       return {
         updateOne: {
           filter: { userId, noteId: n.id },
-          update: { $set: { kind: noteKind(n.id), content: n.content, updatedAt: n.updatedAt, ...(trackId ? { trackId } : {}) } },
+          update: { $set: written({ kind: noteKind(n.id), content: n.content, updatedAt: n.updatedAt, ...(trackId ? { trackId } : {}) }) },
           upsert: true,
         },
       };

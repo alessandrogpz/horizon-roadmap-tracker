@@ -857,6 +857,23 @@ through the same schema the server uses. Three lessons worth repeating in an exa
 - **Production data has a longer history than any fixture.** Real devices carry shapes no test data
   remembers.
 
+**And then it went wrong again, differently.** The next edit failed too, with a 503 this time and
+`MongoBulkWriteError` in the log. The cause sits one layer deeper. A material on the oldest track has no
+`updatedAt` — it predates per-item timestamps. When the server merges two copies and neither has one,
+`lib/merge.ts` still wrote the key: `updatedAt: rm.updatedAt || lm.updatedAt`, which is `undefined`.
+**BSON has no `undefined`**: the driver stores an explicit undefined field as `null`, and the collection's
+`$jsonSchema` says that field must be a number. The database refused the whole track, so every sync after
+the first one failed. The first sync had worked because a first sync stores the device's data as it is —
+only the second one merges.
+
+Two fixes, at two depths: the merge no longer invents a key the data never had, and everything on its way
+into the database now has its set-but-undefined fields dropped, because *absent* is what the schema means
+by optional. Filters are deliberately left alone — dropping a key from a filter would widen it, and every
+filter here scopes a query to one user. Diagnosis worked backwards from the live logs: restore the
+backup into a local scratch database, replay the device's exported workspace against it, and read the
+validator's own explanation (`schemaRulesNotSatisfied` names the property and the rule). The 503 now
+carries that much into the log, so the next one needs no reconstruction.
+
 **See it yourself.** Against the live site, with no credentials:
 
 ```bash
