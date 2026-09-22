@@ -7,6 +7,14 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.21.8] - 2026-09-22
+
+### Changed
+- **vitest 4 → 5 and `@types/node` 20 → 26, together.** Dependabot proposed them as two pull
+  requests and neither could pass alone: vitest 5 requires `@types/node` 22 or newer, so its own
+  update failed to install against the pinned `^20`. Both dependencies are development-only; 288
+  unit tests, 47 database tests, lint, types and the production build all pass on the new versions.
+
 ## [0.21.7] - 2026-09-22
 
 ### Changed
