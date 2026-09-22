@@ -7,6 +7,26 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.26.0] - 2026-09-22
+
+### Added
+- **The step counter on the phone** (`mobile/src/steps/usePedometer.ts`), the one thing the app can
+  do that the website cannot. It asks for the activity-recognition permission only when tapped,
+  keeps working when refused, checks the hardware exists first, releases the sensor subscription when
+  the screen goes away, and reloads the day when the app comes back from the background.
+- Step counts live in their own SQLite table, deliberately outside the synced workspace: they are a
+  reading from one phone's hardware, they would mean nothing merged with another device's, and the
+  server's schema refuses fields it doesn't know (learning log 13).
+- The app is now called Horizon rather than the template's name, with the `horizon://` deep-link
+  scheme, the Android package `com.horizonroadmap.app`, and the activity-recognition permission
+  declared.
+
+### Notes
+- Android has no "how many steps today" call — `getStepCountAsync` is iOS only — so the app keeps a
+  running total from `watchStepCount`, which delivers only while Horizon is in the foreground. Steps
+  taken while it's closed are therefore missed, and the screen says so rather than implying a full
+  day's count. Closing that gap needs Health Connect and a development build.
+
 ## [0.25.0] - 2026-09-22
 
 ### Added
