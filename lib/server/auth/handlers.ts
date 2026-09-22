@@ -21,6 +21,7 @@ import {
   findSessionUser,
   SESSION_COOKIE,
   sessionCookieOptions,
+  sessionTokenFrom,
 } from "./session";
 
 export interface SignInDeps {
@@ -54,7 +55,7 @@ export async function handleGetSession(request: NextRequest): Promise<Response> 
     await openDb();
     const limited = await hit(LIMITS.session, clientAddress(request));
     if (!limited.allowed) return tooManyRequests(limited.retryAfterSeconds);
-    const user = await findSessionUser(request.cookies.get(SESSION_COOKIE)?.value);
+    const user = await findSessionUser(sessionTokenFrom(request));
     return jsonResponse({ account: user ? toView(user) : null });
   } catch (error) {
     return unavailable(error);
@@ -91,6 +92,18 @@ export async function handleSignIn(request: NextRequest, deps: SignInDeps): Prom
     const user = await upsertUser(identity);
     const { token, expiresAt } = await createSession(user._id);
 
+    // A native client asks for the token in the body, because it has nowhere
+    // for a cookie to live that it can also manage: it will keep this in the
+    // device keystore and send it as a Bearer header. Browsers never take this
+    // path — the token stays in an HttpOnly cookie no script can read, which is
+    // what protects it there (threat S3).
+    if (request.headers.get("x-horizon-client") === "native") {
+      return NextResponse.json(
+        { account: toView(user), token, expiresAt: expiresAt.toISOString() },
+        { headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
     const response = NextResponse.json({ account: toView(user) }, { headers: { "Cache-Control": "no-store" } });
     response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions(expiresAt));
     return response;
@@ -105,7 +118,7 @@ export async function handleSignOut(request: NextRequest): Promise<Response> {
     await openDb();
     const limited = await hit(LIMITS.session, clientAddress(request));
     if (!limited.allowed) return tooManyRequests(limited.retryAfterSeconds);
-    await deleteSession(request.cookies.get(SESSION_COOKIE)?.value);
+    await deleteSession(sessionTokenFrom(request));
   } catch (error) {
     if (!(error instanceof DbUnavailableError)) return unavailable(error);
   }
