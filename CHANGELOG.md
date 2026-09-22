@@ -7,6 +7,26 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.21.9] - 2026-09-22
+
+### Changed
+- **Dependencies brought current in one pass**, with the whole check suite run against the result:
+  Next 16.3.5, React 19.3.0, Mongoose 9.10.1, Dexie 4.4.6, zod 4.6.5, Tailwind 4.3.3, tsx, Lucide,
+  the React type definitions, and the local MongoDB image from 8.0 to 8.3 (the database tests pass
+  against it).
+- **Two major updates deliberately not taken**, and Dependabot told to stop proposing them:
+  TypeScript 7 (typescript-eslint refuses to run against it) and ESLint 10 (it removed an API that
+  the eslint-plugin-react inside eslint-config-next still calls, so linting fails on the first
+  file). Both were tried and reverted; minor and patch updates to each still arrive. The comment in
+  `.github/dependabot.yml` says what has to ship upstream before they can be revisited.
+
+### Security
+- **CI now runs on pull requests into `development`, not only `main`.** Dependabot aims its pull
+  requests at `development`, so until now they arrived with no checks of their own — the green
+  marks on them came from the preview deployment, not from the tests. Every proposed dependency
+  change is now type-checked, linted, tested against a real replica set, scanned for secrets and
+  statically analysed before it can be merged (threat T8).
+
 ## [0.21.8] - 2026-09-22
 
 ### Changed
