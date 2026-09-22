@@ -127,6 +127,7 @@ function StepsCard({ steps, styles }: { steps: ReturnType<typeof usePedometer>; 
           Uses this phone's step counter to fill in the day by itself. Say no and nothing changes —
           everything here still works by hand.
         </Text>
+        {steps.detail ? <Text style={styles.stepsFootnote}>{steps.detail}</Text> : null}
       </Pressable>
     );
   }
