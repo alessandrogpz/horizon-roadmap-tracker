@@ -7,6 +7,23 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.26.1] - 2026-09-22
+
+### Fixed
+- The step-counter card now says what Android actually replied when a permission request goes
+  nowhere, instead of looking like a dead button — including the case that matters, "refused, and
+  Android won't ask again", with where to turn it on.
+- The app re-checks the permission whenever it returns to the foreground, so granting it in Android's
+  settings and switching back is enough. After a permanent denial an app can never prompt again, so
+  noticing on resume is the only way back.
+
+### Notes
+- Expo Go does not declare Android's activity-recognition permission, so the pedometer cannot work
+  inside it at all — confirmed on a Pixel 7 Pro, whose permission list for Expo Go has no "Physical
+  activity" entry. It needs a development build carrying this app's own manifest, which is also what
+  native Google sign-in needs. `eas.json` now defines development, preview and production build
+  profiles, and `expo-dev-client` is installed.
+
 ## [0.26.0] - 2026-09-22
 
 ### Added

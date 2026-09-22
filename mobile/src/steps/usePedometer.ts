@@ -39,11 +39,17 @@ export interface StepState {
   today: number;
   /** Asks for permission, once, in response to a tap — never on first paint. */
   request: () => Promise<void>;
+  /** What the platform last said, shown on screen when a request goes nowhere.
+   *  A permission that is refused without a dialog — Expo Go not declaring it,
+   *  or Android remembering a previous "don't ask again" — is indistinguishable
+   *  from a broken button unless the app says so. */
+  detail: string;
 }
 
 export function usePedometer(date: string): StepState {
   const [status, setStatus] = useState<StepStatus>("checking");
   const [today, setToday] = useState(0);
+  const [detail, setDetail] = useState("");
 
   // The stored total, kept in a ref so the sensor callback doesn't need to be
   // re-subscribed every time the number changes.
@@ -71,8 +77,14 @@ export function usePedometer(date: string): StepState {
       if (cancelled) return;
       if (!available) return setStatus("unavailable");
 
-      const permission = await Pedometer.getPermissionsAsync().catch(() => null);
+      const permission = await Pedometer.getPermissionsAsync().catch((error: unknown) => {
+        setDetail(`checking the permission failed: ${error instanceof Error ? error.message : "unknown error"}`);
+        return null;
+      });
       if (cancelled) return;
+      if (permission && !permission.granted) {
+        setDetail(`not granted yet (${permission.status}${permission.canAskAgain ? "" : ", and Android won't ask again"})`);
+      }
       setStatus(permission?.granted ? "counting" : "denied");
     })();
     return () => {
@@ -81,8 +93,21 @@ export function usePedometer(date: string): StepState {
   }, []);
 
   const request = useCallback(async () => {
-    const permission = await Pedometer.requestPermissionsAsync().catch(() => null);
-    setStatus(permission?.granted ? "counting" : "denied");
+    setDetail("asking…");
+    const permission = await Pedometer.requestPermissionsAsync().catch((error: unknown) => {
+      setDetail(`the request failed: ${error instanceof Error ? error.message : "unknown error"}`);
+      return null;
+    });
+    if (!permission) return setStatus("denied");
+
+    setStatus(permission.granted ? "counting" : "denied");
+    setDetail(
+      permission.granted
+        ? ""
+        : permission.canAskAgain
+          ? `refused (${permission.status})`
+          : `refused, and Android won't ask again (${permission.status}) — turn on Physical activity in Android's app settings`
+    );
   }, []);
 
   // Subscribe only while counting, and let go on the way out: an open sensor
@@ -106,8 +131,12 @@ export function usePedometer(date: string): StepState {
     return () => subscription.remove();
   }, [status]);
 
-  // Coming back from the background: the day may have rolled over, and the
-  // subscription was not delivering while away.
+  // Coming back from the background: the day may have rolled over, the
+  // subscription was not delivering while away, and — the case that matters
+  // here — the user may have just granted the permission in Android's settings.
+  // Once Android has recorded "don't ask again", an app can never prompt again;
+  // noticing the change on resume is the only way back without making the user
+  // hunt for a button.
   useEffect(() => {
     const onChange = (state: AppStateStatus) => {
       if (state !== "active") return;
@@ -115,10 +144,17 @@ export function usePedometer(date: string): StepState {
         total.current = stored;
         setToday(stored);
       });
+      Pedometer.getPermissionsAsync()
+        .then((permission) => {
+          if (!permission.granted) return;
+          setStatus("counting");
+          setDetail("");
+        })
+        .catch(() => undefined);
     };
     const subscription = AppState.addEventListener("change", onChange);
     return () => subscription.remove();
   }, []);
 
-  return { status, today, request };
+  return { status, today, request, detail };
 }
