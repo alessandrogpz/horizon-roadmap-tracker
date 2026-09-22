@@ -32,6 +32,7 @@ no business logic.
 │   ├── api/auth/session/         # Sign in / out: Google ID token → session cookie
 │   ├── api/sync/                 # Sync through the account (merge on the server)
 │   ├── api/search/, api/stats/   # Full-text search and history, computed by MongoDB
+│   ├── api/health/               # Can the server reach the database? (watched every 30 min)
 │   └── manifest.ts               # PWA manifest configuration
 ├── components/
 │   ├── Dashboard.tsx             # Layout, drag-and-drop, modal orchestration
@@ -67,9 +68,12 @@ no business logic.
 ├── compose.yaml                  # Local MongoDB replica set (npm run db:up)
 ├── docker/mongo-init.js          # Sets up the replica set and its users
 ├── scripts/dev-env.mjs           # Generates the local database's secrets
+├── scripts/ops-check.ts          # The daily look at the live database (npm run ops:check)
+├── ops/                          # The public key the scheduled backup encrypts to
 ├── docs/nosql/                   # Data model, dataset, performance, replication (SE_06)
 ├── docs/security/                # Threat model, implemented measures, operations runbook
-├── .github/                      # CI (checks, database tests, secret scan, SAST), Dependabot
+├── .github/                      # CI, Dependabot, and the scheduled uptime, operations and backup jobs
+├── docs/README.md                # What every document is, and when to read it
 ├── docs/LEARNING_LOG.md          # What each step of the database & security work teaches
 ├── docs/ORAL_PREP.md             # Exam day: the security talk, the NoSQL demo, the questions
 └── docs/DEPLOY.md                # Putting accounts and sync live (Atlas + Vercel)
