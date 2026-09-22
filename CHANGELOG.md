@@ -7,6 +7,14 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.22.1] - 2026-09-22
+
+### Added
+- `ops/backup-key.pub`: the public half of the key the scheduled backup encrypts to, so
+  `.github/workflows/backup.yml` can run. The private half never leaves the owner's machine, which is
+  what makes it safe to keep encrypted backups of real accounts in a GitHub artifact. Verified by
+  making one: 25 KB, encrypted to that key.
+
 ## [0.22.0] - 2026-09-22
 
 ### Added
