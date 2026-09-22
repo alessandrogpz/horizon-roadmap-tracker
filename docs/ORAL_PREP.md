@@ -16,7 +16,12 @@ Everything below points into documents that already exist. The learning log
 - [ ] `npm run test:db`: all green.
 - [ ] Your usual data synced to your account at least once (so search and insights have something).
 - [ ] MongoDB Compass connected with `MONGODB_URI` from `.env.local`.
-- [ ] Terminals open in the repo; the documents below open in tabs.
+- [ ] Terminals open in the repo; the documents below open in tabs. [`README.md`](README.md) in this
+      folder says what every document is, if you need to find one mid-answer.
+- [ ] The live site signed in and synced: <https://horizonroadmap.com>, Settings → Account.
+- [ ] `curl -s https://horizonroadmap.com/api/health` answers `{"ok":true}`.
+- [ ] `npm run ops:check -- --uri-env ATLAS_URI` runs clean (and is worth showing).
+- [ ] GitHub → Actions: the last runs of CI, Uptime, Operations and Backup, all green.
 - [ ] The exam laptop: disk encryption on, screen lock on (threat I10). If it's a different machine,
       clone the repo, install Docker, run `npm install` and `npm run db:up` there first.
 - [ ] Hand-in admin: repo access for `peterruppel` (see RUNBOOK §1 about write access), and the
@@ -41,10 +46,17 @@ Aim for about 45 seconds a part. Show the diagram and one or two files; don't re
 5. **Input and abuse (3:00).** Strict zod schemas, user input never used as a field name,
    `sanitizeFilter`, `$jsonSchema` validators, size limits, rate limits with atomic counters, generic
    errors, no tokens in logs.
-6. **The life cycle (3:45).** CI on every push: tests on a real replica set, `npm audit` and signature
-   verification, gitleaks over the whole history, Semgrep. Actions pinned by hash, a read-only token,
-   Dependabot, backups with a tested restore, a runbook.
-7. **Honest limits (4:30).** Accepted risks (§9 of the threat model): `'unsafe-inline'` scripts, Atlas
+6. **The life cycle (3:30).** CI on every push, including on Dependabot's own pull requests: tests on a
+   real replica set, `npm audit` and signature verification, gitleaks over the whole history, Semgrep.
+   Actions pinned by hash, a read-only token, and `main` protected by a ruleset that binds me too.
+7. **It is live, and it notices (4:00).** Deployed at horizonroadmap.com: Atlas and the functions both
+   in Frankfurt, a database user with `readWrite` on one database, the connection string write-only in
+   Vercel. Prevention isn't enough, so the server counts every rejection — by kind and hour, never who —
+   a scheduled check reads the counters each morning, `/api/health` is watched every half hour, and the
+   weekly backup is encrypted to a key only I can open. An alert is a failing workflow run, which emails
+   me. Say the story: both of the bugs found on release day were caught because someone was looking, and
+   that is not a control (learning log 13 and 14).
+8. **Honest limits (4:30).** Accepted risks (§9 of the threat model): `'unsafe-inline'` scripts, Atlas
    reachable from any IP, account deletion without step-up authentication, each with its reason.
 
 **Ready to demo** (if asked):
@@ -52,6 +64,10 @@ Aim for about 45 seconds a part. Show the diagram and one or two files; don't re
 - The eleven-request `curl` loop from learning log entry 8: ten 401s, then a 429.
 - Browser devtools: the session cookie's flags. `sha256` of its value equals `_id` in `sessions`
   (learning log entry 5).
+- Against the live site, with no credentials: a forged cross-site `PUT /api/sync` → 403, the same
+  request without a session → 401, `/api/git` → 403, and `curl -sI` showing the CSP and HSTS.
+- `npm run ops:check` after sending the API something malformed: the `body-rejected` counter moves,
+  and `db.securityEvents.find()` shows a count and an hour — and no trace of who did it.
 
 ## Cyber Security: the question map
 
@@ -71,6 +87,13 @@ Aim for about 45 seconds a part. Show the diagram and one or two files; don't re
 | Securing a machine at layer 3? | A host firewall (ufw is active here; matters because `dev:lan` binds to all interfaces); Atlas's IP access list | Threat model E2, I8 |
 | How do you secure your development life cycle? | CI, dependency audit and signatures, Dependabot, secret scanning, SAST, pinned actions, a protected `main` | Learning log 12 |
 | A secret leaked. What now? | Rotate first, then clean the history, then scan again | RUNBOOK §3 |
+| How would you know if it broke? | `/api/health` every 30 minutes and a daily read of the security counters; both alert by failing a workflow run, which emails me | Learning log 14, RUNBOOK §7 |
+| How do you detect an attack? | Counters per kind per hour — rejected sign-ins, rate limits, refused bodies and writes — readable the next morning without keeping anything about who | Learning log 14 |
+| Why not log every rejection? | Failures are attacker-controlled: a row each would be a denial-of-service vector. Hourly buckets are bounded | MODEL §4 |
+| Where are your backups, and who can read them? | A weekly workflow run, encrypted to a public key; the private half is on my machine and in my password manager. Tested: dumped, encrypted, decrypted, restored | RUNBOOK §4, §8 |
+| Where does the data live, and does it matter? | Frankfurt: the cluster, and the functions beside it. Found the functions running in Washington by reading a response header, and pinned the region in `vercel.json` | Learning log 13 |
+| What did deployment change about your security? | It turned a threat model into something testable from outside: the 403/401 checks in DEPLOY.md §4 are run against the real site | DEPLOY.md |
+| Tell me about a bug you found in production | Two, on release day: a strict schema refusing a legacy field, and `undefined` becoming `null` in BSON so the validator refused the write. Both fixed, both covered by tests, both written up | Learning log 13 |
 
 **TLS, the keys (TLS 1.3):**
 - **The server's long-term key pair**, whose public half is in its certificate. It *signs* the handshake,
@@ -103,6 +126,10 @@ So: asymmetric to prove identity and agree on a secret, symmetric for speed.
 6. **Resilience (1.5 min).** `npm run demo:failover` live: the new primary in 0.3 s and no write lost.
    Then `-- --crash` if there's time (10.8 s, a retried write). Explain `w: majority`.
 
+7. **If there's time (1 min).** `db.securityEvents.find()` and `db.rateLimits.find()`: two collections
+   that exist for operational reasons, both counting rather than listing, both cleaned up by TTL
+   indexes rather than a cron job. It's the clearest case of the access pattern deciding the shape.
+
 **Queries to have ready in `mongosh`** (`npm run db:shell`, as the app's user):
 
 ```js
@@ -133,3 +160,7 @@ that come up most:
 - *Sharding?* `{userId: "hashed"}`, and why not the date (MODEL.md §9).
 - *How much data did you test with?* DATA.md.
 - *Mongoose or the native driver?* Both, each where it fits (MODEL.md §6 and learning log 7).
+- *How many collections, and why that many?* Seven: five for the data, two operational (`rateLimits`,
+  `securityEvents`), both counting per time window so a flood costs one document (MODEL.md §1, §4).
+- *What happens to old data?* TTL indexes: sessions at 30 days, audit entries at 90, security counters
+  at 30, rate counters within minutes (MODEL.md §5).

@@ -26,6 +26,7 @@ This folder documents the database side, for the SE_06 NoSQL module.
 | 5 | Use the app without an account, offline | **Implemented** (IndexedDB, before this module) | `lib/localDb.ts` |
 | 6 | Delete my account and all its data from the server | **Implemented** (0.21.0) | `lib/server/account/`, Settings → Account |
 | 7 | Share a track with someone else | **Not planned** (the model keeps every user's data separate) | — |
+| 8 | See what the server has been refusing, without keeping anything personal | **Implemented** (0.22.0) | `lib/server/securityEvents.ts`, `npm run ops:check` |
 
 Level 1 objectives, and where each is met:
 
@@ -60,9 +61,15 @@ including `mongosh` and MongoDB Compass, is in the main [README](../../README.md
 | `npm run db:seed` | Generate the large dataset into `horizon_perf` (2,000 users, a year each) |
 | `npm run db:explain` | Measure the queries on it, and rewrite `PERFORMANCE.md` |
 | `npm run demo:failover` | Stop the primary mid-writes, and show nothing is lost (`-- --crash` to kill it) |
+| `npm run ops:check` | What the last day held: accounts, and the counters the server keeps when it refuses something |
+| `npm run db:backup` | Back it up (`-- --uri-env ATLAS_URI` for the deployed one, `--encrypt-to ops/backup-key.pub` to encrypt) |
 
-**Deployed**: MongoDB Atlas (free tier, Frankfurt), connected through the `MONGODB_URI` environment
-variable in Vercel. Each environment gets its own least-privilege database user. Setup steps: MODULES_PLAN.md, 4a.
+**Deployed** since 2026-09-22 at [horizonroadmap.com](https://horizonroadmap.com): MongoDB Atlas (free
+tier, AWS Frankfurt `eu-central-1`), reached through the `MONGODB_URI` environment variable in Vercel,
+whose functions run in the same region. The database user `horizon_prod` has `readWrite` on the
+`horizon` database and nothing else. Step by step, including the network access list and what the
+connection string must contain: [`../DEPLOY.md`](../DEPLOY.md). The cluster is backed up weekly by a
+scheduled workflow, encrypted so that only the owner can read it ([`../security/RUNBOOK.md`](../security/RUNBOOK.md) §8).
 
 ## How much data, and how it was generated
 

@@ -40,7 +40,7 @@ controls these accounts controls the deployed code and the data (threat T9).
    always gets write access. With the ruleset above, they can't change `main`, which is what matters
    (threat E7).
 
-**Atlas** (at deployment, MODULES_PLAN.md 4a): one database user per environment, each with `readWrite`
+**Atlas** (done 2026-09-22, steps in `docs/DEPLOY.md` §1): one database user per environment, each with `readWrite`
 on its own database only, and a long generated password. Network access `0.0.0.0/0` is expected
 (threat I8). The connection string goes only into Vercel's environment variables.
 
@@ -79,7 +79,7 @@ connection string is in that environment variable). They go to `backups/`, reada
 Restore, overwriting the collections in the backup:
 
 ```bash
-docker run --rm -i --network host -e URI mongo:8.0 \
+docker run --rm -i --network host -e URI mongo:8.3 \
   sh -c 'mongorestore --uri="$URI" --archive --gzip --drop --nsInclude="horizon.*"' < backups/horizon-<time>.archive.gz
 ```
 

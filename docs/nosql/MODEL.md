@@ -31,6 +31,7 @@ order; search looks inside one user's tracks and notes.
 | `notes` | note | sync, when that note changed | sync, search | 631 B |
 | `auditLog` | sync that changed something | sync | (operations) | ~120 B |
 | `rateLimits` | client per minute | every limited request | every limited request | ~80 B |
+| `securityEvents` | kind of rejection per hour | whenever the server refuses something | the daily check | ~120 B |
 
 \* From the generated dataset: 2,000 users, 572,152 day documents. See [DATA.md](DATA.md).
 
@@ -112,8 +113,15 @@ erDiagram
   }
 ```
 
-`rateLimits` stands apart: `{ _id: "bucket:sha256(client):windowStart", count, expiresAt }`, deleted
-by a TTL index two minutes later.
+Two collections stand apart from the diagram, because they belong to no user by design:
+
+- `rateLimits`: `{ _id: "bucket:sha256(client):windowStart", count, expiresAt }`, deleted by a TTL index
+  two minutes later.
+- `securityEvents`: `{ _id: "sign-in-rejected:2026-09-22T14", kind, hour, count, firstAt, lastAt,
+  expiresAt }`, deleted after 30 days. One document per kind of rejection per hour — a rejected sign-in,
+  a client past its rate limit, a body that fails validation, a write the database refuses — raised with
+  an atomic `$inc`. The daily operations check reads them (`npm run ops:check`); no address, account or
+  value is stored, so they say what is happening without saying to whom.
 
 ## 3. The collections in detail
 
@@ -183,6 +191,12 @@ rewrite the whole track (write amplification). One document per day keeps every 
 write only the days that changed, and gives the statistics an index to walk in date order. A bucket per
 *day* rather than per week or month matches what changes together: a day's ticks.
 
+**Count rejections, don't list them.** `securityEvents` uses the same bucket idea for a different
+reason. A document per rejected sign-in would be a denial-of-service vector: anyone could fill the
+database by failing on purpose. One document per kind per hour costs the same whether something happens
+twice or two million times, and `$inc` makes concurrent writes safe without a read first. It is the
+clearest case in this project of the *access pattern*, not the data, deciding the shape.
+
 **Not one document per user.** It's the simplest mapping of the app's `Workspace`, and wrong for the same
 reasons, times every track.
 
@@ -218,6 +232,7 @@ Timestamps from the future are clamped to the present on the way in.
 | `notes` | `{ userId: 1, noteId: 1 }` unique, and `{ userId: 1, content: "text" }` | sync; search |
 | `auditLog` | `{ at: 1 }` TTL 90 days | deleting old entries |
 | `rateLimits` | `{ expiresAt: 1 }` TTL | deleting old counters |
+| `securityEvents` | `{ expiresAt: 1 }` TTL 30 days, and `{ kind: 1, hour: -1 }` | deleting old counters; the daily check reading one kind's recent hours |
 
 - **Compound indexes and prefixes.** `{userId, trackId, date}` also serves any query on `{userId}` or
   `{userId, trackId}`, so no separate single-field indexes are needed.
@@ -227,8 +242,10 @@ Timestamps from the future are clamped to the present on the way in.
 - **Text indexes.** A collection can have only one, and it costs space: on the generated data the tracks'
   text index is about three times the size of the tracks themselves on disk. The `userId` prefix makes
   every search a one-user search.
-- **TTL indexes.** They replace cron jobs: MongoDB deletes expired sessions, old audit entries and old rate
-  counters itself (a background task, about once a minute).
+- **TTL indexes.** They replace cron jobs: MongoDB deletes expired sessions, old audit entries, old rate
+  counters and old security counters itself (a background task, about once a minute). Each collection's
+  retention is one number in its index: 30 days for sessions, 90 for the audit log, 30 for security
+  counters, two windows for rate limits.
 
 ## 6. Validation
 

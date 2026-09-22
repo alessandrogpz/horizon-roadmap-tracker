@@ -7,6 +7,20 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.22.2] - 2026-09-22
+
+### Documentation
+- `docs/README.md`: an index of every document — what it is, when to read it, which module it serves —
+  plus a table mapping each feature to the code that implements it and the document that explains it.
+- `docs/nosql/MODEL.md` now covers the `securityEvents` collection: its shape, its indexes, and why
+  counting rejections per hour rather than listing them is the access pattern deciding the shape.
+- `docs/nosql/README.md`: the deployed setup described as it actually is, and the new commands.
+- `docs/ORAL_PREP.md`: the talk now ends on a live system that notices things (the Level 2 claim),
+  with the day-before checklist covering the live site and the scheduled workflows, eight more
+  questions answered, and the release-day bugs as the "tell me about a bug in production" story.
+- Corrected what had gone stale: the MongoDB image in copy-paste commands (8.0 → 8.3), and three
+  places still describing deployment, Atlas credentials and alerting as future work.
+
 ## [0.22.1] - 2026-09-22
 
 ### Added

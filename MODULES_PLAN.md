@@ -28,8 +28,13 @@
 > live checks in DEPLOY.md §4 passing (cross-site requests refused with 403, unauthenticated ones
 > with 401, `/api/git` 403, CSP and HSTS present). The first real sync failed validation on a
 > retired field and was fixed in 0.21.4; learning log entry 13 tells that story. What's left is the
-> owner's: Dependabot's pull requests, the weekly Atlas backup, the hand-in, and rehearsing.
-> Securing a live application is the Cyber Security Level 2 objective, so Level 2 is now in reach.
+> owner's: the hand-in, and rehearsing.
+> **Level 2's operations half shipped the same day (0.22.0–0.22.1):** the server counts every rejection
+> by kind and hour (`securityEvents`, nothing personal in it), `/api/health` is watched every 30
+> minutes, a scheduled check reads the counters each morning, and the weekly Atlas backup runs by
+> itself, encrypted to a key only the owner holds — all alerting by failing a workflow run, which
+> emails him. Dump, encrypt, decrypt and restore were tested end to end. What's left of Level 2 is a
+> staging database, which needs a fixed preview URL registered with Google first.
 > The plan moved from
 > `temp/` to the repo root in 0.17.1. What each step teaches:
 > `docs/LEARNING_LOG.md`, updated with every step.
@@ -371,7 +376,7 @@ secrets.
 to do.
 
 *Done, local:*
-- `compose.yaml`: three `mongo:8.0` members (`mongo1`–`mongo3`, ports
+- `compose.yaml`: three `mongo:8.3` members (`mongo1`–`mongo3`, ports
   27017–27019) on the host network, bound to `127.0.0.1`, in replica set `rs0`.
   Host networking is what lets the advertised member addresses
   (`localhost:2701x`) work both for the app and between members. It needs
