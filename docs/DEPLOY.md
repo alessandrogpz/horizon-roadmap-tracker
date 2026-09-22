@@ -48,7 +48,13 @@ In [vercel.com](https://vercel.com), the Horizon project → **Settings**:
    - `NEXT_PUBLIC_GOOGLE_CLIENT_ID` =
      `82064719586-e6s5ajaef0qrun4g7j3667mii5etojm5.apps.googleusercontent.com` (public, but only needed
      where sign-in works).
-2. **Functions → Function Region → Frankfurt, Germany (fra1)**, next to the database.
+2. **Functions → Function Region → Frankfurt, Germany (fra1)**, next to the database. `vercel.json`
+   asks for the same region, and that file is what actually decides it — the dashboard setting alone
+   did not reach the deployments here. A Hobby project may run in exactly one region, which is why
+   `regions` names one; Pro allows five. Check it afterwards: the response header
+   `x-vercel-id: fra1::fra1::…` names the edge that received the request and the region that ran the
+   function. Two different codes there (`fra1::iad1::…`) mean the functions are running somewhere
+   else, with every database round trip crossing an ocean and personal data processed outside the EU.
 
 ## 3. Ship it
 
