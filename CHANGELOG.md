@@ -7,6 +7,27 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.23.0] - 2026-09-22
+
+### Added
+- **The landing page now describes the app as it is.** It was written before accounts existed and
+  still promised "no account" and "no server holding your goals". A new **Accounts** section explains
+  what signing in gets you — the same tracks on every device, merged item by item rather than
+  last-one-wins; search and history computed by the database; queries scoped to your own account; and
+  deletion in one click — while keeping the promise that none of it is required.
+- **A questions section** answering what a stranger asks before trying something: whether an account
+  is needed, what it costs, where the data is kept (Frankfurt, in the EU, if you sign in), whether it
+  works on a phone, how to get the data out, and whether it's finished.
+- `app/robots.ts` and `app/sitemap.ts`, so the landing page can be found and the API routes aren't
+  crawled.
+
+### Fixed
+- **The canonical URL pointed at a hostname with no certificate.** The page told search engines and
+  link previews that the authoritative copy lived at `www.horizonroadmap.com`, which doesn't serve.
+  Both the canonical and the Open Graph URL now name the apex domain, and `metadataBase` in the root
+  layout makes every relative metadata URL resolve there.
+- The Google Drive card no longer implies Drive is the only way to sync.
+
 ## [0.22.2] - 2026-09-22
 
 ### Documentation

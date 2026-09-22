@@ -7,6 +7,9 @@ const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jet
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
+  // Relative URLs in any page's metadata resolve against this, and `www` has no
+  // certificate on this domain, so the apex is the only correct answer.
+  metadataBase: new URL("https://horizonroadmap.com"),
   title: "Horizon: Roadmap Tracker",
   description: "Personal roadmap and consistency engine for the goals you're working toward.",
   // Icons are left to the app-directory file conventions — app/favicon.ico,
