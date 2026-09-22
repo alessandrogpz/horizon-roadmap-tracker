@@ -6,7 +6,9 @@ database it hides sign-in, and the new API routes answer "not available". Planne
 
 ## 1. Atlas: the database users and network access
 
-In [cloud.mongodb.com](https://cloud.mongodb.com), project **Horizon**, cluster **horizon** (Frankfurt):
+In [cloud.mongodb.com](https://cloud.mongodb.com), project **horizon**, cluster **horizon-cluster**
+(AWS Frankfurt, `eu-central-1`). A free cluster's region can't be changed later, so check it before
+anything else: **Database** -> the cluster card names it.
 
 1. **Security → Database Access → Add New Database User.**
    - Authentication: Password. Username `horizon_prod`. **Autogenerate Secure Password** and copy it
@@ -14,12 +16,24 @@ In [cloud.mongodb.com](https://cloud.mongodb.com), project **Horizon**, cluster 
    - Database User Privileges: **Specific Privileges → readWrite** on database **`horizon`** only. Not
      "Atlas admin", not "Read and write to any database". This is threat E5.
    - Add User.
+   - Atlas's quickstart creates a user of its own, usually with "Atlas admin" or "Read and write to any
+     database". Delete it; that breadth is the thing this step exists to avoid.
 2. **Security → Network Access → Add IP Address → Allow access from anywhere** (`0.0.0.0/0`). Vercel's
    servers have no fixed addresses. Threat I8 records why this is acceptable: the password, TLS and the
    narrow user carry the protection.
-3. **Database → Connect → Drivers.** Copy the `mongodb+srv://…` string, put `horizon_prod` and the
-   password in it, and add the database name before the `?`:
-   `mongodb+srv://horizon_prod:<password>@<cluster-host>/horizon?retryWrites=true&w=majority`.
+3. **Database → Connect → Drivers** (driver Node.js). Copy the `mongodb+srv://…` string and make three
+   changes: the password in place of `<db_password>`, the database name `horizon` after the host, and
+   `retryWrites=true&w=majority` among the options. Atlas's string already ends `…mongodb.net/?appName=…`,
+   so the database name *replaces* that slash's emptiness rather than adding a second slash — `//horizon`
+   leaves the driver with no database name at all. The result:
+   `mongodb+srv://horizon_prod:<password>@<cluster-host>/horizon?retryWrites=true&w=majority&appName=<cluster>`.
+   Those two options are today's defaults, but stating them keeps the durability the failover demo
+   measures from changing silently under a future default.
+4. **Prove the string works before touching Vercel.** Put it in `.env.local` as `ATLAS_URI=…` (git-ignored,
+   readable only by you, and unlike a shell command it leaves no password in your history), then run
+   `npm run db:backup -- --uri-env ATLAS_URI`. It reads and writes nothing, and a near-empty archive in
+   `backups/` means the password, the user's privileges, the network list, DNS and TLS are all correct.
+   An authentication error means the credentials; a timeout means the access list isn't Active yet.
 
 Preview deployments don't get a database. Their addresses change with every deploy, and Google only
 accepts sign-in from listed addresses, so accounts can't work there anyway. One fewer credential to
@@ -46,7 +60,9 @@ git checkout main
 ```bash
 git merge --ff-only development
 ```
-Then run the checks from DEVELOPMENT.md ("Workflow", step 3), push `main`, and switch back:
+Then run the checks from DEVELOPMENT.md ("Workflow", step 3), push `main`, and switch back. The push
+prints "Bypassed rule violations for refs/heads/main" — that is the ruleset working, letting you
+through on the bypass list (RUNBOOK §1) while it still holds for everyone else:
 ```bash
 git push origin main
 ```

@@ -121,6 +121,10 @@ export const TrackSchema = z.strictObject({
   dailyFocus: LegacyMap.optional(),
   dailyStudyPoints: LegacyMap.optional(),
   studyStreak: z.array(text(30)).max(20_000).optional(),
+  // Retired long ago, and still carried by tracks made before it went. Strict
+  // objects refuse anything unlisted, so a field left out here doesn't degrade
+  // the sync — it stops it, for that device, for good.
+  lastUpdatedDates: byDate(timestamp).optional(),
   isSynced: z.boolean().optional(),
   // mergeAppState (lib/merge.ts) stamps these onto each track too, so any
   // data that has been through a Drive or server merge carries them.
