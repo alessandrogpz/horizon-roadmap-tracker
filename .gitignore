@@ -64,3 +64,11 @@ temp/ai-eval/results/
 
 # Database backups hold personal data (npm run db:backup).
 /backups/
+
+# The Expo app (mobile/) keeps its own dependencies and build output.
+mobile/node_modules
+mobile/.expo
+mobile/dist
+mobile/android
+mobile/ios
+mobile/*.log
