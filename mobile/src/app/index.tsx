@@ -14,6 +14,7 @@ import { isItemCompleted, type DayItemRef, type ItemKind } from "@shared/complet
 import { currentStreakLength } from "@shared/streak";
 import { DAYS_SHORT, parseYMD } from "@shared/dates";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
+import { usePedometer } from "../steps/usePedometer";
 import { DARK, LIGHT, RADIUS, SPACING, type Palette } from "../theme";
 
 interface Row {
@@ -47,6 +48,7 @@ export default function TodayScreen() {
 
   const rows = useMemo(() => (track ? rowsFor(track, today) : { focus: [], revision: [] }), [track, today]);
   const streak = useMemo(() => currentStreakLength(track?.streakHistory ?? [], today), [track, today]);
+  const steps = usePedometer(today);
 
   if (loading) {
     return (
@@ -96,6 +98,8 @@ export default function TodayScreen() {
         <Text style={styles.muted}>day{streak === 1 ? "" : "s"} in a row</Text>
       </View>
 
+      <StepsCard steps={steps} styles={styles} />
+
       <Section title="Focus" rows={rows.focus} track={track} today={today} toggle={toggleItem} dayKey={dayKey} styles={styles} palette={palette} />
       <Section title="Revision" rows={rows.revision} track={track} today={today} toggle={toggleItem} dayKey={dayKey} styles={styles} palette={palette} />
 
@@ -106,6 +110,35 @@ export default function TodayScreen() {
         </Text>
       )}
     </ScrollView>
+  );
+}
+
+/** The pedometer, and what to say when it can't be used. A sensor that is
+ *  missing, or refused, must leave the screen usable — the rest of the day's
+ *  plan has nothing to do with walking. */
+function StepsCard({ steps, styles }: { steps: ReturnType<typeof usePedometer>; styles: ReturnType<typeof makeStyles> }) {
+  if (steps.status === "checking" || steps.status === "unavailable") return null;
+
+  if (steps.status === "denied") {
+    return (
+      <Pressable style={styles.stepsCard} accessibilityRole="button" onPress={steps.request}>
+        <Text style={styles.stepsLabel}>Count my steps</Text>
+        <Text style={styles.muted}>
+          Uses this phone's step counter to fill in the day by itself. Say no and nothing changes —
+          everything here still works by hand.
+        </Text>
+      </Pressable>
+    );
+  }
+
+  return (
+    <View style={styles.stepsCard}>
+      <View style={styles.stepsRow}>
+        <Text style={styles.stepsNumber}>{steps.today.toLocaleString()}</Text>
+        <Text style={styles.muted}>steps today</Text>
+      </View>
+      <Text style={styles.stepsFootnote}>Counted while Horizon is open. Android delivers nothing while it's closed.</Text>
+    </View>
   );
 }
 
@@ -188,6 +221,18 @@ function makeStyles(palette: Palette) {
       backgroundColor: palette.card,
     },
     streakNumber: { color: palette.accent, fontSize: 30, fontWeight: "700" },
+    stepsCard: {
+      gap: SPACING.xs,
+      padding: SPACING.lg,
+      borderRadius: RADIUS.card,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.card,
+    },
+    stepsRow: { flexDirection: "row", alignItems: "baseline", gap: SPACING.sm },
+    stepsNumber: { color: palette.success, fontSize: 26, fontWeight: "700" },
+    stepsLabel: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
+    stepsFootnote: { color: palette.subtleForeground, fontSize: 11, lineHeight: 15 },
     section: { gap: SPACING.sm },
     sectionTitle: {
       color: palette.subtleForeground,

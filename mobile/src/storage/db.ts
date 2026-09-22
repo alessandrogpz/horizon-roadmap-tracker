@@ -47,6 +47,10 @@ function open(): Promise<SQLite.SQLiteDatabase> {
         content TEXT NOT NULL,
         updatedAt INTEGER NOT NULL
       );
+      CREATE TABLE IF NOT EXISTS steps (
+        date TEXT PRIMARY KEY NOT NULL,
+        count INTEGER NOT NULL
+      );
     `);
     return db;
   });
@@ -92,8 +96,28 @@ export async function saveNote(note: StoredNote): Promise<void> {
   );
 }
 
+// Step counts stay in their own table and are deliberately *not* part of the
+// synced workspace: they are a reading from this particular phone's hardware,
+// they would mean nothing merged with another device's, and the server's schema
+// refuses fields it doesn't know about (learning log 13). What does sync is the
+// day being marked done, which is an ordinary completion.
+export async function loadStepCount(date: string): Promise<number> {
+  const db = await open();
+  const row = await db.getFirstAsync<{ count: number }>("SELECT count FROM steps WHERE date = ?", date);
+  return row?.count ?? 0;
+}
+
+export async function saveStepCount(date: string, count: number): Promise<void> {
+  const db = await open();
+  await db.runAsync(
+    "INSERT INTO steps (date, count) VALUES (?, ?) ON CONFLICT(date) DO UPDATE SET count = excluded.count",
+    date,
+    count
+  );
+}
+
 /** Used by "delete local data", and by the tests. */
 export async function clearAll(): Promise<void> {
   const db = await open();
-  await db.execAsync("DELETE FROM workspace; DELETE FROM notes;");
+  await db.execAsync("DELETE FROM workspace; DELETE FROM notes; DELETE FROM steps;");
 }

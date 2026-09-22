@@ -28,6 +28,7 @@ export interface StoredNote {
 
 const WORKSPACE_KEY = "horizon.workspace";
 const NOTES_KEY = "horizon.notes";
+const STEPS_KEY = "horizon.steps";
 
 const read = <T>(key: string, fallback: T): T => {
   try {
@@ -65,10 +66,19 @@ export async function saveNote(note: StoredNote): Promise<void> {
   write(NOTES_KEY, [...notes, note]);
 }
 
+export async function loadStepCount(date: string): Promise<number> {
+  return read<Record<string, number>>(STEPS_KEY, {})[date] ?? 0;
+}
+
+export async function saveStepCount(date: string, count: number): Promise<void> {
+  write(STEPS_KEY, { ...read<Record<string, number>>(STEPS_KEY, {}), [date]: count });
+}
+
 export async function clearAll(): Promise<void> {
   try {
     globalThis.localStorage?.removeItem(WORKSPACE_KEY);
     globalThis.localStorage?.removeItem(NOTES_KEY);
+    globalThis.localStorage?.removeItem(STEPS_KEY);
   } catch {
     // Nothing to do: there was nothing readable to clear.
   }
