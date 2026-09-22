@@ -73,7 +73,7 @@ export default function PrivacyPage() {
         <Section title="Who is responsible">
           <p>
             Alessandro Perez, the author of Horizon, acting as an individual. For anything about this
-            page or your data: <a className="text-accent" href="mailto:alessandrogperez@gmail.com">alessandrogperez@gmail.com</a>.
+            page or your data: <a className="text-accent" href="mailto:alessandroperez.developer@gmail.com">alessandroperez.developer@gmail.com</a>.
           </p>
         </Section>
 
