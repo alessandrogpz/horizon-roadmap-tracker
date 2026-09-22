@@ -35,6 +35,30 @@ export async function createSession(
   return { token, expiresAt };
 }
 
+/**
+ * The session token a request carries, from either of the two ways a client can
+ * hold one.
+ *
+ * A browser uses the cookie: it is set and sent by the browser itself, marked
+ * HttpOnly so no script can read it, which is the strongest place a web page
+ * has to keep a secret.
+ *
+ * A phone has no such place. React Native's networking does have a cookie jar,
+ * but relying on it means the app cannot see or manage its own session, and the
+ * token would sit in a general-purpose store rather than the platform's
+ * protected one. So a native client keeps the token in the Android Keystore or
+ * the iOS Keychain and sends it explicitly, the way any API client would.
+ *
+ * `Bearer` is deliberate: unlike a cookie, it is never attached automatically,
+ * so a request carrying it cannot be forged by another site simply by pointing
+ * a browser at this API — which is the whole shape of CSRF (threat T5).
+ */
+export function sessionTokenFrom(request: { cookies: { get(name: string): { value: string } | undefined }; headers: Headers }): string | undefined {
+  const header = request.headers.get("authorization");
+  if (header?.startsWith("Bearer ")) return header.slice(7).trim();
+  return request.cookies.get(SESSION_COOKIE)?.value;
+}
+
 /** The signed-in user for a cookie's token, or null. */
 export async function findSessionUser(token: string | undefined, now = new Date()): Promise<UserRecord | null> {
   if (!looksLikeToken(token)) return null;

@@ -11,7 +11,7 @@
 import type { NextRequest } from "next/server";
 import { record } from "../securityEvents";
 import { errorResponse, isSameOrigin, jsonResponse, readJsonBody } from "../http";
-import { findSessionUser, SESSION_COOKIE } from "../auth/session";
+import { findSessionUser, sessionTokenFrom } from "../auth/session";
 import type { UserRecord } from "../models";
 import { openDb } from "../collections";
 import { hit, LIMITS, tooManyRequests } from "../rateLimit";
@@ -26,7 +26,7 @@ import type { Workspace } from "../../types";
  *  to this user's id, and nothing in a request can change which user that is
  *  (threats I1, T2). */
 export const requireUser = (request: NextRequest): Promise<UserRecord | null> =>
-  findSessionUser(request.cookies.get(SESSION_COOKIE)?.value);
+  findSessionUser(sessionTokenFrom(request));
 
 /** A bulk write that the database refused, said in field names only. A
  *  validation failure names the rules that weren't satisfied and the property

@@ -21,11 +21,16 @@ const verifyIdToken = vi.fn(async (token: string): Promise<GoogleIdentity> => {
 });
 const deps = { clientId: "test-client", verifyIdToken };
 
-const call = (method: string, { body, cookie, origin = ORIGIN }: { body?: unknown; cookie?: string; origin?: string | null } = {}) => {
+const call = (
+  method: string,
+  { body, cookie, bearer, native, origin = ORIGIN }: { body?: unknown; cookie?: string; bearer?: string; native?: boolean; origin?: string | null } = {}
+) => {
   const headers: Record<string, string> = { host: "localhost:3007" };
   if (origin) headers.origin = origin;
   if (body !== undefined) headers["content-type"] = "application/json";
   if (cookie) headers.cookie = `${SESSION_COOKIE}=${cookie}`;
+  if (bearer) headers.authorization = `Bearer ${bearer}`;
+  if (native) headers["x-horizon-client"] = "native";
   return new NextRequest(`${ORIGIN}/api/auth/session`, {
     method,
     headers,
@@ -168,5 +173,52 @@ describe("query filters (T1)", () => {
     await signIn();
     // Wrapped in $eq, it's a value again, and an object can't be a googleSub.
     await expect(User.findOne({ googleSub: smuggled }).lean()).rejects.toThrow(/Cast to string failed/);
+  });
+});
+
+describe("signing in from a phone", () => {
+  // A native app has no cookie jar it can manage, so it asks for the token and
+  // keeps it in the device keystore. Everything else — the Google check, the
+  // session, the rate limit — is the same code the browser uses.
+  const nativeSignIn = () => handleSignIn(call("POST", { body: { credential: "good-token" }, native: true }), deps);
+
+  it("returns the token in the body, and sets no cookie", async () => {
+    const response = await nativeSignIn();
+    const payload = (await response.json()) as { token?: string; account?: { email: string }; expiresAt?: string };
+
+    expect(response.status).toBe(200);
+    expect(payload.account?.email).toBe("ada@example.com");
+    expect(payload.token).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(sessionCookieOf(response)).toBeUndefined();
+    expect(response.headers.get("cache-control")).toBe("no-store");
+  });
+
+  it("is recognised on later requests as a Bearer token", async () => {
+    const { token } = (await (await nativeSignIn()).json()) as { token: string };
+
+    const response = await handleGetSession(call("GET", { bearer: token }));
+    expect(((await response.json()) as { account: { email: string } | null }).account?.email).toBe("ada@example.com");
+  });
+
+  it("signs out, and the token stops working", async () => {
+    const { token } = (await (await nativeSignIn()).json()) as { token: string };
+
+    expect((await handleSignOut(call("DELETE", { bearer: token }))).status).toBe(204);
+
+    const after = await handleGetSession(call("GET", { bearer: token }));
+    expect(((await after.json()) as { account: unknown }).account).toBeNull();
+  });
+
+  it("refuses a token that was never issued", async () => {
+    const response = await handleGetSession(call("GET", { bearer: "x".repeat(43) }));
+    expect(((await response.json()) as { account: unknown }).account).toBeNull();
+  });
+
+  it("gives a browser a cookie, not a token, even on the same endpoint", async () => {
+    const response = await signIn();
+    const payload = (await response.json()) as { token?: string };
+
+    expect(payload.token).toBeUndefined();
+    expect(sessionCookieOf(response)).toContain("HttpOnly");
   });
 });

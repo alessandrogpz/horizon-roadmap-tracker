@@ -91,6 +91,11 @@ export default function TodayScreen() {
             <Text style={styles.switchLabel}>Switch</Text>
           </Pressable>
         </Link>
+        <Link href="/account" asChild>
+          <Pressable style={styles.switchButton} accessibilityRole="button" accessibilityLabel="Account">
+            <Text style={styles.switchLabel}>Account</Text>
+          </Pressable>
+        </Link>
       </View>
 
       <View style={styles.streakCard}>

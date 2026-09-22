@@ -7,6 +7,27 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.27.0] - 2026-09-22
+
+### Added
+- **Sign in and sync on the phone.** The app asks Google for an identity token addressed to Horizon's
+  existing web client, posts it to the same `/api/auth/session` the website uses, and receives a
+  session token. Sync then runs against the same `/api/sync`, so the phone is simply a third device:
+  the server merges it with the account's copy in a transaction, using the same `mergeWorkspace` the
+  phone itself runs.
+- An Account screen on the phone: sign in, sync, sign out, with plain messages for being offline,
+  signed out or rate-limited.
+
+### Changed
+- **The server now accepts a session carried either way.** A browser keeps using the HttpOnly cookie
+  no script can read. A native client asks for the token in the response body — by sending
+  `X-Horizon-Client: native` — keeps it in the Android Keystore or iOS Keychain, and sends it as a
+  `Bearer` header. Unlike a cookie, a bearer token is never attached automatically, so a request
+  carrying one cannot be forged by pointing a browser at the API.
+- Five database tests cover the phone's path: the token comes back in the body with no cookie set, it
+  authenticates later requests, signing out kills it, an unissued token is refused, and a browser
+  still gets a cookie rather than a token from the same endpoint.
+
 ## [0.26.1] - 2026-09-22
 
 ### Fixed

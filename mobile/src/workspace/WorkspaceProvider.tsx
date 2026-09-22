@@ -25,6 +25,8 @@ interface WorkspaceValue {
   loading: boolean;
   toggleItem: (item: DayItemRef, completed: boolean) => void;
   switchTrack: (trackId: string) => void;
+  /** After a sync: the merged workspace the server sent back, already stored. */
+  replaceWorkspace: (workspace: Workspace) => void;
 }
 
 const WorkspaceContext = createContext<WorkspaceValue | null>(null);
@@ -114,9 +116,11 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     [apply]
   );
 
+  const replaceWorkspace = useCallback((next: Workspace) => setWorkspace(next), []);
+
   const value = useMemo<WorkspaceValue>(
-    () => ({ workspace, track, today, loading, toggleItem, switchTrack }),
-    [workspace, track, today, loading, toggleItem, switchTrack]
+    () => ({ workspace, track, today, loading, toggleItem, switchTrack, replaceWorkspace }),
+    [workspace, track, today, loading, toggleItem, switchTrack, replaceWorkspace]
   );
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;

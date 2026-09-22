@@ -39,11 +39,22 @@
         }
       ],
       "expo-sqlite",
-      "expo-sensors"
+      "expo-sensors",
+      "@react-native-google-signin/google-signin",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "owner": "alessandrogpz",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0ab92496-485f-448d-9a02-322290450ff7"
+      },
+      "serverUrl": "https://horizonroadmap.com",
+      "googleClientId": "82064719586-e6s5ajaef0qrun4g7j3667mii5etojm5.apps.googleusercontent.com"
     }
   }
 }
