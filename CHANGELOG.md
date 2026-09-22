@@ -7,6 +7,12 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.23.2] - 2026-09-22
+
+### Changed
+- The public contact address is now `alessandroperez.developer@gmail.com`, on the privacy page and —
+  newly — in `SECURITY.md`, which asked for private reports without saying where to send them.
+
 ## [0.23.1] - 2026-09-22
 
 ### Added
