@@ -26,7 +26,7 @@
 // connection string *without* a database name (it would take that as the
 // target, and restore nothing), and choose the database with --nsInclude or
 // --nsFrom/--nsTo:
-//   docker run --rm -i --network host -e URI mongo:8.0 \
+//   docker run --rm -i --network host -e URI mongo:8.3 \
 //     sh -c 'mongorestore --uri="$URI" --archive --gzip --drop --nsInclude="horizon.*"' < backups/<file>
 // Tested: a 24 MB backup of the generated dataset restored 587,578 documents,
 // every count, index and validator matching.
