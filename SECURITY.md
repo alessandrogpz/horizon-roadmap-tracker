@@ -2,8 +2,9 @@
 
 ## Reporting a vulnerability
 
-Please report security issues privately to the maintainer rather than in a public issue. Include what you
-found, how to reproduce it, and what it lets an attacker do. Reports are acknowledged within a week.
+Please report security issues privately to <alessandroperez.developer@gmail.com> rather than in a public issue.
+Include what you found, how to reproduce it, and what it lets an attacker do. Reports are acknowledged
+within a week.
 
 ## How Horizon is secured
 
