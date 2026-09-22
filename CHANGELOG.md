@@ -7,6 +7,16 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.24.1] - 2026-09-22
+
+### Documentation
+- `MOBILE_PLAN.md`: the plan for a third module, Mobile App Development, whose exam falls on the same
+  day as the other two. It records why a PWA wrapper cannot pass it, why React Native through Expo is
+  the choice over Kotlin, Flutter and Capacitor, what the phone reuses from this repository (the
+  1,500-line domain core, imports nothing from React or the browser, and the whole server API), which
+  storage each kind of data gets on a device and why, and a four-week schedule with rehearsal running
+  alongside rather than after.
+
 ## [0.24.0] - 2026-09-22
 
 ### Added
