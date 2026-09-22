@@ -36,6 +36,7 @@ The other documents, and what each one is for:
 10. [Data at scale: seeding, explain() and failover (0.20.1)](#10-data-at-scale-seeding-explain-and-failover-0201)
 11. [Deleting an account (0.21.0)](#11-deleting-an-account-0210)
 12. [Securing the development life cycle (0.21.1)](#12-securing-the-development-life-cycle-0211)
+13. [Going live: Atlas, Vercel and a protected `main` (0.21.4)](#13-going-live-atlas-vercel-and-a-protected-main-0214)
 
 ---
 
@@ -799,3 +800,84 @@ asks for a secured development life cycle and operations.
 
 **Files.** `.github/workflows/ci.yml`, `.github/dependabot.yml`, `scripts/backup.ts`, `SECURITY.md`,
 `docs/security/MEASURES.md`, `docs/security/RUNBOOK.md`.
+
+---
+
+## 13. Going live: Atlas, Vercel and a protected `main` (0.21.4)
+
+**What changed.** Accounts, sync, search and statistics went live at horizonroadmap.com on 2026-09-22.
+The database is a MongoDB Atlas free cluster in Frankfurt; the server code runs in Vercel's Frankfurt
+region; `main` went from 0.17.0 to 0.21.3 in one fast-forward, and is now protected by a GitHub ruleset.
+Nothing in the application code changed: the same `MONGODB_URI` that pointed at three Docker containers
+now points at three Atlas servers.
+
+**Why.** The Cyber Security module's Level 2 wording is about securing a *live* application and its
+operations, not a development one. A threat model that has never met the internet is a document; the same
+model checked against a deployed site is evidence. It also completes the NoSQL hand-in, which asks how to
+connect to Atlas.
+
+**Concepts.**
+- **`mongodb+srv://` is a DNS lookup.** One hostname resolves to the replica set's members, so the driver
+  discovers all three servers, and which is currently primary, without being told. That is why moving from
+  Docker to Atlas needed no code change: both are replica sets, and the driver treats them identically.
+- **A database user is not an account.** The Atlas login is the landlord; `horizon_prod` is a key to one
+  room, with `readWrite` on the `horizon` database only. If the connection string leaked, the holder could
+  not read another database, create users, or drop the cluster (threat E5).
+- **An open IP list is not an open database.** The access list is `0.0.0.0/0`, because Vercel's functions
+  have no fixed addresses and a free cluster has no private networking. What protects the data is TLS on
+  every connection and SCRAM authentication with a generated password. An allowlist never authenticated
+  anyone; it only limited who could *attempt* to. The risk that remains is recorded as I8.
+- **Write-only secrets.** `MONGODB_URI` is stored in Vercel as a Secret: after saving, nobody can read it
+  back, not even its owner — only the running function receives it. `NEXT_PUBLIC_GOOGLE_CLIENT_ID` is the
+  opposite, deliberately public and compiled into the browser bundle. Knowing which of your values is
+  which is most of secrets management.
+- **Data residency.** Cluster and functions both in Frankfurt: personal data stays in the EU, and the
+  server's several round trips per sync stay in one city instead of crossing an ocean.
+- **A ruleset binds its author.** `main` requires a pull request and four passing checks. Pushing to it
+  printed "Bypassed rule violations", which is the rule working: the owner is on the bypass list, the
+  assessor with write access is not (threat E7). Required checks name each CI job exactly; a name that
+  matches no job never reports, and a never-reported required check blocks every push for ever.
+- **Verify in production, not only in tests.** Passing tests say the code is right; a live check says the
+  deployment is. Both were run here, and the live one is what an examiner can watch.
+- **401 is not 403.** The live probes show the difference cleanly: no session gets 401 (who are you?),
+  while a request from another site's origin gets 403 (I know who you are, and no).
+
+**What went wrong on the day.** Sign-in worked; the first sync answered 400, "Malformed request." The
+oldest track on the device still carried `lastUpdatedDates`, a field retired long before this changelog
+began — and a strict schema refuses every key it doesn't list. The fixture the tests run on (a year of
+real use) predates that field, so no test could have caught it. Diagnosis took one exported backup run
+through the same schema the server uses. Three lessons worth repeating in an exam:
+- **Strict validation fails closed.** That is right for security — a smuggled `userId` is refused rather
+  than stored — and unforgiving for compatibility. Every retired field has to be listed as deliberately
+  allowed, which is now what the schema's legacy section is for.
+- **A generic error protects the server and blinds its operator.** The response still says only
+  "Malformed request."; the *reason* (which rule failed, and the first three segments of its path, never
+  a value) now goes to the server log, so the next one is readable in Vercel's logs without asking
+  anyone to export their data (threats I4, I6).
+- **Production data has a longer history than any fixture.** Real devices carry shapes no test data
+  remembers.
+
+**See it yourself.** Against the live site, with no credentials:
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' -X PUT -H 'Origin: https://evil.example' -H 'Content-Type: application/json' --data '{}' https://horizonroadmap.com/api/sync
+```
+
+403, and the same for `DELETE /api/account` and `POST /api/auth/session`. Without the forged origin and
+without a session they answer 401, and `/api/git` — the localhost-only route — answers 403 in production.
+`curl -sI https://horizonroadmap.com` shows the CSP, a two-year HSTS, and `x-vercel-id: fra1`.
+
+**Exam questions.**
+- *Your database accepts connections from any IP. Isn't that insecure?* The allowlist was never the
+  control: TLS plus SCRAM authentication are, and the database user reaches one database. Vercel has no
+  fixed egress addresses and the free tier has no private endpoint, so the alternative would be a false
+  sense of security, not a real one. It is an accepted, documented risk (I8).
+- *Where do your secrets live?* In Vercel as a write-only Secret, in Atlas as a generated password, in
+  `.env.local` locally — never in git, which gitleaks checks over the whole history. Rotation: RUNBOOK §3.
+- *How do you stop an unreviewed change reaching production?* `main` is protected: a pull request and four
+  green CI jobs, force-pushes and deletions blocked.
+- *Where is your data stored, and does that matter?* Frankfurt, `eu-central-1`, for GDPR and latency.
+- *How would you know if the deployment were broken?* The live checklist in `docs/DEPLOY.md` §4, Vercel's
+  logs for rejected sign-ins and rate limits, and a weekly backup that has been restored at least once.
+
+**Files.** `docs/DEPLOY.md`, `docs/security/RUNBOOK.md`, `lib/server/db.ts`, `lib/server/http.ts`.

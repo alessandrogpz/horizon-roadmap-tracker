@@ -112,6 +112,8 @@ export interface AppState {
   /** @deprecated */ dailyFocus?: Record<string, string>;
   /** @deprecated */ dailyStudyPoints?: Record<DateStr, number>;
   /** @deprecated */ studyStreak?: DateStr[];
+  /** @deprecated Retired before the changelog; still on tracks created back then. */
+  lastUpdatedDates?: Record<DateStr, number>;
 
   // Sync bookkeeping
   isSynced?: boolean;

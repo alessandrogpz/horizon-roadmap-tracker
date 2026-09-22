@@ -73,5 +73,15 @@ export async function readJsonBody<T>(request: Request, schema: z.ZodType<T>, ma
     return fail(400, "Malformed request.");
   }
   const parsed = schema.safeParse(raw);
-  return parsed.success ? { ok: true, data: parsed.data } : fail(400, "Malformed request.");
+  if (parsed.success) return { ok: true, data: parsed.data };
+  // The client is told nothing but "malformed" (threat I4). The server log gets
+  // enough to find the field: the rule that failed and where, never a value,
+  // and only the first three path segments, so free text used as a key (an
+  // accomplishment title, say) can't reach the log either (threat I6).
+  const where = parsed.error.issues
+    .slice(0, 5)
+    .map((issue) => `${issue.code} at ${issue.path.slice(0, 3).join(".") || "(root)"}`)
+    .join("; ");
+  console.warn(`Body rejected: ${where.slice(0, 300)}`);
+  return fail(400, "Malformed request.");
 }
