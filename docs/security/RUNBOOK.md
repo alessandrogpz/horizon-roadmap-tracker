@@ -107,7 +107,69 @@ catches up later. One member down: nothing to do, the others carry on (see
 `docs/nosql/RESILIENCE.md`). Two down: writes stop until a majority is back. Locally,
 `docker compose ps` shows which, and `docker compose start <member>` brings one back.
 
-## 7. Someone asks for their data to be deleted
+## 7. An alert fired
+
+Two scheduled workflows watch the live system, and both alert the same way: the run fails, and GitHub
+emails the owner. Open the run under **Actions** to see what it said.
+
+**Uptime** (`uptime.yml`, every 30 minutes) asks `/api/health`, which answers 200 only when the server
+can reach the database. A failure means requests are failing *now* — the static page keeps loading from
+the CDN either way, so a working site is not evidence.
+1. Open the site and sign in. If sync works, it was transient: note it and move on.
+2. Otherwise: Atlas → the cluster (paused? unreachable? free clusters pause after 30 idle days), then
+   Vercel → Logs for the reason the server gives.
+3. `MONGODB_URI` wrong or rotated is the most common cause — §3.
+
+**The daily check** (`ops.yml`, 06:15 UTC) reads the counters in the `securityEvents` collection and
+fails when one is out of character. What each means:
+
+| Counter | Over its threshold means | First move |
+|---|---|---|
+| `sign-in-rejected` | Someone is trying tokens that don't verify (S1, S2) | The signature checks are holding. Watch it; if it persists, note the pattern in the threat model |
+| `rate-limit-reached` | A client is hammering, or a limit is too low for real use (D2) | Decide which: real users hit limits in bursts, a script hits them steadily |
+| `body-rejected` | Someone is poking at the API, **or** a released version is sending something the schema refuses | Check the server log for the rule it named — that is how the 0.21.4 bug looked |
+| `write-refused` | Always a bug: the database refused a write the server made (threshold 0) | The log names the property and rule; reproduce locally against a restored backup, as in learning log entry 13 |
+| `db-unavailable` | Atlas unreachable from the functions | §6, then §3 |
+
+The counters hold no address, account or value — only a kind, an hour and a count — so they say what is
+happening, not to whom. To look yourself:
+
+```bash
+npm run ops:check -- --uri-env ATLAS_URI
+```
+
+## 8. Setting up the alerts and the encrypted backup (once)
+
+**The connection string GitHub needs.** Repository → Settings → Secrets and variables → Actions → New
+repository secret, named `ATLAS_URI`, holding the production connection string. Both scheduled
+workflows read it from the environment and never print it. It is the same string as in Vercel, so
+rotating the password (§3) means updating it in both places.
+
+**The backup key.** The scheduled backup encrypts to a public key committed in `ops/`, so a backup of
+real accounts can sit in a GitHub artifact without GitHub — or anyone who can read the repository —
+being able to open it. Generate the pair once, on your own machine:
+
+```bash
+gpg --quick-generate-key "Horizon backups <you@example.com>" default default never
+```
+```bash
+gpg --export --armor "Horizon backups" > ops/backup-key.pub
+```
+
+Commit `ops/backup-key.pub`. **Back up the private key** — export it with `gpg --export-secret-keys
+--armor` and keep it in your password manager, on paper, or both. Without it every backup is
+unreadable, including by you; that is the trade-off asymmetric encryption makes, and it only pays off
+if the private half survives.
+
+To read a backup: download the artifact from the workflow run, then
+
+```bash
+gpg --decrypt horizon-<time>.archive.gz.gpg > horizon.archive.gz
+```
+
+and restore it as in §4. Test this once now, while nothing depends on it.
+
+## 9. Someone asks for their data to be deleted
 
 They can do it themselves: Settings → Account → Delete account. That removes everything the account
 stored on the server, in one transaction. Their device keeps its copy until they use "Delete local data"

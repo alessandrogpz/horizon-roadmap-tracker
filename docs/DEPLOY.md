@@ -89,10 +89,15 @@ git checkout development
 
 ## 5. Afterwards
 
-- **Backups.** The Atlas free tier makes none. Weekly, from your laptop:
-  `ATLAS_URI='<connection string>' npm run db:backup -- --uri-env ATLAS_URI` (put a reminder in your
-  calendar). The file lands in `backups/`, readable only by you.
-- **Logs.** Vercel → the project → Logs: sign-in rejections show as "Sign-in rejected: <reason>", and
-  floods as "Rate limit reached".
-- **Level 2** (only if time allows): uptime monitoring, log alerts on those lines, a scheduled backup job
-  with an encrypted archive, and a second Atlas user for a staging database.
+- **Backups.** The Atlas free tier makes none, so `.github/workflows/backup.yml` makes one every Monday,
+  encrypted to the public key in `ops/` and kept as a workflow artifact for 90 days. It needs two
+  one-time steps — the `ATLAS_URI` secret and the key pair — in RUNBOOK §8. By hand, any time:
+  `npm run db:backup -- --uri-env ATLAS_URI` (add `--encrypt-to ops/backup-key.pub` to encrypt it).
+  The file lands in `backups/`, readable only by you.
+- **Logs and alerts.** Vercel → the project → Logs shows each rejection as it happens. Nobody watches a
+  dashboard, so the server also counts them in the database (`securityEvents`), a scheduled check reads
+  the counters every morning, and `/api/health` is asked every half hour; either one failing emails you.
+  What each alert means and what to do: RUNBOOK §7.
+- **Level 2**: uptime monitoring, alerts on those lines and a scheduled encrypted backup all shipped in
+  0.22.0. What's left of that list is a staging database with its own user, which needs a fixed preview
+  URL registered with Google before sign-in can work there.

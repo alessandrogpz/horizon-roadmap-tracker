@@ -14,6 +14,7 @@
 import { createHash } from "node:crypto";
 import { mongoose } from "./db";
 import { RATE_LIMITS } from "./collections";
+import { record } from "./securityEvents";
 
 export interface Limit {
   /** Which counter: requests to one route don't use up another's budget. */
@@ -59,7 +60,10 @@ export async function hit(limit: Limit, key: string, now = Date.now()): Promise<
   const count = counter?.count ?? 1;
   // Logged once per client per window, on the first refusal, so a flood can't
   // also flood the logs (threat R2). The bucket only: no address.
-  if (count === limit.max + 1) console.warn(`Rate limit reached: ${limit.bucket}`);
+  if (count === limit.max + 1) {
+    console.warn(`Rate limit reached: ${limit.bucket}`);
+    void record("rate-limit-reached");
+  }
   return {
     allowed: count <= limit.max,
     retryAfterSeconds: Math.max(1, Math.ceil((windowStart + limit.windowMs - now) / 1000)),

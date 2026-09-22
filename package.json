@@ -1,7 +1,10 @@
 {
   "name": "horizon-roadmap-tracker",
-  "version": "0.21.9",
+  "version": "0.22.0",
   "private": true,
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "next dev",
     "dev:lan": "next dev -H 0.0.0.0",
@@ -14,6 +17,7 @@
     "db:down": "docker compose down",
     "db:reset": "docker compose down --volumes",
     "db:backup": "tsx scripts/backup.ts",
+    "ops:check": "tsx scripts/ops-check.ts",
     "db:seed": "tsx scripts/seed.ts",
     "db:explain": "tsx scripts/explain.ts",
     "demo:failover": "tsx scripts/failover.ts",
@@ -35,7 +39,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^26.6.2",
+    "@types/node": "^24.13.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9.39.5",

@@ -2,6 +2,7 @@
 // sends is untrusted until it has been through here.
 
 import type { z } from "zod";
+import { record } from "./securityEvents";
 
 /** Every response from these routes is personal: never cache it anywhere. */
 const NO_STORE = { "Cache-Control": "no-store" };
@@ -83,5 +84,6 @@ export async function readJsonBody<T>(request: Request, schema: z.ZodType<T>, ma
     .map((issue) => `${issue.code} at ${issue.path.slice(0, 3).join(".") || "(root)"}`)
     .join("; ");
   console.warn(`Body rejected: ${where.slice(0, 300)}`);
+  void record("body-rejected");
   return fail(400, "Malformed request.");
 }
