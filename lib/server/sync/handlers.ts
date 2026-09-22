@@ -27,8 +27,32 @@ import type { Workspace } from "../../types";
 export const requireUser = (request: NextRequest): Promise<UserRecord | null> =>
   findSessionUser(request.cookies.get(SESSION_COOKIE)?.value);
 
+/** A bulk write that the database refused, said in field names only. A
+ *  validation failure names the rules that weren't satisfied and the property
+ *  each one belongs to; the values stay out of the log (threat I6). */
+interface RefusedWrite {
+  err?: {
+    code?: number;
+    errInfo?: { details?: { schemaRulesNotSatisfied?: { propertyName?: string; operatorName?: string }[] } };
+  };
+}
+
+const writeDetail = (error: unknown): string => {
+  const failures = (error as { writeErrors?: RefusedWrite[] }).writeErrors?.slice(0, 3) ?? [];
+  if (!failures.length) return "";
+  const said = failures.map(({ err }) => {
+    const named = (err?.errInfo?.details?.schemaRulesNotSatisfied ?? [])
+      .flatMap((rule) => [rule.propertyName, rule.operatorName].filter(Boolean))
+      .slice(0, 6)
+      .join("/");
+    return `${err?.code ?? "?"}${named ? ` (${named})` : ""}`;
+  });
+  return ` — refused writes: ${said.join(", ")}`;
+};
+
 const unavailable = (error: unknown): Response => {
-  console.error("Sync unavailable:", error instanceof Error ? error.name : "unknown error");
+  const name = error instanceof Error ? error.name : "unknown error";
+  console.error(`Sync unavailable: ${name}${writeDetail(error)}`);
   return errorResponse(503, "Sync isn't available right now.");
 };
 
