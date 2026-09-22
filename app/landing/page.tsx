@@ -524,7 +524,11 @@ export default function LandingPage() {
               <p className="text-[0.95rem] leading-relaxed text-muted-foreground">
                 Horizon opens and works with no account at all. Sign in with Google — from Settings,
                 whenever you feel like it — and the same tracks follow you between devices. Sign out and
-                nothing breaks; the app keeps running on the copy in your browser.
+                nothing breaks; the app keeps running on the copy in your browser.{" "}
+                <Link href="/security" className="text-accent underline-offset-2 hover:underline">
+                  How your data is protected
+                </Link>
+                .
               </p>
             </div>
 
@@ -629,6 +633,12 @@ export default function LandingPage() {
             className="text-[0.85rem] text-muted-foreground transition-colors hover:text-foreground"
           >
             Privacy
+          </Link>
+          <Link
+            href="/security"
+            className="text-[0.85rem] text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Security
           </Link>
         </div>
       </footer>

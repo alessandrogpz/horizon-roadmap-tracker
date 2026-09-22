@@ -199,9 +199,14 @@ export default function PrivacyPage() {
       </main>
 
       <footer className="border-t border-card-border">
-        <div className="mx-auto flex max-w-3xl items-center gap-2.5 px-4 pt-8 pb-14 sm:px-6">
-          <HorizonMark className="h-3.5 w-auto text-muted-foreground" />
-          <span className="text-[0.85rem] text-muted-foreground">Horizon — Roadmap Tracker</span>
+        <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-x-5 gap-y-2 px-4 pt-8 pb-14 sm:px-6">
+          <span className="flex items-center gap-2.5">
+            <HorizonMark className="h-3.5 w-auto text-muted-foreground" />
+            <span className="text-[0.85rem] text-muted-foreground">Horizon — Roadmap Tracker</span>
+          </span>
+          <Link href="/security" className="text-[0.85rem] text-muted-foreground transition-colors hover:text-foreground">
+            Security
+          </Link>
         </div>
       </footer>
     </div>
