@@ -619,9 +619,17 @@ export default function LandingPage() {
       <footer className="border-t border-card-border">
         {/* Extra bottom padding keeps the row clear of the app's fixed version
             badge in the corner. */}
-        <div className="mx-auto flex max-w-6xl items-center gap-2.5 px-4 pt-8 pb-14 sm:px-6">
-          <HorizonMark className="h-3.5 w-auto text-muted-foreground" />
-          <span className="text-[0.85rem] text-muted-foreground">Horizon — Roadmap Tracker</span>
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-5 gap-y-2 px-4 pt-8 pb-14 sm:px-6">
+          <span className="flex items-center gap-2.5">
+            <HorizonMark className="h-3.5 w-auto text-muted-foreground" />
+            <span className="text-[0.85rem] text-muted-foreground">Horizon — Roadmap Tracker</span>
+          </span>
+          <Link
+            href="/privacy"
+            className="text-[0.85rem] text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Privacy
+          </Link>
         </div>
       </footer>
     </div>
