@@ -7,6 +7,15 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.33.1] - 2026-09-23
+
+### Documentation
+- Corrected a wrong claim: a build variant does **not** share the original's signing key. EAS keeps
+  credentials per application identifier, so `com.horizonroadmap.app.dev` got its own keystore, and
+  Google refused sign-in there with "This android application is not registered to use OAuth2.0". The
+  mobile README and the runbook now say to read the fingerprint from the built APK
+  (`apksigner verify --print-certs`) and list both variants' fingerprints.
+
 ## [0.33.0] - 2026-09-23
 
 ### Added
