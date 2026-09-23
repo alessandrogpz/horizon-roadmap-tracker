@@ -62,8 +62,8 @@ export default function PrivacyPage() {
 
         <Section title="The short version">
           <p>
-            Without an account, nothing leaves your device: Horizon keeps everything in your browser&apos;s
-            own storage. If you sign in with Google, your tracks, daily progress and notes are also kept on
+            Without an account, nothing leaves your device at all: Horizon keeps everything in your
+            browser&apos;s own storage. If you sign in with Google, your tracks, daily progress and notes are also kept on
             a server in Frankfurt so they can follow you between devices. You can delete all of it from
             inside the app, in one click, and the copy on your device keeps working afterwards. There is no
             analytics, no advertising and no tracking of any kind.
@@ -171,14 +171,6 @@ export default function PrivacyPage() {
             JavaScript cannot read it and it only travels over HTTPS, and SameSite so other websites cannot
             use it. There are no analytics or advertising cookies, so there is no consent banner to click
             away.
-          </p>
-        </Section>
-
-        <Section title="Google Drive sync">
-          <p>
-            If you use the optional Drive sync instead of an account, Horizon writes to a hidden folder in{" "}
-            <em>your own</em> Google Drive that only this app can see. That copy is yours, held under your
-            Google account, and the Horizon server never receives it.
           </p>
         </Section>
 

@@ -73,7 +73,7 @@ server (E1, fixed in 0.14.4).
 ## 2. Scope and assumptions
 
 **In scope:** the web app in the browser, the planned API on Vercel, MongoDB
-(Atlas in production, a Docker replica set locally), Google sign-in and Drive
+(Atlas in production, a Docker replica set locally) and Google sign-in
 sync, the GitHub API, the local dev server and the computer it runs on, and
 how code gets from the repo to production.
 
@@ -87,8 +87,8 @@ how code gets from the repo to production.
 
 **Assumptions:**
 - Offline mode (no account) keeps all data in the browser. The only copy
-  outside the device is the user's own Google Drive, if they turn on Drive sync.
-- Signed-in users sync to MongoDB. Anyone not signed in can keep using Drive
+  outside the device is the account's copy on the server, for anyone signed in.
+- Signed-in users sync to MongoDB. Anyone not signed in keeps everything on the device
   sync as today.
 - One developer, who also owns every account: GitHub, Vercel, Google Cloud,
   Atlas.
@@ -109,7 +109,7 @@ flowchart LR
     subgraph ORIGIN["2: Horizon origin"]
       B["B: Horizon web app"]
       IDB[("IDB: IndexedDB<br/>tracks, notes")]
-      LS[("LS: localStorage<br/>Drive and GitHub tokens")]
+      LS[("LS: localStorage<br/>preferences, optional GitHub token")]
     end
     subgraph LOCAL["3: Dev server"]
       D["D: Next.js dev server<br/>/api/open, /api/git, /api/notes"]
@@ -128,7 +128,6 @@ flowchart LR
 
   subgraph GOOGLE["6: Google"]
     G["G: Google Identity"]
-    GD[("GD: Drive app folder")]
   end
 
   GH["GH: GitHub API"]
@@ -143,7 +142,6 @@ flowchart LR
   B -- "F4 sync + cookie" --> A
   A -- "F5 queries over TLS" --> DB
   ENV -.-> A
-  B -- "F6 Drive sync" --> GD
   B -- "F7 repo stats" --> GH
   B -- "F8 same origin" --> D
   D --> H
@@ -163,7 +161,7 @@ flowchart LR
 | U | The user | External | |
 | B | Horizon web app, running in the browser | Process | Exists |
 | IDB | IndexedDB: the workspace (all tracks) and notes | Data store | Exists |
-| LS | localStorage: Drive access token and client ID, optional GitHub token, settings | Data store | Exists |
+| LS | localStorage: preferences, optional GitHub token | Data store | Exists |
 | W | Other websites open in the same browser | External | |
 | D | Local dev server: `/api/open`, `/api/git`, `/api/notes` (only on the user's own computer; production refuses them, checked live 2026-09-10) | Process | Exists |
 | H | The computer's operating system: `xdg-open`, `git`, files | Process | Exists |
@@ -171,8 +169,7 @@ flowchart LR
 | A | Horizon API on Vercel: `/api/auth/session`, `/api/sync`, `/api/search`, `/api/stats`, `/api/account` | Process | All exist and run locally (0.18.0–0.21.0); deployed with Atlas in week 5 |
 | ENV | Vercel environment variables, and `.env.local` locally: `MONGODB_URI` | Data store | Planned (4a) |
 | DB | MongoDB: Atlas in production, a three-member Docker replica set locally | Data store | Local exists (0.17.1); Atlas planned (4a) |
-| G | Google Identity: Drive authorization today, sign-in later | External | Exists |
-| GD | The Drive app folder: `database.json`, `note_<id>.md` | External store | Exists |
+| G | Google Identity: sign-in (OpenID Connect) | External | Exists |
 | GH | GitHub API, for repo stats on materials | External | Exists |
 | CI | GitHub repo, CI, Vercel build and deploy | Process | Repo and deploy exist; CI planned (Step 6) |
 
@@ -185,7 +182,6 @@ flowchart LR
 | F3 | A → G | The API fetches Google's public signing keys | Exists (0.18.0) |
 | F4 | B ↔ A | `GET` and `PUT /api/sync`, authenticated by the session cookie | Exists (0.19.0) |
 | F5 | A ↔ DB | Queries and transactions over TLS | Exists locally (0.19.0); TLS with Atlas |
-| F6 | B ↔ GD | Drive sync, with a one-hour OAuth access token | Exists |
 | F7 | B → GH | Repo stats, with an optional GitHub token | Exists |
 | F8 | B → D → H | The app calling its own local routes (same origin) | Exists |
 | F9 | W → D | Another website sending a request to the local server | Refused since 0.14.4 |
@@ -209,10 +205,9 @@ flowchart LR
 
 | Asset | Why it matters | Where it lives |
 |---|---|---|
-| Users' tracks, progress and notes | Personal data; notes can contain anything | IDB, DB, GD, backup files |
+| Users' tracks, progress and notes | Personal data; notes can contain anything | IDB, SQLite on a phone, DB, backup files |
 | Session cookies | Whoever holds one is signed in as that user | Browser cookie jar; only a hash in DB |
 | Google ID tokens | Short-lived proof of who the user is | In transit only (F1, F2) |
-| Drive access token | Read and write Horizon's Drive folder for about an hour | LS |
 | GitHub token (optional) | Whatever access the user granted it | LS |
 | Database credentials | Full read and write on the app's database | ENV |
 | The deployed code | Runs in every user's browser and on the server | CI |
@@ -276,7 +271,7 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 | ID | Threat | Where | L | I | Risk | Mitigation | Status |
 |---|---|---|---|---|---|---|---|
 | I1 | IDOR: user A asks for a track by its id and gets user B's. Track ids are only unique per user, and every migrated legacy workspace has the same one (`track_legacy_engine_graphics`), so even a bug without an attacker would mix users' data | F4, A, DB | 3 | 3 | High | Every query filters by the session's `userId`. A unique index on `{userId, trackId}`. Tests that user A can't read or write user B's tracks, completions or notes, even with the same track id | Implemented (0.19.0 sync; 0.20.0 search and stats: every query and every `$lookup` filters by the session's `userId`; compound text indexes start with `userId`; tested with two users sharing `track_legacy_engine_graphics`) |
-| I2 | Cross-site scripting (XSS): injected script reads the Drive token, the GitHub token and everything in IndexedDB, or sends requests as the signed-in user | B, LS, IDB | 1 | 3 | Medium | React escapes what it renders. The markdown renderer escapes all HTML and allows only safe link schemes (`lib/markdown.ts`). The session cookie is `HttpOnly`. The CSP limits where data can be sent, within the limits described in I3 | Implemented |
+| I2 | Cross-site scripting (XSS): injected script reads the GitHub token and everything in IndexedDB, or sends requests as the signed-in user | B, LS, IDB | 1 | 3 | Medium | React escapes what it renders. The markdown renderer escapes all HTML and allows only safe link schemes (`lib/markdown.ts`). The session cookie is `HttpOnly`. The CSP limits where data can be sent, within the limits described in I3 | Implemented |
 | I3 | The CSP's `connect-src` allowlist doesn't cover every way out. Injected script could still send data inside an image URL (`img-src https:` allows any HTTPS host), or by navigating the page away | B | 1 | 3 | Medium | Narrow `img-src` to `'self' data: blob:`; the app loads no external images today. Add Google's avatar host only if the UI shows one. No CSP rule can restrict navigation, so preventing XSS (I2) remains the real defence | Implemented (0.18.0: `img-src 'self' data: blob:`) |
 | T5 | Cross-site request forgery: another site makes the browser act as the signed-in user | A | 2 | 3 | High | `Origin` and `Sec-Fetch-Site` checked on every state-changing route; JSON-only bodies; SameSite cookie | Implemented (0.14.4 for the local routes, 0.19.0 for the account API). Refined 0.28.2: a request carrying **no cookie** is allowed without an `Origin` — it has no ambient authority to abuse, which is what CSRF depends on, and the phone authenticates with a Bearer token it supplies deliberately. A cookie with no `Origin` is still refused |
 | I4 | Error messages reveal internals: `/api/git` and `/api/notes` return the raw `error.message`, and `/api/git`'s 403 names the home directory | D | 1 | 1 | Low | Generic messages to the client, details only in server logs. New routes do this from the start | Implemented (0.19.1: `/api/git` and `/api/notes` return generic messages and log details server-side; the 403 no longer names the home directory; tested) |
@@ -287,7 +282,7 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 | I9 | A copy of the database leaks: an Atlas breach, or a stray `mongodump` file | DB | 1 | 3 | Medium | Atlas encrypts storage at rest. Sessions are stored only as hashes, and there are no passwords to steal, because Google handles sign-in. Dumps stay out of the repo | Planned (4a, Step 6) |
 | I10 | Someone with physical access to a computer reads browser data, tokens and `.env.local` | Disk | 1 | 2 | Low | Development desktop: the Linux disk isn't encrypted (checked 2026-09-10). The laptop used for the exam demo needs full-disk encryption and a screen lock | Desktop Accepted; laptop Open |
 | I11 | The private repo contains details of unfixed issues: this document and `MODULES_PLAN.md` | CI | 1 | 2 | Low | Keep the repo private. Remove details of open issues before ever making it public | Accepted |
-| I12 | The Drive token could be used to read the user's other Drive files | F6, GD | 1 | 3 | Medium | The narrowest scope, `drive.appdata`: the token can only see Horizon's hidden app folder | Implemented |
+| I12 | ~~The Drive token could be used to read the user's other Drive files~~ | — | — | — | **Gone** | Drive sync was removed in 0.32.0, so there is no token, no scope and no folder. The strongest mitigation available is deleting the feature: the account sync it duplicated is on infrastructure this project controls | Removed |
 | I13 | Another device, or another program on the computer, reads or changes the local development database | DB | 1 | 2 | Low | It listens on `127.0.0.1` only. Access control is on, and the members authenticate each other with a shared key file. Passwords are generated per machine into git-ignored files only the owner can read (mode 600). The app is given only `horizon_app`'s password, never root's | Implemented (0.17.1; verified: logged-out access refused, sockets on 127.0.0.1) |
 
 ### Denial of service: making the app or its data unavailable
@@ -339,7 +334,7 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 |---|---|
 | Atlas reachable from any IP address (I8) | The free tier has no private networking and Vercel's outgoing IPs change. The password, TLS and a least-privilege user carry the protection instead |
 | `'unsafe-inline'` in the CSP's `script-src` | Next's runtime and the pre-paint theme script in `app/layout.tsx` need it. Nonces are the alternative, but they force every page to render on the server per request. XSS is prevented at the source instead (I2) |
-| Drive and GitHub tokens in `localStorage` | Google's browser token flow hands the token to JavaScript by design. The Drive token lasts about an hour and can only see Horizon's app folder (I12). The GitHub token is optional and user-supplied; a fine-grained, read-only token keeps its value low |
+| An optional GitHub token in `localStorage` | User-supplied and read-only by intention; a fine-grained token keeps its value low. Since 0.32.0 it is the only credential the browser holds — the session lives in an `HttpOnly` cookie no script can read |
 | Unencrypted disk on the development desktop (I10) | A desktop at home. Not accepted for the exam laptop |
 | Details of open issues in the private repo (I11) | Needed as working documents. To be removed before the repo is ever made public |
 | Sync unavailable while Atlas is down (D3) | Offline-first: nothing is lost and the app keeps working |
@@ -383,7 +378,7 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 | Data-flow diagram | A drawing of who takes part, where data is stored and how it moves |
 | Trust boundary | A line where data passes between different levels of trust |
 | STRIDE | Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege |
-| OAuth 2.0 | Lets an app act on a user's behalf with limited permission (Drive sync: an access token for one scope) |
+| OAuth 2.0 | Lets an app act on a user's behalf with limited permission — an access token for a named scope. Horizon used it for Drive sync until 0.32.0; it now uses only OpenID Connect, which answers *who* rather than granting access to anything |
 | OpenID Connect (OIDC) | Identity on top of OAuth 2.0: an ID token that says *who* the user is |
 | ID token / JWT | A signed JSON statement from Google. Its signature is checked with Google's public keys (published as a JWKS) |
 | Session cookie | A random value the browser sends with every request so the server knows who is signed in |

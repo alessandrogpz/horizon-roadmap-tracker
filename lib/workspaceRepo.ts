@@ -80,8 +80,8 @@ export const updateWorkspace = async (
     }
 
     // `isSynced` only ever turns on here. The first real edit sets it: from
-    // then on this device's data is worth keeping, so a Drive sync merges it
-    // instead of replacing it with the Drive copy (ensureStarterTrack has the
+    // then on this device's data is worth keeping, so a sync merges it
+    // instead of replacing it with the account's copy (ensureStarterTrack has the
     // case this protects). The caller's copy may predate that write, so it
     // must never switch the stored flag back off.
     if ((anyChanged && !isReset) || oldWorkspace?.isSynced) {
@@ -103,9 +103,9 @@ export const createTrack = async (track: TrackState): Promise<void> => {
     tracks: { ...ws.tracks, [track.meta.id]: track },
     activeTrackId: track.meta.id,
     // A track the user asked for is real local data. Mark the workspace synced
-    // so the first Sync takes the merge path — otherwise syncWithGoogleDrive's
+    // so the first Sync takes the merge path — otherwise the sync engine's
     // "unsynced: overwrite local with remote" branch would discard this track
-    // when the Drive account already holds data from another device.
+    // when the account already holds data from another device.
     isSynced: true,
   };
   await putWorkspace(nextWorkspace);
@@ -117,7 +117,7 @@ export const createTrack = async (track: TrackState): Promise<void> => {
  * running the load effect twice, or two open tabs, can't add two.
  *
  * It leaves `isSynced` as it was. On a fresh install that means unset, so if
- * this device is then connected to a Drive that already holds tracks, the
+ * this device is then signed in to an account that already holds tracks, the
  * first sync replaces the untouched starter with the real data instead of
  * merging a stray "My Track" into it. The first real edit sets `isSynced`
  * (see updateWorkspace), so nothing the user actually wrote is ever replaced.

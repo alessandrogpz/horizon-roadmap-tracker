@@ -20,19 +20,12 @@ import { daysSince, todayYMD } from "@/lib/dates";
 import { blankTrack } from "@/lib/templates";
 import { MODULES, defaultPanelColumns, homeColumnFor, resolveTrackLayout } from "@/lib/modules";
 import { recommendedPhaseId, removePhase, setCurrentPhase, setWeeklyRhythm, updatePhase, updateTrackIdentity } from "@/lib/trackActions";
-import {
-  clearGoogleAccessToken,
-  getGoogleClientId,
-  isGoogleAuthenticated,
-  loadGoogleGisScript,
-  setGoogleClientId,
-} from "@/lib/googleDrive";
+import { loadGoogleGisScript } from "@/lib/googleSignIn";
 import { useWorkspace, useWorkspaceActions } from "@/components/workspace/WorkspaceProvider";
 import { useAccount } from "@/components/useAccount";
 import { panelFor, type PanelContext } from "@/components/panels/registry";
 import PanelErrorBoundary from "@/components/panels/PanelErrorBoundary";
 import DashboardHeader from "@/components/DashboardHeader";
-import DriveConnectModal, { type DriveModalMode } from "@/components/DriveConnectModal";
 import PhaseDetailModal from "@/components/PhaseDetailModal";
 import RotationModal from "@/components/RotationModal";
 import ScheduleDayModal from "@/components/ScheduleDayModal";
@@ -59,9 +52,9 @@ function FullScreenMessage({ children }: { children: React.ReactNode }) {
 
 export default function Dashboard() {
   const { workspace, track, status, error, syncStatus, syncError } = useWorkspace();
-  const { updateTrack, commitTrack, commitWorkspace, switchTrack, addTrack, sync, syncAccount, reload } = useWorkspaceActions();
-  // Signed in: the sync button goes through the account. Signed out (or
-  // accounts switched off): Drive, exactly as before. Never both.
+  const { updateTrack, commitTrack, commitWorkspace, switchTrack, addTrack, syncAccount, reload } = useWorkspaceActions();
+  // Sync means the account, and only the account. Signed out, the app is
+  // local-only — which is a complete way to use it, not a degraded one.
   const account = useAccount();
 
   const [selectedScheduleDay, setSelectedScheduleDay] = useState<WeekDay | null>(null);
@@ -70,7 +63,6 @@ export default function Dashboard() {
   const [showRhythmEditor, setShowRhythmEditor] = useState(false);
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedPhase, setSelectedPhase] = useState<Phase | null>(null);
-  const [driveModalMode, setDriveModalMode] = useState<DriveModalMode | null>(null);
 
   // Local, draggable copy of the panel order. It mirrors the active track's
   // stored layout but must also hold ahead-of-persistence state during an
@@ -194,29 +186,8 @@ export default function Dashboard() {
   };
 
   const handleSyncWorkspace = () => {
-    if (syncStatus === "syncing") return;
-    if (account) {
-      void syncAccount();
-      return;
-    }
-    const clientId = getGoogleClientId();
-    if (!clientId) {
-      setDriveModalMode("connect");
-      return;
-    }
-    void sync(clientId);
-  };
-
-  const handleDriveConnect = (clientId: string) => {
-    setGoogleClientId(clientId);
-    setDriveModalMode(null);
-    void sync(clientId);
-  };
-
-  const handleDriveDisconnect = () => {
-    localStorage.removeItem("google_drive_client_id");
-    clearGoogleAccessToken();
-    setDriveModalMode(null);
+    if (syncStatus === "syncing" || !account) return;
+    void syncAccount();
   };
 
   /** Soft-delete: flips meta.archived rather than removing the track record,
@@ -308,9 +279,8 @@ export default function Dashboard() {
             workspace={workspace}
             syncStatus={syncStatus}
             syncError={syncError}
-            syncTarget={account ? "account" : "drive"}
+            syncTarget={account ? "account" : "local"}
             onSync={handleSyncWorkspace}
-            onOpenCloudMenu={() => setDriveModalMode("manage")}
             onSwitchTrack={(trackId) => void switchTrack(trackId)}
             onNewTrack={() => addTrack(blankTrack("New Track", todayYMD()))}
             onEditTrack={(fields) => void commitTrack((prev) => updateTrackIdentity(prev, fields), "track identity")}
@@ -398,16 +368,6 @@ export default function Dashboard() {
             void commitTrack((prev) => setWeeklyRhythm(prev, weekSchedule, focusTypes), "weekly rhythm")
           }
           onClose={() => setShowRhythmEditor(false)}
-        />
-      )}
-      {driveModalMode && (
-        <DriveConnectModal
-          mode={driveModalMode}
-          initialClientId={getGoogleClientId()}
-          isAuthenticated={isGoogleAuthenticated()}
-          onConnect={handleDriveConnect}
-          onDisconnect={handleDriveDisconnect}
-          onClose={() => setDriveModalMode(null)}
         />
       )}
     </main>

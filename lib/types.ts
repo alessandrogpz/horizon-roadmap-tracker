@@ -1,5 +1,5 @@
 // Central data model for the tracker. The single "current" record stored in
-// IndexedDB (and mirrored to Google Drive as database.json) follows AppState.
+// IndexedDB (and, signed in, mirrored to the account's database) follows AppState.
 
 export interface TaskItem {
   id: string;
@@ -196,7 +196,7 @@ export interface RotationDef {
  * per-track (mirrored from Workspace.isSynced) so existing per-track UI
  * checks — WeeklyPlan's date/label placeholders, the phase-recommendation
  * gate in app/page.tsx — keep working unchanged. `hasUnsyncedChanges` and
- * `lastSyncTime` are genuinely workspace-only bookkeeping (one Drive round
+ * `lastSyncTime` are genuinely workspace-only bookkeeping (one sync round
  * trip covers every track), so DashboardHeader reads those off Workspace
  * instead of the active track.
  */
@@ -237,7 +237,7 @@ export interface Workspace {
    *  (TrackState.panelColumns); this is only read once to migrate old data. */
   panelColumns?: PanelColumns;
 
-  // Sync bookkeeping — one Drive round trip covers the whole workspace.
+  // Sync bookkeeping — one round trip covers the whole workspace.
   isSynced?: boolean;
   hasUnsyncedChanges?: boolean;
   lastSyncTime?: number;

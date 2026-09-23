@@ -7,6 +7,28 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.32.0] - 2026-09-23
+
+### Removed
+- **Google Drive sync is gone.** It predated accounts and did the same job worse: a second copy of
+  everyone's data in a place this project doesn't operate, reached with an access token the browser
+  had to hold. Signing in now covers every reason it existed, and signed out the app is local-only —
+  a complete way to use it, not a degraded one.
+- What went with it: `lib/googleDrive.ts`, the connect/disconnect modal, the cloud entries in the
+  menu and settings, the Drive token in `localStorage`, and `https://www.googleapis.com` from the
+  content security policy's `connect-src`. "Delete local data" still clears the old Drive keys, since
+  a device that used it still has them.
+- **The only sensitive Google scope went with it.** `drive.appdata` was what would have required a
+  verification review before the OAuth app could be published publicly; sign-in alone needs none.
+- The threat model records I12 as **Removed** rather than mitigated: deleting a feature is the
+  strongest mitigation available, and it is worth distinguishing from defending one.
+
+### Changed
+- The sync button now says "On this device" when signed out, and opens Settings rather than
+  pretending there is somewhere to sync to.
+- `loadGoogleGisScript` moved into `lib/googleSignIn.ts`, where it belongs — it loads Google's
+  identity script, which sign-in still needs.
+
 ## [0.31.1] - 2026-09-23
 
 ### Documentation

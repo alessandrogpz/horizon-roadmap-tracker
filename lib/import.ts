@@ -155,8 +155,10 @@ export async function wipeLocalData(): Promise<void> {
   });
   try {
     // Everything the app owns: its own `horizon-*` keys (settings, theme,
-    // collapsed material groups) plus the Drive/GitHub credentials and the
-    // git-stats cache, which live under their own historical names.
+    // collapsed material groups), the GitHub token and git-stats cache, and the
+    // Google Drive keys — Drive sync was removed in 0.32.0, but a device that
+    // used it still has its tokens sitting here, and "delete local data" should
+    // mean all of it.
     const named = [
       "google_drive_client_id",
       "google_drive_access_token",
