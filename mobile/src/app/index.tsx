@@ -132,6 +132,7 @@ export default function TodayScreen() {
             ["/notes", "Notes"],
             ["/timer", "Focus"],
             ["/search", "Search"],
+            ["/insights", "History"],
             ["/settings", "Settings"],
           ] as const
         ).map(([href, label]) => (

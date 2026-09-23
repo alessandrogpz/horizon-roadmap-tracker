@@ -41,6 +41,7 @@ function Screens() {
           <Stack.Screen name="notes" options={{ title: "Notes" }} />
           <Stack.Screen name="search" options={{ title: "Search" }} />
           <Stack.Screen name="timer" options={{ title: "Focus" }} />
+          <Stack.Screen name="insights" options={{ title: "History" }} />
           <Stack.Screen name="settings" options={{ title: "Settings", presentation: "modal" }} />
           <Stack.Screen name="account" options={{ title: "Account", presentation: "modal" }} />
       </Stack>

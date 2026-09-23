@@ -1,24 +1,37 @@
 // The roadmap: the phases between the start and the deadline, and which one
 // today falls in.
 //
-// Read-only on purpose. Rewriting a phase's description is desk work — a
-// paragraph of prose on a phone keyboard — while *knowing where you are* is
-// precisely the thing worth having in a pocket. The schedule itself comes from
+// Titles can be edited, phases added, removed, or made current. Descriptions
+// stay on the website: a paragraph of prose on a phone keyboard is desk work,
+// and the phases' own schedule comes from
 // `timelineStats` in the shared core, so the dates here and on the website are
 // computed by the same code rather than by two that agree today.
 
-import { useMemo } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useCallback, useMemo, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { phaseStats, timelineStats } from "@shared/stats";
+import { addPhase, removePhase, setCurrentPhase, updatePhase } from "@shared/trackActions";
 import { formatDayMonthYear } from "@shared/dates";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 export default function PhasesScreen() {
-  const { track, today } = useWorkspace();
+  const { track, today, editTrack } = useWorkspace();
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
+
+  const [editing, setEditing] = useState<number | null>(null);
+  const [draft, setDraft] = useState("");
+
+  const saveTitle = useCallback(
+    (phaseId: number) => {
+      const phase = track?.phases.find((p) => p.id === phaseId);
+      if (phase && draft.trim()) editTrack((t) => updatePhase(t, { ...phase, title: draft.trim() }));
+      setEditing(null);
+    },
+    [draft, editTrack, track]
+  );
 
   const timeline = useMemo(() => (track ? timelineStats(track) : null), [track]);
   const current = useMemo(() => (track ? phaseStats(track, today) : null), [track, today]);
@@ -69,10 +82,58 @@ export default function PhasesScreen() {
               {endDate ? ` – ${formatDayMonthYear(endDate)}` : ""}
             </Text>
           </View>
-          <Text style={styles.phaseTitle}>{phase.title}</Text>
+          {editing === phase.id ? (
+            <View style={styles.editRow}>
+              <TextInput
+                value={draft}
+                onChangeText={setDraft}
+                style={styles.input}
+                autoFocus
+                onSubmitEditing={() => saveTitle(phase.id)}
+                accessibilityLabel={`Title of phase ${phase.id}`}
+              />
+              <Pressable accessibilityRole="button" style={styles.smallButton} onPress={() => saveTitle(phase.id)}>
+                <Text style={styles.smallLabel}>Save</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                setEditing(phase.id);
+                setDraft(phase.title);
+              }}
+            >
+              <Text style={styles.phaseTitle}>{phase.title}</Text>
+            </Pressable>
+          )}
+
           {phase.description ? <Text style={styles.muted}>{phase.description}</Text> : null}
+
+          <View style={styles.actions}>
+            {state !== "current" && (
+              <Pressable accessibilityRole="button" style={styles.smallButton} onPress={() => editTrack((t) => setCurrentPhase(t, phase.id))}>
+                <Text style={styles.smallLabel}>Make current</Text>
+              </Pressable>
+            )}
+            <Pressable
+              accessibilityRole="button"
+              style={styles.smallButton}
+              onPress={() => editTrack((t) => removePhase(t, phase.id))}
+            >
+              <Text style={styles.smallLabel}>Remove</Text>
+            </Pressable>
+          </View>
         </View>
       ))}
+
+      <Pressable
+        accessibilityRole="button"
+        style={styles.addButton}
+        onPress={() => editTrack((t) => addPhase(t).track)}
+      >
+        <Text style={styles.smallLabel}>Add a phase</Text>
+      </Pressable>
 
       {timeline.windows.length === 0 && (
         <Text style={styles.muted}>This track has no phases yet. Add them in Horizon on the web.</Text>
@@ -104,5 +165,34 @@ function makeStyles(palette: Palette) {
     phaseLabel: { color: palette.subtleForeground, fontSize: 11, fontWeight: "700", letterSpacing: 1 },
     dates: { color: palette.subtleForeground, fontSize: 11 },
     phaseTitle: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
+    actions: { flexDirection: "row", gap: SPACING.sm, marginTop: SPACING.xs },
+    editRow: { flexDirection: "row", gap: SPACING.sm, alignItems: "center" },
+    input: {
+      flex: 1,
+      paddingHorizontal: SPACING.md,
+      paddingVertical: SPACING.sm,
+      borderRadius: RADIUS.control,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.surfaceMuted,
+      color: palette.foreground,
+      fontSize: 15,
+    },
+    smallButton: {
+      paddingHorizontal: SPACING.md,
+      paddingVertical: SPACING.sm,
+      borderRadius: RADIUS.control,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.surfaceMuted,
+    },
+    smallLabel: { color: palette.mutedForeground, fontSize: 12, fontWeight: "600" },
+    addButton: {
+      alignItems: "center",
+      paddingVertical: SPACING.md,
+      borderRadius: RADIUS.control,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+    },
   });
 }
