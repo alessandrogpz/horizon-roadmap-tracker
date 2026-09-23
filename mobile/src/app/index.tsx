@@ -15,6 +15,7 @@ import { currentStreakLength } from "@shared/streak";
 import { DAYS_SHORT, parseYMD } from "@shared/dates";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { usePedometer } from "../steps/usePedometer";
+import { shareTrack } from "../share/shareTrack";
 import { DARK, LIGHT, RADIUS, SPACING, type Palette } from "../theme";
 
 interface Row {
@@ -107,6 +108,14 @@ export default function TodayScreen() {
 
       <Section title="Focus" rows={rows.focus} track={track} today={today} toggle={toggleItem} dayKey={dayKey} styles={styles} palette={palette} />
       <Section title="Revision" rows={rows.revision} track={track} today={today} toggle={toggleItem} dayKey={dayKey} styles={styles} palette={palette} />
+
+      <Pressable
+        style={styles.shareButton}
+        accessibilityRole="button"
+        onPress={() => void shareTrack(track, today, { done, total })}
+      >
+        <Text style={styles.switchLabel}>Share where this track stands</Text>
+      </Pressable>
 
       {total === 0 && (
         <Text style={styles.empty}>
@@ -272,6 +281,14 @@ function makeStyles(palette: Palette) {
     rowTitle: { color: palette.foreground, fontSize: 15, lineHeight: 20 },
     rowTitleDone: { color: palette.mutedForeground, textDecorationLine: "line-through" },
     rowDescription: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
+    shareButton: {
+      alignItems: "center",
+      paddingVertical: SPACING.md,
+      borderRadius: RADIUS.control,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.surfaceMuted,
+    },
     empty: { color: palette.mutedForeground, fontSize: 14, lineHeight: 20 },
   });
 }
