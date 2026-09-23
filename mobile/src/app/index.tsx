@@ -99,10 +99,12 @@ export default function TodayScreen() {
         </Link>
       </View>
 
-      <View style={styles.streakCard}>
-        <Text style={styles.streakNumber}>{streak}</Text>
-        <Text style={styles.muted}>day{streak === 1 ? "" : "s"} in a row</Text>
-      </View>
+      <Link href="/streak" asChild>
+        <Pressable style={styles.streakCard} accessibilityRole="button" accessibilityLabel="Consistency">
+          <Text style={styles.streakNumber}>{streak}</Text>
+          <Text style={styles.muted}>day{streak === 1 ? "" : "s"} in a row</Text>
+        </Pressable>
+      </Link>
 
       <StepsCard steps={steps} styles={styles} />
 
