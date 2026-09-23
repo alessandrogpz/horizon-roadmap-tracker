@@ -17,27 +17,8 @@ import { NOTES, TRACKS } from "../collections";
 
 type ObjectId = mongoose.Types.ObjectId;
 
-export interface TrackHit {
-  trackId: string;
-  name: string;
-  score: number;
-  materials: { id: string; title: string; author?: string }[];
-  phases: { id: number; title: string }[];
-}
-
-export interface NoteHit {
-  noteId: string;
-  kind: "material" | "notepad" | "todo";
-  /** The material's title, or the track's name for a notepad or to-do list. */
-  about: string;
-  snippet: string;
-  score: number;
-}
-
-export interface SearchResult {
-  tracks: TrackHit[];
-  notes: NoteHit[];
-}
+export type { NoteHit, SearchResult, TrackHit } from "../../apiTypes";
+import type { NoteHit, SearchResult, TrackHit } from "../../apiTypes";
 
 const LIMIT = 20;
 

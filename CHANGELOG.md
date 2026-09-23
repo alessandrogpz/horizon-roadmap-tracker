@@ -7,6 +7,28 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.35.0] - 2026-09-23
+
+### Added
+- **The rest of the phone-first port**, all shipped over the air:
+  - **Roadmap** — the phases between the start and the deadline, which one today falls in, and how
+    far behind the schedule thinks you are. Read-only: rewriting a phase description is desk work,
+    knowing where you are is not.
+  - **Notes** — the notepad and the to-do list for the open track, saved as you type because Android
+    can end the process without warning. The to-do list is the same markdown checklist the website
+    reads and writes, through the same `quickNotes` functions.
+  - **Search** — a thin client over `/api/search`, so the database's text index does the work instead
+    of the phone loading every track and note into memory to scan them. Says plainly when it needs an
+    account or a connection.
+  - **Settings** — account, what this device holds, links to the privacy and security pages, and
+    "delete local data" with a confirmation that disarms itself after a few seconds.
+
+### Changed
+- The API's response shapes moved to `lib/apiTypes.ts`. A type-only import is erased at build time,
+  but TypeScript still reads the file it came from — and reading `lib/server/**` from a React Native
+  project means resolving Mongoose's types in an environment that has no business having them. One
+  definition, imported by both sides.
+
 ## [0.34.0] - 2026-09-23
 
 ### Added
