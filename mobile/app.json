@@ -21,8 +21,12 @@
       "package": "com.horizonroadmap.app",
       "versionCode": 1,
       "permissions": [
+        "android.permission.ACTIVITY_RECOGNITION",
         "android.permission.ACTIVITY_RECOGNITION"
-      ]
+      ],
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "web": {
       "output": "static",
@@ -55,6 +59,12 @@
       },
       "serverUrl": "https://horizonroadmap.com",
       "googleClientId": "82064719586-e6s5ajaef0qrun4g7j3667mii5etojm5.apps.googleusercontent.com"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/0ab92496-485f-448d-9a02-322290450ff7"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }
