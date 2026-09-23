@@ -7,6 +7,21 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.28.2] - 2026-09-23
+
+### Fixed
+- **Signing in from the phone was refused before the token was even read.** The same-origin check
+  rejected every request without an `Origin` header, and a native app doesn't send one — so the
+  server answered 403 and never looked at Google's identity token. Found from the security counters:
+  `sign-in-rejected` stayed at zero while the phone kept failing, which ruled out the token and
+  pointed at the gate in front of it.
+- The check now asks what it actually means to ask. Cross-site request forgery depends on the browser
+  attaching credentials by itself, so a request carrying **no cookie** has no authority to abuse and
+  is allowed without an `Origin`; whatever authenticates it — the phone's Bearer token — was supplied
+  deliberately. A cookie without an `Origin` is still refused, because that shape is a browser and a
+  browser should have sent one. Covered by tests for both shapes, and recorded in the threat model
+  as T5.
+
 ## [0.28.1] - 2026-09-23
 
 ### Documentation

@@ -20,9 +20,19 @@ describe("isSameOrigin", () => {
     expect(isSameOrigin(request({ ...host, origin: "http://localhost:3007", "sec-fetch-site": "same-site" }))).toBe(false);
   });
 
-  it("refuses requests with no usable Origin", () => {
-    expect(isSameOrigin(request(host))).toBe(false);
+  it("refuses a browser-shaped request with no usable Origin", () => {
+    // A cookie means a browser attached credentials by itself, which is exactly
+    // the case Origin exists to police — so a missing or unusable one is fatal.
+    expect(isSameOrigin(request({ ...host, cookie: "__Host-horizon_session=x" }))).toBe(false);
+    expect(isSameOrigin(request({ ...host, origin: "null", cookie: "__Host-horizon_session=x" }))).toBe(false);
     expect(isSameOrigin(request({ ...host, origin: "null" }))).toBe(false);
+  });
+
+  it("allows a request that carries no cookie at all (the phone, curl, a script)", () => {
+    // Nothing was attached on its behalf, so it cannot be a confused deputy:
+    // whatever authenticates it — a Bearer token — was supplied deliberately.
+    expect(isSameOrigin(request(host))).toBe(true);
+    expect(isSameOrigin(request({ ...host, authorization: "Bearer " + "x".repeat(43) }))).toBe(true);
   });
 
   it("compares the port too", () => {

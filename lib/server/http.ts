@@ -28,7 +28,22 @@ export const errorResponse = (status: number, message: string): Response =>
 export function isSameOrigin(request: Request): boolean {
   const origin = request.headers.get("origin");
   const host = request.headers.get("host");
-  if (!origin || !host) return false;
+
+  // What this check is actually for: a browser attaches cookies to a request by
+  // itself, so a page on another site can make the browser act as the signed-in
+  // user without ever seeing the cookie. That is CSRF, and `Origin` — which a
+  // page cannot forge — is what distinguishes it.
+  //
+  // A request carrying no cookie has no such ambient authority: nothing was
+  // attached on its behalf, so whatever authenticates it had to be supplied
+  // deliberately (the phone's Bearer token). Those requests cannot be the
+  // confused deputy this check exists to stop, and they have no Origin to
+  // offer, so refusing them would be refusing the wrong thing.
+  //
+  // A cookie without an Origin stays refused: that shape is a browser, and a
+  // browser should have sent one.
+  if (!origin) return !request.headers.get("cookie");
+  if (!host) return false;
 
   let originHost: string;
   try {
