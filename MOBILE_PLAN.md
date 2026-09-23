@@ -137,6 +137,24 @@ slower. Decide separately; the module needs one platform done properly, not two 
 
 ---
 
+## 6b. Staying on SDK 57, on purpose
+
+Expo Go warns that its next release will only support SDK 58. That warning does not apply here: Expo
+Go is one shared app that can hold one SDK at a time, and this project stopped using it the moment it
+needed a permission and a native module Expo Go doesn't carry. A development build is this app,
+compiled against the SDK it was written for.
+
+Upgrading an SDK moves React Native, the build toolchain and every native module together. Four weeks
+before three exams, with the sensor working and sign-in working, there is nothing to gain and a
+working build to lose. Play accepts SDK 57 builds; nothing is blocked.
+
+The rule worth stating in the exam: upgrade when something you need is on the other side, or when the
+version you are on stops receiving security fixes — not because a newer number exists. The one thing
+to watch is Google Play's own minimum `targetSdkVersion`, which is a deadline set by the platform
+rather than by a framework, and is a genuine reason to upgrade whether or not it is convenient.
+
+---
+
 ## 7. Scope
 
 **In**, because Level 1 asks for non-trivial UI connected to real functionality:
