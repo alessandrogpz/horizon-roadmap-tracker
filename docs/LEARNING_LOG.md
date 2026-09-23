@@ -38,6 +38,8 @@ The other documents, and what each one is for:
 12. [Securing the development life cycle (0.21.1)](#12-securing-the-development-life-cycle-0211)
 13. [Going live: Atlas, Vercel and a protected `main` (0.21.4)](#13-going-live-atlas-vercel-and-a-protected-main-0214)
 14. [Noticing: health checks, security counters and an encrypted backup (0.22.0)](#14-noticing-health-checks-security-counters-and-an-encrypted-backup-0220)
+15. [A second platform, from the same core (0.25.0–0.27.0)](#15-a-second-platform-from-the-same-core-0250-0270)
+16. [What a phone can do that a browser can't (0.26.0–0.29.0)](#16-what-a-phone-can-do-that-a-browser-cant-0260-0290)
 
 ---
 
@@ -977,3 +979,121 @@ curl -s https://horizonroadmap.com/api/health
 **Files.** `lib/server/securityEvents.ts`, `lib/server/health.ts`, `scripts/ops-check.ts`,
 `scripts/backup.ts`, `.github/workflows/{uptime,ops,backup}.yml`, `docs/security/RUNBOOK.md` §7–§8,
 `lib/__tests__/securityEvents.db.test.ts`.
+
+---
+
+## 15. A second platform, from the same core (0.25.0–0.27.0)
+
+**What changed.** Horizon runs on Android, as a real app written with React Native and Expo, in
+`mobile/`. It shows today's plan, ticks items, keeps a streak, switches tracks, signs in with Google
+and syncs with the same account as the website.
+
+**Why.** A third module, Mobile App Development, whose exam falls on the same day as the other two.
+But the interesting part isn't the module: it's what building a second front end revealed about how
+the first one was built.
+
+**Concepts.**
+- **The architecture got tested, not described.** `lib/` — types, dates, completion rules, streak
+  calculation, selectors, the merge engine, the migrations — imports nothing from React and nothing
+  from the browser. About 1,500 lines moved to the phone *unchanged*, tests included. Nobody planned
+  that for mobile; it came from keeping business rules out of components, and this is the first time
+  it was cashed in. "Reflect on your software architecture" has a concrete answer: the architecture is
+  the reason this took weeks rather than months.
+- **What doesn't travel.** Drawing and storing. There is no DOM, so every component is rewritten, and
+  no IndexedDB, so storage is SQLite. Those were always going to be platform-specific; the point of
+  the layering is that *only* they were.
+- **The server didn't change at all** — well, almost (entry 16). The phone is a third device: it posts
+  its workspace to `/api/sync` and the server merges it in a transaction, using the same
+  `mergeWorkspace` the phone itself runs. Two devices ticking different boxes on the same day both
+  keep their tick, and the phone got that for free.
+- **A bundler that reads outside its own folder.** `mobile/` is a separate npm package, so Metro is
+  told to watch the repository root (for `../lib`) and to resolve `node_modules` only from `mobile/` —
+  two copies of React in one bundle is the classic monorepo crash.
+- **Where a session lives, when there is no browser.** The web keeps it in an HttpOnly cookie no
+  script can read. A phone has something better: the Android Keystore. So the app asks for the token
+  explicitly and sends it as a `Bearer` header, which is also safer against forgery — nothing attaches
+  a bearer token automatically, so no other app or page can make an authenticated request by accident.
+- **Storage, and its options.** SQLite for structured data that must survive; a key-value store for
+  small preferences; the keystore for the session; the server for the shared copy. The same question
+  the web answered with IndexedDB and `localStorage`, answered again with different tools.
+
+**See it yourself.** `cd mobile && npm start`, then open Horizon on the phone. Tick something, force
+close the app, reopen: still ticked. Tick something else on the laptop, sync both, and both survive.
+
+**Exam questions.**
+- *Why React Native rather than Flutter or Kotlin?* The domain logic is TypeScript that imports
+  nothing platform-specific, so it moves as it is. Dart or Kotlin would mean rewriting the merge
+  engine and the migrations, then maintaining two copies that can disagree — the exact risk this
+  project spent weeks removing. `MOBILE_PLAN.md` §3.
+- *What did you give up?* Memory, and a bridge between JavaScript and native code that Flutter doesn't
+  have. Both acceptable for an app whose heaviest operation is a merge over a few hundred documents.
+- *What is shared, and what can't be?* Logic travels; drawing and storing do not.
+- *How do two devices not overwrite each other?* They never merge locally. The server merges inside a
+  transaction, per item, with device-side timestamps deciding — entry 7.
+
+**Files.** `mobile/src/`, `mobile/metro.config.js`, `lib/` (unchanged), `MOBILE_PLAN.md`.
+
+---
+
+## 16. What a phone can do that a browser can't (0.26.0–0.29.0)
+
+**What changed.** The step counter, the permission that guards it, and Android's two directions of
+inter-app communication: a share sheet out, a deep link in.
+
+**Why.** A phone that only shows a smaller copy of the website is not worth installing, and the module
+asks for sensors, permissions and inter-app communication specifically — because they are what make
+mobile development different from web development.
+
+**Concepts.**
+- **A sensor is not a data source you can just read.** Android has no "how many steps today". There is
+  `watchStepCount`, which reports steps *since you subscribed* and only while the app is in the
+  foreground. So the app keeps its own running total and writes it immediately, and it says on screen
+  that steps taken while it's closed aren't counted. The alternative — Health Connect — is a second
+  permission system and a bigger build. Stating the limit is better than implying a full day.
+- **Permissions can be refused permanently.** Android's "don't ask again" means the app may never
+  prompt again; only the user can change it in settings. A well-behaved app detects that state, says
+  where to go, and notices the change when it returns to the foreground. Found by hitting it for real.
+- **Native code and JavaScript ship differently, and this is the platform's central fact.** JavaScript
+  can be replaced in an app already installed. Native code cannot: it needs a new build, downloaded
+  and installed by the user. That is why Expo Go — one shared app, containing what Expo chose — could
+  not run the pedometer, and why a build made before secure storage was added crashed on importing it.
+  It is also the client-server versioning problem from entry 13 in different clothes: an old app in
+  someone's pocket, talking to a server that has moved on.
+- **Intents, both ways.** Out: the share sheet hands Android text and the system offers whatever can
+  receive it, with no permission needed because the user picks the destination. In: `horizon://track/<id>`
+  opens the app on that track — and because a link is outside input, the handler may only choose
+  between tracks that already exist.
+- **A CSRF check that was measuring the wrong thing.** The server refused every request without an
+  `Origin` header, which a native app never sends, so sign-in from the phone was refused before the
+  token was read. The fix went back to what the check is *for*: cross-site forgery depends on the
+  browser attaching credentials by itself, so a request carrying no cookie has no authority to abuse.
+  No cookie, no `Origin` needed; a cookie without one is still refused. Found because the security
+  counters from entry 14 showed `sign-in-rejected` stuck at zero while the phone kept failing — the
+  monitoring paid for itself in a day.
+
+**See it yourself.** On the phone: tap "Count my steps", allow, walk. Then, from the laptop with the
+phone attached over USB:
+
+```bash
+adb shell am start -a android.intent.action.VIEW -d "horizon://track/<a track id>" com.horizonroadmap.app
+```
+
+The app switches to that track. And tap "Share where this track stands" to send a summary to any other
+app.
+
+**Exam questions.**
+- *Which sensor, and what did you have to consider?* The pedometer: the hardware may not exist, the
+  permission may be refused or permanently refused, the subscription costs battery so it is released
+  with the screen, and nothing arrives in the background.
+- *How does Android's permission system work?* Declared in the manifest, asked at the moment of use,
+  refusable, permanently refusable. An app that hasn't declared it is never even asked — which is
+  exactly why Expo Go couldn't do this.
+- *What is inter-app communication?* Intents. The share sheet and deep links here; also content
+  providers and broadcast receivers, which this app doesn't need.
+- *What's different about releasing a mobile app?* JavaScript can be updated over the air; native code
+  cannot. Old versions live on phones for months, so the server has to keep accepting what they send.
+- *How do you handle a missing native module?* Load it when first used, and report "this build can't
+  do that" instead of crashing the whole app on startup.
+
+**Files.** `mobile/src/steps/usePedometer.ts`, `mobile/src/share/shareTrack.ts`,
+`mobile/src/app/track/[id].tsx`, `mobile/src/auth/session.ts`, `lib/server/http.ts`, `mobile/app.json`.

@@ -56,6 +56,8 @@ Every document in this project, what it is for, and when to open it.
 | Security counters, health check, daily check | `lib/server/securityEvents.ts`, `lib/server/health.ts`, `scripts/ops-check.ts` | Learning log 14; MEASURES "Detection and response"; RUNBOOK §7 |
 | Backups, encrypted and scheduled | `scripts/backup.ts`, `.github/workflows/backup.yml`, `ops/` | Learning log 14; RUNBOOK §4, §8 |
 | CI, dependency audit, secret scan, static analysis | `.github/workflows/ci.yml`, `.github/dependabot.yml` | Learning log 12; MEASURES "Development life cycle" |
+| The phone app: shared core, SQLite, sign-in, sync | `mobile/src/` | Learning log 15; [`../MOBILE_PLAN.md`](../MOBILE_PLAN.md) |
+| The step counter, permissions, share sheet, deep links | `mobile/src/steps/`, `mobile/src/share/`, `mobile/src/app/track/` | Learning log 16; [`exams/mobile.md`](exams/mobile.md) |
 | Replica set, failover, the generated dataset | `compose.yaml`, `scripts/{seed,explain,failover}.ts` | Learning log 4 and 10; RESILIENCE; DATA |
 
 ## The scripts
