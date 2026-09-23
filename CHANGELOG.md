@@ -7,6 +7,23 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.37.0] - 2026-09-23
+
+### Added
+- **History on the phone**: totals, which weekdays you actually show up, the last twelve months, and
+  per-track figures with longest runs — all computed by the aggregation pipelines on the server,
+  because they read every day document the account owns. The bars are plain views; a charting library
+  would be a megabyte of dependency for what flexbox already does.
+- **Track management**: create a track from any of the four templates, and hold a track in the list to
+  rename it. The templates answer the questions the website's wizard asks, since a five-step form is
+  the wrong shape for a phone and everything stays editable afterwards.
+- **Phase editing**: tap a title to change it, make any phase current, add one, remove one.
+  Descriptions stay on the website — a paragraph of prose on a phone keyboard is desk work.
+
+### Changed
+- The `Stats` response shape joined `SearchResult` in `lib/apiTypes.ts`, so the phone can name what the
+  API returns without reading a file that imports Mongoose.
+
 ## [0.36.0] - 2026-09-23
 
 ### Added

@@ -30,6 +30,10 @@ interface WorkspaceValue {
   /** Any other change to the open track, expressed with the shared core's own
    *  mutations (`trackActions`), stamped and stored the same way. */
   editTrack: (change: (track: TrackState) => TrackState) => void;
+  /** Any track, not just the open one — archiving from a list, say. */
+  editTrackById: (trackId: string, change: (track: TrackState) => TrackState) => void;
+  /** Adds a track and opens it. */
+  addTrack: (track: TrackState) => void;
   switchTrack: (trackId: string) => void;
   /** After a sync: the merged workspace the server sent back, already stored. */
   replaceWorkspace: (workspace: Workspace) => void;
@@ -136,6 +140,33 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     [apply]
   );
 
+  const editTrackById = useCallback(
+    (trackId: string, change: (track: TrackState) => TrackState) => {
+      const workspaceNow = current.current;
+      const target = workspaceNow?.tracks[trackId];
+      if (!workspaceNow || !target) return;
+      apply(workspaceNow, { ...workspaceNow, tracks: { ...workspaceNow.tracks, [trackId]: change(target) } }, trackId);
+    },
+    [apply]
+  );
+
+  const addTrack = useCallback(
+    (track: TrackState) => {
+      const workspaceNow = current.current;
+      if (!workspaceNow) return;
+      const next: Workspace = {
+        ...workspaceNow,
+        activeTrackId: track.meta.id,
+        tracks: { ...workspaceNow.tracks, [track.meta.id]: track },
+      };
+      // A new track has no previous version to compare against, so bookkeeping
+      // has nothing to stamp; it is written as it is.
+      setWorkspace(next);
+      void saveWorkspace(next);
+    },
+    []
+  );
+
   const switchTrack = useCallback(
     (trackId: string) => {
       const workspaceNow = current.current;
@@ -156,8 +187,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo<WorkspaceValue>(
-    () => ({ workspace, track, today, loading, toggleItem, editTrack, switchTrack, replaceWorkspace, resetLocal }),
-    [workspace, track, today, loading, toggleItem, editTrack, switchTrack, replaceWorkspace, resetLocal]
+    () => ({ workspace, track, today, loading, toggleItem, editTrack, editTrackById, addTrack, switchTrack, replaceWorkspace, resetLocal }),
+    [workspace, track, today, loading, toggleItem, editTrack, editTrackById, addTrack, switchTrack, replaceWorkspace, resetLocal]
   );
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;

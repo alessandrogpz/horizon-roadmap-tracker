@@ -31,3 +31,22 @@ export interface SearchResult {
   tracks: TrackHit[];
   notes: NoteHit[];
 }
+
+export interface Stats {
+  totals: { activeDays: number; accomplishments: number; ticks: number; firstDay: string | null; lastDay: string | null };
+  /** Mon..Sun: the share of that weekday, since the first recorded day, that was active. */
+  byWeekday: { weekday: number; activeDays: number; rate: number; accomplishments: number; ticks: number }[];
+  byWeek: { week: string; activeDays: number; accomplishments: number; ticks: number }[];
+  byMonth: { month: string; activeDays: number; accomplishments: number; ticks: number }[];
+  byTrack: {
+    trackId: string;
+    name: string;
+    archived: boolean;
+    activeDays: number;
+    accomplishments: number;
+    ticks: number;
+    firstDay: string;
+    lastDay: string;
+    longestStreak: { length: number; from: string; to: string } | null;
+  }[];
+}
