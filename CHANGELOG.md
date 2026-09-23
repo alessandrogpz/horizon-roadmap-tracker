@@ -7,6 +7,20 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.38.1] - 2026-09-23
+
+### Fixed
+- **The roadmap is rendered on the phone, not shown as its source.** The earlier judgement that a
+  page of prose "reads fine with its headings intact" did not survive contact with a real roadmap:
+  `##`, `- ` and `**` on every line is not prose. It now goes through a markdown renderer styled
+  from the app's palette, with the raw text still shown while editing — that is what you are
+  editing. The renderer is pure JavaScript, so the fix reached the phone as an over-the-air update
+  rather than a new build.
+- **Metro can resolve `punycode`.** React Native ships no Node standard library, so the markdown
+  parser's `require("punycode")` — used for internationalised domain names in links — resolved to
+  nothing and failed the entire bundle. The npm package is now installed and aliased in
+  `metro.config.js`.
+
 ## [0.38.0] - 2026-09-23
 
 ### Added
