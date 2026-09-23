@@ -7,6 +7,14 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.29.2] - 2026-09-23
+
+### Documentation
+- The exam date is confirmed: all three are on the same day in the **first week of November 2026**,
+  about a week later than the estimate both plans were written against. `MOBILE_PLAN.md`'s schedule
+  is rewritten around it — weeks 1 and 2 were finished in two days, so the time bought back goes to
+  rehearsal rather than to more features.
+
 ## [0.29.1] - 2026-09-23
 
 ### Documentation
