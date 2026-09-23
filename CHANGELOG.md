@@ -7,6 +7,19 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.31.1] - 2026-09-23
+
+### Documentation
+- `mobile/README.md` now carries the day-to-day workflow: the dev loop, what needs only a saved file,
+  what needs an over-the-air update, what forces a rebuild and how long each takes — and the rule
+  underneath, that JavaScript can be replaced in an installed app while native code cannot.
+- The three Google OAuth clients are written down with what identifies each: the web client whose ID
+  the server verifies as the token's audience, and an Android client per package name carrying the
+  signing fingerprint. Also in `docs/security/RUNBOOK.md` §1, next to the other one-time account
+  settings, with the consequence noted — a new build variant needs a new Android client, or sign-in
+  fails there while the real app keeps working.
+- `docs/README.md` indexes both `mobile/README.md` and `MOBILE_PLAN.md`.
+
 ## [0.31.0] - 2026-09-23
 
 ### Changed
