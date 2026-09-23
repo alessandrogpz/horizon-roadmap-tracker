@@ -7,6 +7,16 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.34.0] - 2026-09-23
+
+### Added
+- **The consistency grid on the phone.** One cell per day since the track began, shaded by how much
+  landed on it, scrolling sideways and opening on the present — a year is 53 columns, which is more
+  than a phone can show without the cells becoming meaningless. Tapping the streak on Today opens it.
+- The cells come from `streakCalendar` in the shared core, the same function the website's grid and
+  the landing page's miniature use, so the three cannot drift into disagreeing about what a day was
+  worth.
+
 ## [0.33.1] - 2026-09-23
 
 ### Documentation
