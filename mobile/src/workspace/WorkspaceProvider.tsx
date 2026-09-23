@@ -15,7 +15,7 @@ import { migrateWorkspace } from "@shared/migrations";
 import { applyTrackBookkeeping } from "@shared/bookkeeping";
 import { blankTrack } from "@shared/templates";
 import { todayYMD } from "@shared/dates";
-import { loadWorkspace, saveWorkspace } from "../storage/db";
+import { clearAll, loadWorkspace, saveWorkspace } from "../storage/db";
 
 interface WorkspaceValue {
   workspace: Workspace | null;
@@ -31,6 +31,9 @@ interface WorkspaceValue {
   switchTrack: (trackId: string) => void;
   /** After a sync: the merged workspace the server sent back, already stored. */
   replaceWorkspace: (workspace: Workspace) => void;
+  /** Forgets everything this device holds and starts again, as on first run.
+   *  What is in the account is untouched — signing in brings it back. */
+  resetLocal: () => Promise<void>;
 }
 
 const WorkspaceContext = createContext<WorkspaceValue | null>(null);
@@ -63,12 +66,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         // months opens correctly.
         setWorkspace(migrateWorkspace(stored).workspace);
       } else {
-        // A first run with no account: start on something usable rather than
-        // an empty screen, exactly as the website does.
-        const track = blankTrack("My Track", todayYMD());
-        const fresh: Workspace = { activeTrackId: track.meta.id, tracks: { [track.meta.id]: track } };
-        setWorkspace(fresh);
-        await saveWorkspace(fresh);
+        setWorkspace(await freshWorkspace());
       }
       setLoading(false);
     })();
@@ -147,10 +145,24 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
   const replaceWorkspace = useCallback((next: Workspace) => setWorkspace(next), []);
 
+  const resetLocal = useCallback(async () => {
+    await clearAll();
+    setWorkspace(await freshWorkspace());
+  }, []);
+
   const value = useMemo<WorkspaceValue>(
-    () => ({ workspace, track, today, loading, toggleItem, editTrack, switchTrack, replaceWorkspace }),
-    [workspace, track, today, loading, toggleItem, editTrack, switchTrack, replaceWorkspace]
+    () => ({ workspace, track, today, loading, toggleItem, editTrack, switchTrack, replaceWorkspace, resetLocal }),
+    [workspace, track, today, loading, toggleItem, editTrack, switchTrack, replaceWorkspace, resetLocal]
   );
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
+}
+
+/** A first run: something usable rather than an empty screen, exactly as the
+ *  website does. Also what "delete local data" leaves behind. */
+async function freshWorkspace(): Promise<Workspace> {
+  const track = blankTrack("My Track", todayYMD());
+  const fresh: Workspace = { activeTrackId: track.meta.id, tracks: { [track.meta.id]: track } };
+  await saveWorkspace(fresh);
+  return fresh;
 }
