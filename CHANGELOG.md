@@ -7,6 +7,16 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.31.0] - 2026-09-23
+
+### Changed
+- **The development build is now a separate app on the phone.** `app.config.ts` gives the
+  `development` profile its own package name (`com.horizonroadmap.app.dev`), display name and deep
+  link scheme, so it no longer replaces the real app on install — hot reload and the standalone build
+  can coexist. The cost, documented in `mobile/README.md`: Google ties an OAuth client to a package
+  name, so signing in from the development variant needs a second Android client in Google Cloud with
+  the same fingerprint.
+
 ## [0.30.1] - 2026-09-23
 
 ### Fixed
