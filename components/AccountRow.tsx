@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { UserRound } from "lucide-react";
 import { accountStore, AccountsUnavailableError, deleteAccount, fetchAccount, googleClientId, signIn, signOut } from "@/lib/account";
 import { getGoogleAccountsId } from "@/lib/googleSignIn";
-import { loadGoogleGisScript } from "@/lib/googleDrive";
+import { loadGoogleGisScript } from "@/lib/googleSignIn";
 import { resolvedTheme } from "@/lib/theme";
 import { useAccount } from "@/components/useAccount";
 import { useWorkspaceActions } from "@/components/workspace/WorkspaceProvider";

@@ -5,7 +5,6 @@ import {
   AlertTriangle,
   Clock,
   Download,
-  HardDrive,
   Info,
   Monitor,
   Moon,
@@ -98,12 +97,10 @@ const quietButton =
 
 export default function SettingsModal({
   onClose,
-  onOpenCloudMenu,
   onRestored,
 }: {
   onClose: () => void;
   /** Opens the existing Drive connect/backup dialog — connection lives there. */
-  onOpenCloudMenu: () => void;
   /** Called after a restore or a wipe, so the app can reload the workspace. */
   onRestored: () => void;
 }) {
@@ -273,22 +270,6 @@ export default function SettingsModal({
 
         {/* ── Data ───────────────────────────────────────────────────── */}
         {googleClientId() && <AccountRow />}
-
-        <Row
-          icon={<HardDrive size={16} strokeWidth={2} />}
-          title="Cloud sync"
-          hint="Connect, disconnect, or check which Google account this device syncs through."
-        >
-          <button
-            onClick={() => {
-              onClose();
-              onOpenCloudMenu();
-            }}
-            className={quietButton}
-          >
-            Manage connection
-          </button>
-        </Row>
 
         <Row
           icon={<Download size={16} strokeWidth={2} />}

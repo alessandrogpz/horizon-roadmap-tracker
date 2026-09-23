@@ -44,7 +44,7 @@ Every security measure in Horizon: the threat it answers (IDs from
 | `/api/git` checks the path restriction before existence, and again after symlinks, with generic errors; `/api/open` validates the link (string, length, no leading `-`) | I4, I5, E4 | `app/api/git`, `app/api/open`, `app/api/notes` | `localRoutes.test.ts` |
 | Content-Security-Policy: `connect-src` allowlist, `img-src 'self' data: blob:`, `frame-ancestors 'none'`, `object-src 'none'`, `form-action 'self'`, `base-uri 'self'`; plus Referrer-Policy, `nosniff` and `X-Frame-Options: DENY` | I2, I3 | `next.config.ts` | Live headers checked with curl |
 | HTTPS only, with HSTS (two years) | T5 | Vercel | Live check, 2026-09-10 |
-| Drive access limited to Horizon's hidden app folder (`drive.appdata`) | I12 | `lib/googleDrive.ts` | Scope in code |
+| Google Drive sync removed entirely (0.32.0): no access token in the browser, no OAuth scope, no second copy of the data outside this project's control. The account sync it duplicated does the same job on infrastructure we operate | I12 | — | The code and its modal are deleted |
 
 ## Abuse, logging and accountability
 

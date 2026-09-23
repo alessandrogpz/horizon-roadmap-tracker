@@ -168,8 +168,8 @@ const DATA_POINTS = [
   },
   {
     icon: CloudOff,
-    title: "Or your own Google Drive",
-    body: "Signed out, you can still sync between devices through a hidden folder in your own Drive that only Horizon can read, with day-level conflict resolution. Optional, always.",
+    title: "Offline is the normal case",
+    body: "No connection, no problem: everything is read and written locally first. A sync catches up whenever you have signal, and the server merges it with whatever your other devices did meanwhile.",
   },
   {
     icon: Smartphone,
