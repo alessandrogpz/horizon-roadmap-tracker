@@ -12,7 +12,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { TrackState } from "@shared/types";
 import { isItemCompleted, type DayItemRef, type ItemKind } from "@shared/completions";
 import { currentStreakLength } from "@shared/streak";
-import { DAYS_SHORT, parseYMD } from "@shared/dates";
+import { DAYS_SHORT, getWeekNum, parseYMD } from "@shared/dates";
+import { computeRotationItemsForDay, isRotationItem } from "@shared/rotation";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { usePedometer } from "../steps/usePedometer";
 import { shareTrack } from "../share/shareTrack";
@@ -25,19 +26,35 @@ interface Row {
   kind: ItemKind;
 }
 
-/** Today's stored items for this track: the focus list and the revision list
- *  for this day of the week. Rotation-generated items come later — they are
- *  recomputed rather than stored, and are not needed to show a working day. */
+/**
+ * Today's items: what the week's rhythm stores for this weekday, plus whatever
+ * the track's rotations put there for *this* week.
+ *
+ * Rotations cycle — "Linear Algebra this week, OpenGL next" — so their items
+ * are computed from the rotation's definition and the week number, never read
+ * back from storage. A stored rotation item is last week's answer, which is why
+ * they are filtered out before the computed ones are added. This is the rule
+ * the website's weekly plan follows, from the same shared functions; a phone
+ * showing a different revision topic from the laptop would be worse than a
+ * phone showing none.
+ */
 function rowsFor(track: TrackState, dateStr: string): { focus: Row[]; revision: Row[] } {
   const dayKey = DAYS_SHORT[parseYMD(dateStr).getDay()];
+  const storedFocus = track.dailyTasks?.[dayKey] ?? [];
+  const storedRevision = track.dailyRevisionItems?.[dayKey] ?? [];
+
+  const rotations = track.rotations ?? [];
+  const weekNum = track.startDate ? getWeekNum(track.startDate, parseYMD(dateStr)) : 1;
+  const computed = rotations.length ? computeRotationItemsForDay(rotations, weekNum, dayKey) : { focus: [], revisions: [] };
+
+  const focus = rotations.length ? [...computed.focus, ...storedFocus.filter((it) => !isRotationItem(it))] : storedFocus;
+  const revision = rotations.length
+    ? [...computed.revisions, ...storedRevision.filter((it) => !isRotationItem(it))]
+    : storedRevision;
+
   return {
-    focus: (track.dailyTasks?.[dayKey] ?? []).map((item) => ({ id: item.id, title: item.title, kind: "focus" })),
-    revision: (track.dailyRevisionItems?.[dayKey] ?? []).map((item) => ({
-      id: item.id,
-      title: item.title,
-      description: item.description,
-      kind: "revision",
-    })),
+    focus: focus.map((item) => ({ id: item.id, title: item.title, kind: "focus" })),
+    revision: revision.map((item) => ({ id: item.id, title: item.title, description: item.description, kind: "revision" })),
   };
 }
 

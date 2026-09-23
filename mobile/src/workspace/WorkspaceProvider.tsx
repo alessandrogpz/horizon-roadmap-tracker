@@ -15,6 +15,7 @@ import { migrateWorkspace } from "@shared/migrations";
 import { applyTrackBookkeeping } from "@shared/bookkeeping";
 import { blankTrack } from "@shared/templates";
 import { todayYMD } from "@shared/dates";
+import { applyDailyResetIfNeeded } from "@shared/dailyReset";
 import { clearAll, loadWorkspace, saveWorkspace } from "../storage/db";
 
 interface WorkspaceValue {
@@ -64,7 +65,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         // Data written by an older version is brought up to date by the same
         // migrations the web app runs, so a phone that has been closed for
         // months opens correctly.
-        setWorkspace(migrateWorkspace(stored).workspace);
+        setWorkspace(await withDailyReset(migrateWorkspace(stored).workspace));
       } else {
         setWorkspace(await freshWorkspace());
       }
@@ -81,8 +82,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     const onChange = (state: AppStateStatus) => {
       if (state !== "active") return;
       setToday(todayYMD());
-      loadWorkspace().then((stored) => {
-        if (stored) setWorkspace(migrateWorkspace(stored).workspace);
+      loadWorkspace().then(async (stored) => {
+        if (stored) setWorkspace(await withDailyReset(migrateWorkspace(stored).workspace));
       });
     };
     const subscription = AppState.addEventListener("change", onChange);
@@ -165,4 +166,30 @@ async function freshWorkspace(): Promise<Workspace> {
   const fresh: Workspace = { activeTrackId: track.meta.id, tracks: { [track.meta.id]: track } };
   await saveWorkspace(fresh);
   return fresh;
+}
+
+/**
+ * Yesterday's ticks don't carry into today. The website runs this on load and
+ * whenever a track comes into view; a phone needs it in the same places and one
+ * more — coming back from the background, where the day may have rolled over
+ * while the app sat in the switcher.
+ *
+ * It is written back immediately, because a reset that exists only in memory
+ * would be undone by the next process kill.
+ */
+async function withDailyReset(workspace: Workspace): Promise<Workspace> {
+  const today = todayYMD();
+  let changedAny = false;
+  const tracks: Workspace["tracks"] = {};
+
+  for (const [id, track] of Object.entries(workspace.tracks)) {
+    const { data, changed } = applyDailyResetIfNeeded(track, today);
+    tracks[id] = data;
+    changedAny ||= changed;
+  }
+
+  if (!changedAny) return workspace;
+  const next = { ...workspace, tracks };
+  await saveWorkspace(next);
+  return next;
 }

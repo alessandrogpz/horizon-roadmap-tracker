@@ -7,6 +7,18 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.35.1] - 2026-09-23
+
+### Fixed
+- **The phone showed the wrong rotation items.** Rotations cycle — one topic this week, another next —
+  so their items are computed from the rotation's definition and the week number, never read back
+  from storage, and a stored one is last week's answer. Today's list now computes them exactly as the
+  website's weekly plan does, from the same shared functions, and filters the stale stored copies out.
+- **The daily reset didn't run on the phone.** Yesterday's ticks could carry into today. It now runs
+  on load and whenever the app returns to the foreground — where the day may well have rolled over
+  while the app sat in the switcher — and is written back immediately, since a reset held only in
+  memory would be undone by the next process kill.
+
 ## [0.35.0] - 2026-09-23
 
 ### Added
