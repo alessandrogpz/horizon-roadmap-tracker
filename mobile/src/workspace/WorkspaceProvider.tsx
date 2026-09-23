@@ -25,6 +25,9 @@ interface WorkspaceValue {
   today: string;
   loading: boolean;
   toggleItem: (item: DayItemRef, completed: boolean) => void;
+  /** Any other change to the open track, expressed with the shared core's own
+   *  mutations (`trackActions`), stamped and stored the same way. */
+  editTrack: (change: (track: TrackState) => TrackState) => void;
   switchTrack: (trackId: string) => void;
   /** After a sync: the merged workspace the server sent back, already stored. */
   replaceWorkspace: (workspace: Workspace) => void;
@@ -119,6 +122,17 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     [apply]
   );
 
+  const editTrack = useCallback(
+    (change: (track: TrackState) => TrackState) => {
+      const workspaceNow = current.current;
+      if (!workspaceNow) return;
+      const trackNow = activeTrack(workspaceNow);
+      if (!trackNow) return;
+      apply(workspaceNow, withActiveTrack(workspaceNow, change(trackNow)), trackNow.meta.id);
+    },
+    [apply]
+  );
+
   const switchTrack = useCallback(
     (trackId: string) => {
       const workspaceNow = current.current;
@@ -134,8 +148,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const replaceWorkspace = useCallback((next: Workspace) => setWorkspace(next), []);
 
   const value = useMemo<WorkspaceValue>(
-    () => ({ workspace, track, today, loading, toggleItem, switchTrack, replaceWorkspace }),
-    [workspace, track, today, loading, toggleItem, switchTrack, replaceWorkspace]
+    () => ({ workspace, track, today, loading, toggleItem, editTrack, switchTrack, replaceWorkspace }),
+    [workspace, track, today, loading, toggleItem, editTrack, switchTrack, replaceWorkspace]
   );
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
