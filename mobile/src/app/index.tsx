@@ -128,7 +128,10 @@ export default function TodayScreen() {
         {(
           [
             ["/materials", "Materials"],
-            ["/phases", "Roadmap"],
+            ["/phases", "Phases"],
+            ["/roadmap", "Roadmap"],
+            ["/rhythm", "Week"],
+            ["/portfolio", "Deliverables"],
             ["/notes", "Notes"],
             ["/timer", "Focus"],
             ["/search", "Search"],

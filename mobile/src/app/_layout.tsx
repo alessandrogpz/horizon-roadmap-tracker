@@ -42,6 +42,9 @@ function Screens() {
           <Stack.Screen name="search" options={{ title: "Search" }} />
           <Stack.Screen name="timer" options={{ title: "Focus" }} />
           <Stack.Screen name="insights" options={{ title: "History" }} />
+          <Stack.Screen name="rhythm" options={{ title: "Week & rotations" }} />
+          <Stack.Screen name="roadmap" options={{ title: "Roadmap" }} />
+          <Stack.Screen name="portfolio" options={{ title: "Deliverables" }} />
           <Stack.Screen name="settings" options={{ title: "Settings", presentation: "modal" }} />
           <Stack.Screen name="account" options={{ title: "Account", presentation: "modal" }} />
       </Stack>
