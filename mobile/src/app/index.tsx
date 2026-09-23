@@ -92,11 +92,6 @@ export default function TodayScreen() {
             <Text style={styles.switchLabel}>Switch</Text>
           </Pressable>
         </Link>
-        <Link href="/account" asChild>
-          <Pressable style={styles.switchButton} accessibilityRole="button" accessibilityLabel="Account">
-            <Text style={styles.switchLabel}>Account</Text>
-          </Pressable>
-        </Link>
       </View>
 
       <Link href="/streak" asChild>
@@ -111,11 +106,23 @@ export default function TodayScreen() {
       <Section title="Focus" rows={rows.focus} track={track} today={today} toggle={toggleItem} dayKey={dayKey} styles={styles} palette={palette} />
       <Section title="Revision" rows={rows.revision} track={track} today={today} toggle={toggleItem} dayKey={dayKey} styles={styles} palette={palette} />
 
-      <Link href="/materials" asChild>
-        <Pressable style={styles.shareButton} accessibilityRole="button">
-          <Text style={styles.switchLabel}>Materials</Text>
-        </Pressable>
-      </Link>
+      <View style={styles.links}>
+        {(
+          [
+            ["/materials", "Materials"],
+            ["/phases", "Roadmap"],
+            ["/notes", "Notes"],
+            ["/search", "Search"],
+            ["/settings", "Settings"],
+          ] as const
+        ).map(([href, label]) => (
+          <Link key={href} href={href} asChild>
+            <Pressable style={styles.link} accessibilityRole="button">
+              <Text style={styles.switchLabel}>{label}</Text>
+            </Pressable>
+          </Link>
+        ))}
+      </View>
 
       <Pressable
         style={styles.shareButton}
@@ -289,6 +296,15 @@ function makeStyles(palette: Palette) {
     rowTitle: { color: palette.foreground, fontSize: 15, lineHeight: 20 },
     rowTitleDone: { color: palette.mutedForeground, textDecorationLine: "line-through" },
     rowDescription: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
+    links: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.sm },
+    link: {
+      paddingHorizontal: SPACING.lg,
+      paddingVertical: SPACING.md,
+      borderRadius: RADIUS.control,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.card,
+    },
     shareButton: {
       alignItems: "center",
       paddingVertical: SPACING.md,

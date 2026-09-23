@@ -28,6 +28,10 @@ export default function RootLayout() {
           <Stack.Screen name="tracks" options={{ title: "Your tracks", presentation: "modal" }} />
           <Stack.Screen name="materials" options={{ title: "Materials" }} />
           <Stack.Screen name="streak" options={{ title: "Consistency" }} />
+          <Stack.Screen name="phases" options={{ title: "Roadmap" }} />
+          <Stack.Screen name="notes" options={{ title: "Notes" }} />
+          <Stack.Screen name="search" options={{ title: "Search" }} />
+          <Stack.Screen name="settings" options={{ title: "Settings", presentation: "modal" }} />
           <Stack.Screen name="account" options={{ title: "Account", presentation: "modal" }} />
         </Stack>
       </WorkspaceProvider>
