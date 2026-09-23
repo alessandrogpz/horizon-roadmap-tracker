@@ -6,7 +6,7 @@
 // does.
 
 import { useMemo } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, useColorScheme, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Link } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { TrackState } from "@shared/types";
@@ -17,7 +17,8 @@ import { computeRotationItemsForDay, isRotationItem } from "@shared/rotation";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { usePedometer } from "../steps/usePedometer";
 import { shareTrack } from "../share/shareTrack";
-import { DARK, LIGHT, RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, type Palette } from "../theme";
+import { usePalette } from "../theme/ThemeProvider";
 
 interface Row {
   id: string;
@@ -60,7 +61,7 @@ function rowsFor(track: TrackState, dateStr: string): { focus: Row[]; revision: 
 
 export default function TodayScreen() {
   const { track, today, loading, toggleItem } = useWorkspace();
-  const palette = useColorScheme() === "light" ? LIGHT : DARK;
+  const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
   const insets = useSafeAreaInsets();
 
@@ -129,6 +130,7 @@ export default function TodayScreen() {
             ["/materials", "Materials"],
             ["/phases", "Roadmap"],
             ["/notes", "Notes"],
+            ["/timer", "Focus"],
             ["/search", "Search"],
             ["/settings", "Settings"],
           ] as const

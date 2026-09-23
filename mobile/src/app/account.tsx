@@ -2,20 +2,21 @@
 // Settings → Account, and it talks to the same API.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, useColorScheme, View } from "react-native";
-import { currentAccount, signIn, signOut, storedToken, type Account } from "../auth/session";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { currentAccount, deleteAccount, signIn, signOut, storedToken, type Account } from "../auth/session";
 import { syncWithServer } from "../sync/syncWithServer";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
-import { DARK, LIGHT, RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, type Palette } from "../theme";
+import { usePalette } from "../theme/ThemeProvider";
 
 export default function AccountScreen() {
-  const palette = useColorScheme() === "light" ? LIGHT : DARK;
+  const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
   const { replaceWorkspace } = useWorkspace();
 
   const [account, setAccount] = useState<Account | null>(null);
   const [checking, setChecking] = useState(true);
-  const [busy, setBusy] = useState<"signing-in" | "syncing" | "signing-out" | null>(null);
+  const [busy, setBusy] = useState<"signing-in" | "syncing" | "signing-out" | "deleting" | null>(null);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -49,6 +50,29 @@ export default function AccountScreen() {
     setMessage(outcome.message);
     setBusy(null);
   }, [replaceWorkspace]);
+
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+  // An armed delete that never disarms is a trap on a screen people revisit.
+  useEffect(() => {
+    if (!confirmingDelete) return;
+    const timer = setTimeout(() => setConfirmingDelete(false), 8000);
+    return () => clearTimeout(timer);
+  }, [confirmingDelete]);
+
+  const doDelete = useCallback(async () => {
+    setBusy("deleting");
+    try {
+      await deleteAccount();
+      setAccount(null);
+      setMessage("Account deleted. Everything it held on the server is gone; this phone kept its own copy.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "That didn't work.");
+    } finally {
+      setBusy(null);
+      setConfirmingDelete(false);
+    }
+  }, []);
 
   const doSignOut = useCallback(async () => {
     setBusy("signing-out");
@@ -87,6 +111,23 @@ export default function AccountScreen() {
       )}
 
       {message ? <Text style={styles.message}>{message}</Text> : null}
+
+      {account && (
+        <View style={styles.danger}>
+          <Text style={styles.title}>Delete account</Text>
+          <Text style={styles.muted}>
+            Removes the account and everything it holds on the server — tracks, progress, notes and
+            sessions — in one operation that either finishes completely or changes nothing. This phone
+            keeps its own copy and carries on working offline.
+          </Text>
+          <Button
+            label={confirmingDelete ? "Tap again to delete the account" : "Delete account…"}
+            busy={busy === "deleting"}
+            onPress={() => (confirmingDelete ? void doDelete() : setConfirmingDelete(true))}
+            styles={styles}
+          />
+        </View>
+      )}
     </ScrollView>
   );
 }
@@ -145,5 +186,14 @@ function makeStyles(palette: Palette) {
     buttonLabel: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
     buttonLabelPrimary: { color: "#04121c" },
     message: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18, paddingHorizontal: SPACING.xs },
+    danger: {
+      gap: SPACING.sm,
+      marginTop: SPACING.lg,
+      padding: SPACING.lg,
+      borderRadius: RADIUS.card,
+      borderWidth: 1,
+      borderColor: "rgba(248, 113, 113, 0.3)",
+      backgroundColor: "rgba(248, 113, 113, 0.05)",
+    },
   });
 }

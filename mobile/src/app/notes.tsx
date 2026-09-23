@@ -13,17 +13,18 @@
 // screen must never do.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, useColorScheme, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { addTodo, notepadNoteId, parseTodos, removeTodo, serializeTodos, todoNoteId, toggleTodo, type TodoItem } from "@shared/quickNotes";
 import { loadNotes, saveNote } from "../storage/db";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
-import { DARK, LIGHT, RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, type Palette } from "../theme";
+import { usePalette } from "../theme/ThemeProvider";
 
 const SAVE_AFTER_MS = 600;
 
 export default function NotesScreen() {
   const { track } = useWorkspace();
-  const palette = useColorScheme() === "light" ? LIGHT : DARK;
+  const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
 
   const trackId = track?.meta.id ?? "";

@@ -8,15 +8,16 @@
 // computed by the same code rather than by two that agree today.
 
 import { useMemo } from "react";
-import { ScrollView, StyleSheet, Text, useColorScheme, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { phaseStats, timelineStats } from "@shared/stats";
 import { formatDayMonthYear } from "@shared/dates";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
-import { DARK, LIGHT, RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, type Palette } from "../theme";
+import { usePalette } from "../theme/ThemeProvider";
 
 export default function PhasesScreen() {
   const { track, today } = useWorkspace();
-  const palette = useColorScheme() === "light" ? LIGHT : DARK;
+  const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
 
   const timeline = useMemo(() => (track ? timelineStats(track) : null), [track]);

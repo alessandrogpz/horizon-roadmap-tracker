@@ -1,21 +1,30 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useColorScheme } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { WorkspaceProvider } from "../workspace/WorkspaceProvider";
-import { DARK, LIGHT } from "../theme";
+import { ThemeProvider, useTheme } from "../theme/ThemeProvider";
 
 // The root of the app. Everything below it can assume the workspace has been
 // read from SQLite, and that the palette matches the website's.
 
 export default function RootLayout() {
-  const scheme = useColorScheme();
-  const palette = scheme === "light" ? LIGHT : DARK;
+  return (
+    <ThemeProvider>
+      <SafeAreaProvider>
+        <WorkspaceProvider>
+          <Screens />
+        </WorkspaceProvider>
+      </SafeAreaProvider>
+    </ThemeProvider>
+  );
+}
+
+function Screens() {
+  const { palette, resolved } = useTheme();
 
   return (
-    <SafeAreaProvider>
-      <WorkspaceProvider>
-        <StatusBar style={scheme === "light" ? "dark" : "light"} />
+    <>
+      <StatusBar style={resolved === "light" ? "dark" : "light"} />
         <Stack
           screenOptions={{
             headerStyle: { backgroundColor: palette.background },
@@ -31,10 +40,10 @@ export default function RootLayout() {
           <Stack.Screen name="phases" options={{ title: "Roadmap" }} />
           <Stack.Screen name="notes" options={{ title: "Notes" }} />
           <Stack.Screen name="search" options={{ title: "Search" }} />
+          <Stack.Screen name="timer" options={{ title: "Focus" }} />
           <Stack.Screen name="settings" options={{ title: "Settings", presentation: "modal" }} />
           <Stack.Screen name="account" options={{ title: "Account", presentation: "modal" }} />
-        </Stack>
-      </WorkspaceProvider>
-    </SafeAreaProvider>
+      </Stack>
+    </>
   );
 }
