@@ -109,6 +109,12 @@ export default function TodayScreen() {
       <Section title="Focus" rows={rows.focus} track={track} today={today} toggle={toggleItem} dayKey={dayKey} styles={styles} palette={palette} />
       <Section title="Revision" rows={rows.revision} track={track} today={today} toggle={toggleItem} dayKey={dayKey} styles={styles} palette={palette} />
 
+      <Link href="/materials" asChild>
+        <Pressable style={styles.shareButton} accessibilityRole="button">
+          <Text style={styles.switchLabel}>Materials</Text>
+        </Pressable>
+      </Link>
+
       <Pressable
         style={styles.shareButton}
         accessibilityRole="button"
