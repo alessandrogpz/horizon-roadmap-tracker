@@ -163,7 +163,7 @@ Four and a half weeks, with two other exams to rehearse for. Rehearsal happens a
 | 1 (09-22) | Expo app, shared core wired up, SQLite storage, tracks and today's plan on screen | First full rehearsal of the other two exams |
 | 2 (09-29) | Sign-in, sync against the live server, the streak and materials screens | Second rehearsal |
 | 3 (10-06) | The pedometer, permissions, lifecycle and state restoration, the share target | Hand-in admin |
-| 4 (10-13) | Internal testing release, the demo script, this plan finished as documentation | Rehearse all three |
+| 4 (10-13) | Internal testing release, the demo script, this plan finished as documentation | Rehearse all three (docs/exams/) |
 | 5 (10-20) | Buffer, and rehearsal only | — |
 
 If a week slips, the share target goes first, then materials. The sensor and state restoration never

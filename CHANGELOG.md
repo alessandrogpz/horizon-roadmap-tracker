@@ -7,6 +7,18 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.28.0] - 2026-09-23
+
+### Documentation
+- **One preparation document per exam**, in `docs/exams/`, since all three are on the same day and
+  each examiner cares about a different face of the same work: `security.md` (the 5-minute talk and
+  its question map), `nosql.md` (the demo and the questions), and `mobile.md` — new — with an
+  8-minute demo on the phone, the framework comparison, and answers on lifecycle, storage,
+  permissions and rollout. `day-before.md` holds the set-up checklist shared by all three.
+- `docs/ORAL_PREP.md` is now the index to those, and names the overlaps worth pointing out in the
+  room: the legacy field that broke sync is a validation story, a security story and a version-skew
+  story at once.
+
 ## [0.27.1] - 2026-09-23
 
 ### Fixed
