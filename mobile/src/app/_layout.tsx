@@ -26,6 +26,7 @@ export default function RootLayout() {
         >
           <Stack.Screen name="index" options={{ title: "Today" }} />
           <Stack.Screen name="tracks" options={{ title: "Your tracks", presentation: "modal" }} />
+          <Stack.Screen name="materials" options={{ title: "Materials" }} />
           <Stack.Screen name="account" options={{ title: "Account", presentation: "modal" }} />
         </Stack>
       </WorkspaceProvider>

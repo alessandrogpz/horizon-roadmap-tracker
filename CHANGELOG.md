@@ -7,6 +7,16 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.33.0] - 2026-09-23
+
+### Added
+- **Materials on the phone.** Every book, course and paper on the open track, with its author, status
+  and progress bar; tap one to change its status, move the bookmark, or open its link. Marking one
+  Completed feeds the streak, because the shared core decides that — `setMaterialStatus` is the same
+  function the website calls.
+- The phone can now make any change the shared `trackActions` express, not just tick items: the
+  workspace provider gained `editTrack`, which stamps and stores the result exactly as a tick does.
+
 ## [0.32.0] - 2026-09-23
 
 ### Removed
