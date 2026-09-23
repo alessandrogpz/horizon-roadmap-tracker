@@ -1,9 +1,9 @@
 # Plan: Mobile App Development, on Horizon
 
 > **Written 2026-09-22 against v0.24.0.** The exam is on the same day as SE_06 NoSQL and Cyber
-> Security — around 2026-10-25, roughly four and a half weeks out — and those two are already
-> ready. So this plan is scoped to what can be built *and rehearsed* in that time, not to
-> everything that would be nice.
+> Security — **the first week of November 2026**, confirmed on 2026-09-23, so about six weeks out —
+> and those two are already ready. So this plan is scoped to what can be built *and rehearsed* in
+> that time, not to everything that would be nice.
 >
 > **Target: Level 1 in full, with the Level 2 items that come cheaply.** Level 3 needs a second
 > framework and is not reachable here; saying so plainly is better than pretending.
@@ -176,13 +176,18 @@ desktop-shaped work, or a second implementation of something the web already doe
 
 Four and a half weeks, with two other exams to rehearse for. Rehearsal happens alongside, not after.
 
+The exam is in the **first week of November**. Weeks 1 and 2 of this plan were both done on
+2026-09-22–23, which buys back a fortnight; the rest of the time goes to rehearsal, not to more
+features.
+
 | Week (from) | Mobile | Also |
 |---|---|---|
-| 1 (09-22) | Expo app, shared core wired up, SQLite storage, tracks and today's plan on screen | First full rehearsal of the other two exams |
-| 2 (09-29) | Sign-in, sync against the live server, the streak and materials screens | Second rehearsal |
-| 3 (10-06) | The pedometer, permissions, lifecycle and state restoration, the share target | Hand-in admin |
-| 4 (10-13) | Internal testing release, the demo script, this plan finished as documentation | Rehearse all three (docs/exams/) |
-| 5 (10-20) | Buffer, and rehearsal only | — |
+| ~~1–2~~ (09-22) | **Done:** Expo app, shared core, SQLite, today's plan, sign-in, sync, the pedometer, permissions, share sheet and deep links | — |
+| 3 (09-29) | Play internal-testing release once identity verification clears; the standalone preview build on the phone | First full rehearsal of the security talk |
+| 4 (10-06) | Polish what the rehearsals expose; optional: today's checklist in the share text, Health Connect | Rehearse NoSQL and mobile |
+| 5 (10-13) | Hand-in admin: repo access, the Learning Platform forms | Rehearse all three (`docs/exams/`) |
+| 6 (10-20) | Buffer | Rehearse |
+| 7 (10-27) | Buffer, and the day-before checklist | Rehearse |
 
 If a week slips, the share target goes first, then materials. The sensor and state restoration never
 go: they are Level 1 criteria.
