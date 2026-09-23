@@ -7,6 +7,21 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.30.1] - 2026-09-23
+
+### Fixed
+- **Unticking an item on the phone came back ticked after a sync.** Ticking worked; unticking didn't.
+  The website records an edit in two steps — what the new state is, then *which items changed and
+  when* (`applyTrackBookkeeping`) — and the phone only did the first. Without those timestamps an
+  untick is indistinguishable from "never ticked", so the account's timestamped copy won and the tick
+  returned.
+- The bookkeeping moved out of `lib/workspaceRepo.ts`, which is tied to Dexie and the browser, into
+  `lib/bookkeeping.ts`, which is pure. Both the website and the phone now run the same code — two
+  copies of a merge rule would be two rules.
+- Three tests pin it: an untick with a newer timestamp survives, a tick the account lacks is still
+  accepted, and — kept deliberately — an untick with *no* timestamp is shown losing, which is the bug
+  itself preserved as a warning.
+
 ## [0.30.0] - 2026-09-23
 
 ### Added

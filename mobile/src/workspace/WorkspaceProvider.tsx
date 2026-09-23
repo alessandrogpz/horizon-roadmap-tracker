@@ -12,6 +12,7 @@ import type { TrackState, Workspace } from "@shared/types";
 import { setItemCompletion, type DayItemRef } from "@shared/completions";
 import { activeTrack, withActiveTrack } from "@shared/selectors";
 import { migrateWorkspace } from "@shared/migrations";
+import { applyTrackBookkeeping } from "@shared/bookkeeping";
 import { blankTrack } from "@shared/templates";
 import { todayYMD } from "@shared/dates";
 import { loadWorkspace, saveWorkspace } from "../storage/db";
@@ -87,11 +88,22 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.remove();
   }, []);
 
-  /** Applies a change and writes it immediately: there is no "save" moment on
-   *  a phone, because there is no reliable moment before being killed. */
-  const apply = useCallback((next: Workspace) => {
-    setWorkspace(next);
-    void saveWorkspace(next);
+  /**
+   * Applies a change and writes it immediately: there is no "save" moment on a
+   * phone, because there is no reliable moment before being killed.
+   *
+   * `applyTrackBookkeeping` first, and it is not optional. It stamps which
+   * items changed on this device and when — the timestamps the server's merge
+   * compares. Without them an untick carries no evidence that it happened, so
+   * the account's timestamped copy wins and the tick reappears on the next
+   * sync. The website has always run this on every save; the phone skipped it
+   * until a real untick came back from the server.
+   */
+  const apply = useCallback((previous: Workspace, next: Workspace, trackId: string) => {
+    const { track: bookkept } = applyTrackBookkeeping(previous.tracks[trackId], next.tracks[trackId], false);
+    const stamped: Workspace = { ...next, tracks: { ...next.tracks, [trackId]: bookkept } };
+    setWorkspace(stamped);
+    void saveWorkspace(stamped);
   }, []);
 
   const track = workspace ? activeTrack(workspace) : null;
@@ -102,7 +114,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       if (!workspaceNow) return;
       const trackNow = activeTrack(workspaceNow);
       if (!trackNow) return;
-      apply(withActiveTrack(workspaceNow, setItemCompletion(trackNow, item, completed)));
+      apply(workspaceNow, withActiveTrack(workspaceNow, setItemCompletion(trackNow, item, completed)), trackNow.meta.id);
     },
     [apply]
   );
@@ -111,7 +123,10 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     (trackId: string) => {
       const workspaceNow = current.current;
       if (!workspaceNow || !workspaceNow.tracks[trackId]) return;
-      apply({ ...workspaceNow, activeTrackId: trackId });
+      // Switching tracks changes no track's contents, so it needs no stamping.
+      const next = { ...workspaceNow, activeTrackId: trackId };
+      setWorkspace(next);
+      void saveWorkspace(next);
     },
     [apply]
   );
