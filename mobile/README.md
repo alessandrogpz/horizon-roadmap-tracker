@@ -34,3 +34,22 @@ What is *not* shared: anything that draws (no DOM, no CSS) and anything that sto
 
 Every edit is written as it happens. Android kills background processes without warning, so there is
 no safe "save on close" moment.
+
+## Two variants, two apps
+
+The development build and the real app have different package names, so both can sit on the phone at
+once instead of replacing each other:
+
+| Profile | Name on the phone | Package | Scheme |
+|---|---|---|---|
+| `development` | Horizon (dev) | `com.horizonroadmap.app.dev` | `horizondev://` |
+| `preview`, `production` | Horizon | `com.horizonroadmap.app` | `horizon://` |
+
+`app.config.ts` chooses between them from `APP_VARIANT`, which `eas.json` sets on the development
+profile. Everything else stays in `app.json`.
+
+**One thing this costs.** Google ties an OAuth client to a package name, so signing in from the
+development variant needs a *second* Android OAuth client in Google Cloud — same SHA-1 fingerprint,
+package `com.horizonroadmap.app.dev`. Without it, sign-in in a development build fails with a
+developer error while the real app keeps working. That is Android's app identity doing its job: the
+two are genuinely different apps, and Google is right not to take one's word for the other's identity.
