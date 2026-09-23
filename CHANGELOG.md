@@ -7,6 +7,22 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.38.0] - 2026-09-23
+
+### Added
+- **The week and its rotations, on the phone.** Tap a day to change what it is for; add or remove a
+  rotation's topics. Which topic shows today is computed from the week number rather than stored, so
+  editing the list changes what comes up without touching anything already logged.
+- **The roadmap**, readable in full and editable behind a deliberate switch — a stray tap in a
+  4,000-word document on a touch keyboard is how plans get mangled. Shown as markdown rather than
+  rendered: a parser and a component library would be a lot of machinery for a page of prose that
+  reads fine with its headings intact.
+- **Deliverables**, with ticking one off feeding the streak exactly as on the website. The git
+  statistics stay on the web, because they read a repository on the machine running the app and a
+  phone has no checkout.
+- **Archiving a track**, from the same long-press that renames it. Archiving rather than deleting, so
+  the change merges like any other edit rather than having to represent a deletion as an absence.
+
 ## [0.37.0] - 2026-09-23
 
 ### Added
