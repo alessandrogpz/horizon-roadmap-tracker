@@ -117,6 +117,12 @@ export function usePedometer(date: string): StepState {
 
     let last = 0;
     const subscription = Pedometer.watchStepCount((result) => {
+      // Android's step counter batches: events can arrive several steps late,
+      // or in bursts. This line is how that behaviour was observed rather than
+      // guessed at, and it costs nothing in a release build, where the bundler
+      // strips __DEV__ blocks.
+      if (__DEV__) console.log(`[steps] sensor says ${result.steps}, last seen ${last}`);
+
       // `steps` counts from the moment of subscription, so only the difference
       // since the previous callback is new.
       const added = Math.max(0, result.steps - last);

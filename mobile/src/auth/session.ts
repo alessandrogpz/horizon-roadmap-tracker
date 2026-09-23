@@ -16,9 +16,35 @@
 // nothing attaches it automatically, so no other app or page can make an
 // authenticated request by accident.
 
-import * as SecureStore from "expo-secure-store";
-import { GoogleSignin, statusCodes } from "@react-native-google-signin/google-signin";
 import { SERVER_URL, WEB_CLIENT_ID } from "../config";
+
+// Both of these are *native* modules: code compiled into the app, not
+// JavaScript downloaded at runtime. A build that predates them — an older
+// development build, or Expo Go, which can only ever contain what Expo chose to
+// put in it — simply doesn't have them, and importing one at the top of this
+// file would crash the whole app on startup.
+//
+// So they are required lazily, and a missing one is reported as "this build
+// can't sign in" rather than taking the rest of the app down with it. That
+// distinction between JavaScript and native code, and what it means for
+// shipping, is the thing to understand about this platform: new JavaScript can
+// be handed to an installed app; new native code needs a new build in the
+// user's hands (MOBILE_PLAN.md §6).
+
+type SecureStoreModule = typeof import("expo-secure-store");
+type GoogleSigninModule = typeof import("@react-native-google-signin/google-signin");
+
+function nativeModule<T>(load: () => T, name: string): T {
+  try {
+    return load();
+  } catch {
+    throw new SignInError(`This build of Horizon doesn't include ${name}. Install the newest build to sign in.`);
+  }
+}
+
+const secureStore = (): SecureStoreModule => nativeModule(() => require("expo-secure-store") as SecureStoreModule, "secure storage");
+const googleSignin = (): GoogleSigninModule =>
+  nativeModule(() => require("@react-native-google-signin/google-signin") as GoogleSigninModule, "Google sign-in");
 
 const TOKEN_KEY = "horizon.session";
 
@@ -42,7 +68,7 @@ let configured = false;
 
 function configure(): void {
   if (configured) return;
-  GoogleSignin.configure({
+  googleSignin().GoogleSignin.configure({
     // Ask Google for an ID token whose audience is the *web* client — the one
     // the server already verifies against. That way the phone needs no change
     // on the server, and one client ID stays the single source of truth for
@@ -56,7 +82,7 @@ function configure(): void {
 /** The stored session token, if this device has one. */
 export async function storedToken(): Promise<string | null> {
   try {
-    return await SecureStore.getItemAsync(TOKEN_KEY);
+    return await secureStore().getItemAsync(TOKEN_KEY);
   } catch {
     // A keystore that refuses to open (a corrupted keychain entry after a
     // restore, say) should look like "not signed in", not like a crash.
@@ -65,6 +91,7 @@ export async function storedToken(): Promise<string | null> {
 }
 
 async function store(token: string): Promise<void> {
+  const SecureStore = secureStore();
   await SecureStore.setItemAsync(TOKEN_KEY, token, {
     // Available after the first unlock, so a background sync can run without
     // the phone being unlocked, but not while the device has never been
@@ -74,7 +101,7 @@ async function store(token: string): Promise<void> {
 }
 
 async function forget(): Promise<void> {
-  await SecureStore.deleteItemAsync(TOKEN_KEY).catch(() => undefined);
+  await secureStore().deleteItemAsync(TOKEN_KEY).catch(() => undefined);
 }
 
 /** Every request to the account API, with the session attached. */
@@ -97,6 +124,8 @@ export async function authorized(path: string, init: RequestInit = {}): Promise<
  */
 export async function signIn(): Promise<Account> {
   configure();
+
+  const { GoogleSignin, statusCodes } = googleSignin();
 
   let idToken: string | null = null;
   try {
@@ -152,6 +181,12 @@ export async function currentAccount(): Promise<Account | null> {
 /** Ends the session on the server as well as here, so a copied token dies. */
 export async function signOut(): Promise<void> {
   await authorized("/api/auth/session", { method: "DELETE" }).catch(() => undefined);
-  await GoogleSignin.signOut().catch(() => undefined);
-  await forget();
+  // Signing out must always finish, even from a build missing these modules:
+  // ending the server's session is the part that matters, and it already has.
+  try {
+    await googleSignin().GoogleSignin.signOut();
+  } catch {
+    // Nothing to sign out of here.
+  }
+  await forget().catch(() => undefined);
 }
