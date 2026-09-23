@@ -7,6 +7,18 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.29.0] - 2026-09-23
+
+### Added
+- **Inter-app communication on the phone, both directions.** Outgoing: a share button hands Android a
+  plain-text summary of where a track stands, and the system offers whatever can receive it — a
+  message, a note, an email — with no permission involved, because the user picks the destination.
+  Incoming: `horizon://track/<id>` opens the app on that track, matched by the scheme declared in
+  `app.json`. A link is outside input, so it may only choose between tracks that already exist, and
+  an unknown id falls back to Today rather than failing.
+- Verified over USB: `adb shell am start -a android.intent.action.VIEW -d "horizon://track/…"`
+  reached the running app and switched to that track.
+
 ## [0.28.2] - 2026-09-23
 
 ### Fixed
