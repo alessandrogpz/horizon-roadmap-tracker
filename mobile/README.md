@@ -48,11 +48,24 @@ once instead of replacing each other:
 `app.config.ts` chooses between them from `APP_VARIANT`, which `eas.json` sets on the development
 profile. Everything else stays in `app.json`.
 
-**One thing this costs.** Google ties an OAuth client to a package name, so signing in from the
-development variant needs a *second* Android OAuth client in Google Cloud — same SHA-1 fingerprint,
-package `com.horizonroadmap.app.dev`. Without it, sign-in in a development build fails with a
-developer error while the real app keeps working. That is Android's app identity doing its job: the
-two are genuinely different apps, and Google is right not to take one's word for the other's identity.
+**One thing this costs.** Google ties an OAuth client to a package name *and* a signing fingerprint,
+so the development variant needs its own Android OAuth client in Google Cloud. And the fingerprint is
+**not** the same one: EAS keeps credentials per application identifier, so a new package name means a
+new keystore. Read the fingerprint from the built APK rather than assuming:
+
+```bash
+apksigner verify --print-certs <the .apk> | grep "SHA-1 digest"
+```
+
+Without a matching client, sign-in fails in that variant while the real app keeps working, and
+Android's log says so plainly: *"This android application is not registered to use OAuth2.0…"*. That
+is app identity doing its job — the two really are different apps, signed by different keys, and
+Google is right not to take one's word for the other.
+
+| Variant | Package | SHA-1 |
+|---|---|---|
+| Horizon | `com.horizonroadmap.app` | `78:BF:0A:C5:84:3D:DE:E1:E9:59:4B:8F:60:B3:0A:99:48:E9:0C:CB` |
+| Horizon (dev) | `com.horizonroadmap.app.dev` | `8B:5C:CB:29:35:A6:F7:D0:87:CD:75:1B:2E:72:BE:C8:89:7A:1A:85` |
 
 ## Working on it, day to day
 
@@ -95,7 +108,7 @@ Three OAuth clients exist, and each is tied to an identity Google checks:
 |---|---|---|
 | Web application | The website, **and the ID token the phone asks for** | Its client ID, which the server verifies as the token's audience |
 | Android — `com.horizonroadmap.app` | The real app | Package name + the signing key's SHA-1 |
-| Android — `com.horizonroadmap.app.dev` | The development variant | The same SHA-1, the `.dev` package name |
+| Android — `com.horizonroadmap.app.dev` | The development variant | Its **own** SHA-1 (EAS keys per application identifier) and the `.dev` package name |
 
 The phone asks Google for a token addressed to the **web** client (`webClientId` in
 `src/auth/session.ts`), which is why the server needs no second audience to trust. The Android
