@@ -7,6 +7,21 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.27.1] - 2026-09-23
+
+### Fixed
+- **A build missing a native module no longer takes the whole app down.** Secure storage and Google
+  sign-in are compiled into the app rather than downloaded, so a build made before they were added
+  simply doesn't have them — and importing one at the top of a file crashed on startup. They are now
+  loaded when first used, and a missing one reports "this build can't sign in" while everything else
+  keeps working. Signing out finishes either way, since ending the server's session is the part that
+  matters.
+
+### Added
+- The step counter logs each sensor event in development. Android's hardware counter batches — the
+  first few steps often arrive as nothing, then a burst — and this is how that was observed rather
+  than assumed. Verified on a Pixel 7 Pro: permission asked on tap, count climbing while walking.
+
 ## [0.27.0] - 2026-09-22
 
 ### Added
