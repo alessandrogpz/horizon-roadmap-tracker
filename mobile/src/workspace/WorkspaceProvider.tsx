@@ -17,6 +17,7 @@ import { blankTrack } from "@shared/templates";
 import { todayYMD } from "@shared/dates";
 import { applyDailyResetIfNeeded } from "@shared/dailyReset";
 import { clearAll, loadWorkspace, saveWorkspace } from "../storage/db";
+import { loadSettings } from "../storage/settingsStore";
 
 interface WorkspaceValue {
   workspace: Workspace | null;
@@ -58,6 +59,9 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      // Before anything reads a date: the rollover hour and week start live in
+      // the settings blob, and reading them must not be async.
+      await loadSettings();
       const stored = await loadWorkspace();
       if (cancelled) return;
 

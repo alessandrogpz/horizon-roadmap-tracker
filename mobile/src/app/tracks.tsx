@@ -2,16 +2,17 @@
 // rests on, so this is the second screen rather than a setting.
 
 import { useMemo } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, useColorScheme, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 import { visibleTracks } from "@shared/selectors";
 import { currentStreakLength } from "@shared/streak";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
-import { DARK, LIGHT, RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, type Palette } from "../theme";
+import { usePalette } from "../theme/ThemeProvider";
 
 export default function TracksScreen() {
   const { workspace, today, switchTrack } = useWorkspace();
-  const palette = useColorScheme() === "light" ? LIGHT : DARK;
+  const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
 
   const tracks = workspace ? visibleTracks(workspace) : [];

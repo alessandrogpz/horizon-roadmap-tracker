@@ -7,6 +7,30 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.36.0] - 2026-09-23
+
+### Added
+- **Material notes on the phone.** Notes are keyed by the material's own id, the same as on the
+  website, so one written on the sofa opens on the laptop. Saved after a short pause rather than per
+  keystroke.
+- **Delete account** from the phone, calling the same endpoint the website does. The device keeps its
+  own copy and carries on offline — which is what the privacy page promises, now reachable from both
+  places.
+- **A focus timer.** It derives the remaining time from the clock rather than counting ticks, because
+  JavaScript timers stop when Android backgrounds an app; coming back from ten minutes away shows the
+  right number instead of ten lost minutes. It says plainly that it cannot notify you when it ends —
+  that needs a notification permission and a new build.
+- **Device settings on the phone**: theme (system, light or dark), when a day starts, and which day a
+  week begins on.
+
+### Changed
+- `lib/settings.ts` takes its storage as a dependency instead of assuming `localStorage`. The browser
+  keeps using it; the phone installs a key-value store loaded once at startup, because settings are
+  read synchronously from hot paths like "which day is it" and an async read there would spread
+  `await` through every caller.
+- Every phone screen now takes its palette from a theme provider rather than reading the system
+  scheme directly, which is what makes an explicit light/dark choice possible.
+
 ## [0.35.1] - 2026-09-23
 
 ### Fixed

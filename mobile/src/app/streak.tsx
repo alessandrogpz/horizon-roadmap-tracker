@@ -8,11 +8,12 @@
 // squeezing a year into 360 points.
 
 import { useMemo, useRef } from "react";
-import { ScrollView, StyleSheet, Text, useColorScheme, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { streakCalendar, type StreakDay } from "@shared/stats";
 import { currentStreakLength } from "@shared/streak";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
-import { DARK, LIGHT, RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, type Palette } from "../theme";
+import { usePalette } from "../theme/ThemeProvider";
 
 /** How many things done in a day reaches each shade. The website's thresholds. */
 const levelFor = (count: number): number => (count === 0 ? 0 : count <= 1 ? 1 : count <= 2 ? 2 : count <= 3 ? 3 : 4);
@@ -22,7 +23,7 @@ const GAP = 3;
 
 export default function StreakScreen() {
   const { track, today } = useWorkspace();
-  const palette = useColorScheme() === "light" ? LIGHT : DARK;
+  const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
   const scroller = useRef<ScrollView>(null);
 
