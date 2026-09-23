@@ -25,6 +25,37 @@ export const DEFAULT_SETTINGS: AppSettings = {
 export const SETTINGS_EVENT = "horizon-settings-change";
 const STORAGE_KEY = "horizon-settings";
 
+/**
+ * Where the settings blob is kept, which differs by platform: `localStorage` in
+ * a browser, a key-value store on a phone. Injecting it keeps this module — and
+ * the date helpers that read it on every render — free of any assumption about
+ * which one it is running on.
+ *
+ * Deliberately synchronous. `getSettings()` is called from hot paths like
+ * "which day is it", and an async read there would spread `await` through every
+ * caller. A phone loads the blob once at startup and calls `primeSettings` with
+ * it; the browser reads it directly.
+ */
+export interface SettingsStore {
+  read(): string | null;
+  write(value: string): void;
+  remove(): void;
+}
+
+const browserStore: SettingsStore = {
+  read: () => (typeof window === "undefined" ? null : window.localStorage.getItem(STORAGE_KEY)),
+  write: (value) => window.localStorage.setItem(STORAGE_KEY, value),
+  remove: () => window.localStorage.removeItem(STORAGE_KEY),
+};
+
+let store: SettingsStore = browserStore;
+
+/** Platforms with no `localStorage` install their own store at startup. */
+export function useSettingsStore(next: SettingsStore): void {
+  store = next;
+  cache = null;
+}
+
 /** Read once, then held in memory: getSettings() is called from date helpers on
  *  hot paths, and localStorage access is synchronous I/O. Invalidated on every
  *  write, and on another tab's write via the `storage` event below. */
@@ -47,9 +78,8 @@ function normalize(raw: unknown): AppSettings {
 
 export function getSettings(): AppSettings {
   if (cache) return cache;
-  if (typeof window === "undefined") return DEFAULT_SETTINGS;
   try {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
+    const stored = store.read();
     const raw: unknown = stored ? JSON.parse(stored) : {};
     cache = normalize(raw);
     // 0.14 and 0.15 kept bring-your-own AI provider keys in this blob. The
@@ -57,7 +87,7 @@ export function getSettings(): AppSettings {
     // nothing using it: rewrite the blob without it.
     if (raw && typeof raw === "object" && "ai" in raw) {
       try {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
+        store.write(JSON.stringify(cache));
       } catch {
         // Storage refused the write; the next page load tries again.
       }
@@ -74,8 +104,8 @@ export function updateSettings(patch: Partial<AppSettings>): AppSettings {
   const next = normalize({ ...getSettings(), ...patch });
   cache = next;
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    window.dispatchEvent(new Event(SETTINGS_EVENT));
+    store.write(JSON.stringify(next));
+    if (typeof window !== "undefined") window.dispatchEvent(new Event(SETTINGS_EVENT));
   } catch {
     // Private mode, or a non-browser test environment: the in-memory copy
     // above still applies for this session.
@@ -87,7 +117,7 @@ export function updateSettings(patch: Partial<AppSettings>): AppSettings {
 export function resetSettings(): void {
   cache = null;
   try {
-    window.localStorage.removeItem(STORAGE_KEY);
+    store.remove();
   } catch {
     // Nothing stored to clear.
   }
@@ -95,6 +125,10 @@ export function resetSettings(): void {
 
 /** Subscribe to changes, including ones made in another tab. */
 export function subscribeSettings(callback: () => void): () => void {
+  // No window: a phone, where there are no other tabs to hear from. The screen
+  // that changes a setting re-renders itself.
+  if (typeof window === "undefined") return () => undefined;
+
   const onExternal = (e: StorageEvent) => {
     if (e.key === STORAGE_KEY) {
       cache = null;

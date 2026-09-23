@@ -6,17 +6,19 @@
 // phone*: the account, what this device is holding, and how to get rid of it.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Linking, Pressable, ScrollView, StyleSheet, Text, useColorScheme, View } from "react-native";
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Link } from "expo-router";
 import Constants from "expo-constants";
 import { visibleTracks } from "@shared/selectors";
+import { getSettings, updateSettings, type AppSettings } from "@shared/settings";
 import { SERVER_URL } from "../config";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
-import { DARK, LIGHT, RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, type Palette } from "../theme";
+import { useTheme, type ThemePreference } from "../theme/ThemeProvider";
 
 export default function SettingsScreen() {
   const { workspace, resetLocal } = useWorkspace();
-  const palette = useColorScheme() === "light" ? LIGHT : DARK;
+  const { palette, preference, setPreference } = useTheme();
   const styles = useMemo(() => makeStyles(palette), [palette]);
 
   const [confirming, setConfirming] = useState(false);
@@ -37,6 +39,11 @@ export default function SettingsScreen() {
     setConfirming(false);
   }, [resetLocal]);
 
+  // Settings are read synchronously and change rarely; keeping a copy in state
+  // is enough to re-render the controls after a write.
+  const [settings, setSettings] = useState<AppSettings>(() => getSettings());
+  const change = useCallback((patch: Partial<AppSettings>) => setSettings(updateSettings(patch)), []);
+
   const tracks = workspace ? visibleTracks(workspace).length : 0;
   const version = Constants.expoConfig?.version ?? "";
 
@@ -48,6 +55,69 @@ export default function SettingsScreen() {
           <Text style={styles.muted}>Sign in, sync, or sign out</Text>
         </Pressable>
       </Link>
+
+      <View style={styles.row}>
+        <Text style={styles.rowTitle}>Theme</Text>
+        <Text style={styles.muted}>Follow the phone, or pick one.</Text>
+        <View style={styles.choices}>
+          {(["system", "light", "dark"] as ThemePreference[]).map((option) => (
+            <Pressable
+              key={option}
+              accessibilityRole="button"
+              accessibilityState={{ selected: preference === option }}
+              onPress={() => setPreference(option)}
+              style={[styles.choice, preference === option && { borderColor: palette.accent }]}
+            >
+              <Text style={[styles.choiceLabel, preference === option && { color: palette.foreground }]}>
+                {option === "system" ? "System" : option === "light" ? "Light" : "Dark"}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.row}>
+        <Text style={styles.rowTitle}>My day starts at</Text>
+        <Text style={styles.muted}>
+          Work logged before this hour counts for the previous day, so a late session doesn&apos;t land
+          on tomorrow and break a streak.
+        </Text>
+        <View style={styles.choices}>
+          {[0, 2, 3, 4, 5, 6].map((hour) => (
+            <Pressable
+              key={hour}
+              accessibilityRole="button"
+              accessibilityState={{ selected: settings.dayRolloverHour === hour }}
+              onPress={() => change({ dayRolloverHour: hour })}
+              style={[styles.choice, settings.dayRolloverHour === hour && { borderColor: palette.accent }]}
+            >
+              <Text style={[styles.choiceLabel, settings.dayRolloverHour === hour && { color: palette.foreground }]}>
+                {hour === 0 ? "Midnight" : `${hour}am`}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.row}>
+        <Text style={styles.rowTitle}>Weeks start on</Text>
+        <Text style={styles.muted}>Which day each column of the consistency grid begins with.</Text>
+        <View style={styles.choices}>
+          {(["sun", "mon"] as const).map((day) => (
+            <Pressable
+              key={day}
+              accessibilityRole="button"
+              accessibilityState={{ selected: settings.weekStartsOn === day }}
+              onPress={() => change({ weekStartsOn: day })}
+              style={[styles.choice, settings.weekStartsOn === day && { borderColor: palette.accent }]}
+            >
+              <Text style={[styles.choiceLabel, settings.weekStartsOn === day && { color: palette.foreground }]}>
+                {day === "sun" ? "Sunday" : "Monday"}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
 
       <View style={styles.row}>
         <Text style={styles.rowTitle}>This device</Text>
@@ -101,6 +171,16 @@ function makeStyles(palette: Palette) {
       backgroundColor: palette.card,
     },
     rowTitle: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
+    choices: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.sm, marginTop: SPACING.sm },
+    choice: {
+      paddingHorizontal: SPACING.md,
+      paddingVertical: SPACING.sm,
+      borderRadius: RADIUS.control,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.surfaceMuted,
+    },
+    choiceLabel: { color: palette.mutedForeground, fontSize: 13, fontWeight: "600" },
     muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
     danger: {
       gap: SPACING.sm,

@@ -7,17 +7,19 @@
 // because finishing a material is a completion like any other (`setMaterialStatus`
 // in the shared core decides that, not this screen).
 
-import { useCallback, useMemo, useState } from "react";
-import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, useColorScheme, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import type { Material } from "@shared/types";
 import { MATERIAL_STATUSES } from "@shared/materialOptions";
 import { setMaterialStatus, updateMaterial } from "@shared/trackActions";
+import { loadNotes, saveNote } from "../storage/db";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
-import { DARK, LIGHT, RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, type Palette } from "../theme";
+import { usePalette } from "../theme/ThemeProvider";
 
 export default function MaterialsScreen() {
   const { track, today, editTrack } = useWorkspace();
-  const palette = useColorScheme() === "light" ? LIGHT : DARK;
+  const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
   const [open, setOpen] = useState<string | null>(null);
 
@@ -65,6 +67,47 @@ export default function MaterialsScreen() {
   );
 }
 
+/** A material's notes are an ordinary note, keyed by the material's own id —
+ *  the same id the website uses, so a note written on the sofa opens on the
+ *  laptop. Saved after a pause rather than per keystroke, and immediately,
+ *  because the process can end at any moment. */
+function useMaterialNote(materialId: string, enabled: boolean) {
+  const [content, setContent] = useState("");
+  const [loaded, setLoaded] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!enabled || loaded) return;
+    let cancelled = false;
+    loadNotes().then((notes) => {
+      if (cancelled) return;
+      setContent(notes.find((n) => n.id === materialId)?.content ?? "");
+      setLoaded(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [enabled, loaded, materialId]);
+
+  const onChange = useCallback(
+    (text: string) => {
+      setContent(text);
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => void saveNote({ id: materialId, content: text, updatedAt: Date.now() }), 600);
+    },
+    [materialId]
+  );
+
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    []
+  );
+
+  return { content, onChange };
+}
+
 function MaterialCard({
   material,
   expanded,
@@ -83,6 +126,7 @@ function MaterialCard({
   palette: Palette;
 }) {
   const [draftPage, setDraftPage] = useState(String(material.currentPage ?? 0));
+  const note = useMaterialNote(material.id, expanded);
 
   const total = material.totalPages ?? 0;
   const current = material.currentPage ?? 0;
@@ -149,6 +193,17 @@ function MaterialCard({
             </View>
           )}
 
+          <TextInput
+            value={note.content}
+            onChangeText={note.onChange}
+            placeholder="Notes on this material…"
+            placeholderTextColor={palette.subtleForeground}
+            multiline
+            textAlignVertical="top"
+            style={styles.note}
+            accessibilityLabel={`Notes on ${material.title}`}
+          />
+
           {material.link ? (
             <Pressable accessibilityRole="link" onPress={() => void Linking.openURL(material.link!)} style={styles.linkButton}>
               <Text style={styles.linkLabel}>Open link</Text>
@@ -204,6 +259,17 @@ function makeStyles(palette: Palette) {
       color: palette.foreground,
       fontSize: 15,
       textAlign: "center",
+    },
+    note: {
+      minHeight: 120,
+      padding: SPACING.md,
+      borderRadius: RADIUS.control,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.surfaceMuted,
+      color: palette.foreground,
+      fontSize: 14,
+      lineHeight: 20,
     },
     linkButton: {
       alignItems: "center",
