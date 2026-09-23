@@ -7,6 +7,15 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.28.1] - 2026-09-23
+
+### Documentation
+- `MOBILE_PLAN.md` §6b records why the project stays on Expo SDK 57: Expo Go's warning about SDK 58
+  doesn't apply to a development build, and an SDK upgrade moves React Native, the toolchain and every
+  native module at once — a poor trade four weeks before three exams, with a working build to lose.
+  The exception worth watching is Play's own minimum `targetSdkVersion`, which is a platform deadline
+  rather than a preference.
+
 ## [0.28.0] - 2026-09-23
 
 ### Documentation
