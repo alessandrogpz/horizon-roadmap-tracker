@@ -7,6 +7,15 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.29.1] - 2026-09-23
+
+### Documentation
+- Learning log entries 15 and 16, covering the phone: what moved between platforms unchanged and what
+  could never move; where a session lives when there is no browser; why a sensor is not a data source
+  you can simply read; how a permission can be refused permanently; why native code and JavaScript
+  ship differently, which is the platform's central fact; and the CSRF check that was measuring the
+  wrong thing, found because the security counters stayed at zero while the phone kept failing.
+
 ## [0.29.0] - 2026-09-23
 
 ### Added
