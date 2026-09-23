@@ -7,6 +7,19 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.30.0] - 2026-09-23
+
+### Added
+- **Over-the-air updates for the phone app.** `expo-updates` with a channel per build profile, so a
+  change to a screen, a layout or any other JavaScript reaches installed apps on their next launch —
+  no rebuild, no queue, no store review. This is the practical half of the rule the platform keeps
+  teaching: JavaScript can be replaced in an app that is already installed; native code cannot.
+- A `runtimeVersion` tied to the app version, which is the safety catch. An update whose JavaScript
+  expects native code the installed build doesn't have would crash on launch for everyone, with no
+  way back from the user's side. Tying the runtime version to the app version means any release that
+  changes native code gets a new one, and older builds stop receiving updates rather than receiving
+  broken ones.
+
 ## [0.29.2] - 2026-09-23
 
 ### Documentation
