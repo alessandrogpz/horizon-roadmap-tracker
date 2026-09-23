@@ -120,6 +120,28 @@ export default function TracksScreen() {
               <Text style={styles.panelLabel}>Cancel</Text>
             </Pressable>
           </View>
+          <View style={styles.panelRow}>
+            <Pressable
+              accessibilityRole="button"
+              style={styles.panelButton}
+              disabled={tracks.length <= 1}
+              onPress={() => {
+                // Archiving, not deleting: the record stays, with a flag, so the
+                // change merges like any other edit instead of a deletion having
+                // to be represented as an absence (see visibleTracks).
+                const id = renaming;
+                if (!id || tracks.length <= 1) return;
+                const remaining = tracks.filter((t) => t.meta.id !== id);
+                editTrackById(id, (track) => ({ ...track, meta: { ...track.meta, archived: true } }));
+                if (workspace?.activeTrackId === id && remaining[0]) switchTrack(remaining[0].meta.id);
+                setRenaming(null);
+              }}
+            >
+              <Text style={[styles.panelLabel, tracks.length <= 1 && { color: palette.subtleForeground }]}>
+                {tracks.length <= 1 ? "Can't archive your only track" : "Archive this track"}
+              </Text>
+            </Pressable>
+          </View>
         </View>
       )}
 
