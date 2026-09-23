@@ -138,24 +138,8 @@ interface Bucket {
   ticks: number;
 }
 
-export interface Stats {
-  totals: { activeDays: number; accomplishments: number; ticks: number; firstDay: string | null; lastDay: string | null };
-  /** Mon..Sun: the share of that weekday, since the first recorded day, that was active. */
-  byWeekday: { weekday: number; activeDays: number; rate: number; accomplishments: number; ticks: number }[];
-  byWeek: { week: string; activeDays: number; accomplishments: number; ticks: number }[];
-  byMonth: { month: string; activeDays: number; accomplishments: number; ticks: number }[];
-  byTrack: {
-    trackId: string;
-    name: string;
-    archived: boolean;
-    activeDays: number;
-    accomplishments: number;
-    ticks: number;
-    firstDay: string;
-    lastDay: string;
-    longestStreak: { length: number; from: string; to: string } | null;
-  }[];
-}
+export type { Stats } from "../../apiTypes";
+import type { Stats } from "../../apiTypes";
 
 /** How many times each ISO weekday (1 = Mon) occurs from `from` to `to`, inclusive. */
 function weekdayCounts(from: string, to: string): number[] {
