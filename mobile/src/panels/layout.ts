@@ -23,6 +23,11 @@ import { panelOrder } from "../storage/deviceSettings";
 /** The step counter, which only a phone can offer. */
 export const STEPS_PANEL = "steps";
 
+/** Movement, from Health Connect: what the body did today, as opposed to what
+ *  the plan asked of it. Phone-only for the same reason as the step counter —
+ *  a browser has no health store to read. */
+export const FITNESS_PANEL = "fitness";
+
 export interface PanelDefinition {
   id: string;
   label: string;
@@ -40,12 +45,14 @@ const HINTS: Record<string, string> = {
   notepad: "Somewhere to put a thought",
   todoList: "Loose ends that are not part of a day",
   [STEPS_PANEL]: "This phone's step counter — for tracks where walking counts",
+  [FITNESS_PANEL]: "Today's movement from Health Connect: steps, distance and active time",
 };
 
 /** Every panel the phone can show: the website's, plus the step counter. */
 export const PANELS: PanelDefinition[] = [
   ...MODULES.map((m) => ({ id: m.id as string, label: m.label, hint: HINTS[m.id] ?? "" })),
   { id: STEPS_PANEL, label: "Step Counter", hint: HINTS[STEPS_PANEL] },
+  { id: FITNESS_PANEL, label: "Movement", hint: HINTS[FITNESS_PANEL] },
 ];
 
 const ALL_IDS = PANELS.map((p) => p.id);
@@ -71,8 +78,12 @@ export function visiblePanels(track: Pick<TrackState, "meta" | "hiddenPanels">):
   const seen = new Set(stored);
 
   const rest = ALL_IDS.filter((id) => !seen.has(id));
+  // The two phone-only panels are opt-in rather than shown-unless-hidden: a
+  // step count is right on a fitness track and noise on a graphics engine, and
+  // defaulting either on would put it on every track anyone ever makes.
+  const optIn = new Set<string>([STEPS_PANEL, FITNESS_PANEL]);
   return [...stored, ...rest].filter((id) =>
-    id === STEPS_PANEL ? !hidden.has(id) && seen.has(id) : !hidden.has(id)
+    optIn.has(id) ? !hidden.has(id) && seen.has(id) : !hidden.has(id)
   );
 }
 

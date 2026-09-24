@@ -360,7 +360,16 @@ function makeStyles(palette: Palette) {
     tick: { color: "#fff", fontSize: 13, fontWeight: "800" },
     taskTitle: { flex: 1, color: palette.foreground, fontSize: 15, paddingVertical: SPACING.xs },
     doneTask: { color: palette.mutedForeground, textDecorationLine: "line-through" },
-    remove: { color: palette.subtleForeground, fontSize: 20, paddingHorizontal: SPACING.sm },
+    remove: {
+      color: palette.subtleForeground,
+      fontSize: 20,
+      // Android asks for 48dp; a bare glyph was nowhere near it, which is
+      // most of why these felt fiddly to hit.
+      minWidth: 44,
+      minHeight: 44,
+      lineHeight: 44,
+      textAlign: "center",
+    },
     detailCard: {
       gap: 2,
       padding: SPACING.md,

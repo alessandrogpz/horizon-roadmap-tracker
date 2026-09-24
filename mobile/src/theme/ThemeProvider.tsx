@@ -13,7 +13,10 @@ import { DARK, LIGHT, type Palette } from "../theme";
 
 const KEY = "horizon-theme";
 
-export type ThemePreference = "light" | "dark" | "system";
+/** What the person has pinned. `null` means they have not pinned anything, so
+ *  the phone's own setting decides — which is the state every install starts
+ *  in and the reason there is no "system" button to press. */
+export type ThemePreference = "light" | "dark" | null;
 
 interface ThemeValue {
   palette: Palette;
@@ -38,22 +41,25 @@ export function useTheme(): ThemeValue {
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const system = useColorScheme();
-  const [preference, setStored] = useState<ThemePreference>("system");
+  const [preference, setStored] = useState<ThemePreference>(null);
 
   useEffect(() => {
     AsyncStorage.getItem(KEY)
       .then((value) => {
-        if (value === "light" || value === "dark" || value === "system") setStored(value);
+        // Anything else, including the "system" this used to store, means
+        // unpinned — which is the correct reading of it.
+        if (value === "light" || value === "dark") setStored(value);
       })
       .catch(() => undefined);
   }, []);
 
   const setPreference = useCallback((next: ThemePreference) => {
     setStored(next);
-    void AsyncStorage.setItem(KEY, next).catch(() => undefined);
+    if (next === null) void AsyncStorage.removeItem(KEY).catch(() => undefined);
+    else void AsyncStorage.setItem(KEY, next).catch(() => undefined);
   }, []);
 
-  const resolved: "light" | "dark" = preference === "system" ? (system === "light" ? "light" : "dark") : preference;
+  const resolved: "light" | "dark" = preference ?? (system === "light" ? "light" : "dark");
 
   const value = useMemo<ThemeValue>(
     () => ({ palette: resolved === "light" ? LIGHT : DARK, preference, resolved, setPreference }),

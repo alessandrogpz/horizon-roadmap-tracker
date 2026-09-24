@@ -58,6 +58,11 @@ export default function TabsLayout() {
           paddingBottom: insets.bottom + 12,
         },
         tabBarLabelStyle: { fontSize: 11, fontWeight: "600", marginTop: 2 },
+        // The bar is a fixed height, so its labels cannot grow with the
+        // OS font scale without clipping — which is the bug this screen
+        // already had once, just triggered by my numbers instead of
+        // someone's accessibility settings.
+        tabBarAllowFontScaling: false,
         tabBarHideOnKeyboard: true,
         sceneStyle: { backgroundColor: palette.background },
       }}

@@ -1,53 +1,41 @@
 // The theme, as one icon in the header.
 //
 // It used to be three chips in Settings, which is a lot of screen for a thing
-// people flip on the train when the light changes — and Settings is exactly
-// where you are not when that happens. The website puts it in the top bar for
-// the same reason; this is the phone's version of that button.
+// people flip on a train when the light changes — and Settings is exactly
+// where they are not when that happens.
 //
-// Tapping cycles system → light → dark → system. Three states rather than two
-// because "follow the phone" is the default and has to be reachable again
-// after someone has pinned one: a two-way toggle would strand them on an
-// explicit choice forever. The icon says which of the three it is on, and the
-// choice is written to storage by the provider, so it survives a restart.
+// Two states, not three. The app starts on whatever the phone is set to, so a
+// fresh install already matches its surroundings and there is nothing to
+// choose; the button is there for the moment that stops being what you want.
+// The icon shows what you are looking at — sun in light, moon in dark — rather
+// than what tapping would do, because the first is a fact and the second is a
+// guess about which way round someone reads a button.
 
 import { useMemo } from "react";
 import { Pressable, StyleSheet } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useTheme, type ThemePreference } from "../theme/ThemeProvider";
+import { useTheme } from "../theme/ThemeProvider";
+import { tap } from "../feedback/haptics";
 import { RADIUS, SPACING, type Palette } from "../theme";
 
-const NEXT: Record<ThemePreference, ThemePreference> = {
-  system: "light",
-  light: "dark",
-  dark: "system",
-};
-
-const ICON = {
-  system: "phone-portrait-outline",
-  light: "sunny-outline",
-  dark: "moon-outline",
-} as const;
-
-const SAYS = {
-  system: "following the phone",
-  light: "light",
-  dark: "dark",
-};
-
 export function ThemeButton() {
-  const { palette, preference, setPreference } = useTheme();
+  const { palette, resolved, setPreference } = useTheme();
   const styles = useMemo(() => makeStyles(palette), [palette]);
+  const dark = resolved === "dark";
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Theme: ${SAYS[preference]}. Tap for ${SAYS[NEXT[preference]]}.`}
-      onPress={() => setPreference(NEXT[preference])}
+      accessibilityLabel={dark ? "Dark theme. Switch to light." : "Light theme. Switch to dark."}
+      onPress={() => {
+        tap();
+        setPreference(dark ? "light" : "dark");
+      }}
       style={styles.button}
-      hitSlop={6}
+      // The icon is small; the target it sits in should not be.
+      hitSlop={12}
     >
-      <Ionicons name={ICON[preference]} size={15} color={palette.mutedForeground} />
+      <Ionicons name={dark ? "moon" : "sunny"} size={16} color={palette.mutedForeground} />
     </Pressable>
   );
 }
@@ -55,8 +43,11 @@ export function ThemeButton() {
 function makeStyles(palette: Palette) {
   return StyleSheet.create({
     button: {
+      alignItems: "center",
+      justifyContent: "center",
+      minWidth: 34,
+      minHeight: 30,
       paddingHorizontal: SPACING.sm,
-      paddingVertical: 5,
       borderRadius: RADIUS.control,
       borderWidth: 1,
       borderColor: palette.cardBorder,
