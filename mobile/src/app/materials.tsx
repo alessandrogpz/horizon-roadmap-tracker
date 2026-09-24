@@ -12,12 +12,12 @@ import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } fro
 import type { Material } from "@shared/types";
 import { categoriesFor, MATERIAL_STATUSES, MATERIAL_TYPES } from "@shared/materialOptions";
 import { addMaterial, removeMaterial, setMaterialArchived, setMaterialStatus, updateMaterial } from "@shared/trackActions";
-import { loadNotes, saveNote } from "../../storage/db";
-import { useWorkspace } from "../../workspace/WorkspaceProvider";
-import { RADIUS, SPACING, type Palette } from "../../theme";
-import { usePalette } from "../../theme/ThemeProvider";
-import { Refreshable } from "../../components/Refreshable";
-import { SubNav } from "../../components/SubNav";
+import { loadNotes, saveNote } from "../storage/db";
+import { useWorkspace } from "../workspace/WorkspaceProvider";
+import { RADIUS, SPACING, type Palette } from "../theme";
+import { usePalette } from "../theme/ThemeProvider";
+import { Refreshable } from "../components/Refreshable";
+import { SubNav } from "../components/SubNav";
 
 export default function MaterialsScreen() {
   const { track, today, editTrack } = useWorkspace();

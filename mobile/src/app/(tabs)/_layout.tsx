@@ -3,10 +3,15 @@
 // Grouped by what you are trying to do rather than by which data structure a
 // screen happens to edit:
 //
-//   Today     the day's checklist, and the step panel if this track wants one
+//   Today     the day's checklist
 //   Plan      the phases, and through them the roadmap, the week, what to ship
-//   Library   the reading list, the notes, and search across both
-//   Progress  the streak grid, the history the server computes, the timer
+//   My Space  the whole track as panels you arrange yourself
+//   Progress  the streak, the history the server computes, the timer
+//
+// "Library" used to be the third, and was cut: a tab whose whole job was to
+// hold the reading list had no reason to be one tap from everywhere, and the
+// materials panel says more in less space. The full list is still there, from
+// that panel and from the menu.
 //
 // Each one lands on real content instead of a menu — Plan opens on the phases
 // themselves — with a row of chips to its siblings. The alternative, which
@@ -58,8 +63,8 @@ export default function TabsLayout() {
       />
       <Tabs.Screen name="plan" options={{ title: "Plan", tabBarIcon: icon("map", "map-outline") }} />
       <Tabs.Screen
-        name="library"
-        options={{ title: "Library", tabBarIcon: icon("library", "library-outline") }}
+        name="space"
+        options={{ title: "My Space", tabBarIcon: icon("grid", "grid-outline") }}
       />
       <Tabs.Screen
         name="progress"
