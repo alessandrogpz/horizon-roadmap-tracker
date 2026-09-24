@@ -2,16 +2,18 @@ import { describe, expect, it } from "vitest";
 import {
   addExercise,
   addSet,
+  addToPlan,
+  applyStarterPlan,
   emptyGymLog,
-  focusFor,
+  focusOfDay,
   gymNoteId,
   lastTime,
   parseGymLog,
+  plannedFor,
+  removeFromPlan,
   removeSet,
   serializeGymLog,
   setCountOf,
-  setDayFocus,
-  setSplit,
   sessionFor,
   volumeOf,
   type GymLog,
@@ -19,7 +21,7 @@ import {
 
 const log = (): GymLog => {
   let l = emptyGymLog();
-  l = setSplit(l, "Mon", "push");
+  l = addToPlan(l, "push", "Bench press");
   l = addExercise(l, "2026-09-21", "Bench press");
   const id = l.sessions["2026-09-21"].exercises[0].id;
   l = addSet(l, "2026-09-21", id, { reps: 8, weight: 60 });
@@ -30,7 +32,7 @@ const log = (): GymLog => {
 describe("parseGymLog", () => {
   it("round-trips through a note's text", () => {
     const parsed = parseGymLog(serializeGymLog(log()));
-    expect(parsed.split.Mon).toBe("push");
+    expect(parsed.plans.push).toEqual(["Bench press"]);
     expect(parsed.sessions["2026-09-21"].exercises[0].name).toBe("Bench press");
     expect(parsed.sessions["2026-09-21"].exercises[0].sets).toHaveLength(2);
   });
@@ -47,10 +49,9 @@ describe("parseGymLog", () => {
   it("drops malformed pieces and keeps the rest", () => {
     const raw = JSON.stringify({
       version: 1,
-      split: { Mon: "push", Tue: "brunch" },
+      plans: { push: ["Bench press", 42, "  "], pull: "not a list" },
       sessions: {
         "2026-09-21": {
-          focus: "nonsense",
           exercises: [
             { id: "a", name: "Squat", sets: [{ reps: 5, weight: 100 }, { reps: "many" }] },
             { id: "b", sets: [] },
@@ -59,23 +60,52 @@ describe("parseGymLog", () => {
       },
     });
     const parsed = parseGymLog(raw);
-    expect(parsed.split.Mon).toBe("push");
-    expect(parsed.split.Tue).toBeUndefined();
-    expect(parsed.sessions["2026-09-21"].focus).toBeUndefined();
+    expect(parsed.plans.push).toEqual(["Bench press"]);
+    expect(parsed.plans.pull).toBeUndefined();
     // The nameless exercise goes; the bad set goes; the good set stays.
     expect(parsed.sessions["2026-09-21"].exercises).toHaveLength(1);
     expect(parsed.sessions["2026-09-21"].exercises[0].sets).toEqual([{ reps: 5, weight: 100 }]);
   });
 });
 
-describe("focusFor", () => {
-  it("falls back to the weekly split", () => {
-    expect(focusFor(log(), "2026-09-28", "Mon")).toBe("push");
+describe("focusOfDay", () => {
+  // The track's own rhythm is the single answer to "what is Monday for"; the
+  // gym reads it rather than keeping a second copy that could disagree.
+  const week = [
+    { name: "Mon", type: "push", label: "Push" },
+    { name: "Tue", type: "rest", label: "Rest" },
+  ];
+
+  it("reads the kind of day out of the week schedule", () => {
+    expect(focusOfDay(week, "Mon")).toEqual({ key: "push", label: "Push" });
   });
 
-  it("lets a day override its split", () => {
-    const l = setDayFocus(log(), "2026-09-28", "cardio");
-    expect(focusFor(l, "2026-09-28", "Mon")).toBe("cardio");
+  it("is null for a day the rhythm says nothing about", () => {
+    expect(focusOfDay(week, "Sat")).toBeNull();
+    expect(focusOfDay(undefined, "Mon")).toBeNull();
+  });
+});
+
+describe("the plan", () => {
+  it("lists what a kind of day asks for", () => {
+    expect(plannedFor(log(), "push")).toEqual(["Bench press"]);
+    expect(plannedFor(log(), "legs")).toEqual([]);
+    expect(plannedFor(log(), undefined)).toEqual([]);
+  });
+
+  it("refuses the same exercise twice, whatever the case", () => {
+    const l = addToPlan(addToPlan(emptyGymLog(), "push", "Bench press"), "push", "bench PRESS");
+    expect(plannedFor(l, "push")).toEqual(["Bench press"]);
+  });
+
+  it("removes by name", () => {
+    expect(plannedFor(removeFromPlan(log(), "push", "Bench press"), "push")).toEqual([]);
+  });
+
+  it("seeds a starter plan without overwriting what is already there", () => {
+    const seeded = applyStarterPlan(log());
+    expect(plannedFor(seeded, "push")).toEqual(["Bench press"]);
+    expect(plannedFor(seeded, "legs").length).toBeGreaterThan(0);
   });
 });
 

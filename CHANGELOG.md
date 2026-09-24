@@ -7,6 +7,42 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.54.0] - 2026-09-24
+
+A coherence pass: several things in the app were the same idea wearing two names, or two editors for
+one piece of data.
+
+### Changed
+- **The gym no longer decides what day it is.** It kept its own weekly split — push on Monday, pull
+  on Tuesday — while the track's weekly rhythm already answered exactly that question for every
+  other part of the app. Two editors for one fact, free to disagree.
+
+  The rhythm now names the days and the gym fills them: a plan is held per *kind of day*, so "what a
+  push day asks for" is a list of exercises, and which days are push days is set on the Week screen
+  like any other track's days. `lib/gym.ts` lost `split` and gained `plans`.
+
+- **The plan shows up in the week.** The Week screen puts the exercise count under each day, and the
+  Weekly Overview panel lists what today asks for and how much of it is done. A day's contents come
+  from wherever that kind of day keeps them — a checklist for an ordinary track, a gym plan for a
+  training day — and the panel answers without caring which.
+
+- **A "Set up a training week" button** writes a push / pull / legs week with two rest days, its
+  focus types, and the exercises for each — all editable afterwards. Offered whenever a track has no
+  gym plan, because every track already has a week of some kind and gating it on "no week" meant a
+  fitness track never saw it.
+
+- **Panel names name the thing, not a use for it.** "Weekly Study Plan" became **Weekly Overview**,
+  since a track stopped being necessarily about studying the moment it could be about training.
+  "Roadmap Timeline" became **Phases** — it sat one word away from the Roadmap *document*, which is
+  something else entirely. "Portfolio Deliverables" became **Deliverables** and "Consistency Streak"
+  became **Consistency**, both matching the screens they open. Changed on the website too.
+
+- **The menu lost its track switcher and its shortcut grid.** Switching track is the track name in
+  the header now, and having both meant two ways to do one thing with one of them three taps deep.
+  Materials, Notes and the Timer all have panels that link straight to them, so the grid was a third
+  route to screens that already had two. Search moved into what remains, being the one thing with no
+  other home.
+
 ## [0.53.0] - 2026-09-24
 
 ### Added

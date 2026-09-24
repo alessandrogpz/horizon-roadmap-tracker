@@ -17,24 +17,46 @@
 //
 // Half a megabyte is years: a session with eight exercises and thirty sets is
 // about 1 KB.
+//
+// What is deliberately *not* here is which day is a push day. The track's
+// weekly rhythm already answers "what is this day for" — that is the whole
+// job of `weekSchedule` and `focusTypes` — and a gym split stored separately
+// was the same question asked twice, with two editors that could disagree. So
+// the rhythm names the days and this names the exercises for each kind of day.
+// A fitness track's focus types are Push, Pull, Legs, Rest; the plan below is
+// keyed by those same keys.
 
 import type { DateStr, DayKey } from "./types";
 
-/** What a day is for. Deliberately a small fixed set rather than free text:
- *  these are the splits people actually run, and a fixed set is what lets the
- *  panel say "today is pull" without anyone typing it twice. */
-export const GYM_FOCUSES = ["push", "pull", "legs", "upper", "lower", "full", "cardio", "rest"] as const;
-export type GymFocus = (typeof GYM_FOCUSES)[number];
+/** A ready-made week for a track that is about training, offered rather than
+ *  assumed: these become the track's own focus types, so the Week screen edits
+ *  them like any other track's days. */
+export const STARTER_WEEK: { key: string; label: string; color: string }[] = [
+  { key: "push", label: "Push", color: "#ef4444" },
+  { key: "pull", label: "Pull", color: "#0ea5e9" },
+  { key: "legs", label: "Legs", color: "#a855f7" },
+  { key: "cardio", label: "Cardio", color: "#f59e0b" },
+  { key: "rest", label: "Rest", color: "#64748b" },
+];
 
-export const FOCUS_LABEL: Record<GymFocus, string> = {
-  push: "Push",
-  pull: "Pull",
-  legs: "Legs",
-  upper: "Upper",
-  lower: "Lower",
-  full: "Full body",
-  cardio: "Cardio",
-  rest: "Rest",
+/** Mon..Sun for the starter week. Two rest days, and legs away from push. */
+export const STARTER_SPLIT: Record<string, string> = {
+  Mon: "push",
+  Tue: "pull",
+  Wed: "legs",
+  Thu: "rest",
+  Fri: "push",
+  Sat: "cardio",
+  Sun: "rest",
+};
+
+/** What a starter week actually asks of you, per kind of day. */
+export const STARTER_PLAN: Record<string, string[]> = {
+  push: ["Bench press", "Overhead press", "Incline dumbbell press", "Triceps pushdown"],
+  pull: ["Deadlift", "Pull-up", "Barbell row", "Face pull", "Biceps curl"],
+  legs: ["Back squat", "Romanian deadlift", "Leg press", "Calf raise"],
+  cardio: ["Run", "Row"],
+  rest: [],
 };
 
 export interface GymSet {
@@ -51,19 +73,18 @@ export interface GymExercise {
 }
 
 export interface GymSession {
-  /** Overrides the split for this one day, when the plan met reality. */
-  focus?: GymFocus;
   exercises: GymExercise[];
 }
 
 export interface GymLog {
   version: 1;
-  /** Which focus each weekday is for, when the track runs a fixed split. */
-  split: Partial<Record<DayKey, GymFocus>>;
+  /** Focus type key -> the exercises that kind of day asks for. This is the
+   *  *plan*; `sessions` is what actually happened. */
+  plans: Record<string, string[]>;
   sessions: Record<DateStr, GymSession>;
 }
 
-export const emptyGymLog = (): GymLog => ({ version: 1, split: {}, sessions: {} });
+export const emptyGymLog = (): GymLog => ({ version: 1, plans: {}, sessions: {} });
 
 /** One note per track. The id has to match the server's `[A-Za-z0-9_-]`
  *  pattern, which track ids already do. */
@@ -71,11 +92,6 @@ export const gymNoteId = (trackId: string): string => `gym-${trackId}`;
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   !!value && typeof value === "object" && !Array.isArray(value);
-
-const asFocus = (value: unknown): GymFocus | undefined =>
-  typeof value === "string" && (GYM_FOCUSES as readonly string[]).includes(value)
-    ? (value as GymFocus)
-    : undefined;
 
 /**
  * Reads a log out of a note's text.
@@ -95,11 +111,11 @@ export function parseGymLog(content: string | undefined | null): GymLog {
   }
   if (!isRecord(raw)) return emptyGymLog();
 
-  const split: Partial<Record<DayKey, GymFocus>> = {};
-  if (isRecord(raw.split)) {
-    for (const [day, focus] of Object.entries(raw.split)) {
-      const valid = asFocus(focus);
-      if (valid) split[day] = valid;
+  const plans: Record<string, string[]> = {};
+  if (isRecord(raw.plans)) {
+    for (const [focus, names] of Object.entries(raw.plans)) {
+      if (!Array.isArray(names)) continue;
+      plans[focus] = names.filter((name): name is string => typeof name === "string" && !!name.trim());
     }
   }
 
@@ -130,18 +146,65 @@ export function parseGymLog(content: string | undefined | null): GymLog {
         }
       }
 
-      sessions[date] = { ...(asFocus(session.focus) ? { focus: asFocus(session.focus) } : {}), exercises };
+      sessions[date] = { exercises };
     }
   }
 
-  return { version: 1, split, sessions };
+  return { version: 1, plans, sessions };
 }
 
 export const serializeGymLog = (log: GymLog): string => JSON.stringify(log);
 
-/** The focus for a date: whatever the day itself recorded, else the split. */
-export function focusFor(log: GymLog, date: DateStr, dayKey: DayKey): GymFocus | undefined {
-  return log.sessions[date]?.focus ?? log.split[dayKey];
+/**
+ * What kind of day this is, according to the track's own weekly rhythm.
+ *
+ * Takes the schedule rather than the log on purpose: the rhythm is the single
+ * answer to "what is Monday for", shared by Today, the week overview and this.
+ * A gym that kept its own copy would be a second answer that could disagree.
+ */
+export function focusOfDay(
+  weekSchedule: { name: string; type: string; label: string }[] | undefined,
+  dayKey: DayKey
+): { key: string; label: string } | null {
+  const day = (weekSchedule ?? []).find((entry) => entry.name === dayKey);
+  return day ? { key: day.type, label: day.label } : null;
+}
+
+/** The exercises this kind of day asks for. */
+export const plannedFor = (log: GymLog, focusKey: string | undefined): string[] =>
+  focusKey ? (log.plans[focusKey] ?? []) : [];
+
+export function setPlan(log: GymLog, focusKey: string, names: string[]): GymLog {
+  return {
+    ...log,
+    plans: { ...log.plans, [focusKey]: names.map((name) => name.trim()).filter(Boolean) },
+  };
+}
+
+export function addToPlan(log: GymLog, focusKey: string, name: string): GymLog {
+  const trimmed = name.trim();
+  if (!trimmed) return log;
+  const current = plannedFor(log, focusKey);
+  // Same exercise twice in one day's plan is a mistake every time.
+  if (current.some((existing) => existing.toLowerCase() === trimmed.toLowerCase())) return log;
+  return setPlan(log, focusKey, [...current, trimmed]);
+}
+
+export const removeFromPlan = (log: GymLog, focusKey: string, name: string): GymLog =>
+  setPlan(
+    log,
+    focusKey,
+    plannedFor(log, focusKey).filter((existing) => existing !== name)
+  );
+
+/** Seeds the exercises for a starter week, leaving anything already planned
+ *  alone — running this twice should not double anyone's session. */
+export function applyStarterPlan(log: GymLog): GymLog {
+  const plans = { ...log.plans };
+  for (const [focus, names] of Object.entries(STARTER_PLAN)) {
+    if (!plans[focus]?.length) plans[focus] = [...names];
+  }
+  return { ...log, plans };
 }
 
 export const sessionFor = (log: GymLog, date: DateStr): GymSession =>
@@ -149,18 +212,6 @@ export const sessionFor = (log: GymLog, date: DateStr): GymSession =>
 
 function withSession(log: GymLog, date: DateStr, next: GymSession): GymLog {
   return { ...log, sessions: { ...log.sessions, [date]: next } };
-}
-
-export function setSplit(log: GymLog, dayKey: DayKey, focus: GymFocus | undefined): GymLog {
-  const split = { ...log.split };
-  if (focus) split[dayKey] = focus;
-  else delete split[dayKey];
-  return { ...log, split };
-}
-
-export function setDayFocus(log: GymLog, date: DateStr, focus: GymFocus | undefined): GymLog {
-  const session = sessionFor(log, date);
-  return withSession(log, date, { ...session, ...(focus ? { focus } : { focus: undefined }) });
 }
 
 export function addExercise(log: GymLog, date: DateStr, name: string): GymLog {

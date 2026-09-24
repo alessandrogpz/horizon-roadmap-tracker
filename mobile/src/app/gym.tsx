@@ -1,15 +1,20 @@
-// The gym screen: what today is for, and the sets logged against it.
+// The gym screen: today's plan, and the sets logged against it.
 //
-// Built for use with one hand, standing up, between sets — which rules out
-// most of what a form normally does. No save button, no modal per set, no
-// keyboard for the common case: reps and weight are steppers with sensible
-// increments, because typing "8" into a numeric field with sweaty hands is
-// worse than tapping + twice.
+// It does not decide what today is for — the track's weekly rhythm does, the
+// same one Today and the Week overview read. This screen owns the other half:
+// which exercises each *kind* of day asks for, and what was actually done.
+// Those were one concept split across two editors before, and the two could
+// disagree about whether Monday was a push day.
 //
-// The weekly split answers "what am I doing today" without being asked; the
-// day can override it when the plan meets reality. And every exercise shows
-// what it was last time, because that is the question every working set starts
-// with and looking it up is the thing a paper notebook is bad at.
+// Built for use with one hand, standing up, between sets, which rules out most
+// of what a form normally does. No save button, no modal per set, no keyboard
+// for the common case: reps and weight are steppers with real increments,
+// because typing "8" into a numeric field with chalky hands is worse than
+// tapping + twice.
+//
+// Every exercise shows what it was last time. That is the question every
+// working set starts with, and looking it up is what a paper notebook is worst
+// at.
 
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
@@ -17,19 +22,21 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import {
   addExercise,
   addSet,
-  FOCUS_LABEL,
-  focusFor,
-  GYM_FOCUSES,
+  addToPlan,
+  applyStarterPlan,
+  focusOfDay,
   lastTime,
+  plannedFor,
   removeExercise,
+  removeFromPlan,
   removeSet,
   sessionFor,
   setCountOf,
-  setDayFocus,
-  setSplit,
+  STARTER_SPLIT,
+  STARTER_WEEK,
   volumeOf,
-  type GymFocus,
 } from "@shared/gym";
+import { setWeeklyRhythm } from "@shared/trackActions";
 import { DAYS_SHORT, formatDayMonthYear, parseYMD } from "@shared/dates";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { useGymLog } from "../gym/useGymLog";
@@ -41,7 +48,7 @@ import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 export default function GymScreen() {
-  const { track, today } = useWorkspace();
+  const { track, today, editTrack } = useWorkspace();
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
   const { log, change } = useGymLog(track?.meta.id);
@@ -49,8 +56,30 @@ export default function GymScreen() {
   const [newExercise, setNewExercise] = useState("");
 
   const dayKey = DAYS_SHORT[parseYMD(today).getDay()];
-  const focus = focusFor(log, today, dayKey);
+  const focus = focusOfDay(track?.weekSchedule, dayKey);
+  const planned = plannedFor(log, focus?.key);
   const session = sessionFor(log, today);
+
+  /** The starter week writes the track's focus types and rhythm as well as the
+   *  exercises, because a plan for "push days" means nothing until the week
+   *  says which days those are. */
+  const useStarterWeek = useCallback(() => {
+    tap();
+    editTrack((current) => {
+      const focusTypes = { ...(current.focusTypes ?? {}) };
+      for (const entry of STARTER_WEEK) {
+        if (!focusTypes[entry.key]) focusTypes[entry.key] = { label: entry.label, color: entry.color };
+      }
+      const week = DAYS_SHORT.slice(1)
+        .concat(DAYS_SHORT[0])
+        .map((name) => {
+          const key = STARTER_SPLIT[name] ?? "rest";
+          return { name, type: key, label: focusTypes[key]?.label ?? key };
+        });
+      return setWeeklyRhythm(current, week, focusTypes);
+    });
+    change(applyStarterPlan);
+  }, [change, editTrack]);
 
   const logSet = useCallback(
     (exerciseId: string, reps: number, weight: number) => {
@@ -62,15 +91,26 @@ export default function GymScreen() {
     [change, today]
   );
 
+  /** A planned exercise becomes a logged one the moment a set goes on it, so
+   *  the plan is a starting point rather than a separate list to tick off. */
+  const startExercise = useCallback(
+    (name: string) => {
+      tap();
+      change((current) => addExercise(current, today, name));
+    },
+    [change, today]
+  );
+
   if (!track) return <NoTrack />;
+
+  const started = new Set(session.exercises.map((exercise) => exercise.name.toLowerCase()));
+  const todo = planned.filter((name) => !started.has(name.toLowerCase()));
 
   return (
     <Refreshable style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-      {/* Today's focus, big, because it is the one thing you check on the way
-          in. Tapping any chip overrides the split for today only. */}
       <View style={styles.headline}>
         <View style={styles.headlineText}>
-          <Text style={styles.focus}>{focus ? FOCUS_LABEL[focus] : "No focus set"}</Text>
+          <Text style={styles.focus}>{focus?.label ?? "No focus set"}</Text>
           <Text style={styles.muted}>{formatDayMonthYear(parseYMD(today))}</Text>
         </View>
         <View style={styles.totals}>
@@ -85,24 +125,44 @@ export default function GymScreen() {
         )}
       </View>
 
-      <View style={styles.chips}>
-        {GYM_FOCUSES.map((option) => (
-          <Pressable
-            key={option}
-            accessibilityRole="button"
-            accessibilityState={{ selected: focus === option }}
-            onPress={() => {
-              tap();
-              change((current) => setDayFocus(current, today, focus === option ? undefined : option));
-            }}
-            style={[styles.chip, focus === option && { borderColor: palette.accent }]}
-          >
-            <Text style={[styles.chipLabel, focus === option && { color: palette.foreground }]}>
-              {FOCUS_LABEL[option]}
-            </Text>
+      {/* Offered whenever the track has no gym plan at all — not only when it
+          has no week. Every track starts with a week of some kind, so gating
+          this on "no week" meant a fitness track never saw it. */}
+      {Object.keys(log.plans).length === 0 && (
+        <View style={styles.card}>
+          <Text style={styles.exerciseName}>Start from a training week</Text>
+          <Text style={styles.muted}>
+            Sets this track&apos;s week to push / pull / legs with two rest days, and fills each kind
+            of day with the exercises to match. It renames the days this track currently has, so it
+            suits a track that is about training rather than one already in use for something else.
+            Everything is editable afterwards.
+          </Text>
+          <Pressable accessibilityRole="button" onPress={useStarterWeek} style={styles.logButton}>
+            <Text style={styles.logLabel}>Set up a training week</Text>
           </Pressable>
-        ))}
-      </View>
+        </View>
+      )}
+
+      {/* What today asks for and has not been started. Tapping one begins it. */}
+      {todo.length > 0 && (
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Still to do</Text>
+          <View style={styles.chips}>
+            {todo.map((name) => (
+              <Pressable
+                key={name}
+                accessibilityRole="button"
+                accessibilityLabel={`Start ${name}`}
+                onPress={() => startExercise(name)}
+                style={styles.chip}
+              >
+                <Ionicons name="add" size={13} color={palette.mutedForeground} />
+                <Text style={styles.chipLabel}>{name}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      )}
 
       {session.exercises.map((exercise) => {
         const previous = lastTime(log, exercise.name, today);
@@ -171,57 +231,91 @@ export default function GymScreen() {
           change((current) => addExercise(current, today, name));
           setNewExercise("");
         }}
-        placeholder="Add an exercise…"
+        placeholder="Add something not in the plan…"
         placeholderTextColor={palette.subtleForeground}
         returnKeyType="done"
         style={styles.input}
         accessibilityLabel="New exercise"
       />
 
-      {/* The split is a setting, not a daily action, so it sits behind the
-          same read-only switch as everything else that changes a plan. */}
-      <View style={styles.splitHead}>
-        <Text style={styles.sectionTitle}>The weekly split</Text>
-        <EditButton editing={editing} onChange={setEditing} what="the weekly split" />
-      </View>
-
-      {editing ? (
-        DAYS_SHORT.slice(1).concat(DAYS_SHORT[0]).map((day) => (
-          <View key={day} style={styles.splitRow}>
-            <Text style={styles.splitDay}>{day}</Text>
-            <View style={styles.chips}>
-              {GYM_FOCUSES.map((option) => (
-                <Pressable
-                  key={option}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${day}: ${FOCUS_LABEL[option]}`}
-                  accessibilityState={{ selected: log.split[day] === option }}
-                  onPress={() =>
-                    change((current) =>
-                      setSplit(current, day, log.split[day] === option ? undefined : option)
-                    )
-                  }
-                  style={[styles.miniChip, log.split[day] === option && { borderColor: palette.accent }]}
-                >
-                  <Text style={[styles.miniLabel, log.split[day] === option && { color: palette.foreground }]}>
-                    {FOCUS_LABEL[option]}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+      {/* The plan for this kind of day — a setting, so it sits behind the same
+          read-only switch as everything else that changes a plan. */}
+      {focus && (
+        <>
+          <View style={styles.splitHead}>
+            <Text style={styles.sectionTitle}>What a {focus.label.toLowerCase()} day asks for</Text>
+            <EditButton editing={editing} onChange={setEditing} what={`the ${focus.label} plan`} />
           </View>
-        ))
-      ) : (
-        <Text style={styles.muted}>
-          {Object.keys(log.split).length > 0
-            ? DAYS_SHORT.slice(1)
-                .concat(DAYS_SHORT[0])
-                .map((day) => `${day} ${log.split[day] ? FOCUS_LABEL[log.split[day]!] : "—"}`)
-                .join(" · ")
-            : "No split set. Tap Edit to say what each day is for."}
-        </Text>
+
+          {planned.length === 0 && !editing && (
+            <Text style={styles.muted}>
+              Nothing planned for {focus.label.toLowerCase()} days yet. Tap Edit to add exercises, and
+              they will be waiting every {focus.label.toLowerCase()} day.
+            </Text>
+          )}
+
+          {planned.map((name) => (
+            <View key={name} style={styles.planRow}>
+              <Text style={styles.planName}>{name}</Text>
+              {editing && (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Remove ${name} from the ${focus.label} plan`}
+                  hitSlop={10}
+                  onPress={() => change((current) => removeFromPlan(current, focus.key, name))}
+                >
+                  <Ionicons name="close" size={16} color={palette.subtleForeground} />
+                </Pressable>
+              )}
+            </View>
+          ))}
+
+          {editing && (
+            <PlanEntry
+              onAdd={(name) => change((current) => addToPlan(current, focus.key, name))}
+              styles={styles}
+              palette={palette}
+            />
+          )}
+
+          <Text style={styles.footnote}>
+            Which days are {focus.label.toLowerCase()} days is set on the Week screen, along with every
+            other kind of day this track has.
+          </Text>
+        </>
       )}
     </Refreshable>
+  );
+}
+
+/** Adding to the plan, separate from adding to today: one changes every future
+ *  push day, the other changes this afternoon. */
+function PlanEntry({
+  onAdd,
+  styles,
+  palette,
+}: {
+  onAdd: (name: string) => void;
+  styles: ReturnType<typeof makeStyles>;
+  palette: Palette;
+}) {
+  const [draft, setDraft] = useState("");
+  return (
+    <TextInput
+      value={draft}
+      onChangeText={setDraft}
+      onSubmitEditing={() => {
+        const name = draft.trim();
+        if (!name) return;
+        onAdd(name);
+        setDraft("");
+      }}
+      placeholder="Add to this day's plan…"
+      placeholderTextColor={palette.subtleForeground}
+      returnKeyType="done"
+      style={styles.input}
+      accessibilityLabel="Add to the plan"
+    />
   );
 }
 
@@ -330,6 +424,9 @@ function makeStyles(palette: Palette) {
     totalValue: { color: palette.foreground, fontSize: 19, fontWeight: "700" },
     chips: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.xs },
     chip: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
       paddingHorizontal: SPACING.md,
       paddingVertical: SPACING.sm,
       borderRadius: RADIUS.control,
@@ -413,6 +510,16 @@ function makeStyles(palette: Palette) {
     },
     splitRow: { gap: SPACING.xs, marginBottom: SPACING.sm },
     splitDay: { color: palette.foreground, fontSize: 13, fontWeight: "700" },
+    planRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: SPACING.sm,
+      paddingVertical: SPACING.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: palette.cardBorder,
+    },
+    planName: { flex: 1, color: palette.foreground, fontSize: 14 },
+    footnote: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16, marginTop: SPACING.sm },
     muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
   });
 }

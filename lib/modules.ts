@@ -13,6 +13,12 @@ export interface ModuleDefinition {
 /**
  * Every dashboard module, in the order they appear by default.
  *
+ * The labels name the thing, not a use for it. "Weekly Study Plan" assumed
+ * every track was about studying, which stopped being true the moment a track
+ * could be about training or anything else; and "Roadmap Timeline" sat one
+ * letter away from the Roadmap *document*, which is a different thing
+ * entirely.
+ *
  * This is the source of truth for *which* modules exist. It stays free of
  * React so the layout logic below (and its tests) can run headless; each id's
  * icon and actual panel live in components/panels/registry.tsx, which is typed
@@ -20,11 +26,11 @@ export interface ModuleDefinition {
  * compile error rather than a blank space on the dashboard.
  */
 export const MODULES = [
-  { id: "weeklyPlan", label: "Weekly Study Plan", homeColumn: "left" },
-  { id: "phaseTracker", label: "Roadmap Timeline", homeColumn: "left" },
-  { id: "streakGraph", label: "Consistency Streak", homeColumn: "left" },
+  { id: "weeklyPlan", label: "Weekly Overview", homeColumn: "left" },
+  { id: "phaseTracker", label: "Phases", homeColumn: "left" },
+  { id: "streakGraph", label: "Consistency", homeColumn: "left" },
   { id: "pomodoroTimer", label: "Timer", homeColumn: "left" },
-  { id: "portfolioTracker", label: "Portfolio Deliverables", homeColumn: "right" },
+  { id: "portfolioTracker", label: "Deliverables", homeColumn: "right" },
   { id: "materialsTracker", label: "Materials", homeColumn: "right" },
   { id: "notepad", label: "Notepad", homeColumn: "right" },
   { id: "todoList", label: "To-do List", homeColumn: "right" },
