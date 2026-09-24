@@ -21,7 +21,7 @@ import { phaseStats, progressStats, streakCalendar, timelineStats } from "@share
 import { PanelCard, Meter } from "./PanelCard";
 import { FITNESS_PANEL, STEPS_PANEL } from "./layout";
 import { usePedometer } from "../steps/usePedometer";
-import { dailySteps, healthStatus } from "./../steps/healthConnect";
+import { useLiveSteps } from "../steps/useLiveSteps";
 import { focusOfDay, planComplete, plannedFor, sessionFor, setCountOf, volumeOf } from "@shared/gym";
 import { useGymLog } from "../gym/useGymLog";
 import { SPACING, type Palette } from "../theme";
@@ -268,25 +268,7 @@ function TimerPanel() {
 function StepsPanel({ today }: { today: string }) {
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
-  const steps = usePedometer(today, true);
-
-  // Health Connect knows the whole day; the sensor knows the part spent in the
-  // app. Whichever is larger is the better answer, and on a phone without
-  // Health Connect the sensor is the only one.
-  const [wholeDay, setWholeDay] = useState<number | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      if ((await healthStatus()) !== "ready") return;
-      const days = await dailySteps(today, today);
-      if (!cancelled) setWholeDay(days[today] ?? 0);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [today]);
-
-  const count = Math.max(wholeDay ?? 0, steps.today);
+  const steps = useLiveSteps(today);
 
   if (steps.status === "denied") {
     return (
@@ -297,15 +279,15 @@ function StepsPanel({ today }: { today: string }) {
       </Pressable>
     );
   }
-  if (steps.status === "unavailable" && wholeDay === null) {
+  if (steps.status === "unavailable" && !steps.wholeDay) {
     return <Text style={styles.muted}>No step counter, and no Health Connect history.</Text>;
   }
 
   return (
     <View style={styles.headlineRow}>
-      <Text style={[styles.big, { color: TINTS[STEPS_PANEL] }]}>{count.toLocaleString()}</Text>
+      <Text style={[styles.big, { color: TINTS[STEPS_PANEL] }]}>{steps.count.toLocaleString()}</Text>
       <Text style={styles.muted}>
-        steps today{wholeDay === null ? " · while Horizon is open" : ""}
+        steps today{steps.wholeDay ? "" : " · while Horizon is open"}
       </Text>
     </View>
   );
@@ -381,7 +363,6 @@ function GymPanel({ track, today }: PanelProps) {
     </>
   );
 }
-
 
 /** For panels whose whole content is an action: a timer, a notepad. Drawing a
  *  fake preview of a text editor would be decoration pretending to be data. */
