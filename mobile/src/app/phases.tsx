@@ -13,7 +13,7 @@
 import { useMemo } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Link } from "expo-router";
-import { phaseStats, timelineStats } from "@shared/stats";
+import { phaseStats, progressStats, timelineStats } from "@shared/stats";
 import { addPhase, removePhase, setCurrentPhase } from "@shared/trackActions";
 import { formatDayMonthYear } from "@shared/dates";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
@@ -27,6 +27,7 @@ export default function PhasesScreen() {
 
   const timeline = useMemo(() => (track ? timelineStats(track) : null), [track]);
   const current = useMemo(() => (track ? phaseStats(track, today) : null), [track, today]);
+  const progress = useMemo(() => (track ? progressStats(track) : null), [track]);
 
   if (!track || !timeline) {
     return (
@@ -51,6 +52,35 @@ export default function PhasesScreen() {
           <View style={[styles.progressFill, { width: `${Math.min(100, timeline.progressPct)}%` }]} />
         </View>
       </View>
+
+      {progress ? (
+        <View style={styles.card}>
+          {/* Time spent against work done. The pace is the interesting number:
+              a track can be 70% through its calendar with 30% of the work
+              finished, and neither figure says that on its own. */}
+          <Text style={styles.cardTitle}>
+            {Math.round(progress.workPct)}% done · {Math.round(progress.timePct)}% of the time spent
+          </Text>
+          <Text style={styles.muted}>
+            {progress.paceDelta >= 0
+              ? `${Math.round(progress.paceDelta)} points ahead of the calendar.`
+              : `${Math.abs(Math.round(progress.paceDelta))} points behind the calendar.`}
+          </Text>
+          {progress.breakdown
+            .filter((part) => part.total > 0)
+            .map((part) => (
+              <View key={part.label} style={styles.barRow}>
+                <Text style={styles.barLabel}>{part.label}</Text>
+                <View style={styles.barTrack}>
+                  <View style={[styles.barFill, { width: `${Math.min(100, part.pct)}%` }]} />
+                </View>
+                <Text style={styles.barValue}>
+                  {part.done}/{part.total}
+                </Text>
+              </View>
+            ))}
+        </View>
+      ) : null}
 
       {current?.behindBy ? (
         <Text style={styles.behind}>
@@ -130,6 +160,20 @@ function makeStyles(palette: Palette) {
     summary: { gap: SPACING.sm },
     headline: { color: palette.foreground, fontSize: 20, fontWeight: "700" },
     muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
+    card: {
+      gap: SPACING.sm,
+      padding: SPACING.lg,
+      borderRadius: RADIUS.card,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.card,
+    },
+    cardTitle: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
+    barRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
+    barLabel: { color: palette.mutedForeground, fontSize: 12, width: 84 },
+    barTrack: { flex: 1, height: 8, borderRadius: 4, backgroundColor: palette.surfaceMuted, overflow: "hidden" },
+    barFill: { height: 8, borderRadius: 4, backgroundColor: palette.accent },
+    barValue: { color: palette.mutedForeground, fontSize: 12, width: 44, textAlign: "right" },
     taskCount: { color: palette.subtleForeground, fontSize: 11, marginTop: 2 },
     progressTrack: { height: 6, borderRadius: 3, backgroundColor: palette.surfaceMuted, overflow: "hidden" },
     progressFill: { height: 6, borderRadius: 3, backgroundColor: palette.accent },

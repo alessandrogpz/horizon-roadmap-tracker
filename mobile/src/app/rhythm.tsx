@@ -8,7 +8,9 @@
 // - A rotation is a cycle: a list of topics, a set of days, and a starting
 //   week. Which item appears today is computed from the week number, never
 //   stored, which is why editing the list here changes what appears without
-//   touching any stored day.
+//   touching any stored day. Rotations can be created, configured and removed
+//   from here too — the days they run on, which list they feed, and the week
+//   they start counting from.
 //
 // Everything is applied through the shared `trackActions`, so a rhythm changed
 // on the phone and one changed on the laptop are the same edit to the merge.
@@ -189,9 +191,83 @@ export default function RhythmScreen() {
 
       {rotations.map((rotation) => (
         <View key={rotation.id} style={styles.card}>
-          <Text style={styles.cardTitle}>
-            {rotation.label} · {rotation.target === "focus" ? "focus" : "revision"} · {rotation.daysOfWeek.join(", ")}
-          </Text>
+          <View style={styles.itemRow}>
+            <TextInput
+              value={rotation.label}
+              onChangeText={(label) => editRotation(rotation.id, (r) => ({ ...r, label }))}
+              style={[styles.input, { flex: 1 }]}
+              accessibilityLabel={`Name of ${rotation.label}`}
+            />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Remove ${rotation.label}`}
+              onPress={() =>
+                editTrack((t) => ({ ...t, rotations: (t.rotations ?? []).filter((r) => r.id !== rotation.id) }))
+              }
+            >
+              <Text style={styles.remove}>×</Text>
+            </Pressable>
+          </View>
+
+          <Text style={styles.fieldLabel}>Feeds</Text>
+          <View style={styles.choices}>
+            {(["revision", "focus"] as const).map((target) => (
+              <Pressable
+                key={target}
+                accessibilityRole="button"
+                accessibilityState={{ selected: rotation.target === target }}
+                onPress={() => editRotation(rotation.id, (r) => ({ ...r, target }))}
+                style={[styles.choice, rotation.target === target && { borderColor: palette.accent }]}
+              >
+                <Text style={[styles.choiceLabel, rotation.target === target && { color: palette.foreground }]}>
+                  {target === "focus" ? "Focus" : "Revision"}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          <Text style={styles.fieldLabel}>On these days</Text>
+          <View style={styles.choices}>
+            {WEEK.map((day) => {
+              const on = rotation.daysOfWeek.includes(day);
+              return (
+                <Pressable
+                  key={day}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: on }}
+                  accessibilityLabel={`${day}${on ? ", on" : ", off"}`}
+                  onPress={() =>
+                    editRotation(rotation.id, (r) => ({
+                      ...r,
+                      daysOfWeek: on ? r.daysOfWeek.filter((d) => d !== day) : [...r.daysOfWeek, day],
+                    }))
+                  }
+                  style={[styles.choice, on && { borderColor: palette.accent }]}
+                >
+                  <Text style={[styles.choiceLabel, on && { color: palette.foreground }]}>{day}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <Text style={styles.fieldLabel}>Counting from week</Text>
+          <TextInput
+            value={String(rotation.startWeek)}
+            onChangeText={(text) => {
+              const week = Number(text);
+              // Which topic shows is (week - startWeek) into the cycle, so a
+              // blank or nonsense value would put the whole rotation out of
+              // step rather than simply failing.
+              if (Number.isFinite(week) && week >= 1) {
+                editRotation(rotation.id, (r) => ({ ...r, startWeek: Math.round(week) }));
+              }
+            }}
+            keyboardType="number-pad"
+            style={styles.input}
+            accessibilityLabel={`Starting week of ${rotation.label}`}
+          />
+
+          <Text style={styles.fieldLabel}>Topics, in order</Text>
 
           {rotation.items.map((item, index) => (
             <View key={`${index}-${item.title}`} style={styles.itemRow}>
@@ -226,10 +302,35 @@ export default function RhythmScreen() {
 
       {rotations.length === 0 && (
         <Text style={styles.muted}>
-          No rotations on this track. Creating one — with its days, its target list and its starting
-          week — is done on the website.
+          No rotations on this track yet. One is a cycle of topics that takes turns week by week.
         </Text>
       )}
+
+      <Pressable
+        accessibilityRole="button"
+        style={styles.addButton}
+        onPress={() =>
+          editTrack((t) => ({
+            ...t,
+            rotations: [
+              ...(t.rotations ?? []),
+              {
+                // Starts empty and off no days: a rotation that began feeding
+                // items into the week the moment it was created would change
+                // today's plan before it had been given any topics.
+                id: `rot_${Date.now()}`,
+                label: "New rotation",
+                items: [],
+                daysOfWeek: [],
+                target: "revision",
+                startWeek: 1,
+              },
+            ],
+          }))
+        }
+      >
+        <Text style={styles.addLabel}>Add a rotation</Text>
+      </Pressable>
     </ScrollView>
   );
 }
@@ -270,6 +371,27 @@ function makeStyles(palette: Palette) {
       backgroundColor: palette.card,
     },
     cardTitle: { color: palette.foreground, fontSize: 14, fontWeight: "600" },
+    fieldLabel: { color: palette.subtleForeground, fontSize: 10, fontWeight: "700", letterSpacing: 1, textTransform: "uppercase", marginTop: SPACING.sm },
+    choices: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.xs },
+    choice: {
+      paddingHorizontal: SPACING.md,
+      paddingVertical: SPACING.xs,
+      borderRadius: RADIUS.control,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.surfaceMuted,
+    },
+    choiceLabel: { color: palette.mutedForeground, fontSize: 12, fontWeight: "600" },
+    addButton: {
+      alignItems: "center",
+      paddingVertical: SPACING.md,
+      borderRadius: RADIUS.control,
+      borderWidth: 1,
+      borderStyle: "dashed",
+      borderColor: palette.cardBorder,
+      marginTop: SPACING.sm,
+    },
+    addLabel: { color: palette.foreground, fontSize: 14, fontWeight: "600" },
     itemRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
     item: { flex: 1, color: palette.mutedForeground, fontSize: 14 },
     remove: { color: palette.subtleForeground, fontSize: 20, paddingHorizontal: SPACING.sm },

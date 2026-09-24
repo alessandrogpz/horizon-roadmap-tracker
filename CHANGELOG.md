@@ -7,6 +7,19 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.42.0] - 2026-09-24
+
+### Added
+- **Rotations can be created and configured on the phone**, not only have their topics edited: the
+  name, which list they feed, which days they run on, and the week they count from. A new one starts
+  empty and on no days, so creating it doesn't change today's plan before it has been given any
+  topics. The Week screen no longer tells you to go to the website for this, because it no longer
+  has to.
+- **Longest run, active days and the last thirty** on the consistency screen, and **progress against
+  the calendar** on the phases screen — time spent beside work done, broken down by phases, phase
+  tasks, deliverables and materials. The pace is the point: a track can be 70% through its calendar
+  with 30% of the work finished, and neither figure says that alone.
+
 ## [0.41.0] - 2026-09-24
 
 ### Added
