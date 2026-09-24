@@ -9,7 +9,7 @@ import { seedTrackFromTemplate, TEMPLATE_LIST } from "@shared/templates";
 import { hiddenPanelsFor, trackKind, type TrackKind } from "@shared/trackKinds";
 import { PANELS } from "../panels/layout";
 import { trackTotalDays, updateTrackIdentity } from "@shared/trackActions";
-import { todayYMD } from "@shared/dates";
+import { dateForDay, dayForDate, formatDateYMD, todayYMD } from "@shared/dates";
 import { currentStreakLength } from "@shared/streak";
 import type { TrackState } from "@shared/types";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
@@ -30,6 +30,8 @@ export default function TracksScreen() {
 
   const tracks = workspace ? visibleTracks(workspace) : [];
   const [creating, setCreating] = useState(false);
+  const [newStart, setNewStart] = useState(todayYMD);
+  const [newEnd, setNewEnd] = useState("");
   const [name, setName] = useState("");
   const [settingsFor, setSettingsFor] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<Confirmation | null>(null);
@@ -67,11 +69,17 @@ export default function TracksScreen() {
       // The template answers the questions the website asks in its wizard:
       // a phone is the wrong place for a five-step form, and the defaults are
       // what most people accept there anyway. Everything is editable after.
+      // A blank or unreadable end date means "however long the template runs",
+      // which is what happened before this field existed.
+      const start = /^\d{4}-\d{2}-\d{2}$/.test(newStart) ? newStart : todayYMD();
+      const asked = /^\d{4}-\d{2}-\d{2}$/.test(newEnd) ? dayForDate(start, newEnd) : 0;
+      const days = asked > 0 ? asked : template.defaultDurationDays;
+
       const seeded = seedTrackFromTemplate(template, {
         name: name.trim() || template.label,
         color: template.defaultColor,
-        startDate: todayYMD(),
-        phases: template.buildPhases(template.defaultDurationDays),
+        startDate: start,
+        phases: template.buildPhases(days),
         weekSchedule: template.defaultWeekSchedule,
         focusTypes: template.defaultFocusTypes,
       });
@@ -88,10 +96,12 @@ export default function TracksScreen() {
         ),
       });
       setName("");
+      setNewStart(todayYMD());
+      setNewEnd("");
       setCreating(false);
       router.back();
     },
-    [addTrack, name]
+    [addTrack, name, newEnd, newStart]
   );
 
   return (
@@ -110,12 +120,13 @@ export default function TracksScreen() {
                     icon: "trash-outline",
                     colour: "#ef4444",
                     // A swipe is a flick, not a considered tap, and a track
-                    // carries everything on it — so this one asks first even
-                    // though the undo bar catches it afterwards.
+                    // carries everything on it — so this one asks first, and
+                    // deliberately offers no undo afterwards. One decision per
+                    // intent: asking and then offering to take it back is two.
                     onAct: () =>
                       setConfirming({
                         title: `Delete ${track.meta.name}?`,
-                        body: "Its phases, materials, notes and history go with it. You can undo this for a few seconds afterwards.",
+                        body: "Its phases, materials, notes and history go with it, on this phone and in your account.",
                         verb: "Delete",
                         onConfirm: () => remove(track.meta.id),
                       }),
@@ -164,7 +175,7 @@ export default function TracksScreen() {
           onArchive={() =>
             setConfirming({
               title: `Delete ${workspace?.tracks[settingsFor]?.meta.name ?? "this track"}?`,
-              body: "Its phases, materials, notes and history go with it. You can undo this for a few seconds afterwards.",
+              body: "Its phases, materials, notes and history go with it, on this phone and in your account.",
               verb: "Delete",
               onConfirm: () => remove(settingsFor),
             })
@@ -188,6 +199,30 @@ export default function TracksScreen() {
             autoFocus
             accessibilityLabel="Track name"
           />
+          <Text style={styles.fieldLabel}>Starts</Text>
+          <TextInput
+            value={newStart}
+            onChangeText={setNewStart}
+            placeholder={todayYMD()}
+            placeholderTextColor={palette.subtleForeground}
+            keyboardType="numbers-and-punctuation"
+            style={styles.input}
+            accessibilityLabel="Start date, as year-month-day"
+          />
+
+          <Text style={styles.fieldLabel}>Should be done by</Text>
+          {/* The template used to decide this silently, so a track arrived with
+              a horizon nobody had chosen and a phase timeline scaled to it. */}
+          <TextInput
+            value={newEnd}
+            onChangeText={setNewEnd}
+            placeholder="Leave blank for the template's own length"
+            placeholderTextColor={palette.subtleForeground}
+            keyboardType="numbers-and-punctuation"
+            style={styles.input}
+            accessibilityLabel="End date, as year-month-day"
+          />
+
           <Text style={styles.fieldLabel}>What it is about</Text>
           <Text style={styles.muted}>
             This only decides which panels the track opens with. Every panel stays available to every
@@ -246,13 +281,18 @@ function TrackSettings({
   const [name, setName] = useState(track?.meta.name ?? "");
   const [color, setColor] = useState(track?.meta.color || TRACK_COLOURS[0]);
   const [startDate, setStartDate] = useState(track?.startDate ?? todayYMD());
-  const [totalDays, setTotalDays] = useState(String(track ? trackTotalDays(track) : 90));
+  const [endDate, setEndDate] = useState(() =>
+    track ? formatDateYMD(dateForDay(track.startDate ?? todayYMD(), trackTotalDays(track))) : todayYMD()
+  );
 
   if (!track) return null;
 
-  const days = Number(totalDays);
-  const validDate = /^\d{4}-\d{2}-\d{2}$/.test(startDate);
-  const canSave = name.trim().length > 0 && validDate && Number.isFinite(days) && days > 0;
+  const validStart = /^\d{4}-\d{2}-\d{2}$/.test(startDate);
+  const validEnd = /^\d{4}-\d{2}-\d{2}$/.test(endDate);
+  // The stored length is a count of days from the start, which is what lets a
+  // whole track be re-dated without rewriting every phase.
+  const days = validStart && validEnd ? dayForDate(startDate, endDate) : 0;
+  const canSave = name.trim().length > 0 && validStart && validEnd && days > 0;
 
   return (
     <View style={styles.panel}>
@@ -297,17 +337,23 @@ function TrackSettings({
         accessibilityLabel="Start date, as year-month-day"
       />
 
-      <Text style={styles.fieldLabel}>Runs for</Text>
+      <Text style={styles.fieldLabel}>Ends on</Text>
+      {/* A date, not a day count. Nobody knows their track is 92 days long;
+          they know it should be done by Christmas. The count is still what
+          gets stored — it is what lets a track be re-dated wholesale — so this
+          converts on the way in and out. */}
       <TextInput
-        value={totalDays}
-        onChangeText={setTotalDays}
-        keyboardType="number-pad"
+        value={endDate}
+        onChangeText={setEndDate}
+        placeholder={todayYMD()}
+        placeholderTextColor={palette.subtleForeground}
+        keyboardType="numbers-and-punctuation"
         style={styles.input}
-        accessibilityLabel="Length in days"
+        accessibilityLabel="End date, as year-month-day"
       />
       <Text style={styles.footnote}>
-        Days. Changing it moves every phase deadline in proportion, so the shape of the roadmap
-        survives being made longer or shorter.
+        {days > 0 ? `${days} day${days === 1 ? "" : "s"}. ` : ""}Moving it shifts every phase deadline
+        in proportion, so the shape of the roadmap survives being made longer or shorter.
       </Text>
 
       <View style={styles.panelRow}>
@@ -316,7 +362,7 @@ function TrackSettings({
           style={styles.panelButton}
           disabled={!canSave}
           onPress={() =>
-            onSave({ name: name.trim(), color, startDate, totalDays: Math.round(days) })
+            onSave({ name: name.trim(), color, startDate, totalDays: days })
           }
         >
           <Text style={[styles.panelLabel, !canSave && { color: palette.subtleForeground }]}>Save</Text>

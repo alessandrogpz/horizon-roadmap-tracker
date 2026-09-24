@@ -217,36 +217,37 @@ export default function SettingsModal({
             was the least useful third of it. */}
 
         {/* ── Behaviour ──────────────────────────────────────────────── */}
+        {/* One row, not two. When a week begins and when a day rolls over are
+            the same kind of decision — "how this app reads a calendar" — and
+            splitting them made the answer to one of them easy to miss. The
+            phone groups them the same way. */}
         <Row
           icon={<Clock size={16} strokeWidth={2} />}
-          title="My day starts at"
-          hint="Midnight unless you say otherwise. Work logged before this hour counts for the previous day, so a late session doesn't land on tomorrow and break a streak."
+          title="Your week and day"
+          hint="Monday and midnight unless you say otherwise. Work logged before the hour you pick counts for the previous day, so a late session doesn't land on tomorrow and break a streak."
         >
-          <select
-            value={settings.dayRolloverHour}
-            onChange={(e) => updateSettings({ dayRolloverHour: Number(e.target.value) })}
-            className={selectClass}
-          >
-            {Array.from({ length: 24 }, (_, h) => (
-              <option key={h} value={h}>
-                {h === 0 ? "Midnight" : `${String(h).padStart(2, "0")}:00`}
-              </option>
-            ))}
-          </select>
-        </Row>
-
-        <Row
-          title="Weeks start on"
-          hint="Which day each column of the consistency grid begins with."
-        >
-          <Segmented<"sun" | "mon">
-            value={settings.weekStartsOn}
-            onChange={(weekStartsOn) => updateSettings({ weekStartsOn })}
-            options={[
-              { value: "sun", label: "Sunday" },
-              { value: "mon", label: "Monday" },
-            ]}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <Segmented<"sun" | "mon">
+              value={settings.weekStartsOn}
+              onChange={(weekStartsOn) => updateSettings({ weekStartsOn })}
+              options={[
+                { value: "mon", label: "Monday" },
+                { value: "sun", label: "Sunday" },
+              ]}
+            />
+            <select
+              value={settings.dayRolloverHour}
+              onChange={(e) => updateSettings({ dayRolloverHour: Number(e.target.value) })}
+              className={selectClass}
+              aria-label="My day starts at"
+            >
+              {Array.from({ length: 24 }, (_, h) => (
+                <option key={h} value={h}>
+                  {h === 0 ? "Day starts at midnight" : `Day starts at ${String(h).padStart(2, "0")}:00`}
+                </option>
+              ))}
+            </select>
+          </div>
         </Row>
 
         {/* ── Data ───────────────────────────────────────────────────── */}
