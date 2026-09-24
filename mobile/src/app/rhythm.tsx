@@ -36,6 +36,7 @@ import { plannedFor } from "@shared/gym";
 import { useGymLog } from "../gym/useGymLog";
 import { EditHeader, useEditMode } from "../components/EditToggle";
 import { Refreshable } from "../components/Refreshable";
+import { RhythmCalendar } from "../components/RhythmCalendar";
 
 const WEEK = DAYS_SHORT.slice(1).concat(DAYS_SHORT[0]); // Mon..Sun
 
@@ -118,37 +119,43 @@ export default function RhythmScreen() {
         onChange={setEditing}
         hint="Tap a day to cycle what it is for. Rotations and the kinds of day can be changed too."
       />
-      {!editing && (
-        <Text style={styles.muted}>What each day of this track is for, and the topics that rotate through it.</Text>
-      )}
 
-      <View style={styles.week}>
-        {WEEK.map((name) => {
-          const day = schedule.find((d) => d.name === name);
-          const colour = day ? track.focusTypes?.[day.type]?.color : undefined;
-          return (
-            <Pressable
-              key={name}
-              accessibilityRole="button"
-              disabled={!editing}
-              onPress={() => cycleDay(name)}
-              style={styles.day}
-            >
-              <Text style={styles.dayName}>{name}</Text>
-              <View style={[styles.dayDot, { backgroundColor: colour || palette.surfaceMuted }]} />
-              <Text style={styles.dayLabel} numberOfLines={1}>
-                {day?.label ?? "—"}
-              </Text>
-              {/* If this kind of day has a gym plan, say how much of one — the
-                  rhythm names the day and the plan fills it, and seeing both
-                  here is the point of them being one idea. */}
-              {day && plannedFor(gymLog, day.type).length > 0 && (
-                <Text style={styles.dayCount}>{plannedFor(gymLog, day.type).length} ex</Text>
-              )}
-            </Pressable>
-          );
-        })}
-      </View>
+      {/* Two views of one thing. Reading, you want dates: which week is
+          this, what is on Thursday, what did the week after look like.
+          Editing, you want the pattern: what a *Thursday* is for is not a
+          property of any single Thursday, so setting it on a dated row
+          would be quietly lying about what the tap changes. */}
+      {editing ? (
+        <View style={styles.week}>
+          {WEEK.map((name) => {
+            const day = schedule.find((d) => d.name === name);
+            const colour = day ? track.focusTypes?.[day.type]?.color : undefined;
+            return (
+              <Pressable
+                key={name}
+                accessibilityRole="button"
+                disabled={!editing}
+                onPress={() => cycleDay(name)}
+                style={styles.day}
+              >
+                <Text style={styles.dayName}>{name}</Text>
+                <View style={[styles.dayDot, { backgroundColor: colour || palette.surfaceMuted }]} />
+                <Text style={styles.dayLabel} numberOfLines={1}>
+                  {day?.label ?? "—"}
+                </Text>
+                {/* If this kind of day has a gym plan, say how much of one — the
+                    rhythm names the day and the plan fills it, and seeing both
+                    here is the point of them being one idea. */}
+                {day && plannedFor(gymLog, day.type).length > 0 && (
+                  <Text style={styles.dayCount}>{plannedFor(gymLog, day.type).length} ex</Text>
+                )}
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : (
+        <RhythmCalendar track={track} gym={gymLog} />
+      )}
 
       {editing && <Text style={styles.sectionTitle}>What a day can be for</Text>}
       {editing && (
