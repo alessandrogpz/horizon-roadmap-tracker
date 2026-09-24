@@ -67,10 +67,14 @@ export function SwipeRow({
   );
 
   const pan = Gesture.Pan()
-    // Only a decidedly horizontal drag. Without this the row fights the
-    // vertical scroll it lives in and both feel broken.
-    .activeOffsetX([-18, 18])
-    .failOffsetY([-12, 12])
+    // Only a decidedly horizontal drag, and it gives up on the first hint of a
+    // vertical one. These numbers are why scrolling felt sticky: every row and
+    // every panel is wrapped in one of these, so a 12-point vertical dead zone
+    // at the start of a drag was a 12-point dead zone at the start of *every
+    // scroll*. Four points is past a resting thumb's wobble and under anything
+    // deliberate.
+    .activeOffsetX([-14, 14])
+    .failOffsetY([-4, 4])
     .onUpdate((event) => {
       const wanted = event.translationX;
       // Nothing to reveal on a side with no action, so the row does not move

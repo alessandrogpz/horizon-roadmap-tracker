@@ -14,6 +14,7 @@ import { useCallback, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import type { StreakDay } from "@shared/stats";
+import type { CompletedItem } from "@shared/types";
 import { streakCalendar, streakStats } from "@shared/stats";
 import { completedItemTitle, currentStreakLength } from "@shared/streak";
 import { formatDayMonthYear, parseYMD } from "@shared/dates";
@@ -174,6 +175,17 @@ export default function ProgressScreen() {
       {/* The weekday header belongs to the screen, not to each block: every
           month lines up with the same seven columns, which is what keeps a
           Tuesday under "T" wherever it falls. */}
+      {openDay && (
+        // Any tap that is not on the popover closes it. It covers the grid
+        // rather than the screen so the tab bar and the header keep working —
+        // dismissing a detail card should not trap the rest of the app.
+        <Pressable
+          accessibilityLabel="Close the day"
+          onPress={() => setOpenDay(null)}
+          style={styles.backdrop}
+        />
+      )}
+
       <View style={styles.weekdayRow}>
         <View style={styles.gutter} />
         {labels.map((label, index) => (
@@ -185,7 +197,12 @@ export default function ProgressScreen() {
 
       {byMonth
         ? months.map((month) => (
-            <View key={month.key} style={styles.month}>
+            // Raised above its neighbours only while it holds the open day, so
+            // the popover inside it draws over the weeks below.
+            <View
+              key={month.key}
+              style={[styles.month, month.cells.some((day) => day?.date === openDay) && styles.raised]}
+            >
               <Text style={styles.monthLabel}>{month.label}</Text>
               <View style={styles.monthGrid}>
                 {month.cells.map((day, index) =>
@@ -204,12 +221,25 @@ export default function ProgressScreen() {
                   )
                 )}
               </View>
+              {openDay && month.cells.some((day) => day?.date === openDay) && (
+                <DayDetail
+                  date={openDay}
+                  items={titlesFor(openDay)}
+                  onClose={() => setOpenDay(null)}
+                  styles={styles}
+                  palette={palette}
+                />
+              )}
             </View>
           ))
         : weeks.map((week, index) => (
             <View
               key={index}
-              style={[styles.week, week.month % 2 === 0 && { backgroundColor: palette.surfaceMuted }]}
+              style={[
+                styles.week,
+                week.month % 2 === 0 && { backgroundColor: palette.surfaceMuted },
+                week.days.some((day) => day.date === openDay) && styles.raised,
+              ]}
             >
               <Text style={styles.gutterLabel} allowFontScaling={false}>{week.label ?? ""}</Text>
               {week.days.map((day, cell) =>
@@ -227,42 +257,19 @@ export default function ProgressScreen() {
                   <View key={cell} style={[styles.cell, styles.blank]} />
                 )
               )}
+              {openDay && week.days.some((day) => day.date === openDay) && (
+                <DayDetail
+                  date={openDay}
+                  items={titlesFor(openDay)}
+                  onClose={() => setOpenDay(null)}
+                  styles={styles}
+                  palette={palette}
+                />
+              )}
             </View>
           ))}
 
       {weeks.length === 0 && <Text style={styles.muted}>Nothing recorded on this track yet.</Text>}
-
-      {/* The detail sits under the grid rather than in a popup: a sheet over a
-          grid hides the very thing you are reading across. */}
-      {openDay && (
-        <View style={styles.detail}>
-          <View style={styles.detailHead}>
-            <Ionicons name="calendar-outline" size={15} color={palette.accent} />
-            <Text style={styles.detailTitle}>{formatDayMonthYear(parseYMD(openDay))}</Text>
-            <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => setOpenDay(null)} hitSlop={8}>
-              <Ionicons name="close" size={17} color={palette.subtleForeground} />
-            </Pressable>
-          </View>
-          {titlesFor(openDay).length > 0 ? (
-            titlesFor(openDay).map((item, index) => {
-              // Older records stored a bare string here; `completedItemTitle`
-              // is the shared core's answer to both shapes.
-              const description = typeof item === "string" ? undefined : item.description;
-              return (
-                <View key={`${index}-${completedItemTitle(item)}`} style={styles.detailLine}>
-                  <Ionicons name="checkmark-circle" size={14} color={palette.success} />
-                  <View style={styles.detailTextWrap}>
-                    <Text style={styles.detailText}>{completedItemTitle(item)}</Text>
-                    {description ? <Text style={styles.detailSub}>{description}</Text> : null}
-                  </View>
-                </View>
-              );
-            })
-          ) : (
-            <Text style={styles.muted}>Nothing logged on this day.</Text>
-          )}
-        </View>
-      )}
 
       <View style={styles.legend}>
         <Text style={styles.legendLabel}>Less</Text>
@@ -314,6 +321,58 @@ function Cell({
         open && { borderWidth: 2, borderColor: palette.accent },
       ]}
     />
+  );
+}
+
+/**
+ * What was done on one day, shown directly beneath the day you tapped.
+ *
+ * Absolutely positioned so it overlaps the weeks below rather than pushing
+ * them down — the grid is the thing being read, and having it jump every time
+ * a square is tapped loses the place. A backdrop behind it takes any tap
+ * outside and closes it.
+ */
+function DayDetail({
+  date,
+  items,
+  onClose,
+  styles,
+  palette,
+}: {
+  date: string;
+  items: CompletedItem[];
+  onClose: () => void;
+  styles: ReturnType<typeof makeStyles>;
+  palette: Palette;
+}) {
+  return (
+    <View style={styles.detail}>
+      <View style={styles.detailHead}>
+        <Ionicons name="calendar-outline" size={15} color={palette.accent} />
+        <Text style={styles.detailTitle}>{formatDayMonthYear(parseYMD(date))}</Text>
+        <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} hitSlop={10}>
+          <Ionicons name="close" size={17} color={palette.subtleForeground} />
+        </Pressable>
+      </View>
+      {items.length > 0 ? (
+        items.map((item, index) => {
+          // Older records stored a bare string here; `completedItemTitle` is
+          // the shared core's answer to both shapes.
+          const description = typeof item === "string" ? undefined : item.description;
+          return (
+            <View key={`${index}-${completedItemTitle(item)}`} style={styles.detailLine}>
+              <Ionicons name="checkmark-circle" size={14} color={palette.success} />
+              <View style={styles.detailTextWrap}>
+                <Text style={styles.detailText}>{completedItemTitle(item)}</Text>
+                {description ? <Text style={styles.detailSub}>{description}</Text> : null}
+              </View>
+            </View>
+          );
+        })
+      ) : (
+        <Text style={styles.muted}>Nothing logged on this day.</Text>
+      )}
+    </View>
   );
 }
 
@@ -430,14 +489,30 @@ function makeStyles(palette: Palette) {
     },
     cell: { width: CELL, height: CELL, borderRadius: 4 },
     blank: { opacity: 0 },
+    // A row holding the open day sits above its neighbours so the popover
+    // inside it draws over the weeks below rather than under them.
+    // Sits over the grid, under anything raised. Transparent: its only job is
+    // to catch the tap.
+    backdrop: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 5 },
+    raised: { zIndex: 10, elevation: 10 },
     detail: {
+      position: "absolute",
+      top: "100%",
+      left: 0,
+      right: 0,
       gap: SPACING.sm,
       padding: SPACING.lg,
-      marginTop: SPACING.md,
+      marginTop: SPACING.xs,
       borderRadius: RADIUS.card,
       borderWidth: 1,
       borderColor: palette.accent,
       backgroundColor: palette.card,
+      // Android draws by elevation, not paint order.
+      elevation: 12,
+      shadowColor: "#000",
+      shadowOpacity: 0.3,
+      shadowRadius: 12,
+      shadowOffset: { width: 0, height: 4 },
     },
     detailHead: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
     detailTitle: { flex: 1, color: palette.foreground, fontSize: 14, fontWeight: "700" },
