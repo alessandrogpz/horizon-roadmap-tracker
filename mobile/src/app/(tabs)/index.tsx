@@ -164,7 +164,15 @@ export default function SpaceScreen() {
       held.value = -1;
       target.value = -1;
       dragY.value = 0;
-      columnShift.value = 0;
+      // The shift deliberately stays where it is. The column's offset is
+      // `columnShift * collapse`, so letting collapse fall to zero unwinds it
+      // on exactly the path it came in on: the panel just dropped holds its
+      // place and the others open outward from it. Zeroing the shift here
+      // instead snapped the column back to the top of the page first, and
+      // what you saw was every panel teleporting up there and growing
+      // downwards — the fold played back as a cut rather than in reverse.
+      // Nothing needs resetting: at rest collapse is 0, so the offset is 0
+      // whatever the shift holds, and the next pick-up recomputes it.
       collapse.value = withTiming(0, { duration: 260 });
       setDragging(false);
     },
@@ -455,6 +463,14 @@ function DraggablePanel({
       // The panel already sits in its own slot within the shifted column, so
       // landing somewhere else is simply that many slots away.
       const landing = (to - index) * SLOT;
+      // Dropped where it was picked up: there is nothing to settle, and
+      // handing `withTiming` a value it already holds means the release waits
+      // on an animation that has nowhere to go.
+      if (Math.abs(landing - dragY.value) < 1) {
+        dragY.value = landing;
+        runOnJS(onEndDrag)(index, to);
+        return;
+      }
       dragY.value = withTiming(landing, { duration: 170 }, (finished) => {
         if (finished) runOnJS(onEndDrag)(index, to);
       });
