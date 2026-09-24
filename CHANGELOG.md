@@ -7,6 +7,20 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.43.0] - 2026-09-24
+
+### Added
+- **Materials can be added and removed on the phone**, which was the last screen still telling you
+  to go to the website. Three fields — title, kind, category — not the website's ten: a phone is
+  where "that book someone just mentioned" gets written down, and a form demanding page counts and
+  links before it accepts anything is how that does not get written down. A material's page count
+  can be set from its card afterwards, which is what makes the progress bar and the bookmark appear.
+
+### Changed
+- With this, every feature the website has that a phone can meaningfully hold is on the phone. What
+  is left is deliberate: git statistics read a repository on the computer running the app, and a
+  phone has no checkout to read.
+
 ## [0.42.0] - 2026-09-24
 
 ### Added
