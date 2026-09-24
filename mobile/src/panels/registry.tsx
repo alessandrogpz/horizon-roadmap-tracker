@@ -22,7 +22,7 @@ import { PanelCard, Meter } from "./PanelCard";
 import { FITNESS_PANEL, STEPS_PANEL } from "./layout";
 import { usePedometer } from "../steps/usePedometer";
 import { dailySteps, healthStatus } from "./../steps/healthConnect";
-import { FOCUS_LABEL, focusFor, sessionFor, setCountOf, volumeOf } from "@shared/gym";
+import { focusOfDay, plannedFor, sessionFor, setCountOf, volumeOf } from "@shared/gym";
 import { useGymLog } from "../gym/useGymLog";
 import { SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
@@ -77,36 +77,78 @@ export function PanelBody({ id, track, today }: { id: string } & PanelProps) {
   }
 }
 
-/** The week, as seven dots coloured by what each day is for, with today ringed.
- *  The shape of the week in one line. */
+/**
+ * The week, as seven dots coloured by what each day is for, with today ringed —
+ * and, underneath, what today actually asks of you.
+ *
+ * The second half is why this is a "weekly overview" rather than a study plan:
+ * a day's contents come from wherever that kind of day keeps them. For an
+ * ordinary track that is the day's checklist; for a training day it is the gym
+ * plan. Both are the same question — what does the rhythm want today — and the
+ * panel answers it without caring which.
+ */
 function WeekPanel({ track, today }: PanelProps) {
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
   const week = DAYS_SHORT.slice(1).concat(DAYS_SHORT[0]);
   const todayKey = DAYS_SHORT[parseYMD(today).getDay()];
+  const { log } = useGymLog(track.meta.id);
+
+  const focus = focusOfDay(track.weekSchedule, todayKey);
+  const planned = plannedFor(log, focus?.key);
+  const done = new Set(
+    sessionFor(log, today)
+      .exercises.filter((exercise) => exercise.sets.length > 0)
+      .map((exercise) => exercise.name.toLowerCase())
+  );
 
   return (
-    <View style={styles.week}>
-      {week.map((name) => {
-        const day = (track.weekSchedule ?? []).find((d) => d.name === name);
-        const colour = day ? track.focusTypes?.[day.type]?.color : undefined;
-        const isToday = name === todayKey;
-        return (
-          <View key={name} style={styles.weekDay}>
-            <View
-              style={[
-                styles.weekDot,
-                { backgroundColor: colour || palette.surfaceMuted },
-                isToday && { borderWidth: 2, borderColor: palette.foreground },
-              ]}
-            />
-            <Text style={[styles.weekName, isToday && { color: palette.foreground, fontWeight: "700" }]}>
-              {name}
-            </Text>
-          </View>
-        );
-      })}
-    </View>
+    <>
+      <View style={styles.week}>
+        {week.map((name) => {
+          const day = (track.weekSchedule ?? []).find((d) => d.name === name);
+          const colour = day ? track.focusTypes?.[day.type]?.color : undefined;
+          const isToday = name === todayKey;
+          return (
+            <View key={name} style={styles.weekDay}>
+              <View
+                style={[
+                  styles.weekDot,
+                  { backgroundColor: colour || palette.surfaceMuted },
+                  isToday && { borderWidth: 2, borderColor: palette.foreground },
+                ]}
+              />
+              <Text style={[styles.weekName, isToday && { color: palette.foreground, fontWeight: "700" }]}>
+                {name}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
+
+      {planned.length > 0 && (
+        <View style={styles.plannedBlock}>
+          <Text style={styles.muted}>
+            {focus?.label} · {done.size} of {planned.length} done
+          </Text>
+          {planned.slice(0, 4).map((name) => (
+            <View key={name} style={styles.line}>
+              <Ionicons
+                name={done.has(name.toLowerCase()) ? "checkmark-circle" : "ellipse-outline"}
+                size={13}
+                color={done.has(name.toLowerCase()) ? palette.success : palette.subtleForeground}
+              />
+              <Text
+                style={[styles.lineText, done.has(name.toLowerCase()) && styles.struck]}
+                numberOfLines={1}
+              >
+                {name}
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </>
   );
 }
 
@@ -292,10 +334,14 @@ function GymPanel({ track, today }: PanelProps) {
   const { log, loaded } = useGymLog(track.meta.id);
 
   const dayKey = DAYS_SHORT[parseYMD(today).getDay()];
-  const focus = focusFor(log, today, dayKey);
+  // The kind of day comes from the track's rhythm, the same place Today and
+  // the week overview read it from.
+  const focus = focusOfDay(track.weekSchedule, dayKey);
   const session = sessionFor(log, today);
+  const planned = plannedFor(log, focus?.key);
   const sets = setCountOf(session);
   const volume = volumeOf(session);
+  const done = session.exercises.filter((exercise) => exercise.sets.length > 0).length;
 
   if (!loaded) return <Text style={styles.muted}>Loading…</Text>;
 
@@ -303,14 +349,18 @@ function GymPanel({ track, today }: PanelProps) {
     <>
       <View style={styles.headlineRow}>
         <Text style={[styles.big, { color: TINTS[FITNESS_PANEL] }]} numberOfLines={1}>
-          {focus ? FOCUS_LABEL[focus] : "—"}
+          {focus?.label ?? "—"}
         </Text>
         <View style={styles.headlineText}>
           <Text style={styles.strong}>
             {sets === 0 ? "Nothing logged yet" : `${sets} set${sets === 1 ? "" : "s"}`}
           </Text>
           <Text style={styles.muted}>
-            {volume > 0 ? `${Math.round(volume).toLocaleString()} kg lifted` : "Tap to log a set"}
+            {planned.length > 0
+              ? `${done} of ${planned.length} planned`
+              : volume > 0
+                ? `${Math.round(volume).toLocaleString()} kg lifted`
+                : "Tap to log a set"}
           </Text>
         </View>
       </View>
@@ -376,6 +426,7 @@ function makeStyles(palette: Palette) {
     weekDay: { alignItems: "center", gap: 4 },
     weekDot: { width: 16, height: 16, borderRadius: 8 },
     weekName: { color: palette.subtleForeground, fontSize: 10 },
+    plannedBlock: { gap: 3, marginTop: SPACING.sm },
     dots: { flexDirection: "row", flexWrap: "wrap", gap: 3 },
     dot: { width: 12, height: 12, borderRadius: 3 },
     line: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },

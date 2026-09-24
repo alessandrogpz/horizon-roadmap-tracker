@@ -28,18 +28,17 @@ interface Tile {
   go: string;
 }
 
-/** The shortcuts, tinted to match the panels they lead to so the same thing is
- *  the same colour wherever it turns up. */
-const SHORTCUTS: Tile[] = [
-  { label: "Materials", icon: "book-outline", tint: "#14b8a6", go: "/materials" },
-  { label: "Notes", icon: "create-outline", tint: "#64748b", go: "/notes" },
-  { label: "Search", icon: "search-outline", tint: "#0ea5e9", go: "/search" },
-  { label: "Timer", icon: "timer-outline", tint: "#f59e0b", go: "/timer" },
-];
-
+// Switching track left this menu when the track name in the header became the
+// control for it — the name was already the label for that choice, and having
+// both meant two ways to do one thing, one of them three taps deep.
+//
+// The grid of shortcuts went with it. Materials, Notes and the Timer all have
+// panels that link straight to them, so the grid was a third route to screens
+// that already had two, and it pushed the things only reachable here further
+// down the sheet.
 const MANAGE: Tile[] = [
-  { label: "Switch track", icon: "swap-horizontal-outline", tint: "#a855f7", go: "/tracks" },
   { label: "Account", icon: "person-circle-outline", tint: "#22c55e", go: "/account" },
+  { label: "Search", icon: "search-outline", tint: "#0ea5e9", go: "/search" },
   { label: "Settings", icon: "settings-outline", tint: "#64748b", go: "/settings" },
 ];
 
@@ -105,24 +104,7 @@ export function AppMenu({ open, onClose }: { open: boolean; onClose: () => void 
               </View>
             </Pressable>
 
-            <Text style={styles.sectionTitle}>Go to</Text>
-            <View style={styles.grid}>
-              {SHORTCUTS.map((tile) => (
-                <Pressable
-                  key={tile.go}
-                  accessibilityRole="button"
-                  style={styles.gridTile}
-                  onPress={() => go(tile.go)}
-                >
-                  <View style={[styles.iconSquare, { backgroundColor: `${tile.tint}22` }]}>
-                    <Ionicons name={tile.icon} size={19} color={tile.tint} />
-                  </View>
-                  <Text style={styles.gridLabel}>{tile.label}</Text>
-                </Pressable>
-              ))}
-            </View>
-
-            <Text style={styles.sectionTitle}>This track &amp; account</Text>
+            <Text style={styles.sectionTitle}>This track</Text>
 
             {/* Sharing left Today, where it was an odd thing to meet every
                 morning. It belongs with the other occasional actions. */}
