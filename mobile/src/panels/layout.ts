@@ -23,10 +23,13 @@ import { panelOrder } from "../storage/deviceSettings";
 /** The step counter, which only a phone can offer. */
 export const STEPS_PANEL = "steps";
 
-/** Movement, from Health Connect: what the body did today, as opposed to what
- *  the plan asked of it. Phone-only for the same reason as the step counter —
- *  a browser has no health store to read. */
-export const FITNESS_PANEL = "fitness";
+/** Training: the weekly split and what was actually lifted today.
+ *
+ *  This replaced a "Movement" panel that read steps and distance from Health
+ *  Connect — which was the step counter again, with a second name and a worse
+ *  layout. A gym panel is a different question: not "did the body move" but
+ *  "what is today for, and what have I done of it". */
+export const FITNESS_PANEL = "gym";
 
 export interface PanelDefinition {
   id: string;
@@ -45,14 +48,14 @@ const HINTS: Record<string, string> = {
   notepad: "Somewhere to put a thought",
   todoList: "Loose ends that are not part of a day",
   [STEPS_PANEL]: "This phone's step counter — for tracks where walking counts",
-  [FITNESS_PANEL]: "Today's movement from Health Connect: steps, distance and active time",
+  [FITNESS_PANEL]: "What today is for — push, pull, legs — and the sets you log against it",
 };
 
 /** Every panel the phone can show: the website's, plus the step counter. */
 export const PANELS: PanelDefinition[] = [
   ...MODULES.map((m) => ({ id: m.id as string, label: m.label, hint: HINTS[m.id] ?? "" })),
   { id: STEPS_PANEL, label: "Step Counter", hint: HINTS[STEPS_PANEL] },
-  { id: FITNESS_PANEL, label: "Movement", hint: HINTS[FITNESS_PANEL] },
+  { id: FITNESS_PANEL, label: "Gym", hint: HINTS[FITNESS_PANEL] },
 ];
 
 const ALL_IDS = PANELS.map((p) => p.id);

@@ -13,7 +13,7 @@ import { Pressable, StyleSheet, Text } from "react-native";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { formatRemaining, useTimer } from "../timer/TimerProvider";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { HEADER_CONTROL, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 export function TimerChip() {
@@ -51,10 +51,11 @@ function makeStyles(palette: Palette) {
     chip: {
       flexDirection: "row",
       alignItems: "center",
+      justifyContent: "center",
       gap: 4,
-      paddingHorizontal: SPACING.sm,
-      paddingVertical: 4,
-      borderRadius: RADIUS.control,
+      height: HEADER_CONTROL.height,
+      paddingHorizontal: HEADER_CONTROL.paddingHorizontal,
+      borderRadius: HEADER_CONTROL.radius,
       borderWidth: 1,
       backgroundColor: palette.surfaceMuted,
     },
