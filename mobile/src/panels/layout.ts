@@ -17,18 +17,17 @@
 // so a phone-only id costs nothing and syncs harmlessly.
 
 import type { TrackState } from "@shared/types";
-import { MODULES, MODULE_IDS } from "@shared/modules";
+import { isOptIn, MODULES, MODULE_IDS } from "@shared/modules";
 import { panelOrder } from "../storage/deviceSettings";
 
 /** The step counter, which only a phone can offer. */
 export const STEPS_PANEL = "steps";
 
-/** Training: the weekly split and what was actually lifted today.
+/** Training: the plan for each kind of day, and what was lifted today.
  *
- *  This replaced a "Movement" panel that read steps and distance from Health
- *  Connect — which was the step counter again, with a second name and a worse
- *  layout. A gym panel is a different question: not "did the body move" but
- *  "what is today for, and what have I done of it". */
+ *  A shared module rather than a phone-only one: the log lives in a note, so
+ *  the website reads and writes the same thing. It is opt-in, which
+ *  `lib/modules.ts` now expresses directly. */
 export const FITNESS_PANEL = "gym";
 
 export interface PanelDefinition {
@@ -55,7 +54,6 @@ const HINTS: Record<string, string> = {
 export const PANELS: PanelDefinition[] = [
   ...MODULES.map((m) => ({ id: m.id as string, label: m.label, hint: HINTS[m.id] ?? "" })),
   { id: STEPS_PANEL, label: "Step Counter", hint: HINTS[STEPS_PANEL] },
-  { id: FITNESS_PANEL, label: "Gym", hint: HINTS[FITNESS_PANEL] },
 ];
 
 const ALL_IDS = PANELS.map((p) => p.id);
@@ -82,15 +80,18 @@ export function visiblePanels(track: Pick<TrackState, "meta" | "hiddenPanels">):
 
   const rest = ALL_IDS.filter((id) => !seen.has(id));
   // A track created with a kind says what it wants by listing everything it
-  // does *not* want, so `hiddenPanels` is the whole answer and is trusted as
-  // it stands.
+  // does *not* want, so `hiddenPanels` is the whole answer and is trusted.
   //
-  // A track made before kinds existed has no such list, and for those the two
-  // phone-only panels stay opt-in: a step count is right on a fitness track
-  // and noise on a graphics engine, and defaulting them on would put them on
-  // every track anyone had ever made.
+  // A track made before kinds existed has no such list, and for those the
+  // opt-in panels stay out: a step count is right on a fitness track and noise
+  // on a graphics engine, and switching them on by default would put them on
+  // every track anyone had ever made. Which panels are opt-in is the shared
+  // core's answer (`MODULES`), plus the step counter, which only a phone has.
   const declared = (track.hiddenPanels?.length ?? 0) > 0;
-  const optIn = new Set<string>([STEPS_PANEL, FITNESS_PANEL]);
+  const optIn = new Set<string>([
+    STEPS_PANEL,
+    ...MODULE_IDS.filter(isOptIn),
+  ]);
 
   return [...stored, ...rest].filter((id) => {
     if (hidden.has(id)) return false;

@@ -7,6 +7,33 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.57.0] - 2026-09-24
+
+### Fixed
+- **Deleting a track asked twice.** It had a confirmation *and* an undo, which is two decisions for
+  one intent — the sheet has already had the conversation. The rule now: a swipe is a flick and gets
+  an undo; a considered tap on something that carries a lot gets a question. One or the other,
+  never both.
+
+### Added
+- **The Gym panel is on the website.** The log lives in a note, so both platforms read and write the
+  same `gym-<trackId>` and neither knows which one wrote it. The website leans to planning — typing
+  names, setting numbers, seeing the week — since that is what a desk is better at, with logging
+  kept to one click per set.
+- **Modules can be opt-in**, which `lib/modules.ts` now says directly. Anything not opt-in still
+  appears by itself when a new version adds it; the gym does not, because a gym panel on a track
+  about a database course is noise nobody asked for. The two platforms share the answer instead of
+  each keeping their own list.
+
+### Changed
+- The landing page calls the modules what the app calls them — Weekly overview, Phases, Consistency,
+  Deliverables, Timer — and lists the Gym alongside them.
+- `MOBILE_PLAN.md` records how the plan actually resolved: four tabs rather than a smaller website,
+  read-only by default, undo *or* confirmation, and new data going in a note rather than a new field.
+- **Learning log entry 18**, on the twelve releases that added no features and were all design:
+  verifying parity mechanically rather than by reading, rendering the UI to find layout bugs code
+  review cannot, and why two editors for one fact will always disagree.
+
 ## [0.56.0] - 2026-09-24
 
 ### Fixed
