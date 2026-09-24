@@ -18,23 +18,29 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { WorkspaceProvider } from "../workspace/WorkspaceProvider";
 import { SyncProvider } from "../sync/SyncProvider";
 import { ThemeProvider, useTheme } from "../theme/ThemeProvider";
 
 export default function RootLayout() {
   return (
-    <ThemeProvider>
-      <SafeAreaProvider>
-        <WorkspaceProvider>
-          {/* Inside the workspace: a sync writes the merged workspace straight
-              back into it. */}
-          <SyncProvider>
-            <Screens />
-          </SyncProvider>
-        </WorkspaceProvider>
-      </SafeAreaProvider>
-    </ThemeProvider>
+    // Gesture handler needs a root of its own for `GestureDetector` to receive
+    // touches at all — without it the panel drag in My Space is inert on
+    // Android, silently and with no error.
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider>
+        <SafeAreaProvider>
+          <WorkspaceProvider>
+            {/* Inside the workspace: a sync writes the merged workspace
+                straight back into it. */}
+            <SyncProvider>
+              <Screens />
+            </SyncProvider>
+          </WorkspaceProvider>
+        </SafeAreaProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }
 
@@ -59,6 +65,7 @@ function Screens() {
         <Stack.Screen name="portfolio" options={{ title: "Deliverables" }} />
         <Stack.Screen name="phase/[id]" options={{ title: "Phase" }} />
         <Stack.Screen name="rotation/[id]" options={{ title: "The plan" }} />
+        <Stack.Screen name="materials" options={{ title: "Materials" }} />
         <Stack.Screen name="notes" options={{ title: "Notes" }} />
         <Stack.Screen name="search" options={{ title: "Search" }} />
         <Stack.Screen name="insights" options={{ title: "History" }} />
