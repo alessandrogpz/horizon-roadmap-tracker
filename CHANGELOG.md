@@ -7,6 +7,13 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.63.3] - 2026-09-25
+
+### Changed
+- **The footnote fades out while a panel is held.** The column now folds around the thumb, which
+  means it can fold straight over the paragraph explaining how to hold a panel — advice that is of
+  no use to someone already doing it. Only panels are in the way now, and it comes back on release.
+
 ## [0.63.2] - 2026-09-25
 
 ### Fixed

@@ -117,6 +117,11 @@ export default function SpaceScreen() {
     transform: [{ translateY: columnShift.value * collapse.value }],
   }));
 
+  // Everything that is not a panel gets out of the way while one is held.
+  // The column folds around the thumb, and a paragraph of explanation
+  // sitting in the middle of it is just something to read by accident.
+  const chrome = useAnimatedStyle(() => ({ opacity: 1 - collapse.value }));
+
   const slack = useAnimatedStyle(() => {
     let sum = 0;
     for (const id of ids.value) sum += heights.value[id] ?? ROW;
@@ -301,20 +306,23 @@ export default function SpaceScreen() {
       )}
 
       {/* Outside the column, because the column moves to the thumb when a
-          panel is picked up and a footnote has no business following it. */}
-      {!arranging && shown.length === 0 && (
-        <Text style={styles.muted}>
-          No panels yet. Tap Arrange to add some — this is the screen that shows the whole track at
-          once.
-        </Text>
-      )}
-
+          panel is picked up and a footnote has no business following it —
+          and faded out entirely while it is held. */}
       {!arranging && (
-        <Text style={styles.footnote}>
-          Hold a panel anywhere to pick it up and drag it somewhere else, or swipe one away to
-          hide it. Which panels you have follows your account; the order they are
-          in is this phone&apos;s, because a phone has one column and the website has two.
-        </Text>
+        <Animated.View style={[styles.chrome, chrome]} pointerEvents={dragging ? "none" : "auto"}>
+          {shown.length === 0 && (
+            <Text style={styles.muted}>
+              No panels yet. Tap Arrange to add some — this is the screen that shows the whole track
+              at once.
+            </Text>
+          )}
+
+          <Text style={styles.footnote}>
+            Hold a panel anywhere to pick it up and drag it somewhere else, or swipe one away to
+            hide it. Which panels you have follows your account; the order they are
+            in is this phone&apos;s, because a phone has one column and the website has two.
+          </Text>
+        </Animated.View>
       )}
     </Refreshable>
   );
@@ -616,6 +624,7 @@ function makeStyles(palette: Palette) {
     content: { padding: SPACING.lg, gap: SPACING.md, paddingBottom: SPACING.xl },
     centered: { alignItems: "center", justifyContent: "center" },
     stack: { gap: SPACING.md },
+    chrome: { gap: SPACING.md },
     // Clips the panel to whatever the fold has left of it.
     slot: { overflow: "hidden", borderRadius: RADIUS.card },
     ring: {
