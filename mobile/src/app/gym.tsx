@@ -86,7 +86,10 @@ export default function GymScreen() {
     <Refreshable style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <View style={styles.headline}>
         <View style={styles.headlineText}>
-          <Text style={styles.focus}>{focus?.label ?? "No focus set"}</Text>
+          {/* "Gym plan", not the day's focus label. The label is whatever
+              the track calls that weekday — "Focus", "Maths" — which says
+              nothing about training and read as a bug. */}
+          <Text style={styles.focus}>Gym plan</Text>
           <Text style={styles.muted}>{formatDayMonthYear(parseYMD(today))}</Text>
         </View>
         <View style={styles.totals}>
@@ -204,14 +207,14 @@ export default function GymScreen() {
       {focus && (
         <>
           <View style={styles.splitHead}>
-            <Text style={styles.sectionTitle}>What a {focus.label.toLowerCase()} day asks for</Text>
-            <EditButton editing={editing} onChange={setEditing} what={`the ${focus.label} plan`} />
+            <Text style={styles.sectionTitle}>The plan</Text>
+            <EditButton editing={editing} onChange={setEditing} what="the plan" />
           </View>
 
           {planned.length === 0 && !editing && (
             <Text style={styles.muted}>
-              Nothing planned for {focus.label.toLowerCase()} days yet. Tap Edit to add exercises, and
-              they will be waiting every {focus.label.toLowerCase()} day.
+              Nothing planned yet. Tap Edit to add exercises, and they wait on every day of this
+              kind.
             </Text>
           )}
 
@@ -242,7 +245,7 @@ export default function GymScreen() {
                   />
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel={`Remove ${item.name} from the ${focus.label} plan`}
+                    accessibilityLabel={`Remove ${item.name} from the plan`}
                     hitSlop={10}
                     onPress={() => change((current) => removeFromPlan(current, focus.key, item.name))}
                   >
@@ -266,8 +269,8 @@ export default function GymScreen() {
           )}
 
           <Text style={styles.footnote}>
-            Which days are {focus.label.toLowerCase()} days is set on the Week screen, along with every
-            other kind of day this track has.
+            Which days this plan applies to is set on the Week screen, along with every other kind of
+            day this track has.
           </Text>
         </>
       )}

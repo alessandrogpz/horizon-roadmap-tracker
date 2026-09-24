@@ -336,7 +336,7 @@ function GymPanel({ track, today }: PanelProps) {
     return (
       <Text style={styles.muted}>
         {focus
-          ? `Nothing planned for ${focus.label.toLowerCase()} days yet. Tap to build the plan.`
+          ? "Nothing planned yet. Tap to build the plan."
           : "This track's week doesn't say what today is for. Tap to set it up."}
       </Text>
     );
@@ -345,7 +345,7 @@ function GymPanel({ track, today }: PanelProps) {
   return (
     <>
       <Text style={styles.muted}>
-        {focus?.label} · {setCountOf(session)} set{setCountOf(session) === 1 ? "" : "s"} logged
+        {setCountOf(session)} set{setCountOf(session) === 1 ? "" : "s"} logged
         {volumeOf(session) > 0 ? ` · ${Math.round(volumeOf(session)).toLocaleString()} kg` : ""}
       </Text>
 
