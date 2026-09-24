@@ -41,6 +41,7 @@ The other documents, and what each one is for:
 15. [A second platform, from the same core (0.25.0–0.27.0)](#15-a-second-platform-from-the-same-core-0250-0270)
 16. [What a phone can do that a browser can't (0.26.0–0.29.0)](#16-what-a-phone-can-do-that-a-browser-cant-0260-0290)
 17. [Files, and the standard library that isn't there (0.38.1–0.39.0)](#17-files-and-the-standard-library-that-isnt-there-0381-0390)
+18. [Designing it, not just building it (0.45.0–0.56.0)](#18-designing-it-not-just-building-it-0450-0560)
 
 ---
 
@@ -1181,3 +1182,77 @@ file…* → pick a backup the website wrote, and read what it says the file con
 **Files.** `lib/backupFormat.ts`, `lib/export.ts`, `lib/import.ts`,
 `mobile/src/backup/backupFile.ts`, `mobile/src/app/settings.tsx`, `mobile/src/app/roadmap.tsx`,
 `mobile/metro.config.js`, `mobile/src/storage/db.ts`.
+
+
+---
+
+## 18. Designing it, not just building it (0.45.0–0.56.0)
+
+**What changed.** The phone app had every feature the website had and the shape of a prototype: one
+screen with the day's work on top and ten links stacked underneath. Twelve releases later it has
+four tabs, a home screen of panels you arrange yourself, swipe gestures, undo, haptics, an error
+boundary per panel, and a gym tracker. None of it added a feature. All of it was design.
+
+**Why.** Feature parity turned out to be the easy half. A list of everything the website can do,
+ported faithfully, is not an app — it is a menu. The second half was working out what a phone is
+*for*, which is a different question with different answers, and most of them only became obvious
+once the thing was in a hand.
+
+**Concepts.**
+
+- **Verify claims mechanically, not by reading.** Twice I said the phone had reached parity, having
+  checked by reading screens. Both times a proper check found real gaps — five the second time,
+  including the phone being locked to today. What finally worked was a mechanical proxy: list every
+  export in the shared core, diff which ones the website calls that `mobile/src` never does. Reading
+  code shows what a screen appears to do; it cannot show what the other platform can do that this
+  one cannot.
+
+- **Render the UI and measure it.** Three layout bugs were found by serving the React Native app
+  through react-native-web at 375×812 and measuring the DOM — category chips squeezing to 18px and
+  overlapping, the tab bar clipping its own labels to a 5-pixel sliver, a modal parked a whole
+  viewport below the screen. None were visible in the code. `.claude/launch.json` now carries the
+  config to do it.
+
+- **A touch screen has no hover, so editable and read-only look identical.** The app now opens
+  read-only everywhere and puts editing behind a pencil. The exceptions are the two things the app
+  exists for — ticking something off, and the timer — because a mode in front of those would be
+  absurd.
+
+- **Undo or confirmation, never both.** A dialog in front of every destructive action teaches people
+  to dismiss dialogs, so by the time one matters it has already gone. The rule that emerged: a swipe
+  is a flick and gets an undo; a considered tap on something that carries a lot gets a question.
+  Asking *and* offering to take it back is two decisions for one intent.
+
+- **Two editors for one fact will disagree.** The gym kept its own weekly split while the track's
+  rhythm already answered "what is Monday for" everywhere else. The fix was not to sync them but to
+  delete one: the rhythm names the days, the gym fills them. The same instinct killed a "Movement"
+  panel that was the step counter under a second name, and a menu grid that was a third route to
+  screens with two.
+
+- **Name the thing, not a use for it.** "Weekly Study Plan" assumed every track was about studying;
+  "Roadmap Timeline" sat one word from the Roadmap *document*. And a phase on a fitness track was
+  headed "Math Integration" over nothing, because four section keys from a computer-science
+  curriculum were being rendered regardless of content.
+
+- **New data goes where the schema already allows it.** The gym log is JSON in a note, because the
+  server refuses workspace fields it does not know (entry 13) and a note is `{id, content}` with
+  half a megabyte to spare. It syncs, it merges, and it needed no deploy — `lib/gym.ts` owns the
+  format so both platforms read the same log.
+
+- **Defaults, not gates.** A track's kind decides which panels it *opens* with and nothing else.
+  Hiding panels by kind would produce the unanswerable "where did it go?", and a real track is
+  hybrid: the student who also lifts wants the gym panel on a track filed under learning.
+
+**Exam questions.**
+- *How do you know a port is complete?* Not by reading it. Diff the shared core's exports against
+  what each platform actually calls.
+- *What is different about designing for touch?* No hover, no cursor, no tooltips, and a thumb
+  covering whatever it is pressing — so state has to be visible before the press, targets have to be
+  48dp, and destructive actions need a way back rather than a way to be certain.
+- *Where should new data live when the schema is strict?* Somewhere the schema already accepts.
+  Adding a field is a migration, a validator change and a deploy; the alternative may cost nothing.
+- *How do you decide what belongs on a phone?* By what someone does while holding one. Planning is
+  desk work; logging a set between sets is not.
+
+**Files.** `mobile/src/app/(tabs)/`, `mobile/src/panels/`, `mobile/src/components/`, `lib/gym.ts`,
+`lib/trackKinds.ts`, `lib/modules.ts`, `lib/phaseDetails.ts`, `components/GymTracker.tsx`.

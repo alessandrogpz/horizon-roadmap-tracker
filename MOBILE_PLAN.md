@@ -199,3 +199,33 @@ go: they are Level 1 criteria.
 - A Google Play Console account ($25, once) before week 4.
 - An Android phone to test on — the pedometer needs real hardware; an emulator cannot walk.
 - Decide whether iOS is worth $99 this term.
+
+
+---
+
+## 9. Where it ended up
+
+The plan above was written before any of it existed. What shipped differs in
+four ways worth recording, because each was a decision rather than a drift:
+
+- **The phone is not a smaller website; it is the same app with a different
+  shape.** Four tabs — My Space, Today, Plan, Progress — with My Space as the
+  home: the whole track as a column of panels you arrange yourself. The
+  website's two-column dashboard and the phone's single column are the same
+  model (`lib/modules.ts`, `hiddenPanels`), and only the *order* is per-device,
+  because one column and two columns are not the same question.
+
+- **Reading is the default; editing is a decision.** Every screen that can
+  change a plan opens read-only behind a pencil. A touch screen has no hover,
+  so an editable field and a label look identical until one of them moves.
+
+- **Destructive actions get either an undo or a confirmation, never both.** A
+  swipe is a flick, so it gets an undo; a considered tap on something that
+  carries a lot — deleting a track — gets a question. Asking *and* offering to
+  take it back is two decisions for one intent.
+
+- **New data goes in a note, not a new field.** The gym log is JSON in
+  `gym-<trackId>`. The server validates the workspace against a strict schema
+  that refuses unknown fields (learning log 13), so a field would have meant a
+  migration and a deploy before a single set could be logged. Notes already
+  sync, already merge per note, and hold half a megabyte each.

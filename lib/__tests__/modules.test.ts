@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { resolveTrackLayout, defaultPanelColumns, homeColumnFor, MODULE_IDS } from "../modules";
+import { resolveTrackLayout, defaultPanelColumns, homeColumnFor, isOptIn, MODULE_IDS, MODULES } from "../modules";
 
 describe("defaultPanelColumns", () => {
   it("returns a fresh object each call (no shared reference across tracks)", () => {
@@ -11,9 +11,28 @@ describe("defaultPanelColumns", () => {
     expect(b.left).not.toContain("x");
   });
 
-  it("covers every known module across the two columns", () => {
+  it("covers every module except the opt-in ones", () => {
     const cols = defaultPanelColumns();
-    expect([...cols.left, ...cols.right].sort()).toEqual([...MODULE_IDS].sort());
+    const placed = [...cols.left, ...cols.right].sort();
+    const expected = MODULES.filter((module) => !isOptIn(module.id))
+      .map((module) => module.id as string)
+      .sort();
+    expect(placed).toEqual(expected);
+  });
+
+  it("leaves opt-in modules out of a new track entirely", () => {
+    const cols = defaultPanelColumns();
+    const optIn = MODULE_IDS.filter(isOptIn);
+    expect(optIn.length).toBeGreaterThan(0);
+    for (const id of optIn) expect([...cols.left, ...cols.right]).not.toContain(id);
+  });
+
+  it("does not append an opt-in module to a track that never asked for one", () => {
+    // The whole point: a module added in a later version turns up by itself
+    // unless it is the kind most tracks would not want.
+    const { columns } = resolveTrackLayout({ panelColumns: { left: [], right: [] } });
+    const optIn = MODULE_IDS.filter(isOptIn);
+    for (const id of optIn) expect([...columns.left, ...columns.right]).not.toContain(id);
   });
 });
 

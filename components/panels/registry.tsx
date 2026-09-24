@@ -1,11 +1,12 @@
 "use client";
 
 import React from "react";
-import { Activity, BookOpen, CalendarDays, FolderGit2, ListTodo, Milestone, NotebookPen, Timer } from "lucide-react";
+import { Activity, BookOpen, CalendarDays, Dumbbell, FolderGit2, ListTodo, Milestone, NotebookPen, Timer } from "lucide-react";
 import type { ModuleId } from "@/lib/modules";
 import type { Phase, WeekDay } from "@/lib/types";
 import MaterialsPanel from "./MaterialsPanel";
 import PortfolioPanel from "./PortfolioPanel";
+import GymTracker from "@/components/GymTracker";
 import PhaseTracker from "@/components/PhaseTracker";
 import Notepad from "@/components/Notepad";
 import PomodoroTimer from "@/components/PomodoroTimer";
@@ -103,6 +104,14 @@ function NotepadPanel() {
   return <Notepad key={noteId} noteId={noteId} />;
 }
 
+function GymPanel() {
+  const { track } = useWorkspace();
+  if (!track) return null;
+  // Keyed by track so switching tracks re-reads that track's log rather than
+  // showing the previous one until the next render.
+  return <GymTracker key={track.meta.id} />;
+}
+
 function TodoListPanel() {
   const { track } = useWorkspace();
   if (!track) return null;
@@ -127,6 +136,7 @@ export const PANEL_REGISTRY: Record<ModuleId, PanelDefinition> = {
   materialsTracker: { icon: BookOpen, Panel: MaterialsPanel },
   notepad: { icon: NotebookPen, Panel: NotepadPanel },
   todoList: { icon: ListTodo, Panel: TodoListPanel },
+  gym: { icon: Dumbbell, Panel: GymPanel },
 };
 
 export const panelFor = (id: string): PanelDefinition | undefined =>
