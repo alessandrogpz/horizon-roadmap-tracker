@@ -7,6 +7,37 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.39.0] - 2026-09-24
+
+### Added
+- **Backups on the phone, in both directions.** Settings can write every track, phase, tick and note
+  this device holds into a file, and read one back. It is the same file the website writes, so a
+  backup taken on the laptop restores on the phone and the other way round — the shape and its
+  validation moved into `lib/backupFormat.ts`, which both platforms import, so there is one parser
+  rather than two that drift.
+
+  This matters more on a phone than on a laptop. A laptop's copy can be reached from the machine
+  itself; a phone's cannot, so a reset, a loss or an uninstall takes whatever was never synced with
+  it.
+
+  Restoring replaces rather than merges — the same decision the website makes, because a restore
+  means "put it back the way it was" and a merge would need per-item timestamps the file may
+  predate. Because it replaces everything, the file is parsed and described first: how many tracks,
+  which ones, how many notes and recorded days, and when it was taken. A backup from the wrong week
+  looks exactly like the right one until it has already overwritten today.
+
+  Step counts are deliberately left out, for the same reason they are left out of sync: they are a
+  reading from this particular phone's hardware and mean nothing on another device.
+
+### Changed
+- Files get in and out through Android's Storage Access Framework — the export asks for a folder,
+  the import opens the system picker. An app has no access to the user's storage and cannot ask for
+  any; it is only ever handed one location at a time, by the user. That is why the feature involves
+  no permission prompt, and why it needed no new native dependency: `expo-file-system`, already part
+  of every Expo app, carries both pickers, so this shipped over the air rather than as a new build.
+- `MOBILE_PLAN.md`'s storage table said exports would go to the share sheet. They do not, and the
+  reason they do not is the more interesting answer.
+
 ## [0.38.1] - 2026-09-23
 
 ### Fixed

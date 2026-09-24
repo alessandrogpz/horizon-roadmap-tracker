@@ -4,82 +4,27 @@
 // (whose database.json holds the same bundle; the broken-out .md files are
 // copies of content already inside it, so they're ignored on the way back).
 //
-// Parsing and validation are pure and separately testable; only `restoreBackup`
-// touches Dexie.
+// Parsing and validation are pure, live in ./backupFormat.ts so React Native
+// can bundle them, and are re-exported below; what stays here is the part that
+// only a browser can do — reading a `File`, unzipping it — and the part that
+// only this platform's storage can do, writing to Dexie.
 
 import { unzipSync, strFromU8 } from "fflate";
-import type { BackupBundle } from "./export";
-import type { TrackState, Workspace } from "./types";
+import {
+  InvalidBackupError,
+  parseBackup,
+  summarizeBackup,
+  type BackupBundle,
+  type BackupSummary,
+} from "./backupFormat";
 import { db } from "./localDb";
 import { migrateWorkspace } from "./migrations";
 
-export class InvalidBackupError extends Error {}
-
-/** What a file turned out to contain, for the confirmation step — restoring
- *  replaces everything, so the user gets to see what they're about to get. */
-export interface BackupSummary {
-  exportedAt: string | null;
-  trackCount: number;
-  trackNames: string[];
-  noteCount: number;
-  /** Days with at least one recorded accomplishment, across every track. */
-  activeDays: number;
-}
-
-const isRecord = (v: unknown): v is Record<string, unknown> =>
-  !!v && typeof v === "object" && !Array.isArray(v);
-
-/**
- * Validates the minimum a bundle must have to be restorable: a workspace whose
- * tracks are objects carrying the identity the app indexes them by. Everything
- * softer than that is left to the migration pipeline, which already repairs
- * older shapes.
- */
-export function parseBackup(text: string): BackupBundle {
-  let raw: unknown;
-  try {
-    raw = JSON.parse(text);
-  } catch {
-    throw new InvalidBackupError("That file isn't valid JSON.");
-  }
-  if (!isRecord(raw)) throw new InvalidBackupError("That file doesn't contain a backup.");
-
-  const workspace = raw.workspace;
-  if (!isRecord(workspace) || !isRecord(workspace.tracks)) {
-    throw new InvalidBackupError(
-      "That file has no workspace in it — pick a Horizon backup (.json or .zip)."
-    );
-  }
-
-  const tracks = workspace.tracks as Record<string, unknown>;
-  const ids = Object.keys(tracks);
-  if (ids.length === 0) {
-    throw new InvalidBackupError("That backup has no tracks in it.");
-  }
-  for (const id of ids) {
-    const track = tracks[id];
-    if (!isRecord(track) || !isRecord(track.meta) || typeof track.meta.id !== "string") {
-      throw new InvalidBackupError(`Track "${id}" in that backup is malformed.`);
-    }
-  }
-
-  // Every note must be text, under an id like the app makes: letters, digits,
-  // "_" and "-" (threat T7). A crafted file can't slip another type into the
-  // notes table, and an id account sync would refuse can't break later syncs.
-  const notes = isRecord(raw.notes) ? raw.notes : {};
-  for (const [id, content] of Object.entries(notes)) {
-    if (!/^[A-Za-z0-9_-]{1,200}$/.test(id) || typeof content !== "string") {
-      throw new InvalidBackupError("That backup has a malformed note in it.");
-    }
-  }
-
-  return {
-    exportedAt: typeof raw.exportedAt === "string" ? raw.exportedAt : new Date().toISOString(),
-    version: 1,
-    workspace: workspace as unknown as Workspace,
-    notes: notes as Record<string, string>, // checked just above
-  };
-}
+// The parsing and the summary are shared with the phone, which restores the
+// same files; re-exported here so every caller still has one place to import
+// "restoring a backup" from.
+export { InvalidBackupError, parseBackup, summarizeBackup };
+export type { BackupSummary };
 
 /** Pulls the bundle out of whichever export format the file is. */
 export async function readBackupFile(file: File): Promise<BackupBundle> {
@@ -98,23 +43,6 @@ export async function readBackupFile(file: File): Promise<BackupBundle> {
     return parseBackup(strFromU8(entry));
   }
   return parseBackup(await file.text());
-}
-
-export function summarizeBackup(bundle: BackupBundle): BackupSummary {
-  const tracks = Object.values(bundle.workspace.tracks) as TrackState[];
-  const dates = new Set<string>();
-  tracks.forEach((track) => {
-    Object.keys(track.completedItemsHistory || {}).forEach((date) => {
-      if ((track.completedItemsHistory?.[date] || []).length > 0) dates.add(date);
-    });
-  });
-  return {
-    exportedAt: bundle.exportedAt || null,
-    trackCount: tracks.length,
-    trackNames: tracks.map((t) => t.meta?.name || "Untitled"),
-    noteCount: Object.keys(bundle.notes || {}).length,
-    activeDays: dates.size,
-  };
 }
 
 /**
