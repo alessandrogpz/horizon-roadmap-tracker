@@ -9,7 +9,7 @@
 // number all read at a glance; three sentences do not, and three sentences in
 // eight stacked panels is the wall of words this replaced.
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import type { TrackState } from "@shared/types";
@@ -21,6 +21,7 @@ import { phaseStats, progressStats, streakCalendar, timelineStats } from "@share
 import { PanelCard, Meter } from "./PanelCard";
 import { STEPS_PANEL } from "./layout";
 import { usePedometer } from "../steps/usePedometer";
+import { dailySteps, healthStatus } from "./../steps/healthConnect";
 import { SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
@@ -231,6 +232,24 @@ function StepsPanel({ today }: { today: string }) {
   const styles = useMemo(() => makeStyles(palette), [palette]);
   const steps = usePedometer(today, true);
 
+  // Health Connect knows the whole day; the sensor knows the part spent in the
+  // app. Whichever is larger is the better answer, and on a phone without
+  // Health Connect the sensor is the only one.
+  const [wholeDay, setWholeDay] = useState<number | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      if ((await healthStatus()) !== "ready") return;
+      const days = await dailySteps(today, today);
+      if (!cancelled) setWholeDay(days[today] ?? 0);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [today]);
+
+  const count = Math.max(wholeDay ?? 0, steps.today);
+
   if (steps.status === "denied") {
     return (
       <Pressable accessibilityRole="button" onPress={steps.request}>
@@ -240,14 +259,16 @@ function StepsPanel({ today }: { today: string }) {
       </Pressable>
     );
   }
-  if (steps.status === "unavailable") {
-    return <Text style={styles.muted}>This phone has no step counter.</Text>;
+  if (steps.status === "unavailable" && wholeDay === null) {
+    return <Text style={styles.muted}>No step counter, and no Health Connect history.</Text>;
   }
 
   return (
     <View style={styles.headlineRow}>
-      <Text style={[styles.big, { color: TINTS[STEPS_PANEL] }]}>{steps.today.toLocaleString()}</Text>
-      <Text style={styles.muted}>steps today · counted while Horizon is open</Text>
+      <Text style={[styles.big, { color: TINTS[STEPS_PANEL] }]}>{count.toLocaleString()}</Text>
+      <Text style={styles.muted}>
+        steps today{wholeDay === null ? " · while Horizon is open" : ""}
+      </Text>
     </View>
   );
 }
