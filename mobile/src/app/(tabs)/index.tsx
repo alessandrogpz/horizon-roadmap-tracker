@@ -29,8 +29,11 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
+  type AnimatedRef,
   type SharedValue,
+  measure,
   runOnJS,
+  useAnimatedRef,
   useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
@@ -92,6 +95,9 @@ export default function SpaceScreen() {
    *  does not hand a panel someone else's measurement. */
   const heights = useSharedValue<Record<string, number>>({});
   const ids = useSharedValue<string[]>([]);
+  /** The column itself, so the drag can measure where it really is rather
+   *  than reconstruct it from arithmetic. */
+  const stackRef = useAnimatedRef<View>();
   const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
@@ -251,7 +257,7 @@ export default function SpaceScreen() {
           )}
         </>
       ) : (
-        <View style={styles.stack}>
+        <View ref={stackRef} style={styles.stack}>
           {shown.map((id, index) => (
             <DraggablePanel
               key={id}
@@ -266,6 +272,7 @@ export default function SpaceScreen() {
               anchor={anchor}
               heights={heights}
               ids={ids}
+              stackRef={stackRef}
               onBegin={beginDrag}
               onEndDrag={endDrag}
               onHide={hide}
@@ -326,6 +333,7 @@ function DraggablePanel({
   anchor,
   heights,
   ids,
+  stackRef,
   onBegin,
   onEndDrag,
   onHide,
@@ -345,6 +353,7 @@ function DraggablePanel({
   anchor: SharedValue<number>;
   heights: SharedValue<Record<string, number>>;
   ids: SharedValue<string[]>;
+  stackRef: AnimatedRef<View>;
   onBegin: () => void;
   onEndDrag: (from: number, to: number) => void;
   onHide: (id: string) => void;
@@ -384,9 +393,14 @@ function DraggablePanel({
       target.value = index;
       ended.value = false;
 
-      let above = 0;
-      for (let i = 0; i < index; i++) above += (heights.value[ids.value[i]] ?? ROW) + GAP;
-      anchor.value = above + event.y - ROW / 2 - index * SLOT;
+      // Where the panel has to go to stay under the finger, taken from where
+      // the column actually is on screen rather than from adding up what every
+      // panel above it measured. The arithmetic version had to reproduce
+      // Yoga's layout exactly — every gap, every bit of padding, every height
+      // arriving from a shared value that may not have reached this thread
+      // yet — and when it was off, the panel left the finger at the fold.
+      const column = measure(stackRef);
+      anchor.value = column ? event.absoluteY - ROW / 2 - (column.pageY + index * SLOT) : 0;
 
       collapse.value = withTiming(1, { duration: 240 });
       runOnJS(onBegin)();
@@ -461,7 +475,7 @@ function DraggablePanel({
     </PanelBoundary>
   );
 
-  const measure = (height: number) => {
+  const remember = (height: number) => {
     if (open !== null && Math.abs(open - height) < 1) return;
     heights.value = { ...heights.value, [id]: height };
     setOpen(height);
@@ -470,7 +484,7 @@ function DraggablePanel({
   // Before the first measurement there is nothing to animate to, so the panel
   // is rendered plainly for the one frame it takes to find out how tall it is.
   if (open === null) {
-    return <View onLayout={(event) => measure(event.nativeEvent.layout.height)}>{content}</View>;
+    return <View onLayout={(event) => remember(event.nativeEvent.layout.height)}>{content}</View>;
   }
 
   return (
@@ -479,7 +493,7 @@ function DraggablePanel({
         {/* Inside the clipped wrapper but unconstrained by it, so it keeps
             reporting what the panel *would* be if it were open. */}
         <View
-          onLayout={(event) => measure(event.nativeEvent.layout.height)}
+          onLayout={(event) => remember(event.nativeEvent.layout.height)}
           pointerEvents={dragging ? "none" : "auto"}
         >
           {content}

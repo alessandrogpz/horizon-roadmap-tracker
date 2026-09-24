@@ -7,6 +7,21 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.63.1] - 2026-09-25
+
+### Fixed
+- **A picked-up panel jumped upward as the others folded**, instead of staying under the finger. It
+  could still be dragged and dropped from there, but the panel you were holding was no longer the
+  one you were touching — which is the one thing the fold exists to preserve.
+
+  The offset that keeps the held panel under the finger was worked out by adding up the heights of
+  every panel above it and subtracting where its folded slot would be. That reproduces Yoga's layout
+  in arithmetic, and it has to be exactly right: every gap, every bit of padding, and every height
+  arriving from a shared value that the UI thread may not have received yet. It now asks the column
+  where it actually is, with Reanimated's `measure`, and works from the finger's real screen
+  position. Measured over the whole column: a panel seventh in the list now moves 3px as everything
+  around it folds, where the arithmetic put it several hundred pixels away.
+
 ## [0.63.0] - 2026-09-24
 
 Holding a panel now picks it up, rather than switching the screen into a mode that happens to allow
