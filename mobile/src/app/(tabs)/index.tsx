@@ -88,9 +88,11 @@ export default function SpaceScreen() {
   /** Where it would land if released now — what the others step aside for. */
   const target = useSharedValue(-1);
   const dragY = useSharedValue(0);
-  /** What the held panel has to be shifted by to stay under the finger once
-   *  the panels above it have folded up. Worked out once, at pick-up. */
-  const anchor = useSharedValue(0);
+  /** How far the whole folded column has to move so that the held panel's
+   *  slot lands exactly where the held panel already is — under the finger.
+   *  Moving the column rather than the panel is what keeps the two agreeing:
+   *  the panel stays put, and the gap opens around it. */
+  const columnShift = useSharedValue(0);
   /** Each panel's open height, by id rather than by index so that reordering
    *  does not hand a panel someone else's measurement. */
   const heights = useSharedValue<Record<string, number>>({});
@@ -107,6 +109,14 @@ export default function SpaceScreen() {
   // The column gets shorter as it folds, which would drag the scroll position
   // up from under the drag. This makes up the difference, so the content is
   // the same height throughout and nothing moves that was not asked to.
+  // The fold happens around the held panel instead of at the top of the
+  // page. Without this the column collapses upward and the gap opens
+  // wherever the column ended up, which can be most of a screen away from
+  // the thumb that is supposed to be pointing at it.
+  const column = useAnimatedStyle(() => ({
+    transform: [{ translateY: columnShift.value * collapse.value }],
+  }));
+
   const slack = useAnimatedStyle(() => {
     let sum = 0;
     for (const id of ids.value) sum += heights.value[id] ?? ROW;
@@ -149,11 +159,11 @@ export default function SpaceScreen() {
       held.value = -1;
       target.value = -1;
       dragY.value = 0;
-      anchor.value = 0;
+      columnShift.value = 0;
       collapse.value = withTiming(0, { duration: 260 });
       setDragging(false);
     },
-    [anchor, collapse, dragY, held, move, target]
+    [collapse, columnShift, dragY, held, move, target]
   );
 
   const show = useCallback(
@@ -257,7 +267,7 @@ export default function SpaceScreen() {
           )}
         </>
       ) : (
-        <View ref={stackRef} style={styles.stack}>
+        <Animated.View ref={stackRef} style={[styles.stack, column]}>
           {shown.map((id, index) => (
             <DraggablePanel
               key={id}
@@ -269,7 +279,7 @@ export default function SpaceScreen() {
               held={held}
               target={target}
               dragY={dragY}
-              anchor={anchor}
+              columnShift={columnShift}
               heights={heights}
               ids={ids}
               stackRef={stackRef}
@@ -283,21 +293,28 @@ export default function SpaceScreen() {
             />
           ))}
 
+          {/* Makes up the height the column loses as it folds, so the page
+              does not get shorter under a drag and pull the scroll position
+              with it. */}
           <Animated.View style={slack} pointerEvents="none" />
+        </Animated.View>
+      )}
 
-          {shown.length === 0 && (
-            <Text style={styles.muted}>
-              No panels yet. Tap Arrange to add some — this is the screen that shows the whole track at
-              once.
-            </Text>
-          )}
+      {/* Outside the column, because the column moves to the thumb when a
+          panel is picked up and a footnote has no business following it. */}
+      {!arranging && shown.length === 0 && (
+        <Text style={styles.muted}>
+          No panels yet. Tap Arrange to add some — this is the screen that shows the whole track at
+          once.
+        </Text>
+      )}
 
-          <Text style={styles.footnote}>
-            Hold a panel anywhere to pick it up and drag it somewhere else, or swipe one away to
-            hide it. Which panels you have follows your account; the order they are
-            in is this phone&apos;s, because a phone has one column and the website has two.
-          </Text>
-        </View>
+      {!arranging && (
+        <Text style={styles.footnote}>
+          Hold a panel anywhere to pick it up and drag it somewhere else, or swipe one away to
+          hide it. Which panels you have follows your account; the order they are
+          in is this phone&apos;s, because a phone has one column and the website has two.
+        </Text>
       )}
     </Refreshable>
   );
@@ -330,7 +347,7 @@ function DraggablePanel({
   held,
   target,
   dragY,
-  anchor,
+  columnShift,
   heights,
   ids,
   stackRef,
@@ -350,7 +367,7 @@ function DraggablePanel({
   held: SharedValue<number>;
   target: SharedValue<number>;
   dragY: SharedValue<number>;
-  anchor: SharedValue<number>;
+  columnShift: SharedValue<number>;
   heights: SharedValue<Record<string, number>>;
   ids: SharedValue<string[]>;
   stackRef: AnimatedRef<View>;
@@ -399,8 +416,11 @@ function DraggablePanel({
       // Yoga's layout exactly — every gap, every bit of padding, every height
       // arriving from a shared value that may not have reached this thread
       // yet — and when it was off, the panel left the finger at the fold.
-      const column = measure(stackRef);
-      anchor.value = column ? event.absoluteY - ROW / 2 - (column.pageY + index * SLOT) : 0;
+      // Where this panel's folded slot would land if the column folded in
+      // place, against where the finger actually is. The difference is what
+      // the column has to move so the two coincide.
+      const box = measure(stackRef);
+      columnShift.value = box ? event.absoluteY - ROW / 2 - (box.pageY + index * SLOT) : 0;
 
       collapse.value = withTiming(1, { duration: 240 });
       runOnJS(onBegin)();
@@ -424,7 +444,9 @@ function DraggablePanel({
       // Settle into the slot before the order actually changes, so the panel
       // is already where it is going when the list catches up and there is
       // nothing left to jump.
-      const landing = (to - index) * SLOT - anchor.value * collapse.value;
+      // The panel already sits in its own slot within the shifted column, so
+      // landing somewhere else is simply that many slots away.
+      const landing = (to - index) * SLOT;
       dragY.value = withTiming(landing, { duration: 170 }, (finished) => {
         if (finished) runOnJS(onEndDrag)(index, to);
       });
@@ -439,7 +461,7 @@ function DraggablePanel({
     return {
       height: height + (ROW - height) * collapse.value,
       transform: [
-        { translateY: mine ? anchor.value * collapse.value + dragY.value : shift.value },
+        { translateY: mine ? dragY.value : shift.value },
         // Just enough lift to read as picked up rather than as a layout bug.
         { scale: mine ? 1 + 0.03 * collapse.value : 1 },
       ],
