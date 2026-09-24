@@ -7,6 +7,17 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.58.1] - 2026-09-24
+
+### Fixed
+- **The gym panel had no card around it on the website.** `SortablePanel` is transparent chrome that
+  only adds the hover controls — every panel brings its own `glass-panel` shell, and this one did
+  not, so it floated on the column while its neighbours were boxed.
+- **The gym panel was titled with the day's focus label.** Whatever the track calls that weekday —
+  "Focus", "Maths" — was being used as the panel's heading, which said nothing about training and
+  read as a bug. It says "Gym plan" on both platforms now, and the copy underneath no longer bends
+  itself around the label either.
+
 ## [0.58.0] - 2026-09-24
 
 ### Fixed
