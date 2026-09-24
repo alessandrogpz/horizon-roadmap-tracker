@@ -19,13 +19,16 @@ export interface AppSettings {
    *  want this — but the hour someone's day turns over is theirs to state, not
    *  ours to bound, and a shift worker's day may well begin at 19:00. */
   dayRolloverHour: number;
-  /** Which column the consistency grid starts its weeks on. */
+  /** Which column the consistency grid starts its weeks on. Monday by
+   *  default: it is the ISO week, what most of the world writes on a calendar,
+   *  and it keeps the weekend as two adjacent columns rather than splitting it
+   *  across both ends of the row. */
   weekStartsOn: "sun" | "mon";
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
   dayRolloverHour: 0,
-  weekStartsOn: "sun",
+  weekStartsOn: "mon",
 };
 
 export const SETTINGS_EVENT = "horizon-settings-change";
@@ -78,7 +81,10 @@ function normalize(raw: unknown): AppSettings {
   const obj = (raw && typeof raw === "object" ? raw : {}) as Partial<AppSettings>;
   return {
     dayRolloverHour: clampHour(obj.dayRolloverHour),
-    weekStartsOn: obj.weekStartsOn === "mon" ? "mon" : "sun",
+    // Anything that is not an explicit "sun" falls back to the default, so a
+    // missing or malformed value lands on Monday rather than silently on
+    // whichever branch happens to be the else.
+    weekStartsOn: obj.weekStartsOn === "sun" ? "sun" : DEFAULT_SETTINGS.weekStartsOn,
   };
 }
 

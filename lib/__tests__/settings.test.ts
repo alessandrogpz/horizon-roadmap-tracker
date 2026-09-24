@@ -54,11 +54,13 @@ describe("settings", () => {
   it("repairs a malformed stored blob rather than throwing", () => {
     window.localStorage.setItem("horizon-settings", '{"weekStartsOn":"funday","dayRolloverHour":"four"}');
     const settings = getSettings();
-    expect(settings.weekStartsOn).toBe("sun");
+    // Nonsense falls back to the default, which is Monday.
+    expect(settings.weekStartsOn).toBe("mon");
     expect(settings.dayRolloverHour).toBe(0);
   });
 
   it("keeps a valid week start", () => {
+    expect(updateSettings({ weekStartsOn: "sun" }).weekStartsOn).toBe("sun");
     expect(updateSettings({ weekStartsOn: "mon" }).weekStartsOn).toBe("mon");
   });
 });

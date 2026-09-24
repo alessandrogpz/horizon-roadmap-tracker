@@ -30,15 +30,18 @@ import {
 import { SERVER_URL } from "../config";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../theme";
-import { useTheme, type ThemePreference } from "../theme/ThemeProvider";
+import { useTheme } from "../theme/ThemeProvider";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { describeHour, HourWheel } from "../components/HourWheel";
 import { Refreshable } from "../components/Refreshable";
 
 export default function SettingsScreen() {
   const { workspace, replaceWorkspace, resetLocal } = useWorkspace();
-  const { palette, preference, setPreference } = useTheme();
+  const { palette } = useTheme();
   const styles = useMemo(() => makeStyles(palette), [palette]);
 
   const [confirming, setConfirming] = useState(false);
+  const [pickingHour, setPickingHour] = useState(false);
   const [busy, setBusy] = useState(false);
 
   // A destructive confirmation that stays armed forever is a trap: come back
@@ -115,56 +118,15 @@ export default function SettingsScreen() {
       </Link>
 
       <View style={styles.row}>
-        <Text style={styles.rowTitle}>Theme</Text>
-        <Text style={styles.muted}>Follow the phone, or pick one.</Text>
-        <View style={styles.choices}>
-          {(["system", "light", "dark"] as ThemePreference[]).map((option) => (
-            <Pressable
-              key={option}
-              accessibilityRole="button"
-              accessibilityState={{ selected: preference === option }}
-              onPress={() => setPreference(option)}
-              style={[styles.choice, preference === option && { borderColor: palette.accent }]}
-            >
-              <Text style={[styles.choiceLabel, preference === option && { color: palette.foreground }]}>
-                {option === "system" ? "System" : option === "light" ? "Light" : "Dark"}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      </View>
-
-      <View style={styles.row}>
-        <Text style={styles.rowTitle}>My day starts at</Text>
+        <Text style={styles.rowTitle}>Your week and day</Text>
         <Text style={styles.muted}>
-          Midnight, unless you say otherwise. Work logged before this hour counts for the previous
-          day, so a late session doesn&apos;t land on tomorrow and break a streak.
+          When a week begins on the consistency grid, and when a day rolls over. Monday and midnight
+          unless you say otherwise.
         </Text>
-        {/* Every hour, not a handful. The old list stopped at 6am on the
-            assumption that only night owls would want this, which is not ours
-            to assume — a shift worker's day may well begin at 19:00. */}
-        <View style={styles.choices}>
-          {Array.from({ length: 24 }, (_, hour) => hour).map((hour) => (
-            <Pressable
-              key={hour}
-              accessibilityRole="button"
-              accessibilityState={{ selected: settings.dayRolloverHour === hour }}
-              onPress={() => change({ dayRolloverHour: hour })}
-              style={[styles.choice, settings.dayRolloverHour === hour && { borderColor: palette.accent }]}
-            >
-              <Text style={[styles.choiceLabel, settings.dayRolloverHour === hour && { color: palette.foreground }]}>
-                {hour === 0 ? "Midnight" : `${String(hour).padStart(2, "0")}:00`}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      </View>
 
-      <View style={styles.row}>
-        <Text style={styles.rowTitle}>Weeks start on</Text>
-        <Text style={styles.muted}>Which day each column of the consistency grid begins with.</Text>
+        <Text style={styles.fieldLabel}>Weeks start on</Text>
         <View style={styles.choices}>
-          {(["sun", "mon"] as const).map((day) => (
+          {(["mon", "sun"] as const).map((day) => (
             <Pressable
               key={day}
               accessibilityRole="button"
@@ -173,11 +135,24 @@ export default function SettingsScreen() {
               style={[styles.choice, settings.weekStartsOn === day && { borderColor: palette.accent }]}
             >
               <Text style={[styles.choiceLabel, settings.weekStartsOn === day && { color: palette.foreground }]}>
-                {day === "sun" ? "Sunday" : "Monday"}
+                {day === "mon" ? "Monday" : "Sunday"}
               </Text>
             </Pressable>
           ))}
         </View>
+
+        <Text style={styles.fieldLabel}>My day starts at</Text>
+        {/* One button, not twenty-four. The hour is picked on a wheel, which is
+            the platform's idiom for one value out of an ordered range. */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`My day starts at ${describeHour(settings.dayRolloverHour)}. Tap to change.`}
+          onPress={() => setPickingHour(true)}
+          style={styles.picker}
+        >
+          <Text style={styles.pickerValue}>{describeHour(settings.dayRolloverHour)}</Text>
+          <Ionicons name="chevron-forward" size={16} color={palette.subtleForeground} />
+        </Pressable>
       </View>
 
       <View style={styles.row}>
@@ -278,6 +253,12 @@ export default function SettingsScreen() {
           </Text>
         </Pressable>
       </View>
+      <HourWheel
+        open={pickingHour}
+        value={settings.dayRolloverHour}
+        onPick={(hour) => change({ dayRolloverHour: hour })}
+        onClose={() => setPickingHour(false)}
+      />
     </Refreshable>
   );
 }
@@ -305,6 +286,27 @@ function makeStyles(palette: Palette) {
       backgroundColor: palette.surfaceMuted,
     },
     choiceLabel: { color: palette.mutedForeground, fontSize: 13, fontWeight: "600" },
+    fieldLabel: {
+      color: palette.subtleForeground,
+      fontSize: 11,
+      fontWeight: "700",
+      letterSpacing: 1,
+      textTransform: "uppercase",
+      marginTop: SPACING.md,
+    },
+    picker: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginTop: SPACING.sm,
+      paddingHorizontal: SPACING.md,
+      paddingVertical: SPACING.md,
+      borderRadius: RADIUS.control,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.surfaceMuted,
+    },
+    pickerValue: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
     muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
     good: { color: palette.success, fontSize: 13, lineHeight: 18, marginTop: SPACING.sm },
     bad: { color: palette.danger, fontSize: 13, lineHeight: 18, marginTop: SPACING.sm },
