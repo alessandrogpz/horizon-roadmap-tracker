@@ -7,6 +7,17 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.50.1] - 2026-09-24
+
+### Fixed
+- **The Health Connect build failed: Android's minimum SDK was too low.** Expo defaults
+  `minSdkVersion` to 24 (Android 7) and Health Connect's client library declares 26 (Android 8), and
+  the manifest merger refuses to build rather than quietly picking one. `expo-build-properties` now
+  sets the floor to 26.
+
+  Nothing is lost by raising it: Health Connect needs Android 9 anyway, so no device that could have
+  used the feature is excluded — and Android 7 is well under 1% of phones.
+
 ## [0.50.0] - 2026-09-24
 
 ### Added
