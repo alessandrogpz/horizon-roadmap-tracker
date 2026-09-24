@@ -1,535 +1,344 @@
-// The day: what this track asks of you, and the streak riding on it.
+// My Space: the track, as a column of panels you arrange yourself.
 //
-// Usually today, but not necessarily. A day can be stepped through in either
-// direction, because the common reason to open this app in the evening is to
-// tick something from yesterday that never got ticked — and a screen that can
-// only ever show today makes that impossible rather than merely awkward.
+// This is the idea the website's dashboard is built on, brought over rather
+// than reinvented — the same module ids, the same `hiddenPanels` on the track,
+// so closing the notepad here closes it on the laptop too. What does not come
+// over is the two-column layout: a phone has one column, and the order is kept
+// on the device for that reason (panels/layout.ts explains why).
 //
-// What stays pinned to the real today: the streak, the step count, and the
-// daily reset. Those are facts about now, not about the day being looked at.
-//
-// Every rule here comes from the shared core — which day of the week a date is
-// (`dates`), whether an item counts as done (`completions`), how long the
-// streak is (`streak`). This screen decides only how it looks and what a tap
-// does.
+// Arranging is a mode, not a permanent affordance. In normal use a panel is
+// something you read and tap through; holding one — or tapping Arrange —
+// collapses them all to fixed-height rows that can be dragged, removed, and
+// added to. Fixed height is what makes the drag honest: the distance moved
+// divides cleanly into a number of rows, where variable-height cards would
+// need measuring every one of them and would still jump under the thumb.
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
-import { Refreshable } from "../../components/Refreshable";
-import { stepsEnabled, setStepsEnabled } from "../../storage/deviceSettings";
-import { Link } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import type { DayKey, TrackState } from "@shared/types";
-import {
-  addDayItem,
-  isItemCompleted,
-  removeDayItem,
-  updateDayItem,
-  type DayItemRef,
-  type ItemKind,
-} from "@shared/completions";
-import { currentStreakLength } from "@shared/streak";
-import { DAYS_SHORT, formatDateYMD, formatDayMonthYear, getWeekNum, parseYMD } from "@shared/dates";
-import { computeRotationItemsForDay, isRotationItem } from "@shared/rotation";
+import { useCallback, useMemo, useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
-import { usePedometer } from "../../steps/usePedometer";
-import { shareTrack } from "../../share/shareTrack";
+import { Refreshable } from "../../components/Refreshable";
+import { PanelCard } from "../../panels/PanelCard";
+import { PanelBody, PANEL_HREF, PANEL_ICON, tintFor } from "../../panels/registry";
+import { availablePanels, panelDefinition, setPanelHidden, visiblePanels } from "../../panels/layout";
+import { panelOrder, setPanelOrder } from "../../storage/deviceSettings";
 import { RADIUS, SPACING, type Palette } from "../../theme";
 import { usePalette } from "../../theme/ThemeProvider";
 
-interface Row {
-  id: string;
-  title: string;
-  description?: string;
-  kind: ItemKind;
-  /** Computed by a rotation for this week rather than stored on the day. It can
-   *  be ticked but not renamed or removed: there is no stored item to change,
-   *  and next week it will be something else. Editing the rotation's list on
-   *  the Week screen is what changes these. */
-  generated?: boolean;
-}
+const ROW = 56;
 
-/**
- * Today's items: what the week's rhythm stores for this weekday, plus whatever
- * the track's rotations put there for *this* week.
- *
- * Rotations cycle — "Linear Algebra this week, OpenGL next" — so their items
- * are computed from the rotation's definition and the week number, never read
- * back from storage. A stored rotation item is last week's answer, which is why
- * they are filtered out before the computed ones are added. This is the rule
- * the website's weekly plan follows, from the same shared functions; a phone
- * showing a different revision topic from the laptop would be worse than a
- * phone showing none.
- */
-function rowsFor(track: TrackState, dateStr: string): { focus: Row[]; revision: Row[] } {
-  const dayKey = DAYS_SHORT[parseYMD(dateStr).getDay()];
-  const storedFocus = track.dailyTasks?.[dayKey] ?? [];
-  const storedRevision = track.dailyRevisionItems?.[dayKey] ?? [];
-
-  const rotations = track.rotations ?? [];
-  const weekNum = track.startDate ? getWeekNum(track.startDate, parseYMD(dateStr)) : 1;
-  const computed = rotations.length ? computeRotationItemsForDay(rotations, weekNum, dayKey) : { focus: [], revisions: [] };
-
-  const focus = rotations.length ? [...computed.focus, ...storedFocus.filter((it) => !isRotationItem(it))] : storedFocus;
-  const revision = rotations.length
-    ? [...computed.revisions, ...storedRevision.filter((it) => !isRotationItem(it))]
-    : storedRevision;
-
-  const generated = new Set([...computed.focus, ...computed.revisions].map((item) => item.id));
-  return {
-    focus: focus.map((item) => ({
-      id: item.id,
-      title: item.title,
-      kind: "focus" as const,
-      generated: generated.has(item.id),
-    })),
-    revision: revision.map((item) => ({
-      id: item.id,
-      title: item.title,
-      description: item.description,
-      kind: "revision" as const,
-      generated: generated.has(item.id),
-    })),
-  };
-}
-
-export default function TodayScreen() {
-  const { track, today, loading, toggleItem, editTrack } = useWorkspace();
+export default function SpaceScreen() {
+  const { track, today, editTrack } = useWorkspace();
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
-  const insets = useSafeAreaInsets();
 
-  // The day on screen, which starts as today and is reset to it whenever the
-  // real date changes underneath (midnight, or coming back from the
-  // background) — otherwise a phone left open overnight would quietly keep
-  // showing yesterday as though it were today.
-  const [viewing, setViewing] = useState(today);
-  useEffect(() => setViewing(today), [today]);
+  const [arranging, setArranging] = useState(false);
+  // The order lives on the device, so the screen keeps a copy in state to
+  // re-render from and writes through on every change.
+  const [order, setOrder] = useState<string[]>([]);
 
-  const step = useCallback((days: number) => {
-    setViewing((current) => {
-      const date = parseYMD(current);
-      date.setDate(date.getDate() + days);
-      return formatDateYMD(date);
-    });
-  }, []);
+  const shown = useMemo(() => {
+    if (!track) return [];
+    const resolved = visiblePanels(track);
+    // `order` is the working copy while arranging; outside that, whatever the
+    // device last stored wins.
+    return order.length ? order.filter((id) => resolved.includes(id)) : resolved;
+  }, [order, track]);
 
-  const rows = useMemo(() => (track ? rowsFor(track, viewing) : { focus: [], revision: [] }), [track, viewing]);
+  const available = useMemo(() => (track ? availablePanels(track) : []), [track]);
 
-  // A day's own items live under its weekday, not its date: "what Tuesdays are
-  // for" rather than "what happened on the 24th". Adding one here adds it to
-  // every Tuesday, which is what the website does and what the week view
-  // shows.
-  const addItem = useCallback(
-    (kind: ItemKind, key: DayKey, title: string) => editTrack((t) => addDayItem(t, key, kind, { title })),
-    [editTrack]
+  const startArranging = useCallback(() => {
+    if (!track) return;
+    setOrder(visiblePanels(track));
+    setArranging(true);
+  }, [track]);
+
+  const move = useCallback(
+    (from: number, to: number) => {
+      if (!track) return;
+      setOrder((current) => {
+        const next = [...current];
+        const [moved] = next.splice(from, 1);
+        next.splice(Math.max(0, Math.min(next.length, to)), 0, moved);
+        setPanelOrder(track.meta.id, next);
+        return next;
+      });
+    },
+    [track]
   );
 
-  const renameItem = useCallback(
-    (kind: ItemKind, key: DayKey, id: string, title: string) =>
-      editTrack((t) => updateDayItem(t, key, kind, id, { title })),
-    [editTrack]
+  const show = useCallback(
+    (id: string) => {
+      if (!track) return;
+      editTrack((t) => setPanelHidden(t, id, false));
+      // A panel that has just been asked for belongs where it was asked for —
+      // the end of the list — rather than wherever its id happens to sort.
+      const next = [...(panelOrder(track.meta.id).length ? panelOrder(track.meta.id) : visiblePanels(track)), id];
+      setPanelOrder(track.meta.id, next);
+      setOrder(next);
+    },
+    [editTrack, track]
   );
 
-  const deleteItem = useCallback(
-    (row: Row, key: DayKey, date: string) =>
-      editTrack((t) =>
-        removeDayItem(t, { dateStr: date, kind: row.kind, id: row.id, title: row.title, dayKey: key })
-      ),
-    [editTrack]
+  const hide = useCallback(
+    (id: string) => {
+      if (!track) return;
+      editTrack((t) => setPanelHidden(t, id, true));
+      setOrder((current) => {
+        const next = current.filter((x) => x !== id);
+        setPanelOrder(track.meta.id, next);
+        return next;
+      });
+    },
+    [editTrack, track]
   );
-  const streak = useMemo(() => currentStreakLength(track?.streakHistory ?? [], today), [track, today]);
-  // Per track, and off by default: a step count is exactly right on a fitness
-  // track and pure noise on a graphics engine. Kept on the device rather than
-  // in the workspace — see storage/deviceSettings.
-  const [showSteps, setShowSteps] = useState(() => stepsEnabled(track?.meta.id));
-  useEffect(() => setShowSteps(stepsEnabled(track?.meta.id)), [track?.meta.id]);
-
-  // The sensor is only subscribed to when the panel is actually shown, so a
-  // track that does not want it does not pay for it in battery either.
-  const steps = usePedometer(today, showSteps);
-
-  if (loading) {
-    return (
-      <View style={[styles.screen, styles.centered]}>
-        <ActivityIndicator color={palette.accent} />
-      </View>
-    );
-  }
 
   if (!track) {
     return (
       <View style={[styles.screen, styles.centered]}>
-        <Text style={styles.muted}>No track yet.</Text>
+        <Text style={styles.muted}>No track open.</Text>
       </View>
     );
   }
 
-  const dayKey = DAYS_SHORT[parseYMD(viewing).getDay()] as DayKey;
-  const onToday = viewing === today;
-  const done = [...rows.focus, ...rows.revision].filter((row) =>
-    isItemCompleted(track, viewing, row.kind, row.id)
-  ).length;
-  const total = rows.focus.length + rows.revision.length;
-  // How the day is going and how long the run is, in one line under the date —
-  // two numbers do not need two cards.
-  const summary =
-    (total ? `${done} of ${total} done` : "nothing planned") +
-    (streak > 0 ? ` · ${streak} day${streak === 1 ? "" : "s"} in a row` : "");
-
   return (
-    <Refreshable
-      style={styles.screen}
-      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + SPACING.xl }]}
-      keyboardShouldPersistTaps="handled"
-    >
-      <View style={styles.dayBar}>
+    <Refreshable style={styles.screen} contentContainerStyle={styles.content}>
+      <View style={styles.bar}>
+        <Text style={styles.barTitle}>{arranging ? "Drag to reorder" : "My space"}</Text>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="The day before"
-          onPress={() => step(-1)}
-          style={styles.dayStep}
+          onPress={() => (arranging ? setArranging(false) : startArranging())}
+          style={[styles.barButton, arranging && { borderColor: palette.accent }]}
         >
-          <Text style={styles.dayStepLabel}>‹</Text>
-        </Pressable>
-
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={onToday ? "Today" : "Back to today"}
-          onPress={() => setViewing(today)}
-          style={styles.dayLabelWrap}
-        >
-          <Text style={styles.dayLabel}>
-            {onToday ? `Today · ${dayKey}` : `${dayKey} · ${formatDayMonthYear(parseYMD(viewing))}`}
+          <Ionicons
+            name={arranging ? "checkmark" : "options-outline"}
+            size={14}
+            color={arranging ? palette.accent : palette.mutedForeground}
+          />
+          <Text style={[styles.barLabel, arranging && { color: palette.accent }]}>
+            {arranging ? "Done" : "Arrange"}
           </Text>
-          <Text style={styles.dayHint}>
-            {onToday ? summary : "Tap to come back to today"}
-          </Text>
-        </Pressable>
-
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="The day after"
-          onPress={() => step(1)}
-          style={styles.dayStep}
-        >
-          <Text style={styles.dayStepLabel}>›</Text>
         </Pressable>
       </View>
 
-      {onToday && showSteps && <StepsCard steps={steps} styles={styles} />}
+      {arranging ? (
+        <>
+          <View style={{ height: shown.length * ROW }}>
+            {shown.map((id, index) => (
+              <ArrangeRow
+                key={id}
+                id={id}
+                index={index}
+                count={shown.length}
+                onMove={move}
+                onRemove={() => hide(id)}
+                styles={styles}
+                palette={palette}
+              />
+            ))}
+          </View>
 
-      {(["focus", "revision"] as const).map((kind) => (
-        <Section
-          key={kind}
-          title={kind === "focus" ? "Focus" : "Revision"}
-          kind={kind}
-          rows={kind === "focus" ? rows.focus : rows.revision}
-          track={track}
-          date={viewing}
-          toggle={toggleItem}
-          dayKey={dayKey}
-          onAdd={(title) => addItem(kind, dayKey, title)}
-          onRename={(id, title) => renameItem(kind, dayKey, id, title)}
-          onRemove={(row) => deleteItem(row, dayKey, viewing)}
-          styles={styles}
-          palette={palette}
-        />
-      ))}
+          {available.length > 0 && (
+            <>
+              <Text style={styles.sectionTitle}>Add a panel</Text>
+              {available.map((panel) => (
+                <Pressable
+                  key={panel.id}
+                  accessibilityRole="button"
+                  onPress={() => show(panel.id)}
+                  style={styles.addRow}
+                >
+                  <View style={[styles.addIcon, { backgroundColor: `${tintFor(panel.id) ?? palette.accent}22` }]}>
+                    <Ionicons
+                      name={PANEL_ICON[panel.id] ?? "add"}
+                      size={15}
+                      color={tintFor(panel.id) ?? palette.accent}
+                    />
+                  </View>
+                  <View style={styles.addText}>
+                    <Text style={styles.addLabel}>{panel.label}</Text>
+                    <Text style={styles.muted}>{panel.hint}</Text>
+                  </View>
+                  <Ionicons name="add-circle-outline" size={20} color={palette.mutedForeground} />
+                </Pressable>
+              ))}
+            </>
+          )}
+        </>
+      ) : (
+        <Pressable onLongPress={startArranging} delayLongPress={450} style={styles.stack}>
+          {shown.map((id) => {
+            const definition = panelDefinition(id);
+            if (!definition) return null;
+            return (
+              <PanelCard
+                key={id}
+                title={definition.label}
+                icon={PANEL_ICON[id] ?? "square-outline"}
+                accent={tintFor(id)}
+                href={PANEL_HREF[id]}
+              >
+                <PanelBody id={id} track={track} today={today} />
+              </PanelCard>
+            );
+          })}
 
-      <View style={styles.footerActions}>
-        <Pressable
-          accessibilityRole="switch"
-          accessibilityState={{ checked: showSteps }}
-          style={styles.footerAction}
-          onPress={() => {
-            const next = !showSteps;
-            setStepsEnabled(track.meta.id, next);
-            setShowSteps(next);
-          }}
-        >
-          <Text style={styles.footerLabel}>{showSteps ? "Hide steps" : "Count steps"}</Text>
+          {shown.length === 0 && (
+            <Text style={styles.muted}>
+              No panels yet. Tap Arrange to add some — this is the screen that shows the whole track at
+              once.
+            </Text>
+          )}
+
+          <Text style={styles.footnote}>
+            Hold any panel to rearrange. Which panels you have follows your account; the order they are
+            in is this phone&apos;s, because a phone has one column and the website has two.
+          </Text>
         </Pressable>
-
-        <Pressable
-          accessibilityRole="button"
-          style={styles.footerAction}
-          onPress={() => void shareTrack(track, today, { done, total })}
-        >
-          <Text style={styles.footerLabel}>Share progress</Text>
-        </Pressable>
-      </View>
-
-      {total === 0 && (
-        <Text style={styles.empty}>
-          Nothing is planned for {dayKey} on this track yet — add something above, and it becomes part of
-          every {dayKey}.
-        </Text>
       )}
     </Refreshable>
   );
 }
 
-/** The pedometer, and what to say when it can't be used. A sensor that is
- *  missing, or refused, must leave the screen usable — the rest of the day's
- *  plan has nothing to do with walking. */
-function StepsCard({ steps, styles }: { steps: ReturnType<typeof usePedometer>; styles: ReturnType<typeof makeStyles> }) {
-  if (steps.status === "checking" || steps.status === "unavailable") return null;
-
-  if (steps.status === "denied") {
-    return (
-      <Pressable style={styles.stepsCard} accessibilityRole="button" onPress={steps.request}>
-        <Text style={styles.stepsLabel}>Count my steps</Text>
-        <Text style={styles.muted}>
-          Uses this phone's step counter to fill in the day by itself. Say no and nothing changes —
-          everything here still works by hand.
-        </Text>
-        {steps.detail ? <Text style={styles.stepsFootnote}>{steps.detail}</Text> : null}
-      </Pressable>
-    );
-  }
-
-  return (
-    <View style={styles.stepsCard}>
-      <View style={styles.stepsRow}>
-        <Text style={styles.stepsNumber}>{steps.today.toLocaleString()}</Text>
-        <Text style={styles.muted}>steps today</Text>
-      </View>
-      <Text style={styles.stepsFootnote}>Counted while Horizon is open. Android delivers nothing while it's closed.</Text>
-    </View>
-  );
-}
-
 /**
- * One of the day's two checklists.
+ * One draggable row.
  *
- * Tapping a row ticks it; holding one opens it for renaming or removal. A long
- * press rather than a visible button because ticking is what happens a dozen
- * times a day and editing is what happens once a week — the common action gets
- * the whole row, and the rare one does not clutter it.
- *
- * Rotation items are ticked like any other but cannot be edited here: nothing
- * is stored to edit. They come from the rotation's list, and that is where they
- * change.
+ * The gesture moves the row under the thumb and, on release, reports how many
+ * row-heights it travelled. Nothing re-orders mid-drag: the list stays still
+ * and only the dragged row moves, which is less pretty than neighbours sliding
+ * apart and far more predictable to land.
  */
-function Section({
-  title,
-  kind,
-  rows,
-  track,
-  date,
-  toggle,
-  dayKey,
-  onAdd,
-  onRename,
+function ArrangeRow({
+  id,
+  index,
+  count,
+  onMove,
   onRemove,
   styles,
   palette,
 }: {
-  title: string;
-  kind: ItemKind;
-  rows: Row[];
-  track: TrackState;
-  /** The day being shown, which is not always today. */
-  date: string;
-  toggle: (item: DayItemRef, completed: boolean) => void;
-  dayKey: string;
-  onAdd: (title: string) => void;
-  onRename: (id: string, title: string) => void;
-  onRemove: (row: Row) => void;
+  id: string;
+  index: number;
+  count: number;
+  onMove: (from: number, to: number) => void;
+  onRemove: () => void;
   styles: ReturnType<typeof makeStyles>;
   palette: Palette;
 }) {
-  const [editing, setEditing] = useState<string | null>(null);
-  const [draft, setDraft] = useState("");
-  const [adding, setAdding] = useState("");
+  const offset = useSharedValue(0);
+  const lifted = useSharedValue(0);
+  const definition = panelDefinition(id);
 
-  const save = (row: Row) => {
-    const next = draft.trim();
-    if (next && next !== row.title) onRename(row.id, next);
-    setEditing(null);
-  };
+  const drag = Gesture.Pan()
+    .activateAfterLongPress(120)
+    .onStart(() => {
+      lifted.value = 1;
+    })
+    .onUpdate((event) => {
+      offset.value = event.translationY;
+    })
+    .onEnd(() => {
+      const moved = Math.round(offset.value / ROW);
+      const target = Math.max(0, Math.min(count - 1, index + moved));
+      offset.value = 0;
+      lifted.value = 0;
+      if (target !== index) runOnJS(onMove)(index, target);
+    });
+
+  const animated = useAnimatedStyle(() => ({
+    transform: [{ translateY: offset.value }, { scale: lifted.value ? 1.03 : 1 }],
+    zIndex: lifted.value ? 10 : 1,
+    opacity: lifted.value ? 0.95 : 1,
+  }));
+
+  if (!definition) return null;
 
   return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+    <Animated.View style={[styles.arrangeRow, { top: index * ROW }, animated]}>
+      <GestureDetector gesture={drag}>
+        <View style={styles.grip}>
+          <Ionicons name="reorder-three" size={22} color={palette.subtleForeground} />
+        </View>
+      </GestureDetector>
 
-      {rows.map((row) => {
-        const completed = isItemCompleted(track, date, row.kind, row.id);
+      <View style={[styles.addIcon, { backgroundColor: `${tintFor(id) ?? palette.accent}22` }]}>
+        <Ionicons name={PANEL_ICON[id] ?? "square-outline"} size={15} color={tintFor(id) ?? palette.accent} />
+      </View>
+      <Text style={styles.addLabel} numberOfLines={1}>
+        {definition.label}
+      </Text>
 
-        if (editing === row.id) {
-          return (
-            <View key={`${row.kind}:${row.id}`} style={styles.row}>
-              <TextInput
-                value={draft}
-                onChangeText={setDraft}
-                onSubmitEditing={() => save(row)}
-                autoFocus
-                style={styles.editInput}
-                accessibilityLabel={`Rename ${row.title}`}
-              />
-              <Pressable accessibilityRole="button" onPress={() => save(row)} style={styles.rowAction}>
-                <Text style={styles.rowActionLabel}>Save</Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Remove ${row.title}`}
-                onPress={() => {
-                  setEditing(null);
-                  onRemove(row);
-                }}
-                style={styles.rowAction}
-              >
-                <Text style={[styles.rowActionLabel, { color: palette.danger }]}>Remove</Text>
-              </Pressable>
-            </View>
-          );
-        }
-
-        return (
-          <Pressable
-            key={`${row.kind}:${row.id}`}
-            style={styles.row}
-            accessibilityRole="checkbox"
-            accessibilityState={{ checked: completed }}
-            accessibilityLabel={row.title}
-            accessibilityHint={row.generated ? undefined : "Hold to rename or remove"}
-            onPress={() =>
-              toggle({ dateStr: date, kind: row.kind, id: row.id, title: row.title, description: row.description, dayKey }, !completed)
-            }
-            onLongPress={
-              row.generated
-                ? undefined
-                : () => {
-                    setDraft(row.title);
-                    setEditing(row.id);
-                  }
-            }
-          >
-            <View style={[styles.checkbox, completed && { backgroundColor: palette.success, borderColor: palette.success }]}>
-              {completed && <Text style={styles.tick}>✓</Text>}
-            </View>
-            <View style={styles.rowText}>
-              <Text style={[styles.rowTitle, completed && styles.rowTitleDone]}>{row.title}</Text>
-              {row.description ? <Text style={styles.rowDescription}>{row.description}</Text> : null}
-            </View>
-          </Pressable>
-        );
-      })}
-
-      <TextInput
-        value={adding}
-        onChangeText={setAdding}
-        onSubmitEditing={() => {
-          const text = adding.trim();
-          if (!text) return;
-          onAdd(text);
-          setAdding("");
-        }}
-        placeholder={kind === "focus" ? `Add to ${dayKey}'s focus…` : `Add something to revise…`}
-        placeholderTextColor={palette.subtleForeground}
-        returnKeyType="done"
-        style={styles.addInput}
-        accessibilityLabel={`Add a ${kind} item to ${dayKey}`}
-      />
-    </View>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Remove ${definition.label}`}
+        onPress={onRemove}
+        hitSlop={8}
+      >
+        <Ionicons name="close-circle" size={20} color={palette.subtleForeground} />
+      </Pressable>
+    </Animated.View>
   );
 }
 
 function makeStyles(palette: Palette) {
   return StyleSheet.create({
     screen: { flex: 1, backgroundColor: palette.background },
-    content: { padding: SPACING.lg, gap: SPACING.lg },
+    content: { padding: SPACING.lg, gap: SPACING.md, paddingBottom: SPACING.xl },
     centered: { alignItems: "center", justifyContent: "center" },
-    muted: { color: palette.mutedForeground, fontSize: 13 },
-    footerActions: { flexDirection: "row", gap: SPACING.sm, marginTop: SPACING.md },
-    footerAction: {
-      flex: 1,
+    stack: { gap: SPACING.md },
+    bar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+    barTitle: { color: palette.foreground, fontSize: 15, fontWeight: "700" },
+    barButton: {
+      flexDirection: "row",
       alignItems: "center",
-      paddingVertical: SPACING.sm,
-      borderRadius: RADIUS.control,
-      borderWidth: 1,
-      borderColor: palette.cardBorder,
-    },
-    footerLabel: { color: palette.mutedForeground, fontSize: 12, fontWeight: "600" },
-    dayBar: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
-    dayStep: {
-      width: 40,
-      alignItems: "center",
+      gap: 5,
+      paddingHorizontal: SPACING.md,
       paddingVertical: SPACING.xs,
       borderRadius: RADIUS.control,
       borderWidth: 1,
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    dayStepLabel: { color: palette.foreground, fontSize: 20, lineHeight: 24 },
-    dayLabelWrap: { flex: 1, alignItems: "center" },
-    dayLabel: { color: palette.foreground, fontSize: 14, fontWeight: "600" },
-    dayHint: { color: palette.subtleForeground, fontSize: 11 },
-    editInput: {
-      flex: 1,
-      color: palette.foreground,
-      fontSize: 15,
-      paddingVertical: SPACING.xs,
-    },
-    rowAction: { paddingHorizontal: SPACING.sm, paddingVertical: SPACING.xs },
-    rowActionLabel: { color: palette.mutedForeground, fontSize: 13, fontWeight: "600" },
-    addInput: {
-      marginTop: SPACING.xs,
+    barLabel: { color: palette.mutedForeground, fontSize: 12, fontWeight: "600" },
+    arrangeRow: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      height: ROW - 8,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: SPACING.sm,
       paddingHorizontal: SPACING.md,
-      paddingVertical: SPACING.sm,
-      borderRadius: RADIUS.control,
-      borderWidth: 1,
-      borderStyle: "dashed",
-      borderColor: palette.cardBorder,
-      color: palette.foreground,
-      fontSize: 14,
-    },
-    stepsCard: {
-      gap: SPACING.xs,
-      padding: SPACING.lg,
       borderRadius: RADIUS.card,
       borderWidth: 1,
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
     },
-    stepsRow: { flexDirection: "row", alignItems: "baseline", gap: SPACING.sm },
-    stepsNumber: { color: palette.success, fontSize: 26, fontWeight: "700" },
-    stepsLabel: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
-    stepsFootnote: { color: palette.subtleForeground, fontSize: 11, lineHeight: 15 },
-    section: { gap: SPACING.sm },
+    grip: { paddingVertical: SPACING.sm, paddingRight: SPACING.xs },
     sectionTitle: {
       color: palette.subtleForeground,
       fontSize: 11,
       fontWeight: "700",
       letterSpacing: 1.2,
       textTransform: "uppercase",
+      marginTop: SPACING.md,
     },
-    row: {
+    addRow: {
       flexDirection: "row",
-      alignItems: "flex-start",
+      alignItems: "center",
       gap: SPACING.md,
-      padding: SPACING.lg,
+      padding: SPACING.md,
       borderRadius: RADIUS.card,
       borderWidth: 1,
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
     },
-    checkbox: {
-      width: 22,
-      height: 22,
-      borderRadius: 6,
-      borderWidth: 1.5,
-      borderColor: palette.cardBorder,
-      alignItems: "center",
-      justifyContent: "center",
-      marginTop: 1,
-    },
-    tick: { color: "#fff", fontSize: 13, fontWeight: "800" },
-    rowText: { flex: 1, gap: 3 },
-    rowTitle: { color: palette.foreground, fontSize: 15, lineHeight: 20 },
-    rowTitleDone: { color: palette.mutedForeground, textDecorationLine: "line-through" },
-    rowDescription: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
-    empty: { color: palette.mutedForeground, fontSize: 14, lineHeight: 20 },
+    addIcon: { width: 26, height: 26, borderRadius: 8, alignItems: "center", justifyContent: "center" },
+    addText: { flex: 1, gap: 1 },
+    addLabel: { flex: 1, color: palette.foreground, fontSize: 14, fontWeight: "600" },
+    muted: { color: palette.mutedForeground, fontSize: 12, lineHeight: 17 },
+    footnote: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16, marginTop: SPACING.md },
   });
 }

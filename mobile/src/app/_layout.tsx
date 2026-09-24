@@ -21,6 +21,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { WorkspaceProvider } from "../workspace/WorkspaceProvider";
 import { SyncProvider } from "../sync/SyncProvider";
+import { TimerProvider } from "../timer/TimerProvider";
 import { ThemeProvider, useTheme } from "../theme/ThemeProvider";
 
 export default function RootLayout() {
@@ -35,7 +36,11 @@ export default function RootLayout() {
             {/* Inside the workspace: a sync writes the merged workspace
                 straight back into it. */}
             <SyncProvider>
-              <Screens />
+              {/* Above the screens so leaving the timer screen does not stop
+                  the timer. */}
+              <TimerProvider>
+                <Screens />
+              </TimerProvider>
             </SyncProvider>
           </WorkspaceProvider>
         </SafeAreaProvider>
@@ -69,7 +74,7 @@ function Screens() {
         <Stack.Screen name="notes" options={{ title: "Notes" }} />
         <Stack.Screen name="search" options={{ title: "Search" }} />
         <Stack.Screen name="insights" options={{ title: "History" }} />
-        <Stack.Screen name="timer" options={{ title: "Focus" }} />
+        <Stack.Screen name="timer" options={{ title: "Timer" }} />
 
         <Stack.Screen name="tracks" options={{ title: "Your tracks", presentation: "modal" }} />
         <Stack.Screen name="settings" options={{ title: "Settings", presentation: "modal" }} />

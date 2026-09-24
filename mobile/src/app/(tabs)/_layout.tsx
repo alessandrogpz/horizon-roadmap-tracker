@@ -3,10 +3,16 @@
 // Grouped by what you are trying to do rather than by which data structure a
 // screen happens to edit:
 //
+//   My Space  the whole track as panels you arrange yourself — the home
 //   Today     the day's checklist
 //   Plan      the phases, and through them the roadmap, the week, what to ship
-//   My Space  the whole track as panels you arrange yourself
-//   Progress  the streak, the history the server computes, the timer
+//   Progress  the streak, and the history the server computes
+//
+// My Space is first and is what opens: it is the screen that answers "where
+// does this track stand" without being asked anything, and everything else is
+// a way of drilling into part of it. Being first also does the back gesture a
+// favour — `backBehavior: "firstRoute"` means the system back from any other
+// tab returns here rather than leaving the app.
 //
 // "Library" used to be the third, and was cut: a tab whose whole job was to
 // hold the reading list had no reason to be one tap from everywhere, and the
@@ -36,6 +42,7 @@ export default function TabsLayout() {
 
   return (
     <Tabs
+      backBehavior="firstRoute"
       screenOptions={{
         header: () => <AppHeader />,
         tabBarActiveTintColor: palette.accent,
@@ -59,13 +66,13 @@ export default function TabsLayout() {
           user already reads without being told. */}
       <Tabs.Screen
         name="index"
+        options={{ title: "My Space", tabBarIcon: icon("grid", "grid-outline") }}
+      />
+      <Tabs.Screen
+        name="today"
         options={{ title: "Today", tabBarIcon: icon("checkmark-circle", "checkmark-circle-outline") }}
       />
       <Tabs.Screen name="plan" options={{ title: "Plan", tabBarIcon: icon("map", "map-outline") }} />
-      <Tabs.Screen
-        name="space"
-        options={{ title: "My Space", tabBarIcon: icon("grid", "grid-outline") }}
-      />
       <Tabs.Screen
         name="progress"
         options={{ title: "Progress", tabBarIcon: icon("flame", "flame-outline") }}

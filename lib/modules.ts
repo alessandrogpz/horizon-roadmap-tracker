@@ -23,7 +23,7 @@ export const MODULES = [
   { id: "weeklyPlan", label: "Weekly Study Plan", homeColumn: "left" },
   { id: "phaseTracker", label: "Roadmap Timeline", homeColumn: "left" },
   { id: "streakGraph", label: "Consistency Streak", homeColumn: "left" },
-  { id: "pomodoroTimer", label: "Focus Timer", homeColumn: "left" },
+  { id: "pomodoroTimer", label: "Timer", homeColumn: "left" },
   { id: "portfolioTracker", label: "Portfolio Deliverables", homeColumn: "right" },
   { id: "materialsTracker", label: "Materials", homeColumn: "right" },
   { id: "notepad", label: "Notepad", homeColumn: "right" },
