@@ -7,6 +7,19 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.44.1] - 2026-09-24
+
+### Added
+- A deliverable's name and repository link are editable on the phone; it could only be added, ticked
+  and removed before.
+- "Clear the done" on the to-do list, which the website has had all along.
+
+Both were found by checking which shared actions the website calls and the phone never does — a
+mechanical check worth more than reading the screens, which is how the previous two parity claims
+came out wrong. Everything in `trackActions`, `completions`, `quickNotes`, `stats`, `rotation` and
+`selectors` is now reachable from the phone, except `recommendedPhaseId`, which the phone reaches
+through `phaseStats` instead.
+
 ## [0.44.0] - 2026-09-24
 
 ### Added
