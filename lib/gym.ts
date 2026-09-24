@@ -45,11 +45,20 @@ export interface GymSession {
   exercises: GymExercise[];
 }
 
+/** One line of a plan: what to do, how many sets, how many reps. A name on its
+ *  own was not a plan — it said which exercise but nothing about the work, so
+ *  the numbers had to be remembered or looked up every single session. */
+export interface PlanItem {
+  name: string;
+  sets: number;
+  reps: number;
+}
+
 export interface GymLog {
   version: 1;
-  /** Focus type key -> the exercises that kind of day asks for. This is the
-   *  *plan*; `sessions` is what actually happened. */
-  plans: Record<string, string[]>;
+  /** Focus type key -> what that kind of day asks for. This is the *plan*;
+   *  `sessions` is what actually happened. */
+  plans: Record<string, PlanItem[]>;
   sessions: Record<DateStr, GymSession>;
 }
 
@@ -80,11 +89,27 @@ export function parseGymLog(content: string | undefined | null): GymLog {
   }
   if (!isRecord(raw)) return emptyGymLog();
 
-  const plans: Record<string, string[]> = {};
+  const plans: Record<string, PlanItem[]> = {};
   if (isRecord(raw.plans)) {
-    for (const [focus, names] of Object.entries(raw.plans)) {
-      if (!Array.isArray(names)) continue;
-      plans[focus] = names.filter((name): name is string => typeof name === "string" && !!name.trim());
+    for (const [focus, items] of Object.entries(raw.plans)) {
+      if (!Array.isArray(items)) continue;
+      const parsed: PlanItem[] = [];
+      for (const item of items) {
+        // Plans were a list of names before sets and reps existed. An older
+        // note — or one written by a version of the app still on another
+        // phone — must keep working, so a bare string becomes a plan item with
+        // sensible numbers rather than being dropped.
+        if (typeof item === "string" && item.trim()) {
+          parsed.push({ name: item.trim(), sets: DEFAULT_SETS, reps: DEFAULT_REPS });
+        } else if (isRecord(item) && typeof item.name === "string" && item.name.trim()) {
+          parsed.push({
+            name: item.name.trim(),
+            sets: typeof item.sets === "number" ? Math.max(1, Math.round(item.sets)) : DEFAULT_SETS,
+            reps: typeof item.reps === "number" ? Math.max(1, Math.round(item.reps)) : DEFAULT_REPS,
+          });
+        }
+      }
+      plans[focus] = parsed;
     }
   }
 
@@ -139,32 +164,73 @@ export function focusOfDay(
   return day ? { key: day.type, label: day.label } : null;
 }
 
-/** The exercises this kind of day asks for. */
-export const plannedFor = (log: GymLog, focusKey: string | undefined): string[] =>
+/** Three sets of ten: the shape most plans start from, and a better guess than
+ *  nothing when an older note only recorded a name. */
+export const DEFAULT_SETS = 3;
+export const DEFAULT_REPS = 10;
+
+/** What this kind of day asks for. */
+export const plannedFor = (log: GymLog, focusKey: string | undefined): PlanItem[] =>
   focusKey ? (log.plans[focusKey] ?? []) : [];
 
-export function setPlan(log: GymLog, focusKey: string, names: string[]): GymLog {
-  return {
-    ...log,
-    plans: { ...log.plans, [focusKey]: names.map((name) => name.trim()).filter(Boolean) },
-  };
+export function setPlan(log: GymLog, focusKey: string, items: PlanItem[]): GymLog {
+  return { ...log, plans: { ...log.plans, [focusKey]: items } };
 }
 
-export function addToPlan(log: GymLog, focusKey: string, name: string): GymLog {
+export function addToPlan(
+  log: GymLog,
+  focusKey: string,
+  name: string,
+  sets = DEFAULT_SETS,
+  reps = DEFAULT_REPS
+): GymLog {
   const trimmed = name.trim();
   if (!trimmed) return log;
   const current = plannedFor(log, focusKey);
-  // Same exercise twice in one day's plan is a mistake every time.
-  if (current.some((existing) => existing.toLowerCase() === trimmed.toLowerCase())) return log;
-  return setPlan(log, focusKey, [...current, trimmed]);
+  // The same exercise twice in one day's plan is a mistake every time.
+  if (current.some((item) => item.name.toLowerCase() === trimmed.toLowerCase())) return log;
+  return setPlan(log, focusKey, [...current, { name: trimmed, sets, reps }]);
 }
 
 export const removeFromPlan = (log: GymLog, focusKey: string, name: string): GymLog =>
-  setPlan(
+  setPlan(log, focusKey, plannedFor(log, focusKey).filter((item) => item.name !== name));
+
+/** Changes the numbers on one line of the plan, leaving its place alone. */
+export function updatePlanItem(
+  log: GymLog,
+  focusKey: string,
+  name: string,
+  fields: Partial<Omit<PlanItem, "name">>
+): GymLog {
+  return setPlan(
     log,
     focusKey,
-    plannedFor(log, focusKey).filter((existing) => existing !== name)
+    plannedFor(log, focusKey).map((item) =>
+      item.name === name
+        ? {
+            ...item,
+            ...(fields.sets !== undefined ? { sets: Math.max(1, Math.round(fields.sets)) } : {}),
+            ...(fields.reps !== undefined ? { reps: Math.max(1, Math.round(fields.reps)) } : {}),
+          }
+        : item
+    )
   );
+}
+
+/** Whether this day's planned work is finished: every planned exercise has at
+ *  least as many sets logged as it asked for. What the week needs to show a
+ *  tick, and nothing more. */
+export function planComplete(log: GymLog, focusKey: string | undefined, date: DateStr): boolean {
+  const plan = plannedFor(log, focusKey);
+  if (plan.length === 0) return false;
+  const session = sessionFor(log, date);
+  return plan.every((item) => {
+    const logged = session.exercises.find(
+      (exercise) => exercise.name.toLowerCase() === item.name.toLowerCase()
+    );
+    return (logged?.sets.length ?? 0) >= item.sets;
+  });
+}
 
 export const sessionFor = (log: GymLog, date: DateStr): GymSession =>
   log.sessions[date] ?? { exercises: [] };

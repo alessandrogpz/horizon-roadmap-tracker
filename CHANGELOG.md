@@ -7,6 +7,41 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.56.0] - 2026-09-24
+
+### Fixed
+- **A fast flick downwards sometimes got eaten by pull-to-refresh.** Flicking down is also how you
+  scroll back to the top, and the pull was re-checking "are we at the top?" on every frame — so half
+  way up the check would start passing and it would grab a gesture that was already a scroll. It now
+  decides once, when the finger lands, and needs a deliberate 24-point drag rather than a flick.
+
+### Changed
+- **A plan has sets and reps, not just names.** A name said which exercise and nothing about the
+  work, so the numbers had to be remembered every session. The **Gym panel now shows the day's
+  exercises the way a workout app does** — name, sets done against sets planned, reps — with a tick
+  per exercise as you finish it.
+- **The Weekly Overview is just a tick**: "Push: 2 of 3 exercises", or done. The plan belongs to the
+  gym panel, and repeating it in the week put the same information in two places — which is how the
+  two came to disagree in the first place.
+- **Tracks are deleted, not archived**, with a confirmation. Swiping is a flick rather than a
+  considered tap and a track carries everything on it, so this one asks first — and the undo bar
+  still catches it afterwards. It is still stored as a flag underneath, because the sync merge
+  reconciles by comparing records: a track removed by *absence* would be handed straight back by the
+  next sync from the account's copy. Nothing in the app shows a deleted track; a true erase needs a
+  tombstone the server understands.
+- **Swiping a panel in My Space hides it**, the same gesture as everywhere else. No undo on this
+  one — nothing is lost, it is waiting in Arrange.
+- **New tracks say what the field is for.** The name field is labelled "Name" and says so, and the
+  kind below it says plainly that it only decides which panels the track opens with.
+
+### Added
+- **Track kinds seed default panels** — and nothing else. A fitness track opens with the gym, the
+  week, consistency and steps; a learning track with materials and phases. Every panel stays
+  available to every track from Arrange, for ever: hiding by kind would produce the unanswerable
+  "where did it go?", and a real track is hybrid anyway. `lib/trackKinds.ts` is keyed to the
+  existing template ids, because choosing "Fitness" when creating a track already answers the
+  question.
+
 ## [0.55.0] - 2026-09-24
 
 ### Added

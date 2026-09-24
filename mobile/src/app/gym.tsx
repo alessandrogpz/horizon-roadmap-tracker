@@ -21,6 +21,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import {
   addExercise,
+  updatePlanItem,
   addSet,
   addToPlan,
   focusOfDay,
@@ -79,7 +80,7 @@ export default function GymScreen() {
   if (!track) return <NoTrack />;
 
   const started = new Set(session.exercises.map((exercise) => exercise.name.toLowerCase()));
-  const todo = planned.filter((name) => !started.has(name.toLowerCase()));
+  const todo = planned.filter((item) => !started.has(item.name.toLowerCase()));
 
   return (
     <Refreshable style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -104,20 +105,23 @@ export default function GymScreen() {
       {todo.length > 0 && (
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Still to do</Text>
-          <View style={styles.chips}>
-            {todo.map((name) => (
-              <Pressable
-                key={name}
-                accessibilityRole="button"
-                accessibilityLabel={`Start ${name}`}
-                onPress={() => startExercise(name)}
-                style={styles.chip}
-              >
-                <Ionicons name="add" size={13} color={palette.mutedForeground} />
-                <Text style={styles.chipLabel}>{name}</Text>
-              </Pressable>
-            ))}
-          </View>
+          {todo.map((item) => (
+            <Pressable
+              key={item.name}
+              accessibilityRole="button"
+              accessibilityLabel={`Start ${item.name}, ${item.sets} sets of ${item.reps}`}
+              onPress={() => startExercise(item.name)}
+              style={styles.todoRow}
+            >
+              <Ionicons name="ellipse-outline" size={16} color={palette.subtleForeground} />
+              <Text style={styles.todoName} numberOfLines={1}>
+                {item.name}
+              </Text>
+              <Text style={styles.todoNumbers}>
+                {item.sets} × {item.reps}
+              </Text>
+            </Pressable>
+          ))}
         </View>
       )}
 
@@ -211,18 +215,44 @@ export default function GymScreen() {
             </Text>
           )}
 
-          {planned.map((name) => (
-            <View key={name} style={styles.planRow}>
-              <Text style={styles.planName}>{name}</Text>
-              {editing && (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={`Remove ${name} from the ${focus.label} plan`}
-                  hitSlop={10}
-                  onPress={() => change((current) => removeFromPlan(current, focus.key, name))}
-                >
-                  <Ionicons name="close" size={16} color={palette.subtleForeground} />
-                </Pressable>
+          {planned.map((item) => (
+            <View key={item.name} style={styles.planRow}>
+              <Text style={styles.planName} numberOfLines={1}>
+                {item.name}
+              </Text>
+              {editing ? (
+                <>
+                  <PlanNumber
+                    value={item.sets}
+                    unit="sets"
+                    onChange={(sets) =>
+                      change((current) => updatePlanItem(current, focus.key, item.name, { sets }))
+                    }
+                    styles={styles}
+                    palette={palette}
+                  />
+                  <PlanNumber
+                    value={item.reps}
+                    unit="reps"
+                    onChange={(reps) =>
+                      change((current) => updatePlanItem(current, focus.key, item.name, { reps }))
+                    }
+                    styles={styles}
+                    palette={palette}
+                  />
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Remove ${item.name} from the ${focus.label} plan`}
+                    hitSlop={10}
+                    onPress={() => change((current) => removeFromPlan(current, focus.key, item.name))}
+                  >
+                    <Ionicons name="close" size={16} color={palette.subtleForeground} />
+                  </Pressable>
+                </>
+              ) : (
+                <Text style={styles.planNumbers}>
+                  {item.sets} sets · {item.reps} reps
+                </Text>
               )}
             </View>
           ))}
@@ -242,6 +272,43 @@ export default function GymScreen() {
         </>
       )}
     </Refreshable>
+  );
+}
+
+/** One editable number on a plan row. Tapping cycles it up and wraps round at
+ *  a sensible ceiling — a stepper per number would be six controls on a line
+ *  that has to stay readable, and nobody plans nineteen sets. */
+function PlanNumber({
+  value,
+  unit,
+  onChange,
+  styles,
+  palette,
+}: {
+  value: number;
+  unit: "sets" | "reps";
+  onChange: (value: number) => void;
+  styles: ReturnType<typeof makeStyles>;
+  palette: Palette;
+}) {
+  const ceiling = unit === "sets" ? 8 : 30;
+  const step = unit === "sets" ? 1 : 5;
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${value} ${unit}. Tap to change.`}
+      hitSlop={6}
+      onPress={() => {
+        tap();
+        const next = value + step;
+        onChange(next > ceiling ? step : next);
+      }}
+      style={styles.planNumberButton}
+    >
+      <Text style={[styles.planNumbers, { color: palette.foreground }]}>
+        {value} {unit}
+      </Text>
+    </Pressable>
   );
 }
 
@@ -476,6 +543,24 @@ function makeStyles(palette: Palette) {
       borderBottomColor: palette.cardBorder,
     },
     planName: { flex: 1, color: palette.foreground, fontSize: 14 },
+    planNumbers: { color: palette.mutedForeground, fontSize: 12, fontWeight: "600" },
+    planNumberButton: {
+      minHeight: 36,
+      justifyContent: "center",
+      paddingHorizontal: SPACING.sm,
+      borderRadius: RADIUS.control,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+    },
+    todoRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: SPACING.sm,
+      minHeight: 44,
+      paddingHorizontal: SPACING.xs,
+    },
+    todoName: { flex: 1, color: palette.foreground, fontSize: 15 },
+    todoNumbers: { color: palette.mutedForeground, fontSize: 13, fontWeight: "600" },
     footnote: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16, marginTop: SPACING.sm },
     muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
   });

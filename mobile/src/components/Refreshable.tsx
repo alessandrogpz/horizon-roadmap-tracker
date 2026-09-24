@@ -48,6 +48,12 @@ export function Refreshable({ children, ...props }: ComponentProps<typeof Scroll
   const pull = useSharedValue(0);
   const scrollY = useSharedValue(0);
   const armed = useSharedValue(false);
+  // Decided once, when the finger lands, and not revisited for the rest of the
+  // drag. Checking "are we at the top" on every frame is what made a fast
+  // flick downwards unreliable: the flick is *also* how you scroll back to the
+  // top, so half way up the check would start passing and the pull would grab
+  // a gesture that was already a scroll.
+  const canPull = useSharedValue(false);
   // Typed loosely on purpose: `simultaneousWithExternalGesture` wants a ref
   // to a gesture-aware component, and a ScrollView ref satisfies it at
   // runtime without satisfying the declared type.
@@ -69,12 +75,16 @@ export function Refreshable({ children, ...props }: ComponentProps<typeof Scroll
 
   const pan = Gesture.Pan()
     .simultaneousWithExternalGesture(scroller)
-    // Only a decidedly downward drag, and only from the very top. Anything
-    // else is the scroll's business.
-    .activeOffsetY(12)
-    .failOffsetY(-8)
+    // A deliberate drag, not a flick: 24 points is past what a scroll gesture
+    // covers before the list starts moving, so an ordinary swipe never trips
+    // it. Any upward movement fails it outright.
+    .activeOffsetY(24)
+    .failOffsetY(-4)
+    .onBegin(() => {
+      canPull.value = scrollY.value <= 0;
+    })
     .onUpdate((event) => {
-      if (scrollY.value > 1 || event.translationY <= 0) return;
+      if (!canPull.value || event.translationY <= 0) return;
       // Square-root resistance: it follows the thumb closely at first and
       // stiffens as it stretches, which is what makes it feel elastic rather
       // than loose.
@@ -87,8 +97,9 @@ export function Refreshable({ children, ...props }: ComponentProps<typeof Scroll
       }
     })
     .onEnd(() => {
-      const committed = pull.value >= COMMIT_AT;
+      const committed = canPull.value && pull.value >= COMMIT_AT;
       armed.value = false;
+      canPull.value = false;
       if (committed) {
         pull.value = withTiming(RESTING, { duration: 160 });
         runOnJS(run)();
