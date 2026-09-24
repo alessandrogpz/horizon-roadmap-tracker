@@ -7,6 +7,26 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.49.0] - 2026-09-24
+
+### Changed
+- **The consistency grid is grouped by month.** Each month is its own block, starting on the weekday
+  it actually starts on, separated from the one before. A year as an unbroken ribbon of weeks is
+  hard to read a month out of, because nothing marks where one ends. The weekday header stays at the
+  top of the screen and every block lines up with it, so a Tuesday sits under "T" wherever it falls.
+  The old continuous shape is a toggle away — it is still the better way to see a long run at a
+  glance.
+- **The row of links moved off the top of Plan, Progress and Materials.** Roadmap, Week & rotations,
+  Deliverables, History and Search are places you might go, not what those screens are about, and
+  they were sitting above the thing you came to read. They are at the foot now, under "More on this
+  track".
+
+### Added
+- **The to-do list on Today**, collapsed until asked for and remembered per track. The two checklists
+  above it are the plan — what this weekday is for, every week; a to-do is the loose end that came up
+  today and has no place in a repeating schedule. Different things, same question: what am I doing
+  today. It is the same list the Notes screen and the website edit.
+
 ## [0.48.0] - 2026-09-24
 
 ### Changed

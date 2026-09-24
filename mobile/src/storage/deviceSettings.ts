@@ -33,9 +33,11 @@ interface DeviceSettings {
    *  dragged something on a train. "Which panels" is the same question
    *  everywhere; "in what order" is not. */
   panelOrderByTrack: Record<string, string[]>;
+  /** track id -> whether Today shows the to-do list expanded. */
+  todosOnTodayByTrack: Record<string, boolean>;
 }
 
-const EMPTY: DeviceSettings = { stepsByTrack: {}, panelOrderByTrack: {} };
+const EMPTY: DeviceSettings = { stepsByTrack: {}, panelOrderByTrack: {}, todosOnTodayByTrack: {} };
 
 // Read once into memory so screens can ask synchronously during render, the
 // same shape `@shared/settings` uses and for the same reason.
@@ -69,6 +71,15 @@ export function panelOrder(trackId: string | null | undefined): string[] {
 
 export function setPanelOrder(trackId: string, order: string[]): void {
   cache = { ...cache, panelOrderByTrack: { ...cache.panelOrderByTrack, [trackId]: order } };
+  void AsyncStorage.setItem(KEY, JSON.stringify(cache));
+}
+
+export function todosOpen(trackId: string | null | undefined): boolean {
+  return trackId ? cache.todosOnTodayByTrack[trackId] === true : false;
+}
+
+export function setTodosOpen(trackId: string, open: boolean): void {
+  cache = { ...cache, todosOnTodayByTrack: { ...cache.todosOnTodayByTrack, [trackId]: open } };
   void AsyncStorage.setItem(KEY, JSON.stringify(cache));
 }
 
