@@ -191,6 +191,7 @@ build and release workflow.
 
 ## Core Features & Mechanics
 
+*   **Weekly overview:** What each day of a track is for, and what that day actually holds — the rotation topics due that week, the day's own checklist, the gym plan for that kind of day. On the phone it is a calendar you can walk through, a week at a time or a month at a glance, so what a future week asks for is something you look up rather than work out.
 *   **Phases:** Interactive vertical timeline of a track's phases, their deadlines and what each one asks for.
 *   **Consistency:** GitHub-style contributions graph tracking every day you showed up, in real time.
 *   **Deliverables:** Repository checklists, with live git statistics (branch, modified status, last commit message) pulled from local git repos or GitHub.
