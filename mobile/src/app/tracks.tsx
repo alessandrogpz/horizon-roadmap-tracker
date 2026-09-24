@@ -4,6 +4,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { router } from "expo-router";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { visibleTracks } from "@shared/selectors";
 import { seedTrackFromTemplate, TEMPLATE_LIST } from "@shared/templates";
 import { hiddenPanelsFor, trackKind, type TrackKind } from "@shared/trackKinds";
@@ -17,6 +18,7 @@ import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { SwipeRow } from "../components/SwipeRow";
 import { ConfirmSheet, type Confirmation } from "../components/ConfirmSheet";
+import { DatePicker, describeDate } from "../components/DatePicker";
 import { Refreshable } from "../components/Refreshable";
 
 /** The colours a track can be. A fixed set rather than a picker: the picker
@@ -35,6 +37,9 @@ export default function TracksScreen() {
   const [name, setName] = useState("");
   const [settingsFor, setSettingsFor] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<Confirmation | null>(null);
+  // Which date field is being chosen, if any. One picker serves them all
+  // rather than a modal per field.
+  const [picking, setPicking] = useState<"new-start" | "new-end" | null>(null);
 
   /**
    * Deleting a track.
@@ -200,27 +205,22 @@ export default function TracksScreen() {
             accessibilityLabel="Track name"
           />
           <Text style={styles.fieldLabel}>Starts</Text>
-          <TextInput
+          <DateField
             value={newStart}
-            onChangeText={setNewStart}
-            placeholder={todayYMD()}
-            placeholderTextColor={palette.subtleForeground}
-            keyboardType="numbers-and-punctuation"
-            style={styles.input}
-            accessibilityLabel="Start date, as year-month-day"
+            onPress={() => setPicking("new-start")}
+            styles={styles}
+            palette={palette}
           />
 
           <Text style={styles.fieldLabel}>Should be done by</Text>
           {/* The template used to decide this silently, so a track arrived with
               a horizon nobody had chosen and a phase timeline scaled to it. */}
-          <TextInput
+          <DateField
             value={newEnd}
-            onChangeText={setNewEnd}
-            placeholder="Leave blank for the template's own length"
-            placeholderTextColor={palette.subtleForeground}
-            keyboardType="numbers-and-punctuation"
-            style={styles.input}
-            accessibilityLabel="End date, as year-month-day"
+            empty="However long the template runs"
+            onPress={() => setPicking("new-end")}
+            styles={styles}
+            palette={palette}
           />
 
           <Text style={styles.fieldLabel}>What it is about</Text>
@@ -246,6 +246,15 @@ export default function TracksScreen() {
           <Text style={styles.panelLabel}>New track…</Text>
         </Pressable>
       )}
+      <DatePicker
+        open={picking !== null}
+        title={picking === "new-end" ? "Should be done by" : "Starts on"}
+        value={picking === "new-end" ? newEnd : newStart}
+        earliest={picking === "new-end" ? newStart : undefined}
+        onPick={(date) => (picking === "new-end" ? setNewEnd(date) : setNewStart(date))}
+        onClose={() => setPicking(null)}
+      />
+
       <ConfirmSheet confirmation={confirming} onClose={() => setConfirming(null)} />
     </Refreshable>
   );
@@ -281,6 +290,7 @@ function TrackSettings({
   const [name, setName] = useState(track?.meta.name ?? "");
   const [color, setColor] = useState(track?.meta.color || TRACK_COLOURS[0]);
   const [startDate, setStartDate] = useState(track?.startDate ?? todayYMD());
+  const [picking, setPicking] = useState<"start" | "end" | null>(null);
   const [endDate, setEndDate] = useState(() =>
     track ? formatDateYMD(dateForDay(track.startDate ?? todayYMD(), trackTotalDays(track))) : todayYMD()
   );
@@ -327,34 +337,32 @@ function TrackSettings({
       </View>
 
       <Text style={styles.fieldLabel}>Started on</Text>
-      <TextInput
-        value={startDate}
-        onChangeText={setStartDate}
-        placeholder={todayYMD()}
-        placeholderTextColor={palette.subtleForeground}
-        keyboardType="numbers-and-punctuation"
-        style={styles.input}
-        accessibilityLabel="Start date, as year-month-day"
-      />
+      <DateField value={startDate} onPress={() => setPicking("start")} styles={styles} palette={palette} />
 
       <Text style={styles.fieldLabel}>Ends on</Text>
       {/* A date, not a day count. Nobody knows their track is 92 days long;
           they know it should be done by Christmas. The count is still what
           gets stored — it is what lets a track be re-dated wholesale — so this
           converts on the way in and out. */}
-      <TextInput
+      <DateField
         value={endDate}
-        onChangeText={setEndDate}
-        placeholder={todayYMD()}
-        placeholderTextColor={palette.subtleForeground}
-        keyboardType="numbers-and-punctuation"
-        style={styles.input}
-        accessibilityLabel="End date, as year-month-day"
+        onPress={() => setPicking("end")}
+        styles={styles}
+        palette={palette}
       />
       <Text style={styles.footnote}>
         {days > 0 ? `${days} day${days === 1 ? "" : "s"}. ` : ""}Moving it shifts every phase deadline
         in proportion, so the shape of the roadmap survives being made longer or shorter.
       </Text>
+
+      <DatePicker
+        open={picking !== null}
+        title={picking === "end" ? "Ends on" : "Started on"}
+        value={picking === "end" ? endDate : startDate}
+        earliest={picking === "end" ? startDate : undefined}
+        onPick={(date) => (picking === "end" ? setEndDate(date) : setStartDate(date))}
+        onClose={() => setPicking(null)}
+      />
 
       <View style={styles.panelRow}>
         <Pressable
@@ -385,6 +393,39 @@ function TrackSettings({
         </Pressable>
       </View>
     </View>
+  );
+}
+
+/** A date, shown as a date and opened as a picker. Never a text box: every
+ *  date here feeds arithmetic — a phase deadline is a day count from the start
+ *  — so an unparseable one is not a cosmetic problem, and the only thing the
+ *  code could do with a half-typed one was ignore it. */
+function DateField({
+  value,
+  empty,
+  onPress,
+  styles,
+  palette,
+}: {
+  value: string;
+  empty?: string;
+  onPress: () => void;
+  styles: ReturnType<typeof makeStyles>;
+  palette: Palette;
+}) {
+  const set = /^\d{4}-\d{2}-\d{2}$/.test(value);
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${describeDate(value, empty ?? "Not set")}. Tap to change.`}
+      onPress={onPress}
+      style={styles.dateField}
+    >
+      <Text style={[styles.dateValue, !set && { color: palette.subtleForeground }]}>
+        {describeDate(value, empty ?? "Choose a date")}
+      </Text>
+      <Ionicons name="calendar-outline" size={16} color={palette.subtleForeground} />
+    </Pressable>
   );
 }
 
@@ -427,6 +468,18 @@ function makeStyles(palette: Palette) {
     },
     panelLabel: { color: palette.foreground, fontSize: 14, fontWeight: "600" },
     fieldLabel: { color: palette.subtleForeground, fontSize: 11, fontWeight: "700", letterSpacing: 1, textTransform: "uppercase", marginTop: SPACING.sm },
+    dateField: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      minHeight: 48,
+      paddingHorizontal: SPACING.md,
+      borderRadius: RADIUS.control,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.surfaceMuted,
+    },
+    dateValue: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
     swatches: { flexDirection: "row", gap: SPACING.sm },
     swatch: { width: 26, height: 26, borderRadius: 13, borderWidth: 1, borderColor: "rgba(0,0,0,0.2)" },
     footnote: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16 },

@@ -18,10 +18,12 @@ import { useLocalSearchParams } from "expo-router";
 import type { Phase, PhaseDetailItem, PhaseDetailedInfo } from "@shared/types";
 import { updatePhase } from "@shared/trackActions";
 import { PHASE_DETAIL_SECTIONS, phaseDetailItems, setPhaseDetail } from "@shared/phaseDetails";
-import { dateForDay, dayForDate, formatDateYMD, formatDayMonthYear, todayYMD } from "@shared/dates";
+import { dateForDay, dayForDate, formatDateYMD, formatDayMonthYear, parseYMD } from "@shared/dates";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../../theme";
 import { usePalette } from "../../theme/ThemeProvider";
+import { DatePicker } from "../../components/DatePicker";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { EditButton, useEditMode } from "../../components/EditToggle";
 import { Refreshable } from "../../components/Refreshable";
 
@@ -269,6 +271,18 @@ export default function PhaseDetailScreen() {
  * A typed date rather than a date picker: the picker is a native module, and a
  * native module is a new build on every phone for one field.
  */
+/**
+ * The phase's deadline.
+ *
+ * Stored as `recommendedByDay` — a count of days from the track's start, not a
+ * date — because moving a track's start should move its phases with it. That
+ * is the right thing to store and the wrong thing to show, so this reads and
+ * writes a calendar date and does the conversion, exactly as the website does.
+ *
+ * Picked, never typed. The count is arithmetic on whatever comes out of here,
+ * so a half-typed date was not a cosmetic problem — and the old field silently
+ * reverted anything it could not parse, which is the worst of both.
+ */
 function Deadline({
   phase,
   startDate,
@@ -280,70 +294,68 @@ function Deadline({
   phase: Phase;
   startDate: string;
   change: (next: (phase: Phase) => Phase) => void;
-  /** The screen's edit mode; the deadline has its own little edit state on top
-   *  of it, since typing a date is a step of its own. */
+  /** The screen's edit mode. */
   canEdit: boolean;
   styles: ReturnType<typeof makeStyles>;
   palette: Palette;
 }) {
-  const stored =
-    phase.recommendedByDay !== undefined ? formatDateYMD(dateForDay(startDate, phase.recommendedByDay)) : "";
-  const [draft, setDraft] = useState(stored);
-  const [editing, setEditing] = useState(false);
-
-  const commit = useCallback(() => {
-    setEditing(false);
-    const text = draft.trim();
-    if (!text) {
-      // Clearing the field removes the threshold entirely, which is how a
-      // phase opts out of the deadline banner.
-      change((p) => {
-        const cleared = { ...p };
-        delete cleared.recommendedByDay;
-        return cleared;
-      });
-      return;
-    }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return setDraft(stored);
-    const day = dayForDate(startDate, text);
-    // Not a date, or before the track begins: leave what was stored alone
-    // rather than clamping, which would silently move the deadline somewhere
-    // nobody asked for. The website refuses the same way.
-    if (!Number.isFinite(day) || day < 1) return setDraft(stored);
-    change((p) => ({ ...p, recommendedByDay: day }));
-  }, [change, draft, startDate, stored]);
-
-  if (!editing) {
-    return (
-      <Pressable accessibilityRole="button" disabled={!canEdit} onPress={() => { setDraft(stored); setEditing(true); }}>
-        <Text style={styles.muted}>
-          {phase.recommendedByDay !== undefined
-            ? `Due ${formatDayMonthYear(dateForDay(startDate, phase.recommendedByDay))} · day ${phase.recommendedByDay}${canEdit ? " — tap to change" : ""}`
-            : canEdit
-              ? "No deadline — tap to set one"
-              : "No deadline"}
-        </Text>
-      </Pressable>
-    );
-  }
+  const [picking, setPicking] = useState(false);
+  const due =
+    phase.recommendedByDay !== undefined
+      ? formatDateYMD(dateForDay(startDate, phase.recommendedByDay))
+      : "";
 
   return (
-    <View style={styles.editRow}>
-      <TextInput
-        value={draft}
-        onChangeText={setDraft}
-        onSubmitEditing={commit}
-        onBlur={commit}
-        autoFocus
-        placeholder={todayYMD()}
-        placeholderTextColor={palette.subtleForeground}
-        keyboardType="numbers-and-punctuation"
-        returnKeyType="done"
-        style={[styles.input, { flex: 1 }]}
-        accessibilityLabel="Phase deadline, as year-month-day"
+    <>
+      <View style={styles.deadlineRow}>
+        <Pressable
+          accessibilityRole="button"
+          disabled={!canEdit}
+          onPress={() => setPicking(true)}
+          style={styles.deadlineButton}
+        >
+          <Ionicons name="calendar-outline" size={14} color={palette.subtleForeground} />
+          <Text style={styles.muted}>
+            {due
+              ? `Due ${formatDayMonthYear(parseYMD(due))} · day ${phase.recommendedByDay}`
+              : canEdit
+                ? "No deadline — tap to set one"
+                : "No deadline"}
+          </Text>
+        </Pressable>
+
+        {canEdit && due ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Clear the deadline"
+            hitSlop={10}
+            onPress={() =>
+              change((p) => {
+                const cleared = { ...p };
+                delete cleared.recommendedByDay;
+                return cleared;
+              })
+            }
+          >
+            <Ionicons name="close" size={16} color={palette.subtleForeground} />
+          </Pressable>
+        ) : null}
+      </View>
+
+      <DatePicker
+        open={picking}
+        title="Phase ends on"
+        value={due}
+        // A phase cannot end before the track begins, so those days are not
+        // offered rather than refused after the fact.
+        earliest={startDate}
+        onPick={(date) => {
+          const day = dayForDate(startDate, date);
+          if (Number.isFinite(day) && day >= 1) change((p) => ({ ...p, recommendedByDay: day }));
+        }}
+        onClose={() => setPicking(false)}
       />
-      <Text style={styles.footnote}>Empty clears it</Text>
-    </View>
+    </>
   );
 }
 
@@ -355,6 +367,8 @@ function makeStyles(palette: Palette) {
     titleRow: { flexDirection: "row", alignItems: "center", gap: SPACING.md },
     titleInput: { color: palette.foreground, fontSize: 20, fontWeight: "700", paddingVertical: SPACING.xs },
     reading: { color: palette.mutedForeground, fontSize: 14, lineHeight: 20 },
+    deadlineRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
+    deadlineButton: { flex: 1, flexDirection: "row", alignItems: "center", gap: SPACING.sm, minHeight: 40 },
     sectionTitle: {
       color: palette.subtleForeground,
       fontSize: 11,
