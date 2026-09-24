@@ -22,7 +22,7 @@ import { PanelCard, Meter } from "./PanelCard";
 import { FITNESS_PANEL, STEPS_PANEL } from "./layout";
 import { usePedometer } from "../steps/usePedometer";
 import { dailySteps, healthStatus } from "./../steps/healthConnect";
-import { focusOfDay, plannedFor, sessionFor, setCountOf, volumeOf } from "@shared/gym";
+import { focusOfDay, planComplete, plannedFor, sessionFor, setCountOf, volumeOf } from "@shared/gym";
 import { useGymLog } from "../gym/useGymLog";
 import { SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
@@ -96,11 +96,8 @@ function WeekPanel({ track, today }: PanelProps) {
 
   const focus = focusOfDay(track.weekSchedule, todayKey);
   const planned = plannedFor(log, focus?.key);
-  const done = new Set(
-    sessionFor(log, today)
-      .exercises.filter((exercise) => exercise.sets.length > 0)
-      .map((exercise) => exercise.name.toLowerCase())
-  );
+  const complete = planComplete(log, focus?.key, today);
+  const done = sessionFor(log, today).exercises.filter((exercise) => exercise.sets.length > 0).length;
 
   return (
     <>
@@ -126,26 +123,20 @@ function WeekPanel({ track, today }: PanelProps) {
         })}
       </View>
 
+      {/* Whether today's training is done — a tick, not a second copy of the
+          plan. The plan belongs to the gym panel; repeating it here would put
+          the same information in two places, which is how the week and the gym
+          came to disagree in the first place. */}
       {planned.length > 0 && (
-        <View style={styles.plannedBlock}>
-          <Text style={styles.muted}>
-            {focus?.label} · {done.size} of {planned.length} done
+        <View style={[styles.line, styles.plannedBlock]}>
+          <Ionicons
+            name={complete ? "checkmark-circle" : "ellipse-outline"}
+            size={15}
+            color={complete ? palette.success : palette.subtleForeground}
+          />
+          <Text style={styles.lineText}>
+            {focus?.label}: {complete ? "done" : `${done} of ${planned.length} exercises`}
           </Text>
-          {planned.slice(0, 4).map((name) => (
-            <View key={name} style={styles.line}>
-              <Ionicons
-                name={done.has(name.toLowerCase()) ? "checkmark-circle" : "ellipse-outline"}
-                size={13}
-                color={done.has(name.toLowerCase()) ? palette.success : palette.subtleForeground}
-              />
-              <Text
-                style={[styles.lineText, done.has(name.toLowerCase()) && styles.struck]}
-                numberOfLines={1}
-              >
-                {name}
-              </Text>
-            </View>
-          ))}
         </View>
       )}
     </>
@@ -321,12 +312,13 @@ function StepsPanel({ today }: { today: string }) {
 }
 
 /**
- * Today's training: what the day is for, and what has been done of it.
+ * Today's training: the exercises, their sets and reps, and what is done.
  *
- * Replaced a "Movement" panel that read steps and distance out of Health
- * Connect, which was the step counter with a second name. The useful question
- * in a gym is not whether the body moved — it is what today is for and how
- * much of it is left.
+ * A panel that only said "3 sets logged" was a scoreboard for a session you
+ * had to open another screen to see. What belongs on the home screen is the
+ * session itself — which exercises, how many sets of how many — the way a
+ * workout app shows it, with the tick being the only thing that changes as
+ * you work through it.
  */
 function GymPanel({ track, today }: PanelProps) {
   const palette = usePalette();
@@ -334,49 +326,62 @@ function GymPanel({ track, today }: PanelProps) {
   const { log, loaded } = useGymLog(track.meta.id);
 
   const dayKey = DAYS_SHORT[parseYMD(today).getDay()];
-  // The kind of day comes from the track's rhythm, the same place Today and
-  // the week overview read it from.
   const focus = focusOfDay(track.weekSchedule, dayKey);
-  const session = sessionFor(log, today);
   const planned = plannedFor(log, focus?.key);
-  const sets = setCountOf(session);
-  const volume = volumeOf(session);
-  const done = session.exercises.filter((exercise) => exercise.sets.length > 0).length;
+  const session = sessionFor(log, today);
 
   if (!loaded) return <Text style={styles.muted}>Loading…</Text>;
 
+  if (planned.length === 0) {
+    return (
+      <Text style={styles.muted}>
+        {focus
+          ? `Nothing planned for ${focus.label.toLowerCase()} days yet. Tap to build the plan.`
+          : "This track's week doesn't say what today is for. Tap to set it up."}
+      </Text>
+    );
+  }
+
   return (
     <>
-      <View style={styles.headlineRow}>
-        <Text style={[styles.big, { color: TINTS[FITNESS_PANEL] }]} numberOfLines={1}>
-          {focus?.label ?? "—"}
-        </Text>
-        <View style={styles.headlineText}>
-          <Text style={styles.strong}>
-            {sets === 0 ? "Nothing logged yet" : `${sets} set${sets === 1 ? "" : "s"}`}
-          </Text>
-          <Text style={styles.muted}>
-            {planned.length > 0
-              ? `${done} of ${planned.length} planned`
-              : volume > 0
-                ? `${Math.round(volume).toLocaleString()} kg lifted`
-                : "Tap to log a set"}
-          </Text>
-        </View>
-      </View>
+      <Text style={styles.muted}>
+        {focus?.label} · {setCountOf(session)} set{setCountOf(session) === 1 ? "" : "s"} logged
+        {volumeOf(session) > 0 ? ` · ${Math.round(volumeOf(session)).toLocaleString()} kg` : ""}
+      </Text>
 
-      {session.exercises.slice(0, 3).map((exercise) => (
-        <View key={exercise.id} style={styles.line}>
-          <Ionicons name="barbell-outline" size={13} color={palette.subtleForeground} />
-          <Text style={styles.lineText} numberOfLines={1}>
-            {exercise.name}
-          </Text>
-          <Text style={styles.muted}>{exercise.sets.length}</Text>
-        </View>
-      ))}
+      {planned.map((item) => {
+        const logged = session.exercises.find(
+          (exercise) => exercise.name.toLowerCase() === item.name.toLowerCase()
+        );
+        const doneSets = logged?.sets.length ?? 0;
+        const complete = doneSets >= item.sets;
+        return (
+          <View key={item.name} style={styles.exerciseRow}>
+            <Ionicons
+              name={complete ? "checkmark-circle" : "ellipse-outline"}
+              size={15}
+              color={complete ? palette.success : palette.subtleForeground}
+            />
+            <Text style={[styles.lineText, complete && styles.struck]} numberOfLines={1}>
+              {item.name}
+            </Text>
+            <View style={styles.exerciseNumbers}>
+              <Text style={styles.numberValue}>
+                {doneSets}/{item.sets}
+              </Text>
+              <Text style={styles.numberUnit}>sets</Text>
+            </View>
+            <View style={styles.exerciseNumbers}>
+              <Text style={styles.numberValue}>{item.reps}</Text>
+              <Text style={styles.numberUnit}>reps</Text>
+            </View>
+          </View>
+        );
+      })}
     </>
   );
 }
+
 
 /** For panels whose whole content is an action: a timer, a notepad. Drawing a
  *  fake preview of a text editor would be decoration pretending to be data. */
@@ -426,7 +431,11 @@ function makeStyles(palette: Palette) {
     weekDay: { alignItems: "center", gap: 4 },
     weekDot: { width: 16, height: 16, borderRadius: 8 },
     weekName: { color: palette.subtleForeground, fontSize: 10 },
-    plannedBlock: { gap: 3, marginTop: SPACING.sm },
+    plannedBlock: { marginTop: SPACING.sm },
+    exerciseRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm, paddingVertical: 3 },
+    exerciseNumbers: { alignItems: "center", minWidth: 34 },
+    numberValue: { color: palette.foreground, fontSize: 13, fontWeight: "700" },
+    numberUnit: { color: palette.subtleForeground, fontSize: 9 },
     dots: { flexDirection: "row", flexWrap: "wrap", gap: 3 },
     dot: { width: 12, height: 12, borderRadius: 3 },
     line: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },

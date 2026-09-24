@@ -3,6 +3,10 @@ import {
   addExercise,
   addSet,
   addToPlan,
+  DEFAULT_REPS,
+  DEFAULT_SETS,
+  planComplete,
+  updatePlanItem,
   emptyGymLog,
   focusOfDay,
   gymNoteId,
@@ -31,7 +35,7 @@ const log = (): GymLog => {
 describe("parseGymLog", () => {
   it("round-trips through a note's text", () => {
     const parsed = parseGymLog(serializeGymLog(log()));
-    expect(parsed.plans.push).toEqual(["Bench press"]);
+    expect(parsed.plans.push).toEqual([{ name: "Bench press", sets: DEFAULT_SETS, reps: DEFAULT_REPS }]);
     expect(parsed.sessions["2026-09-21"].exercises[0].name).toBe("Bench press");
     expect(parsed.sessions["2026-09-21"].exercises[0].sets).toHaveLength(2);
   });
@@ -48,7 +52,10 @@ describe("parseGymLog", () => {
   it("drops malformed pieces and keeps the rest", () => {
     const raw = JSON.stringify({
       version: 1,
-      plans: { push: ["Bench press", 42, "  "], pull: "not a list" },
+      plans: {
+        push: ["Bench press", 42, "  ", { name: "Squat", sets: 5, reps: 5 }],
+        pull: "not a list",
+      },
       sessions: {
         "2026-09-21": {
           exercises: [
@@ -59,7 +66,12 @@ describe("parseGymLog", () => {
       },
     });
     const parsed = parseGymLog(raw);
-    expect(parsed.plans.push).toEqual(["Bench press"]);
+    // A bare string is how plans were stored before sets and reps existed, so
+    // it is upgraded rather than dropped; rubbish still goes.
+    expect(parsed.plans.push).toEqual([
+      { name: "Bench press", sets: DEFAULT_SETS, reps: DEFAULT_REPS },
+      { name: "Squat", sets: 5, reps: 5 },
+    ]);
     expect(parsed.plans.pull).toBeUndefined();
     // The nameless exercise goes; the bad set goes; the good set stays.
     expect(parsed.sessions["2026-09-21"].exercises).toHaveLength(1);
@@ -86,15 +98,26 @@ describe("focusOfDay", () => {
 });
 
 describe("the plan", () => {
-  it("lists what a kind of day asks for", () => {
-    expect(plannedFor(log(), "push")).toEqual(["Bench press"]);
+  it("lists what a kind of day asks for, with its numbers", () => {
+    expect(plannedFor(log(), "push")).toEqual([
+      { name: "Bench press", sets: DEFAULT_SETS, reps: DEFAULT_REPS },
+    ]);
     expect(plannedFor(log(), "legs")).toEqual([]);
     expect(plannedFor(log(), undefined)).toEqual([]);
   });
 
+  it("changes one line's numbers without moving it", () => {
+    let l = addToPlan(log(), "push", "Overhead press");
+    l = updatePlanItem(l, "push", "Bench press", { sets: 5, reps: 5 });
+    expect(plannedFor(l, "push")).toEqual([
+      { name: "Bench press", sets: 5, reps: 5 },
+      { name: "Overhead press", sets: DEFAULT_SETS, reps: DEFAULT_REPS },
+    ]);
+  });
+
   it("refuses the same exercise twice, whatever the case", () => {
     const l = addToPlan(addToPlan(emptyGymLog(), "push", "Bench press"), "push", "bench PRESS");
-    expect(plannedFor(l, "push")).toEqual(["Bench press"]);
+    expect(plannedFor(l, "push")).toHaveLength(1);
   });
 
   it("removes by name", () => {
@@ -153,5 +176,36 @@ describe("gymNoteId", () => {
   it("makes an id the server's note pattern accepts", () => {
     const id = gymNoteId("track_987e17f1-c0cf-47ee-b068-bb1ddd11c586");
     expect(id).toMatch(/^[A-Za-z0-9_-]{1,200}$/);
+  });
+});
+
+describe("planComplete", () => {
+  // What the week's tick is made of: every planned exercise has at least the
+  // sets it asked for.
+  it("is false until every planned exercise has its sets", () => {
+    let l = addToPlan(emptyGymLog(), "push", "Bench press", 2, 10);
+    l = addExercise(l, "2026-09-21", "Bench press");
+    const id = l.sessions["2026-09-21"].exercises[0].id;
+
+    l = addSet(l, "2026-09-21", id, { reps: 10 });
+    expect(planComplete(l, "push", "2026-09-21")).toBe(false);
+
+    l = addSet(l, "2026-09-21", id, { reps: 10 });
+    expect(planComplete(l, "push", "2026-09-21")).toBe(true);
+  });
+
+  it("is false when there is no plan to complete", () => {
+    expect(planComplete(emptyGymLog(), "push", "2026-09-21")).toBe(false);
+    expect(planComplete(emptyGymLog(), undefined, "2026-09-21")).toBe(false);
+  });
+
+  it("does not care about extra sets or extra exercises", () => {
+    let l = addToPlan(emptyGymLog(), "push", "Bench press", 1, 10);
+    l = addExercise(l, "2026-09-21", "Bench press");
+    const id = l.sessions["2026-09-21"].exercises[0].id;
+    l = addSet(l, "2026-09-21", id, { reps: 10 });
+    l = addSet(l, "2026-09-21", id, { reps: 10 });
+    l = addExercise(l, "2026-09-21", "Something unplanned");
+    expect(planComplete(l, "push", "2026-09-21")).toBe(true);
   });
 });

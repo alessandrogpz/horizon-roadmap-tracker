@@ -6,6 +6,8 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-
 import { router } from "expo-router";
 import { visibleTracks } from "@shared/selectors";
 import { seedTrackFromTemplate, TEMPLATE_LIST } from "@shared/templates";
+import { hiddenPanelsFor, trackKind, type TrackKind } from "@shared/trackKinds";
+import { PANELS } from "../panels/layout";
 import { trackTotalDays, updateTrackIdentity } from "@shared/trackActions";
 import { todayYMD } from "@shared/dates";
 import { currentStreakLength } from "@shared/streak";
@@ -15,6 +17,7 @@ import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { SwipeRow } from "../components/SwipeRow";
 import { useUndo } from "../components/UndoBar";
+import { ConfirmSheet, type Confirmation } from "../components/ConfirmSheet";
 import { Refreshable } from "../components/Refreshable";
 
 /** The colours a track can be. A fixed set rather than a picker: the picker
@@ -31,6 +34,29 @@ export default function TracksScreen() {
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
   const [settingsFor, setSettingsFor] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState<Confirmation | null>(null);
+
+  /**
+   * Deleting a track.
+   *
+   * Implemented as `meta.archived`, and that is not a euphemism for the sake
+   * of it: the sync merge reconciles two devices by comparing records, so a
+   * track removed by *absence* on this phone would simply be handed back by
+   * the next sync from the account's copy. A flag is a change both sides can
+   * agree on. Nothing in the app shows an archived track, so "delete" is what
+   * it does from here; a true erase needs a tombstone the server understands.
+   */
+  const remove = useCallback(
+    (id: string) => {
+      const previous = workspace;
+      const remaining = tracks.filter((other) => other.meta.id !== id);
+      editTrackById(id, (current) => ({ ...current, meta: { ...current.meta, archived: true } }));
+      if (workspace?.activeTrackId === id && remaining[0]) switchTrack(remaining[0].meta.id);
+      setSettingsFor(null);
+      if (previous) offer("Track deleted", () => restoreWorkspace(previous));
+    },
+    [editTrackById, offer, restoreWorkspace, switchTrack, tracks, workspace]
+  );
 
   const create = useCallback(
     (templateId: string) => {
@@ -39,16 +65,26 @@ export default function TracksScreen() {
       // The template answers the questions the website asks in its wizard:
       // a phone is the wrong place for a five-step form, and the defaults are
       // what most people accept there anyway. Everything is editable after.
-      addTrack(
-        seedTrackFromTemplate(template, {
-          name: name.trim() || template.label,
-          color: template.defaultColor,
-          startDate: todayYMD(),
-          phases: template.buildPhases(template.defaultDurationDays),
-          weekSchedule: template.defaultWeekSchedule,
-          focusTypes: template.defaultFocusTypes,
-        })
-      );
+      const seeded = seedTrackFromTemplate(template, {
+        name: name.trim() || template.label,
+        color: template.defaultColor,
+        startDate: todayYMD(),
+        phases: template.buildPhases(template.defaultDurationDays),
+        weekSchedule: template.defaultWeekSchedule,
+        focusTypes: template.defaultFocusTypes,
+      });
+
+      // The kind only decides what the track *opens* with. Every panel stays
+      // available to every track from Arrange — a fitness track that later
+      // wants a roadmap is two taps away, and hiding things by kind would
+      // produce the unanswerable "where did it go?".
+      addTrack({
+        ...seeded,
+        hiddenPanels: hiddenPanelsFor(
+          template.id as TrackKind,
+          PANELS.map((panel) => panel.id)
+        ),
+      });
       setName("");
       setCreating(false);
       router.back();
@@ -61,28 +97,26 @@ export default function TracksScreen() {
       {tracks.map((track) => {
         const active = track.meta.id === workspace?.activeTrackId;
         const streak = currentStreakLength(track.streakHistory ?? [], today);
-        const canArchive = tracks.length > 1;
+        const canDelete = tracks.length > 1;
         return (
           <SwipeRow
             key={track.meta.id}
-            left={
-              canArchive
+            right={
+              canDelete
                 ? {
-                    label: "Archive",
-                    icon: "archive-outline",
-                    colour: "#f59e0b",
-                    onAct: () => {
-                      const previous = workspace;
-                      const remaining = tracks.filter((other) => other.meta.id !== track.meta.id);
-                      editTrackById(track.meta.id, (current) => ({
-                        ...current,
-                        meta: { ...current.meta, archived: true },
-                      }));
-                      if (workspace?.activeTrackId === track.meta.id && remaining[0]) {
-                        switchTrack(remaining[0].meta.id);
-                      }
-                      if (previous) offer("Track archived", () => restoreWorkspace(previous));
-                    },
+                    label: "Delete",
+                    icon: "trash-outline",
+                    colour: "#ef4444",
+                    // A swipe is a flick, not a considered tap, and a track
+                    // carries everything on it — so this one asks first even
+                    // though the undo bar catches it afterwards.
+                    onAct: () =>
+                      setConfirming({
+                        title: `Delete ${track.meta.name}?`,
+                        body: "Its phases, materials, notes and history go with it. You can undo this for a few seconds afterwards.",
+                        verb: "Delete",
+                        onConfirm: () => remove(track.meta.id),
+                      }),
                   }
                 : undefined
             }
@@ -90,7 +124,7 @@ export default function TracksScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityState={{ selected: active }}
-              accessibilityHint={canArchive ? "Swipe left to archive" : undefined}
+              accessibilityHint={canDelete ? "Swipe right to delete" : undefined}
               style={[styles.card, active && { borderColor: palette.accent }]}
               onPress={() => {
                 switchTrack(track.meta.id);
@@ -125,16 +159,14 @@ export default function TracksScreen() {
             editTrackById(settingsFor, (track) => updateTrackIdentity(track, fields));
             setSettingsFor(null);
           }}
-          onArchive={() => {
-            // Archiving, not deleting: the record stays, with a flag, so the
-            // change merges like any other edit instead of a deletion having to
-            // be represented as an absence (see visibleTracks).
-            const id = settingsFor;
-            const remaining = tracks.filter((t) => t.meta.id !== id);
-            editTrackById(id, (track) => ({ ...track, meta: { ...track.meta, archived: true } }));
-            if (workspace?.activeTrackId === id && remaining[0]) switchTrack(remaining[0].meta.id);
-            setSettingsFor(null);
-          }}
+          onArchive={() =>
+            setConfirming({
+              title: `Delete ${workspace?.tracks[settingsFor]?.meta.name ?? "this track"}?`,
+              body: "Its phases, materials, notes and history go with it. You can undo this for a few seconds afterwards.",
+              verb: "Delete",
+              onConfirm: () => remove(settingsFor),
+            })
+          }
           onCancel={() => setSettingsFor(null)}
           styles={styles}
           palette={palette}
@@ -144,15 +176,21 @@ export default function TracksScreen() {
       {creating ? (
         <View style={styles.panel}>
           <Text style={styles.panelTitle}>New track</Text>
+          <Text style={styles.fieldLabel}>Name</Text>
           <TextInput
             value={name}
             onChangeText={setName}
-            placeholder="What are you working towards?"
+            placeholder="What is this track called?"
             placeholderTextColor={palette.subtleForeground}
             style={styles.input}
+            autoFocus
             accessibilityLabel="Track name"
           />
-          <Text style={styles.muted}>Start from:</Text>
+          <Text style={styles.fieldLabel}>What it is about</Text>
+          <Text style={styles.muted}>
+            This only decides which panels the track opens with. Every panel stays available to every
+            track from Arrange, so nothing is locked away by choosing here.
+          </Text>
           {TEMPLATE_LIST.map((template) => (
             <Pressable key={template.id} accessibilityRole="button" style={styles.templateRow} onPress={() => create(template.id)}>
               <View style={[styles.dot, { backgroundColor: template.defaultColor }]} />
@@ -171,6 +209,7 @@ export default function TracksScreen() {
           <Text style={styles.panelLabel}>New track…</Text>
         </Pressable>
       )}
+      <ConfirmSheet confirmation={confirming} onClose={() => setConfirming(null)} />
     </Refreshable>
   );
 }
@@ -291,14 +330,10 @@ function TrackSettings({
           accessibilityRole="button"
           style={styles.panelButton}
           disabled={!canArchive}
-          onPress={() => (confirmingArchive ? onArchive() : setConfirmingArchive(true))}
+          onPress={onArchive}
         >
           <Text style={[styles.panelLabel, !canArchive && { color: palette.subtleForeground }]}>
-            {!canArchive
-              ? "Can't archive your only track"
-              : confirmingArchive
-                ? "Tap again to archive it"
-                : "Archive this track"}
+            {!canArchive ? "Can't delete your only track" : "Delete this track"}
           </Text>
         </Pressable>
       </View>

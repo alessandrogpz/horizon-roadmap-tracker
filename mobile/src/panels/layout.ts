@@ -81,13 +81,22 @@ export function visiblePanels(track: Pick<TrackState, "meta" | "hiddenPanels">):
   const seen = new Set(stored);
 
   const rest = ALL_IDS.filter((id) => !seen.has(id));
-  // The two phone-only panels are opt-in rather than shown-unless-hidden: a
-  // step count is right on a fitness track and noise on a graphics engine, and
-  // defaulting either on would put it on every track anyone ever makes.
+  // A track created with a kind says what it wants by listing everything it
+  // does *not* want, so `hiddenPanels` is the whole answer and is trusted as
+  // it stands.
+  //
+  // A track made before kinds existed has no such list, and for those the two
+  // phone-only panels stay opt-in: a step count is right on a fitness track
+  // and noise on a graphics engine, and defaulting them on would put them on
+  // every track anyone had ever made.
+  const declared = (track.hiddenPanels?.length ?? 0) > 0;
   const optIn = new Set<string>([STEPS_PANEL, FITNESS_PANEL]);
-  return [...stored, ...rest].filter((id) =>
-    optIn.has(id) ? !hidden.has(id) && seen.has(id) : !hidden.has(id)
-  );
+
+  return [...stored, ...rest].filter((id) => {
+    if (hidden.has(id)) return false;
+    if (declared || !optIn.has(id)) return true;
+    return seen.has(id);
+  });
 }
 
 /** Panels that exist but are not being shown, for the "add a panel" list. */
