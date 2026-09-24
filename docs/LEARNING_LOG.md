@@ -40,6 +40,7 @@ The other documents, and what each one is for:
 14. [Noticing: health checks, security counters and an encrypted backup (0.22.0)](#14-noticing-health-checks-security-counters-and-an-encrypted-backup-0220)
 15. [A second platform, from the same core (0.25.0–0.27.0)](#15-a-second-platform-from-the-same-core-0250-0270)
 16. [What a phone can do that a browser can't (0.26.0–0.29.0)](#16-what-a-phone-can-do-that-a-browser-cant-0260-0290)
+17. [Files, and the standard library that isn't there (0.38.1–0.39.0)](#17-files-and-the-standard-library-that-isnt-there-0381-0390)
 
 ---
 
@@ -1097,3 +1098,86 @@ app.
 
 **Files.** `mobile/src/steps/usePedometer.ts`, `mobile/src/share/shareTrack.ts`,
 `mobile/src/app/track/[id].tsx`, `mobile/src/auth/session.ts`, `lib/server/http.ts`, `mobile/app.json`.
+
+
+---
+
+## 17. Files, and the standard library that isn't there (0.38.1–0.39.0)
+
+**What changed.** Two things that both turned out to be about the same gap. The roadmap now *renders*
+on the phone instead of showing its markdown source. And Settings can write a backup of everything
+the device holds into a file, and read one back.
+
+**Why.** The roadmap was shipped as raw text on the judgement that "a page of prose reads fine with
+its headings intact". That judgement did not survive the first real roadmap on a real screen: a
+roadmap is `##`, `- ` and `**` on nearly every line, which is not prose. The backup was the last
+thing the website could do that the phone could not — and it matters more here than there. A
+laptop's copy can be reached from the machine itself; a phone's cannot, so a reset, a loss or an
+uninstall takes whatever was never synced with it.
+
+**Concepts.**
+
+- **React Native is not Node, and the difference shows up as a bundling failure.** Adding a markdown
+  renderer failed the entire export with `Unable to resolve module punycode`. Not a bug in the
+  library: `markdown-it` does `require("punycode")`, which on a server is the Node standard library,
+  and on a phone is nothing at all. React Native ships a JavaScript engine, not Node — no `fs`, no
+  `path`, no `crypto`, no `punycode`. The fix is to install the real implementation from npm and tell
+  the bundler where to find it (`resolver.extraNodeModules` in `metro.config.js`). Worth knowing
+  before choosing a dependency: a library written for the server can import something that does not
+  exist here, and nothing warns you until the bundle breaks.
+
+- **Android gives an app no access to the user's files.** Not "ask for permission and then you have
+  it" — there is no permission to ask for. An app reaches the user's storage only through the
+  *Storage Access Framework*: the system shows a picker, the user chooses one file or one folder, and
+  the app is handed access to exactly that. So the export asks for a folder and the import opens a
+  picker, and the whole feature involves no permission prompt at all. Contrast with the pedometer in
+  entry 16, which does need one: the difference is that the user's own choice *is* the grant here.
+
+- **A native dependency costs a release; a JavaScript one costs nothing.** Both changes could have
+  taken the obvious route — `react-native-markdown-display` needs no native code, but a share-sheet
+  module and a document picker both do, and a native dependency means a new build installed on every
+  phone rather than an update that arrives on next launch. `expo-file-system` is already in every
+  Expo app and carries both pickers, so the backup shipped over the air. Checking whether a
+  dependency contains native code *before* designing around it is now a habit, not an afterthought.
+
+- **Shared code has to be pulled apart along the right seam.** `lib/export.ts` and `lib/import.ts`
+  were not reusable: one builds a `Blob` and clicks an invisible `<a>`, the other takes a browser
+  `File` and writes to Dexie. But the *format* is the same file on both platforms, and a backup that
+  only restores where it was written is not a backup. Splitting out `lib/backupFormat.ts` — the
+  shape, the validation, the summary, importing nothing but types — left one parser instead of two
+  that drift. This is the third time the same move has paid off (`lib/bookkeeping.ts`,
+  `lib/apiTypes.ts` before it), and the test for it is mechanical: can React Native bundle this file?
+
+- **Restoring replaces; it does not merge.** The same decision the website makes, for the same
+  reason: a restore means "put it back the way it was", and a merge would need per-item timestamps
+  the file may predate. Because it replaces everything, the file is parsed and described before
+  anything happens — how many tracks, which ones, how many notes and recorded days, when it was
+  taken. A backup from the wrong week looks exactly like the right one until it has already
+  overwritten today.
+
+- **A restore has to reach the screen, not just the disk.** Writing the restored workspace to SQLite
+  and leaving the provider holding the old one would have been a silent data loss: what is on screen
+  is what the next edit is written from, so the next tap would have saved the old workspace straight
+  back over the new one. The same class of mistake as the bookkeeping bug in 0.30.1 — state in two
+  places, updated in one.
+
+**See it yourself.** Settings → *Save a backup…* → pick Downloads. Then open the file on the laptop:
+it is the same JSON the website's export produces, down to the filename. Settings → *Restore from a
+file…* → pick a backup the website wrote, and read what it says the file contains before confirming.
+
+**Exam questions.**
+- *How does a mobile app access files?* Through the Storage Access Framework on Android: the system
+  picker hands the app one file or folder the user chose. An app has no general access to storage and
+  no permission exists to grant it.
+- *What is different about dependencies in React Native?* There is no Node standard library, so a
+  package that imports `fs`, `crypto` or `punycode` will not bundle; and a package containing native
+  code cannot be delivered over the air, only in a new build.
+- *How do you decide what to share between platforms?* By what imports nothing platform-specific.
+  Format, rules and validation are shared; anything touching the DOM, Dexie, SQLite or the file
+  system is not.
+- *Why replace rather than merge on restore?* Merging needs per-item timestamps the backup may not
+  have. Replacing is predictable, which is why the user is shown what the file holds first.
+
+**Files.** `lib/backupFormat.ts`, `lib/export.ts`, `lib/import.ts`,
+`mobile/src/backup/backupFile.ts`, `mobile/src/app/settings.tsx`, `mobile/src/app/roadmap.tsx`,
+`mobile/metro.config.js`, `mobile/src/storage/db.ts`.

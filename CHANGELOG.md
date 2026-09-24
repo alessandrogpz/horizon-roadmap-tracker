@@ -7,6 +7,15 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.39.1] - 2026-09-24
+
+### Changed
+- **Learning log entry 17** and the mobile exam notes: what the last two releases actually taught —
+  that React Native has no Node standard library (which is why a markdown renderer broke the
+  bundle), that Android grants file access one user-chosen item at a time rather than by permission,
+  and that whether a dependency contains native code decides whether a feature ships over the air or
+  waits for a new build.
+
 ## [0.39.0] - 2026-09-24
 
 ### Added
