@@ -11,7 +11,7 @@
 // agree today.
 
 import { useMemo } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Link } from "expo-router";
 import { phaseStats, progressStats, timelineStats } from "@shared/stats";
 import { addPhase, removePhase, setCurrentPhase } from "@shared/trackActions";
@@ -34,6 +34,10 @@ export default function PhasesScreen() {
   const timeline = useMemo(() => (track ? timelineStats(track) : null), [track]);
   const current = useMemo(() => (track ? phaseStats(track, today) : null), [track, today]);
   const progress = useMemo(() => (track ? progressStats(track) : null), [track]);
+  const currentIndex = useMemo(
+    () => timeline?.windows.findIndex((w) => w.state === "current") ?? -1,
+    [timeline]
+  );
 
   if (!track || !timeline) {
     return (
@@ -102,62 +106,130 @@ export default function PhasesScreen() {
         </Text>
       ) : null}
 
-      {timeline.windows.map(({ phase, state, startDate, endDate }) => (
-        <View
-          key={phase.id}
-          style={[styles.phase, state === "current" && { borderColor: palette.accent }]}
-        >
-          <View style={styles.phaseHead}>
-            <Text style={[styles.phaseLabel, state === "current" && { color: palette.accent }]}>
-              Phase {phase.id}
-              {state === "done" ? " · done" : state === "current" ? " · now" : ""}
-            </Text>
-            <Text style={styles.dates}>
-              {formatDayMonthYear(startDate)}
-              {endDate ? ` – ${formatDayMonthYear(endDate)}` : ""}
-            </Text>
-          </View>
-          <Link href={{ pathname: "/phase/[id]", params: { id: phase.id } }} asChild>
-            <Pressable accessibilityRole="button" accessibilityLabel={`Open ${phase.title}`}>
-              <Text style={styles.phaseTitle}>{phase.title}</Text>
-              {phase.description ? (
-                <Text style={styles.muted} numberOfLines={2}>
-                  {phase.description}
-                </Text>
-              ) : null}
-              {phase.tasks.length > 0 && (
-                <Text style={styles.taskCount}>
-                  {phase.tasks.filter((t) => t.completed).length} of {phase.tasks.length} tasks done
-                </Text>
-              )}
-            </Pressable>
-          </Link>
+      {/* One continuous line down the left, with a dot per phase — the shape
+          of the plan read in a glance, which eight bordered cards did not
+          give. The line is what carries the state: green behind you, accent
+          at the phase you are in, then fading out ahead, so how far along the
+          track is does not have to be spelled out in words.
 
-          {editing && (
-          <View style={styles.actions}>
-            {state !== "current" && (
-              <Pressable accessibilityRole="button" style={styles.smallButton} onPress={() => editTrack((t) => setCurrentPhase(t, phase.id))}>
-                <Text style={styles.smallLabel}>Make current</Text>
-              </Pressable>
-            )}
-            <Pressable
-              accessibilityRole="button"
-              style={styles.smallButton}
-              onPress={() => {
-                // Snapshot first: the undo puts a whole workspace back rather
-                // than trying to reverse the edit, which would have to know
-                // where in the list the phase sat.
-                const previous = workspace;
-                editTrack((t) => removePhase(t, phase.id));
-                if (previous) offer("Phase removed", () => restoreWorkspace(previous));
-              }}
-            >
-              <Text style={styles.smallLabel}>Remove</Text>
-            </Pressable>
-          </View>
-          )}
-        </View>
-      ))}
+          Wrapped in its own View because the screen's content container has a
+          gap between children, and a gap would cut the line into pieces. */}
+      <View style={styles.timeline}>
+        {timeline.windows.map(({ phase, state, startDate, endDate, endDay }, index) => {
+          const last = index === timeline.windows.length - 1;
+          const previous = timeline.windows[index - 1];
+
+          // A segment's colour is the state of the phase it leads *out* of,
+          // so the change of colour happens at the dot rather than between.
+          const colourOf = (windowState: string | undefined) =>
+            windowState === "done" ? palette.success : windowState === "current" ? palette.accent : palette.cardBorder;
+
+          // Ahead of the current phase, everything dims with distance. Nothing
+          // beyond the current phase has been decided yet, and the display
+          // should say so rather than presenting phase 8 as vividly as phase 2.
+          const ahead = currentIndex >= 0 && index > currentIndex ? index - currentIndex : 0;
+          const fade = Math.max(0.42, 1 - ahead * 0.17);
+          const dim = state === "done" ? 0.65 : state === "current" ? 1 : fade;
+
+          return (
+            <View key={phase.id} style={styles.row}>
+              {index > 0 && (
+                <View
+                  style={[styles.lineTop, { backgroundColor: colourOf(previous?.state), opacity: 0.5 * dim + 0.1 }]}
+                />
+              )}
+              {!last && (
+                <View style={[styles.lineBottom, { backgroundColor: colourOf(state), opacity: 0.5 * dim + 0.1 }]} />
+              )}
+
+              {/* The glow around the current phase, as a circle behind the dot
+                  rather than a shadow — coloured shadows do not survive the
+                  trip to Android. */}
+              {state === "current" && <View style={styles.halo} />}
+              <View
+                style={[
+                  styles.dot,
+                  state === "done" && { backgroundColor: palette.success, borderColor: palette.success },
+                  state === "current" && {
+                    backgroundColor: palette.background,
+                    borderColor: palette.accent,
+                    borderWidth: 3,
+                  },
+                  state === "upcoming" && { opacity: fade },
+                ]}
+              />
+
+              <Link href={{ pathname: "/phase/[id]", params: { id: phase.id } }} asChild>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Open ${phase.title}`}
+                  // Flattened: expo-router's Link passes styles straight
+                  // through to its child and will not take an array.
+                  style={StyleSheet.flatten([styles.rowBody, { opacity: dim }])}
+                >
+                  <View style={styles.rowHead}>
+                    <Text
+                      style={[
+                        styles.phaseLabel,
+                        state === "current" && { color: palette.accent },
+                        state === "done" && { color: palette.success },
+                      ]}
+                    >
+                      PHASE {String(phase.id).padStart(2, "0")}
+                    </Text>
+                    <Text style={styles.phaseTitle} numberOfLines={1}>
+                      {/* The label already says which number this is. */}
+                      {phase.title.replace(/^Phase \d+:\s*/, "")}
+                    </Text>
+                  </View>
+
+                  {phase.description ? (
+                    <Text style={styles.muted} numberOfLines={2}>
+                      {phase.description}
+                    </Text>
+                  ) : null}
+
+                  <Text style={styles.dates}>
+                    {endDate ? `Ends ${formatDayMonthYear(endDate)}` : `Starts ${formatDayMonthYear(startDate)}`}
+                    {endDay !== undefined ? ` · day ${endDay}` : ""}
+                    {phase.tasks.length > 0
+                      ? ` · ${phase.tasks.filter((t) => t.completed).length}/${phase.tasks.length} done`
+                      : ""}
+                  </Text>
+                </Pressable>
+              </Link>
+
+              {editing && (
+                <View style={styles.actions}>
+                  {state !== "current" && (
+                    <Pressable
+                      accessibilityRole="button"
+                      style={styles.smallButton}
+                      onPress={() => editTrack((t) => setCurrentPhase(t, phase.id))}
+                    >
+                      <Text style={styles.smallLabel}>Make current</Text>
+                    </Pressable>
+                  )}
+                  <Pressable
+                    accessibilityRole="button"
+                    style={styles.smallButton}
+                    onPress={() => {
+                      // Snapshot first: the undo puts a whole workspace back
+                      // rather than trying to reverse the edit, which would
+                      // have to know where in the list the phase sat.
+                      const previousWorkspace = workspace;
+                      editTrack((t) => removePhase(t, phase.id));
+                      if (previousWorkspace) offer("Phase removed", () => restoreWorkspace(previousWorkspace));
+                    }}
+                  >
+                    <Text style={styles.smallLabel}>Remove</Text>
+                  </Pressable>
+                </View>
+              )}
+            </View>
+          );
+        })}
+      </View>
 
       {editing && (
         <Pressable
@@ -211,23 +283,43 @@ function makeStyles(palette: Palette) {
     barTrack: { flex: 1, height: 8, borderRadius: 4, backgroundColor: palette.surfaceMuted, overflow: "hidden" },
     barFill: { height: 8, borderRadius: 4, backgroundColor: palette.accent },
     barValue: { color: palette.mutedForeground, fontSize: 12, width: 44, textAlign: "right" },
-    taskCount: { color: palette.subtleForeground, fontSize: 11, marginTop: 2 },
     progressTrack: { height: 6, borderRadius: 3, backgroundColor: palette.surfaceMuted, overflow: "hidden" },
     progressFill: { height: 6, borderRadius: 3, backgroundColor: palette.accent },
     behind: { color: palette.foreground, fontSize: 13, lineHeight: 18 },
-    phase: {
-      gap: SPACING.xs,
-      padding: SPACING.lg,
-      borderRadius: RADIUS.card,
-      borderWidth: 1,
+    // Rows sit flush against each other so the line running through them is
+    // continuous; each row supplies its own breathing room instead.
+    timeline: { marginVertical: SPACING.xs },
+    row: { position: "relative", paddingLeft: 36, paddingRight: SPACING.xs, paddingVertical: SPACING.sm },
+    // Both halves meet at the dot's centre, 18 from the row's top.
+    lineTop: { position: "absolute", left: 12, top: 0, height: 18, width: 2 },
+    lineBottom: { position: "absolute", left: 12, top: 18, bottom: 0, width: 2 },
+    dot: {
+      position: "absolute",
+      left: 5,
+      top: 10,
+      width: 16,
+      height: 16,
+      borderRadius: 8,
+      borderWidth: 2,
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
     },
-    phaseHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: SPACING.sm },
-    phaseLabel: { color: palette.subtleForeground, fontSize: 11, fontWeight: "700", letterSpacing: 1 },
-    dates: { color: palette.subtleForeground, fontSize: 11 },
-    phaseTitle: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
-    actions: { flexDirection: "row", gap: SPACING.sm, marginTop: SPACING.xs },
+    halo: {
+      position: "absolute",
+      left: 0,
+      top: 5,
+      width: 26,
+      height: 26,
+      borderRadius: 13,
+      backgroundColor: palette.accent,
+      opacity: 0.16,
+    },
+    rowBody: { gap: 3 },
+    rowHead: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
+    phaseLabel: { color: palette.mutedForeground, fontSize: 10, fontWeight: "700", letterSpacing: 1.1 },
+    dates: { color: palette.subtleForeground, fontSize: 11, marginTop: 1 },
+    phaseTitle: { flex: 1, color: palette.foreground, fontSize: 15, fontWeight: "600" },
+    actions: { flexDirection: "row", gap: SPACING.sm, marginTop: SPACING.sm },
     editRow: { flexDirection: "row", gap: SPACING.sm, alignItems: "center" },
     input: {
       flex: 1,
