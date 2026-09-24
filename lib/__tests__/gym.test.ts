@@ -3,7 +3,6 @@ import {
   addExercise,
   addSet,
   addToPlan,
-  applyStarterPlan,
   emptyGymLog,
   focusOfDay,
   gymNoteId,
@@ -100,12 +99,6 @@ describe("the plan", () => {
 
   it("removes by name", () => {
     expect(plannedFor(removeFromPlan(log(), "push", "Bench press"), "push")).toEqual([]);
-  });
-
-  it("seeds a starter plan without overwriting what is already there", () => {
-    const seeded = applyStarterPlan(log());
-    expect(plannedFor(seeded, "push")).toEqual(["Bench press"]);
-    expect(plannedFor(seeded, "legs").length).toBeGreaterThan(0);
   });
 });
 

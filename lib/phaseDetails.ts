@@ -21,14 +21,22 @@ export function phaseDetailItems(value: PhaseDetailItem[] | string | undefined):
   return Array.isArray(value) ? value : [{ item: value, desc: "" }];
 }
 
-/** The sections, in the order they are shown. Ordered deliberately: what the
- *  phase is about, then what it needs from maths and from algorithms, then
- *  what it has to produce. */
+/**
+ * The sections, in the order they are shown: what the phase is about, then what
+ * it needs from maths and from algorithms, then what it has to produce.
+ *
+ * The keys are fixed by the stored schema and date from when Horizon was one
+ * computer-science curriculum. They are not a good fit for a track about
+ * training or a language, which is why nothing here should be rendered unless
+ * it actually has content — a fitness phase headed "Maths" with nothing under
+ * it is just confusing. Callers filter on emptiness; the labels were shortened
+ * so the ones that *are* used read less like a syllabus.
+ */
 export const PHASE_DETAIL_SECTIONS: { key: keyof PhaseDetailedInfo; label: string }[] = [
-  { key: "focus", label: "Core focus" },
-  { key: "math", label: "Math integration" },
-  { key: "algoDS", label: "Algorithms & data structures" },
-  { key: "deliverable", label: "Deliverable goal" },
+  { key: "focus", label: "Focus" },
+  { key: "math", label: "Maths" },
+  { key: "algoDS", label: "Algorithms" },
+  { key: "deliverable", label: "Deliverable" },
 ];
 
 /** Replaces one section, always in list form — so editing a phase that still

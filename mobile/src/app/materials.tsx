@@ -16,14 +16,17 @@ import { loadNotes, saveNote } from "../storage/db";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { SwipeRow } from "../components/SwipeRow";
+import { useUndo } from "../components/UndoBar";
 import { EditHeader, useEditMode } from "../components/EditToggle";
 import { Refreshable } from "../components/Refreshable";
 import { SubNav } from "../components/SubNav";
 
 export default function MaterialsScreen() {
-  const { track, today, editTrack } = useWorkspace();
+  const { workspace, track, today, editTrack, restoreWorkspace } = useWorkspace();
   const palette = usePalette();
   const { editing, setEditing } = useEditMode();
+  const { offer } = useUndo();
   const styles = useMemo(() => makeStyles(palette), [palette]);
   const [open, setOpen] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
@@ -93,8 +96,26 @@ export default function MaterialsScreen() {
       />
 
       {materials.map((material) => (
-        <MaterialCard
+        <SwipeRow
           key={material.id}
+          left={{
+            label: "Archive",
+            icon: "archive-outline",
+            colour: "#f59e0b",
+            onAct: () => setArchived(material.id, true),
+          }}
+          right={{
+            label: "Remove",
+            icon: "trash-outline",
+            colour: "#ef4444",
+            onAct: () => {
+              const previous = workspace;
+              remove(material.id);
+              if (previous) offer("Material removed", () => restoreWorkspace(previous));
+            },
+          }}
+        >
+        <MaterialCard
           material={material}
           expanded={open === material.id}
           editing={editing}
@@ -107,6 +128,7 @@ export default function MaterialsScreen() {
           styles={styles}
           palette={palette}
         />
+        </SwipeRow>
       ))}
 
       {materials.length === 0 && <Text style={styles.muted}>No materials on this track yet.</Text>}

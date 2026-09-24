@@ -13,6 +13,8 @@ import type { TrackState } from "@shared/types";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { SwipeRow } from "../components/SwipeRow";
+import { useUndo } from "../components/UndoBar";
 import { Refreshable } from "../components/Refreshable";
 
 /** The colours a track can be. A fixed set rather than a picker: the picker
@@ -20,7 +22,8 @@ import { Refreshable } from "../components/Refreshable";
 const TRACK_COLOURS = ["#0ea5e9", "#22c55e", "#f59e0b", "#ef4444", "#a855f7", "#64748b"];
 
 export default function TracksScreen() {
-  const { workspace, today, switchTrack, addTrack, editTrackById } = useWorkspace();
+  const { workspace, today, switchTrack, addTrack, editTrackById, restoreWorkspace } = useWorkspace();
+  const { offer } = useUndo();
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
 
@@ -58,30 +61,56 @@ export default function TracksScreen() {
       {tracks.map((track) => {
         const active = track.meta.id === workspace?.activeTrackId;
         const streak = currentStreakLength(track.streakHistory ?? [], today);
+        const canArchive = tracks.length > 1;
         return (
-          <Pressable
+          <SwipeRow
             key={track.meta.id}
-            accessibilityRole="button"
-            accessibilityState={{ selected: active }}
-            style={[styles.card, active && { borderColor: palette.accent }]}
-            onPress={() => {
-              switchTrack(track.meta.id);
-              router.back();
-            }}
-            onLongPress={() => {
-              setSettingsFor(track.meta.id);
-            }}
-            delayLongPress={350}
+            left={
+              canArchive
+                ? {
+                    label: "Archive",
+                    icon: "archive-outline",
+                    colour: "#f59e0b",
+                    onAct: () => {
+                      const previous = workspace;
+                      const remaining = tracks.filter((other) => other.meta.id !== track.meta.id);
+                      editTrackById(track.meta.id, (current) => ({
+                        ...current,
+                        meta: { ...current.meta, archived: true },
+                      }));
+                      if (workspace?.activeTrackId === track.meta.id && remaining[0]) {
+                        switchTrack(remaining[0].meta.id);
+                      }
+                      if (previous) offer("Track archived", () => restoreWorkspace(previous));
+                    },
+                  }
+                : undefined
+            }
           >
-            <View style={[styles.dot, { backgroundColor: track.meta.color || palette.accent }]} />
-            <View style={styles.text}>
-              <Text style={styles.name}>{track.meta.name}</Text>
-              <Text style={styles.muted}>
-                {streak > 0 ? `${streak} day${streak === 1 ? "" : "s"} in a row` : "no streak yet"}
-                {active ? " · open" : ""} · hold for settings
-              </Text>
-            </View>
-          </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ selected: active }}
+              accessibilityHint={canArchive ? "Swipe left to archive" : undefined}
+              style={[styles.card, active && { borderColor: palette.accent }]}
+              onPress={() => {
+                switchTrack(track.meta.id);
+                router.back();
+              }}
+              onLongPress={() => {
+                setSettingsFor(track.meta.id);
+              }}
+              delayLongPress={350}
+            >
+              <View style={[styles.dot, { backgroundColor: track.meta.color || palette.accent }]} />
+              <View style={styles.text}>
+                <Text style={styles.name}>{track.meta.name}</Text>
+                <Text style={styles.muted}>
+                  {streak > 0 ? `${streak} day${streak === 1 ? "" : "s"} in a row` : "no streak yet"}
+                  {active ? " · open" : ""}
+                </Text>
+              </View>
+            </Pressable>
+          </SwipeRow>
         );
       })}
 
