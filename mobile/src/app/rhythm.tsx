@@ -32,6 +32,8 @@ import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { useUndo } from "../components/UndoBar";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { plannedFor } from "@shared/gym";
+import { useGymLog } from "../gym/useGymLog";
 import { EditHeader, useEditMode } from "../components/EditToggle";
 import { Refreshable } from "../components/Refreshable";
 
@@ -51,6 +53,7 @@ export default function RhythmScreen() {
   const [newType, setNewType] = useState("");
   const { editing, setEditing } = useEditMode();
   const { offer } = useUndo();
+  const { log: gymLog } = useGymLog(track?.meta.id);
 
   /** Every focus-type edit is the same shape: take the pool, change it with a
    *  shared rule, write both halves back. The rules keep the week consistent —
@@ -136,6 +139,12 @@ export default function RhythmScreen() {
               <Text style={styles.dayLabel} numberOfLines={1}>
                 {day?.label ?? "—"}
               </Text>
+              {/* If this kind of day has a gym plan, say how much of one — the
+                  rhythm names the day and the plan fills it, and seeing both
+                  here is the point of them being one idea. */}
+              {day && plannedFor(gymLog, day.type).length > 0 && (
+                <Text style={styles.dayCount}>{plannedFor(gymLog, day.type).length} ex</Text>
+              )}
             </Pressable>
           );
         })}
@@ -421,6 +430,7 @@ function makeStyles(palette: Palette) {
     dayName: { color: palette.foreground, fontSize: 11, fontWeight: "700" },
     dayDot: { width: 8, height: 8, borderRadius: 4 },
     dayLabel: { color: palette.subtleForeground, fontSize: 9 },
+    dayCount: { color: palette.accent, fontSize: 9, fontWeight: "700" },
     card: {
       gap: SPACING.sm,
       padding: SPACING.lg,
