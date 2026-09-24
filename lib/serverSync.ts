@@ -1,4 +1,4 @@
-// Sync through the Horizon account: the counterpart of syncWithGoogleDrive,
+// Sync through the Horizon account, which since 0.32.0 is the only cloud copy:
 // returning the same SyncResult so WorkspaceProvider treats them alike.
 //
 // The device sends its whole workspace and every note; the server merges them

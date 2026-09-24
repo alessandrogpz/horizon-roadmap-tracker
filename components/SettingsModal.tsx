@@ -5,11 +5,7 @@ import {
   AlertTriangle,
   Clock,
   Download,
-  HardDrive,
   Info,
-  Monitor,
-  Moon,
-  Sun,
   Upload,
   X,
 } from "lucide-react";
@@ -26,7 +22,6 @@ import {
 import type { BackupBundle } from "@/lib/export";
 import { updateSettings } from "@/lib/settings";
 import { useAppSettings } from "@/lib/useAppSettings";
-import { getThemePreference, setThemePreference, type ThemePreference } from "@/lib/theme";
 import { googleClientId, signOut } from "@/lib/account";
 import AccountRow from "./AccountRow";
 
@@ -98,12 +93,10 @@ const quietButton =
 
 export default function SettingsModal({
   onClose,
-  onOpenCloudMenu,
   onRestored,
 }: {
   onClose: () => void;
   /** Opens the existing Drive connect/backup dialog — connection lives there. */
-  onOpenCloudMenu: () => void;
   /** Called after a restore or a wipe, so the app can reload the workspace. */
   onRestored: () => void;
 }) {
@@ -112,7 +105,6 @@ export default function SettingsModal({
   // can't change while this dialog is open, and the dialog only ever mounts
   // client-side (it's rendered behind a click), so there's no SSR snapshot to
   // mismatch.
-  const [theme, setTheme] = useState<ThemePreference>(getThemePreference);
   const [storage, setStorage] = useState<string>("");
   const [busy, setBusy] = useState<"export-json" | "export-zip" | "restore" | null>(null);
   const [error, setError] = useState("");
@@ -218,38 +210,24 @@ export default function SettingsModal({
           rhythm and rotations live in its settings.
         </p>
 
-        {/* ── Appearance ─────────────────────────────────────────────── */}
-        <Row
-          icon={<Sun size={16} strokeWidth={2} />}
-          title="Theme"
-          hint="System follows your OS setting and keeps following it."
-        >
-          <Segmented<ThemePreference>
-            value={theme}
-            onChange={(next) => {
-              setTheme(next);
-              setThemePreference(next);
-            }}
-            options={[
-              { value: "light", label: "Light", icon: <Sun size={13} /> },
-              { value: "dark", label: "Dark", icon: <Moon size={13} /> },
-              { value: "system", label: "System", icon: <Monitor size={13} /> },
-            ]}
-          />
-        </Row>
+        {/* Appearance is not here any more. The theme is the icon in the top
+            bar: it starts on whatever the OS is set to, and the button flips
+            it. Three chips in a modal was a lot of screen for a decision made
+            in a second, and a "System" option that only mattered on first run
+            was the least useful third of it. */}
 
         {/* ── Behaviour ──────────────────────────────────────────────── */}
         <Row
           icon={<Clock size={16} strokeWidth={2} />}
           title="My day starts at"
-          hint="Work logged before this hour counts for the previous day, so a late session doesn't land on tomorrow and break a streak."
+          hint="Midnight unless you say otherwise. Work logged before this hour counts for the previous day, so a late session doesn't land on tomorrow and break a streak."
         >
           <select
             value={settings.dayRolloverHour}
             onChange={(e) => updateSettings({ dayRolloverHour: Number(e.target.value) })}
             className={selectClass}
           >
-            {Array.from({ length: 12 }, (_, h) => (
+            {Array.from({ length: 24 }, (_, h) => (
               <option key={h} value={h}>
                 {h === 0 ? "Midnight" : `${String(h).padStart(2, "0")}:00`}
               </option>
@@ -273,22 +251,6 @@ export default function SettingsModal({
 
         {/* ── Data ───────────────────────────────────────────────────── */}
         {googleClientId() && <AccountRow />}
-
-        <Row
-          icon={<HardDrive size={16} strokeWidth={2} />}
-          title="Cloud sync"
-          hint="Connect, disconnect, or check which Google account this device syncs through."
-        >
-          <button
-            onClick={() => {
-              onClose();
-              onOpenCloudMenu();
-            }}
-            className={quietButton}
-          >
-            Manage connection
-          </button>
-        </Row>
 
         <Row
           icon={<Download size={16} strokeWidth={2} />}

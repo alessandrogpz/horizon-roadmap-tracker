@@ -190,3 +190,22 @@ export async function signOut(): Promise<void> {
   }
   await forget().catch(() => undefined);
 }
+
+/**
+ * Deletes the account and everything it holds on the server, in one
+ * transaction: the same endpoint the website's Settings → Account uses. The
+ * copy on this phone is deliberately untouched — the app keeps working offline,
+ * and signing in again later starts an empty account.
+ */
+export async function deleteAccount(): Promise<void> {
+  const response = await authorized("/api/account", { method: "DELETE" });
+  if (!response.ok && response.status !== 401) {
+    throw new SignInError("The server couldn't delete the account just now. Nothing was deleted.");
+  }
+  await forget().catch(() => undefined);
+  try {
+    await googleSignin().GoogleSignin.signOut();
+  } catch {
+    // Nothing to sign out of on this device.
+  }
+}

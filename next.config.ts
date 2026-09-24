@@ -3,9 +3,9 @@ import type { NextConfig } from "next";
 /**
  * Content-Security-Policy.
  *
- * The point of this is `connect-src`. The browser holds a Google Drive access
- * token, an optional GitHub token and all of the user's data, and "we don't
- * send it anywhere" is worth nothing as a promise — the operator controls the
+ * The point of this is `connect-src`. The browser holds a session cookie, an
+ * optional GitHub token and all of the user's data, and "we don't send it
+ * anywhere" is worth nothing as a promise — the operator controls the
  * code the browser runs. A CSP is different: the *browser* enforces it, the
  * header is visible in devtools in ten seconds, and no script on the page —
  * ours, a dependency's, or one injected through a hole we haven't found — can
@@ -17,8 +17,8 @@ import type { NextConfig } from "next";
  */
 const CONNECT_SRC = [
   "'self'",
-  // Google Drive sync, Drive authorization and sign-in with Google.
-  "https://www.googleapis.com",
+  // Sign in with Google. (The server's own fetch of Google's signing keys
+  // isn't a browser request, so it needs no entry here.)
   "https://accounts.google.com",
   // Repo stats shown on materials and portfolio entries.
   "https://api.github.com",

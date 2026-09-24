@@ -208,8 +208,8 @@ security methods applied**, then Q&A. Example questions are mapped in §6.
 
 ## 5. Steps
 
-**Schedule.** Both exams are on the same day, about six weeks out (around
-2026-10-25; get the exact date). Target Level 1 in both, and go for security
+**Schedule.** All three exams are on the same day, in the **first week of November 2026**
+(confirmed 2026-09-23). The original estimate was 2026-10-25; the extra week goes to rehearsal. Target Level 1 in both, and go for security
 Level 2 only if time is left after Step 7. The user is new to databases, so
 each step also has to leave them able to explain it (see Step 7's oral prep).
 Explain concepts as they're built, not all at the end.
@@ -1014,7 +1014,7 @@ repo is private; submit through the Learning Platform form.
 
 ## 7. Open questions for kickoff (all answered 2026-09-10)
 
-1. ~~Exam dates and order~~ **Same day, about six weeks out.** Keep the step
+1. ~~Exam dates and order~~ **Same day, first week of November 2026** (confirmed 2026-09-23). Keep the step
    order; the schedule is at the top of §5.
 2. ~~Security target level~~ **Level 1 first**, Level 2 (securing the live
    Vercel deployment) only if time is left.

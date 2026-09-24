@@ -40,6 +40,14 @@ controls these accounts controls the deployed code and the data (threat T9).
    always gets write access. With the ruleset above, they can't change `main`, which is what matters
    (threat E7).
 
+**Google Cloud → Credentials** (the phone app, from 2026-09-23): one web client — whose ID the server
+verifies as every token's audience — and one Android client per package name, each carrying the app's
+signing fingerprint. Adding a build variant means adding an Android client, or sign-in fails there
+while the real app keeps working — and it needs that variant's *own* fingerprint, because EAS keeps a
+keystore per application identifier. Read it from the built APK (`apksigner verify --print-certs`)
+rather than assuming it matches; assuming cost an evening on 2026-09-23. Changing a signing key means
+updating the matching Android client.
+
 **Atlas** (done 2026-09-22, steps in `docs/DEPLOY.md` §1): one database user per environment, each with `readWrite`
 on its own database only, and a long generated password. Network access `0.0.0.0/0` is expected
 (threat I8). The connection string goes only into Vercel's environment variables.

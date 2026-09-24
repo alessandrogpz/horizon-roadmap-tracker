@@ -26,9 +26,8 @@ interface DashboardHeaderProps {
   syncStatus: SyncStatus;
   syncError: string;
   /** Where the sync button sends the data: the Horizon account, or Drive. */
-  syncTarget?: "account" | "drive";
+  syncTarget?: "account" | "local";
   onSync: (e: React.MouseEvent) => void;
-  onOpenCloudMenu: () => void;
   onSwitchTrack: (trackId: string) => void;
   /** Resolves once the new track is active. */
   onNewTrack: () => Promise<void>;
@@ -153,7 +152,7 @@ function StatTile({
   );
 }
 
-export default function DashboardHeader({ data, workspace, syncStatus, syncError, syncTarget = "drive", onSync, onOpenCloudMenu, onSwitchTrack, onNewTrack, onEditTrack, onDeleteTrack, canDeleteTrack, moduleState, onToggleModule, onEditRhythm, onNewRotation, onReloadWorkspace }: DashboardHeaderProps) {
+export default function DashboardHeader({ data, workspace, syncStatus, syncError, syncTarget = "local", onSync, onSwitchTrack, onNewTrack, onEditTrack, onDeleteTrack, canDeleteTrack, moduleState, onToggleModule, onEditRhythm, onNewRotation, onReloadWorkspace }: DashboardHeaderProps) {
   const [showTrackSettings, setShowTrackSettings] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
@@ -216,7 +215,7 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
         {/* Sync status, clickable to sync. Stays in the bar on purpose: a
             status indicator hidden inside a menu stops being one. */}
         <div
-          onClick={onSync}
+          onClick={syncTarget === "account" ? onSync : () => setShowSettings(true)}
           className={`flex items-center gap-2 text-muted-foreground select-none w-fit py-1 px-2 -mx-2 rounded transition-colors duration-200 min-w-0 ${
             syncStatus === "syncing" ? "cursor-not-allowed" : "cursor-pointer hover:bg-surface-hover"
           }`}
@@ -225,7 +224,7 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
               ? syncError
               : syncTarget === "account"
                 ? "Click to sync with your Horizon account"
-                : "Click to sync with Google Drive"
+                : "Saved on this device. Sign in to sync between devices."
           }
         >
           <div className={`w-2 h-2 rounded-full transition-all duration-300 shrink-0 ${dotColor}`} />
@@ -234,11 +233,11 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
             {syncStatus === "error" && "Sync Error (retry)"}
             {syncStatus === "success" && "Synced"}
             {syncStatus === "idle" &&
-              (workspace.hasUnsyncedChanges
-                ? "Unsynced (Click to Sync)"
-                : syncTarget === "account"
-                  ? "Synced with account"
-                  : "Synced with Cloud")}
+              (syncTarget !== "account"
+                ? "On this device"
+                : workspace.hasUnsyncedChanges
+                  ? "Unsynced (Click to Sync)"
+                  : "Synced with account")}
           </span>
           <span className="text-card-border hidden sm:inline">•</span>
           <span className="hidden sm:inline">
@@ -257,7 +256,6 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
             onEditRhythm={onEditRhythm}
             onNewRotation={onNewRotation}
             onNewTrack={() => void handleNewTrack()}
-            onOpenCloud={onOpenCloudMenu}
             onOpenSettings={() => setShowSettings(true)}
             onOpenInsights={account ? () => setShowInsights(true) : undefined}
           />
@@ -326,7 +324,6 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
       {showSettings && (
         <SettingsModal
           onClose={() => setShowSettings(false)}
-          onOpenCloudMenu={onOpenCloudMenu}
           onRestored={onReloadWorkspace}
         />
       )}

@@ -13,7 +13,6 @@ The project has been refactored into a modular, type-safe Next.js PWA:
 *   **Framework:** Next.js (with Turbopack) & React 19
 *   **Styling:** Tailwind CSS v4 & PostCSS (using CSS-native `@import` and custom theme extensions)
 *   **Database (Local-first):** Dexie.js (IndexedDB wrapper) for offline persistence
-*   **Storage & Sync:** Google Drive API (sandboxed `appDataFolder` scope) with a custom, day-level logical-version conflict resolution engine.
 *   **Server:** Next.js route handlers and MongoDB (Mongoose plus the native driver) for accounts: sign in with Google, server-side sessions, and sync through the account, merged on the server inside a transaction.
 *   **Tests:** Vitest for testing date-helpers and state merge algorithms.
 
@@ -54,7 +53,6 @@ no business logic.
 │   ├── completions.ts            # Pure checkbox/streak rules
 │   ├── selectors.ts              # Pure workspace queries
 │   ├── merge.ts                  # Sync state merger (checkboxes & materials)
-│   ├── googleDrive.ts            # Drive auth, REST client & sync engine
 │   ├── gitStats.ts               # GitHub / local git stats, with caching
 │   ├── modules.ts                # Which dashboard modules exist
 │   ├── streak.ts                 # Streak calculation helpers
@@ -171,8 +169,7 @@ You can install the tracker as a native standalone application on your Android/i
 *   **Portfolio Tracker:** Displays repository checklists and pulls live git statistics (branch, modified status, last commit message) from local git repos or GitHub.
 *   **Materials & Notes:** Track references, edit study notes in a Markdown editor with a live Preview pane, and query repo statistics.
 *   **Search & insights (signed in):** Full-text search across your tracks, materials, phases, roadmaps and notes, and your history (active days, weekday habits, months, per-track streaks), both computed by MongoDB on the server.
-*   **Cloud Sync:** All data lives in your browser (IndexedDB). Signed in, it syncs through your Horizon account (MongoDB on the server); signed out, bidirectionally to a hidden app folder in your own Google Drive. 
-    *   *Click to sync; Shift+Click to manage/disconnect the connection.*
+*   **Cloud Sync:** All data lives in your browser (IndexedDB). Signed in, the same data syncs through your Horizon account (MongoDB on the server), merged per item on the server so two devices never overwrite each other. Signed out, nothing leaves the device — which is a complete way to use it, not a degraded one.
 
 ---
 

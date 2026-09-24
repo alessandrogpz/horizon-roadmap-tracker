@@ -96,6 +96,28 @@ export async function saveNote(note: StoredNote): Promise<void> {
   );
 }
 
+/** Swaps the whole notes table for another set, in one transaction.
+ *
+ * Only a restore needs this. Every other write is one note at a time, because
+ * every other write is someone typing. A restore is "put it back the way it
+ * was", so notes the backup does not have must go — an ordinary upsert would
+ * leave them behind and quietly merge two different days.
+ */
+export async function replaceNotes(notes: StoredNote[]): Promise<void> {
+  const db = await open();
+  await db.withTransactionAsync(async () => {
+    await db.runAsync("DELETE FROM notes");
+    for (const note of notes) {
+      await db.runAsync(
+        "INSERT INTO notes (id, content, updatedAt) VALUES (?, ?, ?)",
+        note.id,
+        note.content,
+        note.updatedAt
+      );
+    }
+  });
+}
+
 // Step counts stay in their own table and are deliberately *not* part of the
 // synced workspace: they are a reading from this particular phone's hardware,
 // they would mean nothing merged with another device's, and the server's schema

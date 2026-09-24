@@ -3,7 +3,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
   CalendarCog,
-  Cloud,
   Ellipsis,
   Eye,
   EyeOff,
@@ -43,7 +42,6 @@ interface TopBarMenuProps {
   onEditRhythm: () => void;
   onNewRotation: () => void;
   onNewTrack: () => void;
-  onOpenCloud: () => void;
   onOpenSettings: () => void;
   /** Only when signed in: search and history come from the account. */
   onOpenInsights?: () => void;
@@ -93,7 +91,6 @@ export default function TopBarMenu({
   onEditRhythm,
   onNewRotation,
   onNewTrack,
-  onOpenCloud,
   onOpenSettings,
   onOpenInsights,
 }: TopBarMenuProps) {
@@ -224,7 +221,6 @@ export default function TopBarMenu({
             {onOpenInsights && (
               <Item icon={<Search size={15} strokeWidth={2} />} label="Search & insights…" onClick={run(onOpenInsights)} />
             )}
-            <Item icon={<Cloud size={15} strokeWidth={2} />} label="Cloud & backup…" onClick={run(onOpenCloud)} />
             <Item icon={<Settings size={15} strokeWidth={2} />} label="Settings…" onClick={run(onOpenSettings)} />
           </div>
         </div>
