@@ -16,6 +16,7 @@ import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { AppMenu } from "./AppMenu";
 import { SyncChip } from "./SyncChip";
 import { TimerChip } from "./TimerChip";
+import { ThemeButton } from "./ThemeButton";
 import { SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
@@ -53,6 +54,7 @@ export function AppHeader({ title }: { title?: string }) {
         </Text>
         <TimerChip />
         <SyncChip />
+        <ThemeButton />
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Menu"
