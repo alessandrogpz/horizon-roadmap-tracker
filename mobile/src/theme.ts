@@ -53,3 +53,15 @@ export const LIGHT: Palette = {
 
 export const SPACING = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 } as const;
 export const RADIUS = { control: 8, card: 14 } as const;
+
+/** Every control in the app header — the sync chip, the theme button, the
+ *  menu — is this tall, with this radius and this border. They were three
+ *  different sizes because each was written on its own day; a row of controls
+ *  that disagree about their own height reads as unfinished however good each
+ *  one is in isolation. */
+export const HEADER_CONTROL = {
+  height: 30,
+  minWidth: 32,
+  radius: RADIUS.control,
+  paddingHorizontal: SPACING.sm,
+} as const;

@@ -13,7 +13,7 @@
 import { useMemo } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { describeLastSync, useSync } from "../sync/SyncProvider";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { HEADER_CONTROL, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 export function SyncChip() {
@@ -29,7 +29,7 @@ export function SyncChip() {
       accessibilityLabel={`Sync status: ${label}. Tap to sync now.`}
       onPress={() => void sync()}
       style={styles.chip}
-      hitSlop={8}
+      hitSlop={10}
     >
       {state === "syncing" ? (
         <ActivityIndicator size="small" color={palette.accent} />
@@ -63,12 +63,15 @@ function makeStyles(palette: Palette) {
     chip: {
       flexDirection: "row",
       alignItems: "center",
+      justifyContent: "center",
       gap: 6,
-      paddingHorizontal: SPACING.sm,
-      paddingVertical: 4,
-      borderRadius: RADIUS.control,
+      height: HEADER_CONTROL.height,
+      paddingHorizontal: HEADER_CONTROL.paddingHorizontal,
+      borderRadius: HEADER_CONTROL.radius,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
-      maxWidth: 130,
+      maxWidth: 120,
     },
     dot: { width: 7, height: 7, borderRadius: 4 },
     label: { fontSize: 11, fontWeight: "600" },
