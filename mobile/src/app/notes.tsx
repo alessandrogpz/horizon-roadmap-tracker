@@ -29,6 +29,7 @@ import { loadNotes, saveNote } from "../storage/db";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { Refreshable } from "../components/Refreshable";
 
 const SAVE_AFTER_MS = 600;
 
@@ -102,7 +103,7 @@ export default function NotesScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <Refreshable contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Text style={styles.sectionTitle}>To-do</Text>
 
         <View style={styles.addRow}>
@@ -168,7 +169,7 @@ export default function NotesScreen() {
           accessibilityLabel="Notepad"
         />
         <Text style={styles.footnote}>Saved as you type, and synced with the rest when you sync.</Text>
-      </ScrollView>
+      </Refreshable>
     </KeyboardAvoidingView>
   );
 }

@@ -16,10 +16,11 @@
 // like any other change.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import Markdown from "react-native-markdown-display";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { Refreshable } from "./Refreshable";
 
 const SAVE_AFTER_MS = 800;
 
@@ -84,13 +85,13 @@ export function MarkdownDocument({
           accessibilityLabel={label}
         />
       ) : (
-        <ScrollView contentContainerStyle={styles.content}>
+        <Refreshable contentContainerStyle={styles.content}>
           {value?.trim() ? (
             <Markdown style={markdownStyles(palette)}>{value}</Markdown>
           ) : (
             <Text style={styles.reading}>{emptyText}</Text>
           )}
-        </ScrollView>
+        </Refreshable>
       )}
     </KeyboardAvoidingView>
   );

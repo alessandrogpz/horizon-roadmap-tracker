@@ -20,6 +20,7 @@ import {
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { Refreshable } from "../components/Refreshable";
 
 export default function PortfolioScreen() {
   const { track, today, editTrack } = useWorkspace();
@@ -50,7 +51,7 @@ export default function PortfolioScreen() {
   const projects = track.portfolio ?? [];
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <Refreshable style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       {projects.map((project) => (
         <View key={project.id} style={styles.card}>
           <Pressable
@@ -120,7 +121,7 @@ export default function PortfolioScreen() {
         Git statistics stay on the website: they read a repository on the computer running the app, and
         a phone has no checkout to read.
       </Text>
-    </ScrollView>
+    </Refreshable>
   );
 }
 

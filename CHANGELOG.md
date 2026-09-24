@@ -7,6 +7,48 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.45.0] - 2026-09-24
+
+The phone app had every feature and the shape of a prototype: one screen with the day's work on top
+and ten links stacked underneath, sync four taps away on a settings page, and a step counter on
+every track whether it meant anything there or not. This is the shape it should have had.
+
+### Added
+- **A bottom tab bar** — Today, Plan, Library, Progress — with icons, so the four places you spend
+  time are one tap apart from anywhere. Each tab lands on real content rather than a menu of further
+  choices: Plan opens on the phases, Library on the reading list, Progress on the streak grid. Their
+  siblings are a row of chips at the top.
+- **A shared header** carrying the track name, a live sync chip and a `⋯` menu. The track name is
+  not decoration: with a dozen screens, "which track am I editing?" stops being obvious the moment
+  you leave Today, and every edit belongs to one.
+- **Sync is visible and always in reach.** The chip says synced, syncing, offline or local-only, and
+  tapping it syncs. It also runs by itself when the app returns to the foreground — the moment most
+  likely to follow an edit made on the laptop.
+- **Pull down to sync, on every screen.** The gesture people already try, working everywhere rather
+  than on a chosen few.
+- **The step counter is opt-in, per track.** Off unless turned on, from a control at the foot of
+  Today. Right on a fitness track and noise on a graphics engine, which is the whole point. When it
+  is off the sensor is never subscribed to, so a track that does not want it does not pay for it in
+  battery — and Android is never asked for the activity permission at all.
+
+### Changed
+- Today is the day's work and nothing else: the day stepper with the summary under it, the two
+  checklists, and two quiet footer actions. The wall of links, the switch button and the streak card
+  are gone — the header, the tabs and the Progress tab already carry those.
+- Sync lives in one provider instead of on the Account screen, so the chip, a pull-to-refresh and
+  the Account button are the same operation with the same status rather than three ideas of it.
+- The step-panel preference is stored on the device, not in the workspace. The server validates the
+  workspace against a strict schema and refuses unknown fields (learning log 13), and a per-track
+  display toggle is not worth a migration on the server — nor does a reading from *this* phone's
+  hardware mean anything on another device.
+
+### Fixed
+- Material category chips overlapped each other: they were sharing a row evenly, which is right for
+  three status buttons and wrong for twelve category names. They size to their labels and wrap now.
+- The tab bar clipped its own labels, having given the icon the space first.
+- The menu sheet is anchored to the bottom edge and fades in, rather than being slid a whole
+  viewport and animated back — which left it off-screen when the animation did not run.
+
 ## [0.44.1] - 2026-09-24
 
 ### Added

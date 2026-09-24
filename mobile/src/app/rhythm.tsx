@@ -31,6 +31,7 @@ import { DAYS_SHORT } from "@shared/dates";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { Refreshable } from "../components/Refreshable";
 
 const WEEK = DAYS_SHORT.slice(1).concat(DAYS_SHORT[0]); // Mon..Sun
 
@@ -103,7 +104,7 @@ export default function RhythmScreen() {
   const rotations = track.rotations ?? [];
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <Refreshable style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <Text style={styles.sectionTitle}>The week</Text>
       <Text style={styles.muted}>Tap a day to change what it&apos;s for.</Text>
 
@@ -340,7 +341,7 @@ export default function RhythmScreen() {
       >
         <Text style={styles.addLabel}>Add a rotation</Text>
       </Pressable>
-    </ScrollView>
+    </Refreshable>
   );
 }
 

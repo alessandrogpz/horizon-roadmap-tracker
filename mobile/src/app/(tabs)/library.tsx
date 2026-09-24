@@ -12,10 +12,12 @@ import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } fro
 import type { Material } from "@shared/types";
 import { categoriesFor, MATERIAL_STATUSES, MATERIAL_TYPES } from "@shared/materialOptions";
 import { addMaterial, removeMaterial, setMaterialArchived, setMaterialStatus, updateMaterial } from "@shared/trackActions";
-import { loadNotes, saveNote } from "../storage/db";
-import { useWorkspace } from "../workspace/WorkspaceProvider";
-import { RADIUS, SPACING, type Palette } from "../theme";
-import { usePalette } from "../theme/ThemeProvider";
+import { loadNotes, saveNote } from "../../storage/db";
+import { useWorkspace } from "../../workspace/WorkspaceProvider";
+import { RADIUS, SPACING, type Palette } from "../../theme";
+import { usePalette } from "../../theme/ThemeProvider";
+import { Refreshable } from "../../components/Refreshable";
+import { SubNav } from "../../components/SubNav";
 
 export default function MaterialsScreen() {
   const { track, today, editTrack } = useWorkspace();
@@ -80,7 +82,9 @@ export default function MaterialsScreen() {
   }
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+    <Refreshable style={styles.screen} contentContainerStyle={styles.content}>
+      <SubNav links={[{"href": "/notes", "label": "Notes & to-dos"}, {"href": "/search", "label": "Search"}]} />
+
       {materials.map((material) => (
         <MaterialCard
           key={material.id}
@@ -136,7 +140,7 @@ export default function MaterialsScreen() {
         styles={styles}
         palette={palette}
       />
-    </ScrollView>
+    </Refreshable>
   );
 }
 
@@ -243,7 +247,7 @@ function MaterialCard({
                 accessibilityRole="button"
                 accessibilityState={{ selected: material.status === status }}
                 onPress={() => onStatus(status)}
-                style={[styles.statusButton, material.status === status && { borderColor: palette.accent }]}
+                style={[styles.statusButton, styles.evenly, material.status === status && { borderColor: palette.accent }]}
               >
                 <Text style={[styles.statusLabel, material.status === status && { color: palette.foreground }]}>{status}</Text>
               </Pressable>
@@ -440,16 +444,22 @@ function makeStyles(palette: Palette) {
     progressTrack: { height: 4, borderRadius: 2, backgroundColor: palette.surfaceMuted, overflow: "hidden" },
     progressFill: { height: 4, borderRadius: 2 },
     details: { gap: SPACING.md, paddingTop: SPACING.xs },
-    statusRow: { flexDirection: "row", gap: SPACING.sm },
+    statusRow: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.sm },
+    // A chip sized by its own label. Not `flex: 1`: that is right for the
+    // three status buttons, which should divide a row evenly, and wrong for
+    // twelve category names, which squeeze to nothing and overlap instead of
+    // wrapping onto a second line.
     statusButton: {
-      flex: 1,
+      flexShrink: 0,
       alignItems: "center",
+      paddingHorizontal: SPACING.md,
       paddingVertical: SPACING.sm,
       borderRadius: RADIUS.control,
       borderWidth: 1,
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
+    evenly: { flex: 1 },
     statusLabel: { color: palette.mutedForeground, fontSize: 12, fontWeight: "600" },
     pageRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
     pageInput: {
