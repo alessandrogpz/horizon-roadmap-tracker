@@ -7,6 +7,33 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.63.0] - 2026-09-24
+
+Holding a panel now picks it up, rather than switching the screen into a mode that happens to allow
+dragging. The whole reorder is one gesture: hold, move, let go.
+
+### Added
+- **Pick up a panel by holding it anywhere.** Every panel folds down to its own header, the held one
+  comes to the thumb and stays under it, and the rest step aside as it passes. Letting go drops it
+  where it is and the column opens back up. The folding is animated in both directions on purpose:
+  it is the only thing telling you which panel you are still holding once they all look alike.
+
+### Fixed
+- **Holding a panel's title opened it instead of picking it up**, so the gesture only worked in the
+  dead space in the middle of a card. `PanelCard` used React Native's `Pressable`, which is not
+  built on a gesture and so takes no part in the arbitration around it — the drag above it had no
+  way to claim the touch. It now uses Gesture Handler's, which does. A tap still opens the panel.
+- **The drop target is counted in slots travelled**, not in where the panel has ended up. Because
+  the panel sits under the finger it starts off the grid by however far down it was grabbed, so
+  measuring its position made "up one panel" a different distance depending on where you grabbed it.
+- **Scrolling is disabled while a panel is held**, and the column keeps its full height as it folds.
+  Otherwise the page would scroll under a drag that is itself vertical, and the content shrinking
+  would pull the scroll position out from under the gesture.
+
+### Changed
+- **Arrange is now only for adding and removing panels.** Reordering by holding covers the rest, and
+  a mode you have to enter and leave was a poor fit for something this small.
+
 ## [0.62.0] - 2026-09-24
 
 ### Changed

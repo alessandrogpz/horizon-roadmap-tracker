@@ -6,7 +6,13 @@
 // bigger — a chevron that opens the full screen.
 
 import { useMemo, type ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+// Gesture Handler's Pressable, not React Native's, and the difference is
+// load-bearing: this one is built on a gesture, so it takes part in the
+// arbitration around it. React Native's does not, which is why holding the
+// header used to open the panel instead of picking it up — the drag above it
+// had no way to say "this touch is mine now".
+import { Pressable } from "react-native-gesture-handler";
 import { Link } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { RADIUS, SPACING, type Palette } from "../theme";
