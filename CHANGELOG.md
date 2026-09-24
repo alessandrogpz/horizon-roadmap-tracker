@@ -7,6 +7,26 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.59.0] - 2026-09-24
+
+### Changed
+- **Dates are picked, never typed.** Every date field on the phone — a track's start and end, a
+  phase's deadline — now opens a picker that narrows year, then month, then day. A text box asked
+  the person to know the format, type it correctly on a touch keyboard, and get the month right, and
+  then quietly did nothing when they did not, because the only thing the code could do with a
+  half-typed date was ignore it.
+
+  Every date here feeds arithmetic — a phase's deadline is stored as a day count from the track's
+  start — so an unparseable one was never merely cosmetic. Offering choices removes the invalid
+  state rather than handling it: every path through the picker produces a real date.
+
+  It also means a range can be *enforced by omission*. A phase cannot end before its track begins
+  and a track cannot end before it starts, so those years, months and days are not offered at all
+  rather than refused after the fact.
+
+  Built out of three lists rather than the platform's date picker, which is a native module and
+  therefore a new build in everyone's hands.
+
 ## [0.58.1] - 2026-09-24
 
 ### Fixed
