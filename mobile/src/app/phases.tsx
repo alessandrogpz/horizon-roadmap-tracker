@@ -1,16 +1,20 @@
 // The roadmap: the phases between the start and the deadline, and which one
 // today falls in.
 //
-// Titles can be edited, phases added, removed, or made current. Descriptions
-// stay on the website: a paragraph of prose on a phone keyboard is desk work,
-// and the phases' own schedule comes from
-// `timelineStats` in the shared core, so the dates here and on the website are
-// computed by the same code rather than by two that agree today.
+// Phases can be added, removed or made current from here; tapping one opens
+// it in full (./phase/[id].tsx), which is where its title, description, tasks,
+// deadline and detail sections are edited. The split matches what each view is
+// for: this one is the shape of the plan, that one is the inside of a phase.
+//
+// The schedule comes from `timelineStats` in the shared core, so the dates here
+// and on the website are computed by the same code rather than by two that
+// agree today.
 
-import { useCallback, useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { useMemo } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Link } from "expo-router";
 import { phaseStats, timelineStats } from "@shared/stats";
-import { addPhase, removePhase, setCurrentPhase, updatePhase } from "@shared/trackActions";
+import { addPhase, removePhase, setCurrentPhase } from "@shared/trackActions";
 import { formatDayMonthYear } from "@shared/dates";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../theme";
@@ -20,18 +24,6 @@ export default function PhasesScreen() {
   const { track, today, editTrack } = useWorkspace();
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
-
-  const [editing, setEditing] = useState<number | null>(null);
-  const [draft, setDraft] = useState("");
-
-  const saveTitle = useCallback(
-    (phaseId: number) => {
-      const phase = track?.phases.find((p) => p.id === phaseId);
-      if (phase && draft.trim()) editTrack((t) => updatePhase(t, { ...phase, title: draft.trim() }));
-      setEditing(null);
-    },
-    [draft, editTrack, track]
-  );
 
   const timeline = useMemo(() => (track ? timelineStats(track) : null), [track]);
   const current = useMemo(() => (track ? phaseStats(track, today) : null), [track, today]);
@@ -82,33 +74,21 @@ export default function PhasesScreen() {
               {endDate ? ` – ${formatDayMonthYear(endDate)}` : ""}
             </Text>
           </View>
-          {editing === phase.id ? (
-            <View style={styles.editRow}>
-              <TextInput
-                value={draft}
-                onChangeText={setDraft}
-                style={styles.input}
-                autoFocus
-                onSubmitEditing={() => saveTitle(phase.id)}
-                accessibilityLabel={`Title of phase ${phase.id}`}
-              />
-              <Pressable accessibilityRole="button" style={styles.smallButton} onPress={() => saveTitle(phase.id)}>
-                <Text style={styles.smallLabel}>Save</Text>
-              </Pressable>
-            </View>
-          ) : (
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => {
-                setEditing(phase.id);
-                setDraft(phase.title);
-              }}
-            >
+          <Link href={{ pathname: "/phase/[id]", params: { id: phase.id } }} asChild>
+            <Pressable accessibilityRole="button" accessibilityLabel={`Open ${phase.title}`}>
               <Text style={styles.phaseTitle}>{phase.title}</Text>
+              {phase.description ? (
+                <Text style={styles.muted} numberOfLines={2}>
+                  {phase.description}
+                </Text>
+              ) : null}
+              {phase.tasks.length > 0 && (
+                <Text style={styles.taskCount}>
+                  {phase.tasks.filter((t) => t.completed).length} of {phase.tasks.length} tasks done
+                </Text>
+              )}
             </Pressable>
-          )}
-
-          {phase.description ? <Text style={styles.muted}>{phase.description}</Text> : null}
+          </Link>
 
           <View style={styles.actions}>
             {state !== "current" && (
@@ -136,7 +116,7 @@ export default function PhasesScreen() {
       </Pressable>
 
       {timeline.windows.length === 0 && (
-        <Text style={styles.muted}>This track has no phases yet. Add them in Horizon on the web.</Text>
+        <Text style={styles.muted}>This track has no phases yet.</Text>
       )}
     </ScrollView>
   );
@@ -150,6 +130,7 @@ function makeStyles(palette: Palette) {
     summary: { gap: SPACING.sm },
     headline: { color: palette.foreground, fontSize: 20, fontWeight: "700" },
     muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
+    taskCount: { color: palette.subtleForeground, fontSize: 11, marginTop: 2 },
     progressTrack: { height: 6, borderRadius: 3, backgroundColor: palette.surfaceMuted, overflow: "hidden" },
     progressFill: { height: 6, borderRadius: 3, backgroundColor: palette.accent },
     behind: { color: palette.foreground, fontSize: 13, lineHeight: 18 },

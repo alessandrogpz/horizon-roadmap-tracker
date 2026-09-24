@@ -7,6 +7,34 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.40.0] - 2026-09-24
+
+### Added
+- **A phase, in full, on the phone.** Tapping a phase opens it: its title, what it is about, its
+  tasks, its deadline, and the four detail sections — core focus, math integration, algorithms and
+  data structures, the deliverable goal. All editable, all saving as you type. This was the last
+  real gap against the website, where the same thing is a modal; on a phone it is a route, so the
+  back gesture works and a phase can be linked to.
+
+  The phases list keeps its job — the shape of the plan, where today falls, adding and removing and
+  making current — and hands off the inside of a phase to the new screen. The inline title edit went
+  with it, because editing one field of something in a list is worse than opening it.
+
+- The deadline is edited as a date and stored as a day number from the track's start, so re-dating a
+  track moves its phases with it. A date that falls before the track begins is refused rather than
+  clamped — silently moving a deadline somewhere nobody asked for is worse than ignoring a typo.
+  Typed rather than picked from a calendar: a date picker is a native module, and a native module is
+  a new build on every phone for one field.
+
+### Changed
+- `lib/phaseDetails.ts` holds the four sections' labels and order, and the normaliser for the older
+  tracks that stored a section as a sentence rather than a list. That normaliser lived inside a
+  React component while there was one reader; both platforms import it now, so a track shows the
+  same headings wherever it is opened.
+- The phases screen no longer says phases must be added on the website — they can be added from
+  either, and have been able to for a while.
+- The phases screen's header said "Roadmap", which is the *other* screen's name.
+
 ## [0.39.1] - 2026-09-24
 
 ### Changed
