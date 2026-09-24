@@ -7,6 +7,32 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.61.0] - 2026-09-24
+
+The week screen was showing a *pattern*, not a calendar: seven chips reading Mon..Sun, with no way to
+ask what the week after next holds. That question has a real answer here — a rotation's topic is
+computed from the week number and never stored — so the app knew, and simply had no way to say it.
+
+### Added
+- **A dated week you can walk through**, in place of the seven undated chips. Each day is a row: its
+  date, what kind of day it is, and what is actually on it — the rotation topics computed for *that*
+  week, the day's own checklist, and the gym plan for that kind of day, with a count of what was
+  recorded. Stepping forward a week changes the rotation topics, which is the whole point.
+- **A month view**, at the scope toggle beside it, for finding the week you want. One dot per day:
+  its colour is what kind of day it is, and it is dimmed when nothing is on it. Tapping a day opens
+  its contents below the grid. Deliberately less detail than the week — three signals is the most a
+  45px cell carries before it becomes a bad week view.
+- **A "Today" button**, shown only when it would do something: it appears once you navigate away from
+  the current week or month, and disappears when you are back on it.
+
+### Changed
+- **The week screen's two halves now split by mode**, following the app-wide read-by-default rule
+  from 0.55.0. Reading gives you the calendar, because you want dates. Editing gives you the seven
+  chips, because what a *Thursday* is for is not a property of any single Thursday — setting it on a
+  dated row would misdescribe what the tap changes.
+- **The Weekly Overview panel's day strip carries dates**, so it reads as this week rather than a
+  week in general, and agrees with the calendar it opens into.
+
 ## [0.60.0] - 2026-09-24
 
 A cleanup pass, found by asking the code rather than reading it: which files nothing imports, which

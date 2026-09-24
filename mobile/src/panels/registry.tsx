@@ -15,7 +15,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import type { TrackState } from "@shared/types";
 import { isItemCompleted } from "@shared/completions";
 import { computeRotationItemsForDay, isRotationItem } from "@shared/rotation";
-import { DAYS_SHORT, getWeekNum, parseYMD } from "@shared/dates";
+import { DAYS_SHORT, getMondayOfDateWeek, getWeekNum, parseYMD } from "@shared/dates";
 import { currentStreakLength } from "@shared/streak";
 import { phaseStats, progressStats, streakCalendar, timelineStats } from "@shared/stats";
 import { PanelCard, Meter } from "./PanelCard";
@@ -92,6 +92,9 @@ function WeekPanel({ track, today }: PanelProps) {
   const styles = useMemo(() => makeStyles(palette), [palette]);
   const week = DAYS_SHORT.slice(1).concat(DAYS_SHORT[0]);
   const todayKey = DAYS_SHORT[parseYMD(today).getDay()];
+  // Dated, so the strip reads as *this* week rather than a week in general —
+  // and so it agrees with the calendar it opens into.
+  const monday = getMondayOfDateWeek(parseYMD(today));
   const { log } = useGymLog(track.meta.id);
 
   const focus = focusOfDay(track.weekSchedule, todayKey);
@@ -102,10 +105,12 @@ function WeekPanel({ track, today }: PanelProps) {
   return (
     <>
       <View style={styles.week}>
-        {week.map((name) => {
+        {week.map((name, index) => {
           const day = (track.weekSchedule ?? []).find((d) => d.name === name);
           const colour = day ? track.focusTypes?.[day.type]?.color : undefined;
           const isToday = name === todayKey;
+          const date = new Date(monday);
+          date.setDate(monday.getDate() + index);
           return (
             <View key={name} style={styles.weekDay}>
               <View
@@ -117,6 +122,9 @@ function WeekPanel({ track, today }: PanelProps) {
               />
               <Text style={[styles.weekName, isToday && { color: palette.foreground, fontWeight: "700" }]}>
                 {name}
+              </Text>
+              <Text style={[styles.weekDate, isToday && { color: palette.foreground }]} allowFontScaling={false}>
+                {date.getDate()}
               </Text>
             </View>
           );
@@ -412,6 +420,7 @@ function makeStyles(palette: Palette) {
     weekDay: { alignItems: "center", gap: 4 },
     weekDot: { width: 16, height: 16, borderRadius: 8 },
     weekName: { color: palette.subtleForeground, fontSize: 10 },
+    weekDate: { color: palette.subtleForeground, fontSize: 9 },
     plannedBlock: { marginTop: SPACING.sm },
     exerciseRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm, paddingVertical: 3 },
     exerciseNumbers: { alignItems: "center", minWidth: 34 },
