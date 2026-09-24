@@ -1,0 +1,115 @@
+// The frame every panel sits in.
+//
+// One card shape for all of them, because a column of panels that each invent
+// their own padding and heading reads as a pile rather than a page. The header
+// carries an icon and a title, and — where the panel is a summary of something
+// bigger — a chevron that opens the full screen.
+
+import { useMemo, type ReactNode } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Link } from "expo-router";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { RADIUS, SPACING, type Palette } from "../theme";
+import { usePalette } from "../theme/ThemeProvider";
+
+export function PanelCard({
+  title,
+  icon,
+  accent,
+  href,
+  children,
+}: {
+  title: string;
+  icon: React.ComponentProps<typeof Ionicons>["name"];
+  /** Tints the icon; panels are told apart by colour before they are read. */
+  accent?: string;
+  /** The full screen this panel is a summary of, if it has one. */
+  href?: string;
+  children: ReactNode;
+}) {
+  const palette = usePalette();
+  const styles = useMemo(() => makeStyles(palette), [palette]);
+  const tint = accent ?? palette.accent;
+
+  const header = (
+    <View style={styles.head}>
+      <View style={[styles.iconWrap, { backgroundColor: `${tint}22` }]}>
+        <Ionicons name={icon} size={15} color={tint} />
+      </View>
+      <Text style={styles.title}>{title}</Text>
+      {href ? <Ionicons name="chevron-forward" size={16} color={palette.subtleForeground} /> : null}
+    </View>
+  );
+
+  return (
+    <View style={styles.card}>
+      {href ? (
+        <Link href={href as never} asChild>
+          <Pressable accessibilityRole="button" accessibilityLabel={`Open ${title}`}>
+            {header}
+          </Pressable>
+        </Link>
+      ) : (
+        header
+      )}
+      <View style={styles.body}>{children}</View>
+    </View>
+  );
+}
+
+function makeStyles(palette: Palette) {
+  return StyleSheet.create({
+    card: {
+      borderRadius: RADIUS.card,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.card,
+      overflow: "hidden",
+    },
+    head: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: SPACING.sm,
+      paddingHorizontal: SPACING.lg,
+      paddingVertical: SPACING.md,
+    },
+    iconWrap: { width: 26, height: 26, borderRadius: 8, alignItems: "center", justifyContent: "center" },
+    title: { flex: 1, color: palette.foreground, fontSize: 14, fontWeight: "700" },
+    body: { paddingHorizontal: SPACING.lg, paddingBottom: SPACING.lg, gap: SPACING.sm },
+  });
+}
+
+/** A labelled bar. Used by half the panels, and the reason none of them draw
+ *  their own: a column of progress bars that disagree about height reads as
+ *  noise. */
+export function Meter({ label, value, total, tint }: { label: string; value: number; total: number; tint?: string }) {
+  const palette = usePalette();
+  const pct = total > 0 ? Math.min(100, (value / total) * 100) : 0;
+
+  return (
+    <View style={meterStyles.row}>
+      <Text style={[meterStyles.label, { color: palette.mutedForeground }]} numberOfLines={1}>
+        {label}
+      </Text>
+      <View style={[meterStyles.track, { backgroundColor: palette.surfaceMuted }]}>
+        <View style={[meterStyles.fill, { width: `${pct}%`, backgroundColor: tint ?? palette.accent }]} />
+      </View>
+      <Text style={[meterStyles.value, { color: palette.mutedForeground }]}>
+        {value}/{total}
+      </Text>
+    </View>
+  );
+}
+
+// The label carries its own complete style rather than borrowing the card's
+// title. Borrowing it looked tidy and silently broke the label: the title is
+// `flex: 1`, which resolves to `flexBasis: 0`, and a fixed `width` layered on
+// top of that collapses to nothing — a row of bars with no idea what they
+// measure.
+const meterStyles = StyleSheet.create({
+  row: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
+  label: { width: 88, fontSize: 12, fontWeight: "600" },
+  track: { flex: 1, height: 7, borderRadius: 4, overflow: "hidden" },
+  fill: { height: 7, borderRadius: 4 },
+  value: { width: 46, fontSize: 11, textAlign: "right" },
+});

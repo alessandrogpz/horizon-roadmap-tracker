@@ -23,9 +23,19 @@ const KEY = "horizon-device";
 interface DeviceSettings {
   /** track id -> whether the step panel is shown on Today for that track. */
   stepsByTrack: Record<string, boolean>;
+  /** track id -> the order its panels are stacked in on this phone.
+   *
+   *  Order is deliberately *not* synced, while which panels you have is (it
+   *  lives in `track.hiddenPanels`). The reason is that the two platforms are
+   *  not arranging the same thing: the website has two columns and the phone
+   *  has one, so a phone writing its single order into `panelColumns` would
+   *  flatten the laptop's layout into a single column every time someone
+   *  dragged something on a train. "Which panels" is the same question
+   *  everywhere; "in what order" is not. */
+  panelOrderByTrack: Record<string, string[]>;
 }
 
-const EMPTY: DeviceSettings = { stepsByTrack: {} };
+const EMPTY: DeviceSettings = { stepsByTrack: {}, panelOrderByTrack: {} };
 
 // Read once into memory so screens can ask synchronously during render, the
 // same shape `@shared/settings` uses and for the same reason.
@@ -50,6 +60,15 @@ export function stepsEnabled(trackId: string | null | undefined): boolean {
 
 export function setStepsEnabled(trackId: string, enabled: boolean): void {
   cache = { ...cache, stepsByTrack: { ...cache.stepsByTrack, [trackId]: enabled } };
+  void AsyncStorage.setItem(KEY, JSON.stringify(cache));
+}
+
+export function panelOrder(trackId: string | null | undefined): string[] {
+  return trackId ? (cache.panelOrderByTrack[trackId] ?? []) : [];
+}
+
+export function setPanelOrder(trackId: string, order: string[]): void {
+  cache = { ...cache, panelOrderByTrack: { ...cache.panelOrderByTrack, [trackId]: order } };
   void AsyncStorage.setItem(KEY, JSON.stringify(cache));
 }
 

@@ -7,6 +7,51 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.46.0] - 2026-09-24
+
+0.45.0 gave the phone the *shape* of an app. This gives it the idea behind the website: a track is a
+set of panels you arrange yourself, and the app should be looked at more than it is read.
+
+### Added
+- **My Space**, a new tab: the whole track as a column of panels — the week as seven coloured dots,
+  the roadmap as time-spent against work-done, the streak as a block of days, what you are reading as
+  bars. Hold any panel, or tap Arrange, to drag them into the order you want, remove one, or add one
+  from the list of what is available.
+
+  The model is shared with the website, not reinvented: the same module ids, and closing a panel here
+  closes it on the laptop because it writes the same `hiddenPanels`. The *order* deliberately does
+  not travel — the website arranges two columns and a phone has one, so a phone writing its single
+  order into `panelColumns` would flatten the laptop's layout every time someone dragged something on
+  a train. Which panels you have is the same question everywhere; what order they are in is not.
+
+- **The step counter is a panel** like any other, and the only one the website cannot have. Added
+  from the same list, removed the same way, off until a track asks for it.
+
+### Changed
+- **Progress is vertical.** The website's consistency grid runs weeks across and weekdays down, which
+  works on a desk and not in a hand — at phone width it either shrinks below what a thumb can hit or
+  scrolls sideways, the one direction a phone is bad at. Turned ninety degrees, seven cells fit
+  across at a size you can actually land on, which is what makes **every day tappable**: tap one and
+  it says what was done that day. Three numbers across the top replace the paragraph.
+- **The menu has icons.** It was a list of sentences; it is now a sync card that shows its own state,
+  a grid of tinted shortcuts, and labelled rows — recognisable rather than readable.
+- **Library is gone as a tab.** A tab whose whole job was holding the reading list did not earn being
+  one tap from everywhere, and the materials panel says more in less space. The full list is still
+  there, from that panel and from the menu.
+
+### Fixed
+- **Coming back from the background switched the step sensor on for tracks that had said no.** The
+  resume handler only looked at the Android permission, never at whether this track wanted a step
+  count — so any track could start subscribing to the pedometer after a trip to another app.
+- A missing sensor module now leaves the rest of the screen working instead of white-screening
+  Today. It is a checklist; it has nothing to do with walking.
+- The streak panel gave several cells the same React key: the calendar pads each week out to seven
+  with cells whose date is the empty string.
+- Panel meters rendered with no labels — just bars and numbers. The label borrowed the card title's
+  `flex: 1`, which resolves to `flexBasis: 0` and collapses a fixed width to nothing.
+- `semver` resolved to the hoisted v6, which has no `functions/satisfies` subpath, so importing
+  Reanimated failed the whole bundle.
+
 ## [0.45.0] - 2026-09-24
 
 The phone app had every feature and the shape of a prototype: one screen with the day's work on top
