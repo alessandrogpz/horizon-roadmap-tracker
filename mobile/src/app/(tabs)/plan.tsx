@@ -19,12 +19,14 @@ import { formatDayMonthYear } from "@shared/dates";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../../theme";
 import { usePalette } from "../../theme/ThemeProvider";
+import { EditHeader, useEditMode } from "../../components/EditToggle";
 import { Refreshable } from "../../components/Refreshable";
 import { SubNav } from "../../components/SubNav";
 
 export default function PhasesScreen() {
   const { track, today, editTrack } = useWorkspace();
   const palette = usePalette();
+  const { editing, setEditing } = useEditMode();
   const styles = useMemo(() => makeStyles(palette), [palette]);
 
   const timeline = useMemo(() => (track ? timelineStats(track) : null), [track]);
@@ -42,6 +44,13 @@ export default function PhasesScreen() {
   return (
     <Refreshable style={styles.screen} contentContainerStyle={styles.content}>
       <SubNav links={[{"href": "/roadmap", "label": "Roadmap"}, {"href": "/rhythm", "label": "Week & rotations"}, {"href": "/portfolio", "label": "Deliverables"}]} />
+
+      <EditHeader
+        title="Phases"
+        editing={editing}
+        onChange={setEditing}
+        hint="Add or remove a phase, or move the track to a different one."
+      />
 
       <View style={styles.summary}>
         <Text style={styles.headline}>
@@ -124,6 +133,7 @@ export default function PhasesScreen() {
             </Pressable>
           </Link>
 
+          {editing && (
           <View style={styles.actions}>
             {state !== "current" && (
               <Pressable accessibilityRole="button" style={styles.smallButton} onPress={() => editTrack((t) => setCurrentPhase(t, phase.id))}>
@@ -138,16 +148,19 @@ export default function PhasesScreen() {
               <Text style={styles.smallLabel}>Remove</Text>
             </Pressable>
           </View>
+          )}
         </View>
       ))}
 
-      <Pressable
-        accessibilityRole="button"
-        style={styles.addButton}
-        onPress={() => editTrack((t) => addPhase(t).track)}
-      >
-        <Text style={styles.smallLabel}>Add a phase</Text>
-      </Pressable>
+      {editing && (
+        <Pressable
+          accessibilityRole="button"
+          style={styles.addButton}
+          onPress={() => editTrack((t) => addPhase(t).track)}
+        >
+          <Text style={styles.smallLabel}>Add a phase</Text>
+        </Pressable>
+      )}
 
       {timeline.windows.length === 0 && (
         <Text style={styles.muted}>This track has no phases yet.</Text>

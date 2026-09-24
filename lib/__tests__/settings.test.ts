@@ -47,7 +47,7 @@ describe("settings", () => {
   });
 
   it("clamps a rollover hour out of range", () => {
-    expect(updateSettings({ dayRolloverHour: 99 }).dayRolloverHour).toBe(11);
+    expect(updateSettings({ dayRolloverHour: 99 }).dayRolloverHour).toBe(23);
     expect(updateSettings({ dayRolloverHour: -5 }).dayRolloverHour).toBe(0);
   });
 

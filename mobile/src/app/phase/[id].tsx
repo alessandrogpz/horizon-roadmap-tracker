@@ -22,6 +22,7 @@ import { dateForDay, dayForDate, formatDateYMD, formatDayMonthYear, todayYMD } f
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../../theme";
 import { usePalette } from "../../theme/ThemeProvider";
+import { EditButton, useEditMode } from "../../components/EditToggle";
 import { Refreshable } from "../../components/Refreshable";
 
 export default function PhaseDetailScreen() {
@@ -33,6 +34,7 @@ export default function PhaseDetailScreen() {
   const phase = track?.phases.find((p) => String(p.id) === String(id)) ?? null;
   const [newTask, setNewTask] = useState("");
   const [newItem, setNewItem] = useState<Partial<Record<string, string>>>({});
+  const { editing, setEditing } = useEditMode();
 
   /** Every edit on this screen is "replace this phase with a changed copy", so
    *  there is one way through rather than a mutation per field. */
@@ -57,26 +59,37 @@ export default function PhaseDetailScreen() {
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <Refreshable contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <TextInput
-          value={phase.title}
-          onChangeText={(title) => change((p) => ({ ...p, title }))}
-          style={styles.titleInput}
-          accessibilityLabel="Phase title"
-        />
+        <View style={styles.titleRow}>
+          {editing ? (
+            <TextInput
+              value={phase.title}
+              onChangeText={(title) => change((p) => ({ ...p, title }))}
+              style={[styles.titleInput, { flex: 1 }]}
+              accessibilityLabel="Phase title"
+            />
+          ) : (
+            <Text style={[styles.titleInput, { flex: 1 }]}>{phase.title}</Text>
+          )}
+          <EditButton editing={editing} onChange={setEditing} what="this phase" />
+        </View>
 
-        <Deadline phase={phase} startDate={track.startDate} change={change} styles={styles} palette={palette} />
+        <Deadline phase={phase} startDate={track.startDate} change={change} canEdit={editing} styles={styles} palette={palette} />
 
         <Text style={styles.sectionTitle}>What this phase is about</Text>
-        <TextInput
-          value={phase.description}
-          onChangeText={(description) => change((p) => ({ ...p, description }))}
-          multiline
-          textAlignVertical="top"
-          placeholder="A sentence or two…"
-          placeholderTextColor={palette.subtleForeground}
-          style={[styles.input, styles.paragraph]}
-          accessibilityLabel="Phase description"
-        />
+        {editing ? (
+          <TextInput
+            value={phase.description}
+            onChangeText={(description) => change((p) => ({ ...p, description }))}
+            multiline
+            textAlignVertical="top"
+            placeholder="A sentence or two…"
+            placeholderTextColor={palette.subtleForeground}
+            style={[styles.input, styles.paragraph]}
+            accessibilityLabel="Phase description"
+          />
+        ) : (
+          <Text style={styles.reading}>{phase.description || "Nothing written about this phase yet."}</Text>
+        )}
 
         <Text style={styles.sectionTitle}>
           Tasks{phase.tasks.length > 0 ? ` · ${done} of ${phase.tasks.length}` : ""}
@@ -97,23 +110,30 @@ export default function PhaseDetailScreen() {
             >
               {task.completed && <Text style={styles.tick}>✓</Text>}
             </Pressable>
-            <TextInput
-              value={task.title}
-              onChangeText={(title) =>
-                change((p) => ({ ...p, tasks: p.tasks.map((t) => (t.id === task.id ? { ...t, title } : t)) }))
-              }
-              style={[styles.taskTitle, task.completed && styles.doneTask]}
-              accessibilityLabel={`Title of ${task.title}`}
-            />
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`Remove ${task.title}`}
-              onPress={() => change((p) => ({ ...p, tasks: p.tasks.filter((t) => t.id !== task.id) }))}
-            >
-              <Text style={styles.remove}>×</Text>
-            </Pressable>
+            {editing ? (
+              <TextInput
+                value={task.title}
+                onChangeText={(title) =>
+                  change((p) => ({ ...p, tasks: p.tasks.map((t) => (t.id === task.id ? { ...t, title } : t)) }))
+                }
+                style={[styles.taskTitle, task.completed && styles.doneTask]}
+                accessibilityLabel={`Title of ${task.title}`}
+              />
+            ) : (
+              <Text style={[styles.taskTitle, task.completed && styles.doneTask]}>{task.title}</Text>
+            )}
+            {editing && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Remove ${task.title}`}
+                onPress={() => change((p) => ({ ...p, tasks: p.tasks.filter((t) => t.id !== task.id) }))}
+              >
+                <Text style={styles.remove}>×</Text>
+              </Pressable>
+            )}
           </View>
         ))}
+        {editing && (
         <TextInput
           value={newTask}
           onChangeText={setNewTask}
@@ -131,6 +151,7 @@ export default function PhaseDetailScreen() {
           style={styles.input}
           accessibilityLabel="New task"
         />
+        )}
 
         {PHASE_DETAIL_SECTIONS.map(({ key, label }) => {
           const items = phaseDetailItems(phase.detailedInfo[key]);
@@ -141,32 +162,43 @@ export default function PhaseDetailScreen() {
               {items.map((item, index) => (
                 <View key={index} style={styles.detailCard}>
                   <View style={styles.detailHead}>
-                    <TextInput
-                      value={item.item}
-                      onChangeText={(text) => set(items.map((it, i) => (i === index ? { ...it, item: text } : it)))}
-                      style={styles.detailItem}
-                      accessibilityLabel={`${label} item ${index + 1}`}
-                    />
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel={`Remove ${item.item || `${label} item ${index + 1}`}`}
-                      onPress={() => set(items.filter((_, i) => i !== index))}
-                    >
-                      <Text style={styles.remove}>×</Text>
-                    </Pressable>
+                    {editing ? (
+                      <TextInput
+                        value={item.item}
+                        onChangeText={(text) => set(items.map((it, i) => (i === index ? { ...it, item: text } : it)))}
+                        style={styles.detailItem}
+                        accessibilityLabel={`${label} item ${index + 1}`}
+                      />
+                    ) : (
+                      <Text style={styles.detailItem}>{item.item}</Text>
+                    )}
+                    {editing && (
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`Remove ${item.item || `${label} item ${index + 1}`}`}
+                        onPress={() => set(items.filter((_, i) => i !== index))}
+                      >
+                        <Text style={styles.remove}>×</Text>
+                      </Pressable>
+                    )}
                   </View>
-                  <TextInput
-                    value={item.desc}
-                    onChangeText={(text) => set(items.map((it, i) => (i === index ? { ...it, desc: text } : it)))}
-                    multiline
-                    textAlignVertical="top"
-                    placeholder="What it means…"
-                    placeholderTextColor={palette.subtleForeground}
-                    style={styles.detailDesc}
-                    accessibilityLabel={`Description of ${item.item || `${label} item ${index + 1}`}`}
-                  />
+                  {editing ? (
+                    <TextInput
+                      value={item.desc}
+                      onChangeText={(text) => set(items.map((it, i) => (i === index ? { ...it, desc: text } : it)))}
+                      multiline
+                      textAlignVertical="top"
+                      placeholder="What it means…"
+                      placeholderTextColor={palette.subtleForeground}
+                      style={styles.detailDesc}
+                      accessibilityLabel={`Description of ${item.item || `${label} item ${index + 1}`}`}
+                    />
+                  ) : item.desc ? (
+                    <Text style={styles.detailDesc}>{item.desc}</Text>
+                  ) : null}
                 </View>
               ))}
+              {editing && (
               <TextInput
                 value={newItem[key] ?? ""}
                 onChangeText={(text) => setNewItem((prev) => ({ ...prev, [key]: text }))}
@@ -182,12 +214,15 @@ export default function PhaseDetailScreen() {
                 style={styles.input}
                 accessibilityLabel={`Add to ${label}`}
               />
+              )}
             </View>
           );
         })}
 
         <Text style={styles.footnote}>
-          Everything on this screen saves as you type, and syncs with the rest of the track.
+          {editing
+            ? "Saves as you type, and syncs with the rest of the track."
+            : "Tap Edit to change any of this."}
         </Text>
       </Refreshable>
     </KeyboardAvoidingView>
@@ -209,12 +244,16 @@ function Deadline({
   phase,
   startDate,
   change,
+  canEdit,
   styles,
   palette,
 }: {
   phase: Phase;
   startDate: string;
   change: (next: (phase: Phase) => Phase) => void;
+  /** The screen's edit mode; the deadline has its own little edit state on top
+   *  of it, since typing a date is a step of its own. */
+  canEdit: boolean;
   styles: ReturnType<typeof makeStyles>;
   palette: Palette;
 }) {
@@ -247,11 +286,13 @@ function Deadline({
 
   if (!editing) {
     return (
-      <Pressable accessibilityRole="button" onPress={() => { setDraft(stored); setEditing(true); }}>
+      <Pressable accessibilityRole="button" disabled={!canEdit} onPress={() => { setDraft(stored); setEditing(true); }}>
         <Text style={styles.muted}>
           {phase.recommendedByDay !== undefined
-            ? `Due ${formatDayMonthYear(dateForDay(startDate, phase.recommendedByDay))} · day ${phase.recommendedByDay} — tap to change`
-            : "No deadline — tap to set one"}
+            ? `Due ${formatDayMonthYear(dateForDay(startDate, phase.recommendedByDay))} · day ${phase.recommendedByDay}${canEdit ? " — tap to change" : ""}`
+            : canEdit
+              ? "No deadline — tap to set one"
+              : "No deadline"}
         </Text>
       </Pressable>
     );
@@ -282,7 +323,9 @@ function makeStyles(palette: Palette) {
     screen: { flex: 1, backgroundColor: palette.background },
     content: { padding: SPACING.lg, gap: SPACING.sm, paddingBottom: SPACING.xl },
     centered: { alignItems: "center", justifyContent: "center" },
+    titleRow: { flexDirection: "row", alignItems: "center", gap: SPACING.md },
     titleInput: { color: palette.foreground, fontSize: 20, fontWeight: "700", paddingVertical: SPACING.xs },
+    reading: { color: palette.mutedForeground, fontSize: 14, lineHeight: 20 },
     sectionTitle: {
       color: palette.subtleForeground,
       fontSize: 11,

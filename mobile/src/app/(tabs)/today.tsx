@@ -37,6 +37,7 @@ import { computeRotationItemsForDay, isRotationItem } from "@shared/rotation";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../../theme";
 import { usePalette } from "../../theme/ThemeProvider";
+import { EditButton, useEditMode } from "../../components/EditToggle";
 
 interface Row {
   id: string;
@@ -104,6 +105,7 @@ export default function TodayScreen() {
   // real date changes underneath (midnight, or coming back from the
   // background) — otherwise a phone left open overnight would quietly keep
   // showing yesterday as though it were today.
+  const { editing, setEditing } = useEditMode();
   const [viewing, setViewing] = useState(today);
   useEffect(() => setViewing(today), [today]);
 
@@ -209,6 +211,12 @@ export default function TodayScreen() {
         </Pressable>
       </View>
 
+      {/* Ticking is never behind the switch — it is the thing this screen is
+          for. What the switch guards is changing *what the day contains*. */}
+      <View style={styles.editRow}>
+        <EditButton editing={editing} onChange={setEditing} what={`${dayKey}'s plan`} />
+      </View>
+
       {(["focus", "revision"] as const).map((kind) => (
         <Section
           key={kind}
@@ -219,6 +227,7 @@ export default function TodayScreen() {
           date={viewing}
           toggle={toggleItem}
           dayKey={dayKey}
+          editing={editing}
           onAdd={(title) => addItem(kind, dayKey, title)}
           onRename={(id, title) => renameItem(kind, dayKey, id, title)}
           onRemove={(row) => deleteItem(row, dayKey, viewing)}
@@ -229,8 +238,8 @@ export default function TodayScreen() {
 
       {total === 0 && (
         <Text style={styles.empty}>
-          Nothing is planned for {dayKey} on this track yet — add something above, and it becomes part of
-          every {dayKey}.
+          Nothing is planned for {dayKey} on this track yet. Tap Edit to add something — it becomes
+          part of every {dayKey}.
         </Text>
       )}
     </Refreshable>
@@ -255,6 +264,7 @@ function Section({
   rows,
   track,
   date,
+  editing,
   toggle,
   dayKey,
   onAdd,
@@ -269,6 +279,8 @@ function Section({
   track: TrackState;
   /** The day being shown, which is not always today. */
   date: string;
+  /** Whether the screen is in edit mode. Ticking ignores it. */
+  editing: boolean;
   toggle: (item: DayItemRef, completed: boolean) => void;
   dayKey: string;
   onAdd: (title: string) => void;
@@ -277,14 +289,14 @@ function Section({
   styles: ReturnType<typeof makeStyles>;
   palette: Palette;
 }) {
-  const [editing, setEditing] = useState<string | null>(null);
+  const [renaming, setRenaming] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [adding, setAdding] = useState("");
 
   const save = (row: Row) => {
     const next = draft.trim();
     if (next && next !== row.title) onRename(row.id, next);
-    setEditing(null);
+    setRenaming(null);
   };
 
   return (
@@ -294,7 +306,7 @@ function Section({
       {rows.map((row) => {
         const completed = isItemCompleted(track, date, row.kind, row.id);
 
-        if (editing === row.id) {
+        if (renaming === row.id) {
           return (
             <View key={`${row.kind}:${row.id}`} style={styles.row}>
               <TextInput
@@ -312,7 +324,7 @@ function Section({
                 accessibilityRole="button"
                 accessibilityLabel={`Remove ${row.title}`}
                 onPress={() => {
-                  setEditing(null);
+                  setRenaming(null);
                   onRemove(row);
                 }}
                 style={styles.rowAction}
@@ -330,16 +342,16 @@ function Section({
             accessibilityRole="checkbox"
             accessibilityState={{ checked: completed }}
             accessibilityLabel={row.title}
-            accessibilityHint={row.generated ? undefined : "Hold to rename or remove"}
+            accessibilityHint={editing && !row.generated ? "Hold to rename or remove" : undefined}
             onPress={() =>
               toggle({ dateStr: date, kind: row.kind, id: row.id, title: row.title, description: row.description, dayKey }, !completed)
             }
             onLongPress={
-              row.generated
+              !editing || row.generated
                 ? undefined
                 : () => {
                     setDraft(row.title);
-                    setEditing(row.id);
+                    setRenaming(row.id);
                   }
             }
           >
@@ -354,6 +366,7 @@ function Section({
         );
       })}
 
+      {editing && (
       <TextInput
         value={adding}
         onChangeText={setAdding}
@@ -369,6 +382,7 @@ function Section({
         style={styles.addInput}
         accessibilityLabel={`Add a ${kind} item to ${dayKey}`}
       />
+      )}
     </View>
   );
 }
@@ -403,6 +417,7 @@ function makeStyles(palette: Palette) {
     dayLabelWrap: { flex: 1, alignItems: "center" },
     dayLabel: { color: palette.foreground, fontSize: 14, fontWeight: "600" },
     dayHint: { color: palette.subtleForeground, fontSize: 11 },
+    editRow: { flexDirection: "row", justifyContent: "flex-end" },
     editInput: {
       flex: 1,
       color: palette.foreground,

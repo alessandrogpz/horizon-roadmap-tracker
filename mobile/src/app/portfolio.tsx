@@ -20,11 +20,13 @@ import {
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { EditHeader, useEditMode } from "../components/EditToggle";
 import { Refreshable } from "../components/Refreshable";
 
 export default function PortfolioScreen() {
   const { track, today, editTrack } = useWorkspace();
   const palette = usePalette();
+  const { editing, setEditing } = useEditMode();
   const styles = useMemo(() => makeStyles(palette), [palette]);
   const [draft, setDraft] = useState("");
 
@@ -52,6 +54,13 @@ export default function PortfolioScreen() {
 
   return (
     <Refreshable style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <EditHeader
+        title="Deliverables"
+        editing={editing}
+        onChange={setEditing}
+        hint="Rename one, add its repository, or take it off the list. Ticking one off works either way."
+      />
+
       {projects.map((project) => (
         <View key={project.id} style={styles.card}>
           <Pressable
@@ -64,14 +73,19 @@ export default function PortfolioScreen() {
             <View style={[styles.checkbox, project.completed && { backgroundColor: palette.success, borderColor: palette.success }]}>
               {project.completed && <Text style={styles.tick}>✓</Text>}
             </View>
-            <TextInput
-              value={project.title}
-              onChangeText={(title) => editTrack((t) => updatePortfolioProject(t, project.id, { title }))}
-              style={[styles.title, project.completed && styles.done]}
-              accessibilityLabel={`Name of ${project.title}`}
-            />
+            {editing ? (
+              <TextInput
+                value={project.title}
+                onChangeText={(title) => editTrack((t) => updatePortfolioProject(t, project.id, { title }))}
+                style={[styles.title, project.completed && styles.done]}
+                accessibilityLabel={`Name of ${project.title}`}
+              />
+            ) : (
+              <Text style={[styles.title, project.completed && styles.done]}>{project.title}</Text>
+            )}
           </Pressable>
 
+          {editing && (
           <TextInput
             value={project.repoUrl ?? ""}
             onChangeText={(repoUrl) =>
@@ -86,6 +100,7 @@ export default function PortfolioScreen() {
             style={styles.repoInput}
             accessibilityLabel={`Repository link for ${project.title}`}
           />
+          )}
 
           <View style={styles.actions}>
             {project.repoUrl ? (
@@ -93,19 +108,22 @@ export default function PortfolioScreen() {
                 <Text style={styles.smallLabel}>Open repository</Text>
               </Pressable>
             ) : null}
-            <Pressable
-              accessibilityRole="button"
-              style={styles.smallButton}
-              onPress={() => editTrack((t) => removePortfolioProject(t, project.id))}
-            >
-              <Text style={styles.smallLabel}>Remove</Text>
-            </Pressable>
+            {editing && (
+              <Pressable
+                accessibilityRole="button"
+                style={styles.smallButton}
+                onPress={() => editTrack((t) => removePortfolioProject(t, project.id))}
+              >
+                <Text style={styles.smallLabel}>Remove</Text>
+              </Pressable>
+            )}
           </View>
         </View>
       ))}
 
       {projects.length === 0 && <Text style={styles.muted}>Nothing to deliver on this track yet.</Text>}
 
+      {editing && (
       <TextInput
         value={draft}
         onChangeText={setDraft}
@@ -116,6 +134,7 @@ export default function PortfolioScreen() {
         style={styles.input}
         accessibilityLabel="New deliverable"
       />
+      )}
 
       <Text style={styles.footnote}>
         Git statistics stay on the website: they read a repository on the computer running the app, and

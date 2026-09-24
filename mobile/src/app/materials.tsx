@@ -16,12 +16,14 @@ import { loadNotes, saveNote } from "../storage/db";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { EditHeader, useEditMode } from "../components/EditToggle";
 import { Refreshable } from "../components/Refreshable";
 import { SubNav } from "../components/SubNav";
 
 export default function MaterialsScreen() {
   const { track, today, editTrack } = useWorkspace();
   const palette = usePalette();
+  const { editing, setEditing } = useEditMode();
   const styles = useMemo(() => makeStyles(palette), [palette]);
   const [open, setOpen] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
@@ -85,11 +87,19 @@ export default function MaterialsScreen() {
     <Refreshable style={styles.screen} contentContainerStyle={styles.content}>
       <SubNav links={[{"href": "/notes", "label": "Notes & to-dos"}, {"href": "/search", "label": "Search"}]} />
 
+      <EditHeader
+        title="Materials"
+        editing={editing}
+        onChange={setEditing}
+        hint="Add something, archive what is finished, or correct a page count. Marking progress works either way."
+      />
+
       {materials.map((material) => (
         <MaterialCard
           key={material.id}
           material={material}
           expanded={open === material.id}
+          editing={editing}
           onToggle={() => setOpen(open === material.id ? null : material.id)}
           onStatus={(status) => setStatus(material.id, status)}
           onPage={(page) => setPage(material.id, page)}
@@ -134,12 +144,14 @@ export default function MaterialsScreen() {
         </View>
       )}
 
+      {editing && (
       <AddMaterial
         categories={categoriesFor(track.materials ?? [])}
         onAdd={add}
         styles={styles}
         palette={palette}
       />
+      )}
     </Refreshable>
   );
 }
@@ -188,6 +200,7 @@ function useMaterialNote(materialId: string, enabled: boolean) {
 function MaterialCard({
   material,
   expanded,
+  editing,
   onToggle,
   onStatus,
   onPage,
@@ -199,6 +212,10 @@ function MaterialCard({
 }: {
   material: Material;
   expanded: boolean;
+  /** The screen's edit mode. Ticking progress is always allowed; changing what
+   *  a material *is* — its page count, whether it is archived, whether it
+   *  exists — is not. */
+  editing: boolean;
   onToggle: () => void;
   onStatus: (status: string) => void;
   onPage: (page: number) => void;
@@ -254,6 +271,7 @@ function MaterialCard({
             ))}
           </View>
 
+          {editing && (
           <View style={styles.pageRow}>
             <Text style={styles.muted}>Pages in total</Text>
             <TextInput
@@ -274,6 +292,7 @@ function MaterialCard({
             />
             <Text style={styles.muted}>{total > 0 ? "" : "— leave 0 if it has none"}</Text>
           </View>
+          )}
 
           {total > 0 && (
             <View style={styles.pageRow}>
@@ -310,23 +329,27 @@ function MaterialCard({
             accessibilityLabel={`Notes on ${material.title}`}
           />
 
-          <Pressable accessibilityRole="button" onPress={onArchive} style={styles.linkButton}>
-            <Text style={styles.linkLabel}>Archive it</Text>
-          </Pressable>
-          <Text style={styles.footnote}>
-            Archiving keeps the progress, the notes and the history, and takes it off the list.
-            Removing does not.
-          </Text>
+          {editing && (
+            <>
+              <Pressable accessibilityRole="button" onPress={onArchive} style={styles.linkButton}>
+                <Text style={styles.linkLabel}>Archive it</Text>
+              </Pressable>
+              <Text style={styles.footnote}>
+                Archiving keeps the progress, the notes and the history, and takes it off the list.
+                Removing does not.
+              </Text>
 
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => (confirmingRemove ? onRemove() : setConfirmingRemove(true))}
-            style={styles.linkButton}
-          >
-            <Text style={[styles.linkLabel, confirmingRemove && { color: palette.danger }]}>
-              {confirmingRemove ? "Tap again to remove it" : "Remove this material"}
-            </Text>
-          </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => (confirmingRemove ? onRemove() : setConfirmingRemove(true))}
+                style={styles.linkButton}
+              >
+                <Text style={[styles.linkLabel, confirmingRemove && { color: palette.danger }]}>
+                  {confirmingRemove ? "Tap again to remove it" : "Remove this material"}
+                </Text>
+              </Pressable>
+            </>
+          )}
 
           {material.link ? (
             <Pressable accessibilityRole="link" onPress={() => void Linking.openURL(material.link!)} style={styles.linkButton}>

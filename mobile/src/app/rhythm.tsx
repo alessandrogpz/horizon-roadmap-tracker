@@ -31,6 +31,7 @@ import { DAYS_SHORT } from "@shared/dates";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { EditHeader, useEditMode } from "../components/EditToggle";
 import { Refreshable } from "../components/Refreshable";
 
 const WEEK = DAYS_SHORT.slice(1).concat(DAYS_SHORT[0]); // Mon..Sun
@@ -47,6 +48,7 @@ export default function RhythmScreen() {
   const styles = useMemo(() => makeStyles(palette), [palette]);
   const [newItem, setNewItem] = useState<Record<string, string>>({});
   const [newType, setNewType] = useState("");
+  const { editing, setEditing } = useEditMode();
 
   /** Every focus-type edit is the same shape: take the pool, change it with a
    *  shared rule, write both halves back. The rules keep the week consistent —
@@ -105,15 +107,28 @@ export default function RhythmScreen() {
 
   return (
     <Refreshable style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-      <Text style={styles.sectionTitle}>The week</Text>
-      <Text style={styles.muted}>Tap a day to change what it&apos;s for.</Text>
+      <EditHeader
+        title="The week"
+        editing={editing}
+        onChange={setEditing}
+        hint="Tap a day to cycle what it is for. Rotations and the kinds of day can be changed too."
+      />
+      {!editing && (
+        <Text style={styles.muted}>What each day of this track is for, and the topics that rotate through it.</Text>
+      )}
 
       <View style={styles.week}>
         {WEEK.map((name) => {
           const day = schedule.find((d) => d.name === name);
           const colour = day ? track.focusTypes?.[day.type]?.color : undefined;
           return (
-            <Pressable key={name} accessibilityRole="button" onPress={() => cycleDay(name)} style={styles.day}>
+            <Pressable
+              key={name}
+              accessibilityRole="button"
+              disabled={!editing}
+              onPress={() => cycleDay(name)}
+              style={styles.day}
+            >
               <Text style={styles.dayName}>{name}</Text>
               <View style={[styles.dayDot, { backgroundColor: colour || palette.surfaceMuted }]} />
               <Text style={styles.dayLabel} numberOfLines={1}>
@@ -124,13 +139,16 @@ export default function RhythmScreen() {
         })}
       </View>
 
-      <Text style={styles.sectionTitle}>What a day can be for</Text>
-      <Text style={styles.muted}>
-        The pool the days above cycle through. Renaming one renames it everywhere it is used; deleting
-        one moves its days to whatever is left, because a day pointing at a type that is gone is worse
-        than a day of the wrong kind.
-      </Text>
+      {editing && <Text style={styles.sectionTitle}>What a day can be for</Text>}
+      {editing && (
+        <Text style={styles.muted}>
+          The pool the days above cycle through. Renaming one renames it everywhere it is used;
+          deleting one moves its days to whatever is left, because a day pointing at a type that is
+          gone is worse than a day of the wrong kind.
+        </Text>
+      )}
 
+      {editing && (
       <View style={styles.card}>
         {focusTypes.map(([key, type]) => (
           <View key={key} style={styles.itemRow}>
@@ -183,6 +201,7 @@ export default function RhythmScreen() {
           accessibilityLabel="New focus type"
         />
       </View>
+      )}
 
       <Text style={styles.sectionTitle}>Rotations</Text>
       <Text style={styles.muted}>
@@ -194,23 +213,34 @@ export default function RhythmScreen() {
       {rotations.map((rotation) => (
         <View key={rotation.id} style={styles.card}>
           <View style={styles.itemRow}>
-            <TextInput
-              value={rotation.label}
-              onChangeText={(label) => editRotation(rotation.id, (r) => ({ ...r, label }))}
-              style={[styles.input, { flex: 1 }]}
-              accessibilityLabel={`Name of ${rotation.label}`}
-            />
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`Remove ${rotation.label}`}
-              onPress={() =>
-                editTrack((t) => ({ ...t, rotations: (t.rotations ?? []).filter((r) => r.id !== rotation.id) }))
-              }
-            >
-              <Text style={styles.remove}>×</Text>
-            </Pressable>
+            {editing ? (
+              <TextInput
+                value={rotation.label}
+                onChangeText={(label) => editRotation(rotation.id, (r) => ({ ...r, label }))}
+                style={[styles.input, { flex: 1 }]}
+                accessibilityLabel={`Name of ${rotation.label}`}
+              />
+            ) : (
+              <Text style={styles.cardTitle}>
+                {rotation.label} · {rotation.target === "focus" ? "focus" : "revision"} ·{" "}
+                {rotation.daysOfWeek.length ? rotation.daysOfWeek.join(", ") : "no days yet"}
+              </Text>
+            )}
+            {editing && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Remove ${rotation.label}`}
+                onPress={() =>
+                  editTrack((t) => ({ ...t, rotations: (t.rotations ?? []).filter((r) => r.id !== rotation.id) }))
+                }
+              >
+                <Text style={styles.remove}>×</Text>
+              </Pressable>
+            )}
           </View>
 
+          {editing && (
+            <>
           <Text style={styles.fieldLabel}>Feeds</Text>
           <View style={styles.choices}>
             {(["revision", "focus"] as const).map((target) => (
@@ -269,6 +299,9 @@ export default function RhythmScreen() {
             accessibilityLabel={`Starting week of ${rotation.label}`}
           />
 
+            </>
+          )}
+
           <Link href={{ pathname: "/rotation/[id]", params: { id: rotation.id } }} asChild>
             <Pressable accessibilityRole="button" style={styles.planButton}>
               <Text style={styles.planLabel}>
@@ -282,16 +315,19 @@ export default function RhythmScreen() {
           {rotation.items.map((item, index) => (
             <View key={`${index}-${item.title}`} style={styles.itemRow}>
               <Text style={styles.item}>{item.title}</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Remove ${item.title}`}
-                onPress={() => editRotation(rotation.id, (r) => ({ ...r, items: r.items.filter((_, i) => i !== index) }))}
-              >
-                <Text style={styles.remove}>×</Text>
-              </Pressable>
+              {editing && (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Remove ${item.title}`}
+                  onPress={() => editRotation(rotation.id, (r) => ({ ...r, items: r.items.filter((_, i) => i !== index) }))}
+                >
+                  <Text style={styles.remove}>×</Text>
+                </Pressable>
+              )}
             </View>
           ))}
 
+          {editing && (
           <TextInput
             value={newItem[rotation.id] ?? ""}
             onChangeText={(text) => setNewItem((prev) => ({ ...prev, [rotation.id]: text }))}
@@ -307,6 +343,7 @@ export default function RhythmScreen() {
             style={styles.input}
             accessibilityLabel={`Add a topic to ${rotation.label}`}
           />
+          )}
         </View>
       ))}
 
@@ -316,6 +353,7 @@ export default function RhythmScreen() {
         </Text>
       )}
 
+      {editing && (
       <Pressable
         accessibilityRole="button"
         style={styles.addButton}
@@ -341,6 +379,7 @@ export default function RhythmScreen() {
       >
         <Text style={styles.addLabel}>Add a rotation</Text>
       </Pressable>
+      )}
     </Refreshable>
   );
 }

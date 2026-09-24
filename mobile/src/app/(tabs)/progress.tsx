@@ -256,7 +256,14 @@ function makeStyles(palette: Palette) {
     // enough to hold a number and left only a handful of weeks on screen,
     // which is the opposite of what a consistency grid is for: the point is
     // seeing months of it at once.
-    weekdayRow: { flexDirection: "row", gap: CELL_GAP, alignItems: "center", marginBottom: 2 },
+    weekdayRow: {
+      flexDirection: "row",
+      gap: CELL_GAP,
+      alignItems: "center",
+      marginBottom: 2,
+      alignSelf: "flex-start",
+      width: GUTTER + 7 * CELL + 7 * CELL_GAP,
+    },
     weekdayLabel: {
       width: CELL,
       textAlign: "center",
@@ -277,6 +284,11 @@ function makeStyles(palette: Palette) {
       alignItems: "center",
       paddingVertical: 2,
       borderRadius: 4,
+      // Only as wide as the grid it sits behind. Left to stretch, the month
+      // band ran the full width of the screen while the cells stopped a third
+      // of the way across, so the shading looked like it belonged to nothing.
+      alignSelf: "flex-start",
+      width: GUTTER + 7 * CELL + 7 * CELL_GAP,
     },
     cell: { width: CELL, height: CELL, borderRadius: 4 },
     blank: { opacity: 0 },
