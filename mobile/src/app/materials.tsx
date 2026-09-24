@@ -85,8 +85,6 @@ export default function MaterialsScreen() {
 
   return (
     <Refreshable style={styles.screen} contentContainerStyle={styles.content}>
-      <SubNav links={[{"href": "/notes", "label": "Notes & to-dos"}, {"href": "/search", "label": "Search"}]} />
-
       <EditHeader
         title="Materials"
         editing={editing}
@@ -152,6 +150,11 @@ export default function MaterialsScreen() {
         palette={palette}
       />
       )}
+      <View style={styles.moreRow}>
+        <Text style={styles.moreTitle}>More on this track</Text>
+      </View>
+      <SubNav links={[{"href": "/notes", "label": "Notes & to-dos"}, {"href": "/search", "label": "Search"}]} />
+
     </Refreshable>
   );
 }
@@ -461,6 +464,14 @@ function makeStyles(palette: Palette) {
     cardText: { flex: 1, gap: 2 },
     title: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
     muted: { color: palette.mutedForeground, fontSize: 13 },
+    moreRow: { marginTop: SPACING.xl },
+    moreTitle: {
+      color: palette.subtleForeground,
+      fontSize: 11,
+      fontWeight: "700",
+      letterSpacing: 1.2,
+      textTransform: "uppercase",
+    },
     footnote: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16 },
     archivedRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: SPACING.md, paddingTop: SPACING.sm },
     statusDot: { width: 9, height: 9, borderRadius: 5 },

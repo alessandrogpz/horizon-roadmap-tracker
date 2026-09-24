@@ -43,8 +43,6 @@ export default function PhasesScreen() {
 
   return (
     <Refreshable style={styles.screen} contentContainerStyle={styles.content}>
-      <SubNav links={[{"href": "/roadmap", "label": "Roadmap"}, {"href": "/rhythm", "label": "Week & rotations"}, {"href": "/portfolio", "label": "Deliverables"}]} />
-
       <EditHeader
         title="Phases"
         editing={editing}
@@ -165,6 +163,11 @@ export default function PhasesScreen() {
       {timeline.windows.length === 0 && (
         <Text style={styles.muted}>This track has no phases yet.</Text>
       )}
+      <View style={styles.moreRow}>
+        <Text style={styles.moreTitle}>More on this track</Text>
+      </View>
+      <SubNav links={[{"href": "/roadmap", "label": "Roadmap"}, {"href": "/rhythm", "label": "Week & rotations"}, {"href": "/portfolio", "label": "Deliverables"}]} />
+
     </Refreshable>
   );
 }
@@ -177,6 +180,14 @@ function makeStyles(palette: Palette) {
     summary: { gap: SPACING.sm },
     headline: { color: palette.foreground, fontSize: 20, fontWeight: "700" },
     muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
+    moreRow: { marginTop: SPACING.xl },
+    moreTitle: {
+      color: palette.subtleForeground,
+      fontSize: 11,
+      fontWeight: "700",
+      letterSpacing: 1.2,
+      textTransform: "uppercase",
+    },
     card: {
       gap: SPACING.sm,
       padding: SPACING.lg,
