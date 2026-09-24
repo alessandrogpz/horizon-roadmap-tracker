@@ -7,6 +7,24 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.62.0] - 2026-09-24
+
+### Changed
+- **The phone's phase list is a timeline**, the one the website has always had, rather than four
+  bordered cards stacked on top of each other. A single line runs down the left with a dot per
+  phase: green behind you, a ringed accent dot at the phase you are in, then dimming with distance
+  ahead. The borders were doing a job the line does better — separating phases — while also
+  insisting each one was equally important, which is the opposite of what a roadmap is for.
+- **What sat in a card's header now sits in a line of its own**: `PHASE 03`, the title beside it,
+  the description, then the deadline and task count in one faint row. The phase number is in the
+  label, so `Phase 3: ` is stripped from the title rather than printed twice.
+- **Phases ahead of the current one fade with distance.** Nothing past the phase you are in has
+  been decided in any detail, and showing phase 8 as vividly as phase 4 said otherwise.
+
+### Fixed
+- **The glow on the current phase is a circle behind the dot, not a shadow.** Coloured shadows do
+  not survive the trip to Android, so the website's `box-shadow` could not simply be copied.
+
 ## [0.61.0] - 2026-09-24
 
 The week screen was showing a *pattern*, not a calendar: seven chips reading Mon..Sun, with no way to
