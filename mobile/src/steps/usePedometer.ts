@@ -46,7 +46,14 @@ export interface StepState {
   detail: string;
 }
 
-export function usePedometer(date: string): StepState {
+/**
+ * @param enabled Whether this track wants a step count at all. False keeps the
+ *   hook inert: no availability check, no permission prompt, and above all no
+ *   subscription to the sensor, which is the part that costs battery. A track
+ *   that has never asked for step counting should never cause Android to ask
+ *   for the activity permission either.
+ */
+export function usePedometer(date: string, enabled = true): StepState {
   const [status, setStatus] = useState<StepStatus>("checking");
   const [today, setToday] = useState(0);
   const [detail, setDetail] = useState("");
@@ -71,6 +78,7 @@ export function usePedometer(date: string): StepState {
   }, [date]);
 
   useEffect(() => {
+    if (!enabled) return setStatus("unavailable");
     let cancelled = false;
     (async () => {
       const available = await Pedometer.isAvailableAsync().catch(() => false);
@@ -90,7 +98,7 @@ export function usePedometer(date: string): StepState {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [enabled]);
 
   const request = useCallback(async () => {
     setDetail("asking…");
@@ -113,10 +121,12 @@ export function usePedometer(date: string): StepState {
   // Subscribe only while counting, and let go on the way out: an open sensor
   // subscription is a battery cost the user did not ask for.
   useEffect(() => {
-    if (status !== "counting") return;
+    if (!enabled || status !== "counting") return;
 
     let last = 0;
-    const subscription = Pedometer.watchStepCount((result) => {
+    let subscription: { remove: () => void } | undefined;
+    try {
+      subscription = Pedometer.watchStepCount((result) => {
       // Android's step counter batches: events can arrive several steps late,
       // or in bursts. This line is how that behaviour was observed rather than
       // guessed at, and it costs nothing in a release build, where the bundler
@@ -129,13 +139,20 @@ export function usePedometer(date: string): StepState {
       last = result.steps;
       if (!added) return;
 
-      total.current += added;
-      setToday(total.current);
-      void saveStepCount(dateRef.current, total.current);
-    });
+        total.current += added;
+        setToday(total.current);
+        void saveStepCount(dateRef.current, total.current);
+      });
+    } catch (error) {
+      // A build without the sensor module, or a platform that has none at all,
+      // must leave the rest of the screen working. Today is a checklist; it has
+      // nothing to do with walking.
+      setStatus("unavailable");
+      setDetail(error instanceof Error ? error.message : "the step counter is not available here");
+    }
 
-    return () => subscription.remove();
-  }, [status]);
+    return () => subscription?.remove();
+  }, [enabled, status]);
 
   // Coming back from the background: the day may have rolled over, the
   // subscription was not delivering while away, and — the case that matters
@@ -144,6 +161,7 @@ export function usePedometer(date: string): StepState {
   // noticing the change on resume is the only way back without making the user
   // hunt for a button.
   useEffect(() => {
+    if (!enabled) return;
     const onChange = (state: AppStateStatus) => {
       if (state !== "active") return;
       loadStepCount(dateRef.current).then((stored) => {
@@ -160,7 +178,10 @@ export function usePedometer(date: string): StepState {
     };
     const subscription = AppState.addEventListener("change", onChange);
     return () => subscription.remove();
-  }, []);
+    // `enabled` matters here as much as anywhere: without it, coming back from
+    // the background quietly switched the sensor on for a track that had said
+    // no, because this effect only looked at the permission.
+  }, [enabled]);
 
   return { status, today, request, detail };
 }

@@ -1,6 +1,7 @@
 import "fake-indexeddb/auto";
 import { describe, it, expect } from "vitest";
 import { buildBackupBundle, buildZipFiles, slugify, type BackupBundle } from "../export";
+import { backupFilename } from "../backupFormat";
 import { createTrack } from "../workspaceRepo";
 import { db } from "../localDb";
 import { notepadNoteId, todoNoteId } from "../quickNotes";
@@ -125,5 +126,17 @@ describe("buildZipFiles", () => {
     const rotationPaths = Object.keys(files).filter((p) => p.startsWith("rotations/"));
     expect(rotationPaths).toHaveLength(2);
     expect(new Set(rotationPaths).size).toBe(2);
+  });
+});
+
+describe("backupFilename", () => {
+  // The phone writes its backups through the same function (lib/backupFormat),
+  // so a folder holding files from both devices sorts by date rather than by
+  // which one wrote them. Pinned because changing the name is a silent break:
+  // nothing fails, the files just stop lining up.
+  it("names a file after the day it was taken", () => {
+    const at = new Date("2026-09-24T22:41:03.000Z");
+    expect(backupFilename("json", at)).toBe("horizon-backup-2026-09-24.json");
+    expect(backupFilename("zip", at)).toBe("horizon-backup-2026-09-24.zip");
   });
 });

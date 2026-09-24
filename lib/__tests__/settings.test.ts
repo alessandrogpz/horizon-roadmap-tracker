@@ -47,18 +47,20 @@ describe("settings", () => {
   });
 
   it("clamps a rollover hour out of range", () => {
-    expect(updateSettings({ dayRolloverHour: 99 }).dayRolloverHour).toBe(11);
+    expect(updateSettings({ dayRolloverHour: 99 }).dayRolloverHour).toBe(23);
     expect(updateSettings({ dayRolloverHour: -5 }).dayRolloverHour).toBe(0);
   });
 
   it("repairs a malformed stored blob rather than throwing", () => {
     window.localStorage.setItem("horizon-settings", '{"weekStartsOn":"funday","dayRolloverHour":"four"}');
     const settings = getSettings();
-    expect(settings.weekStartsOn).toBe("sun");
+    // Nonsense falls back to the default, which is Monday.
+    expect(settings.weekStartsOn).toBe("mon");
     expect(settings.dayRolloverHour).toBe(0);
   });
 
   it("keeps a valid week start", () => {
+    expect(updateSettings({ weekStartsOn: "sun" }).weekStartsOn).toBe("sun");
     expect(updateSettings({ weekStartsOn: "mon" }).weekStartsOn).toBe("mon");
   });
 });

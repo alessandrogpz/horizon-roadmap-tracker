@@ -6,11 +6,6 @@ import { createTrack, ensureStarterTrack, fetchWorkspace, updateWorkspace } from
 import { activeTrack, visibleTracks, withActiveTrack } from "@/lib/selectors";
 import { applyDailyResetIfNeeded } from "@/lib/dailyReset";
 import { todayYMD } from "@/lib/dates";
-import {
-  authenticateGoogleDrive,
-  isGoogleAuthenticated,
-  syncWithGoogleDrive,
-} from "@/lib/googleDrive";
 import { syncWithServer } from "@/lib/serverSync";
 import { accountStore } from "@/lib/account";
 
@@ -53,7 +48,6 @@ export interface WorkspaceActions {
   /** Adds a new track and makes it active. */
   addTrack: (track: TrackState) => Promise<void>;
   /** Runs a full Drive sync and reloads the merged result. */
-  sync: (clientId: string) => Promise<void>;
   /** The same through the signed-in Horizon account (MongoDB on the server). */
   syncAccount: () => Promise<void>;
   /** Re-reads the workspace from storage. For changes made underneath the
@@ -258,21 +252,6 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     [flush, reload]
   );
 
-  const sync = useCallback(
-    (clientId: string) =>
-      runSync(async () => {
-        if (!isGoogleAuthenticated()) await authenticateGoogleDrive(clientId);
-        let res = await syncWithGoogleDrive();
-        if (!res.success && res.authRequired) {
-          // Token expired or was revoked mid-session: re-authenticate and retry once.
-          await authenticateGoogleDrive(clientId);
-          res = await syncWithGoogleDrive();
-        }
-        return res;
-      }),
-    [runSync]
-  );
-
   const syncAccount = useCallback(
     () =>
       runSync(async () => {
@@ -355,8 +334,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   );
 
   const actions = useMemo<WorkspaceActions>(
-    () => ({ updateTrack, commitTrack, commitWorkspace, flush, switchTrack, addTrack, sync, syncAccount, reload }),
-    [updateTrack, commitTrack, commitWorkspace, flush, switchTrack, addTrack, sync, syncAccount, reload]
+    () => ({ updateTrack, commitTrack, commitWorkspace, flush, switchTrack, addTrack, syncAccount, reload }),
+    [updateTrack, commitTrack, commitWorkspace, flush, switchTrack, addTrack, syncAccount, reload]
   );
 
   return (

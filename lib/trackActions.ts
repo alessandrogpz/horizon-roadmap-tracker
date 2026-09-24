@@ -68,7 +68,7 @@ export const setMaterialArchived = (track: TrackState, materialId: string, archi
   updateMaterial(track, materialId, { archived });
 
 /** Ids are prefixed with the track id so they stay globally unique — notes
- *  sync matches files by note_<materialId>.md in one shared Drive folder. */
+ *  the .zip export names note files by material id, so they stay matchable. */
 export const addMaterial = (track: TrackState, material: Omit<Material, "id">): TrackState => ({
   ...track,
   materials: [...(track.materials || []), { id: `m_${track.meta.id}_${Date.now()}`, ...material, updatedAt: Date.now() }],

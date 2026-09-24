@@ -58,7 +58,7 @@ Aim for about 45 seconds a part. Show the diagram and one or two files; don't re
 | Symmetric vs asymmetric encryption | Asymmetric (a key pair) to agree on keys and to sign; symmetric (one shared key) for the bulk data, because it's fast. TLS uses both | below |
 | How does authentication work in your app? | OpenID Connect with Google → the server verifies the ID token → a hashed server-side session | Learning log 5 |
 | How does authorization work? | Per-user query scoping; least-privilege database users; OAuth scopes (`drive.appdata`) | Learning log 4, 7 |
-| OAuth 2.0 vs OpenID Connect? | Drive sync uses OAuth 2.0: permission for one scope, no identity. Sign-in uses OpenID Connect: an ID token that says who you are | Learning log 5 |
+| OAuth 2.0 vs OpenID Connect? | OAuth 2.0 grants *access* — Horizon used it for Drive sync until 0.32.0, an access token for one scope and no identity. OpenID Connect answers *who*: an ID token the server verifies, granting access to nothing. Dropping Drive left only the second, which is why no sensitive scope remains | Learning log 5 |
 | How do you validate input? | zod strict schemas, `$jsonSchema`, the backup validator, markdown escaping | Learning log 7, 8 |
 | What is CSRF, and your defence? | The 0.14.4 story; SameSite cookies plus `Origin` checks plus JSON-only on the API | Learning log 1, 5 |
 | Database injection? | NoSQL operator injection (`{"$ne": null}`): strict types, `sanitizeFilter`, and the test that shows the raw driver matching and Mongoose refusing | Learning log 5 |

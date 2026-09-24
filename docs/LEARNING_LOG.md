@@ -38,6 +38,10 @@ The other documents, and what each one is for:
 12. [Securing the development life cycle (0.21.1)](#12-securing-the-development-life-cycle-0211)
 13. [Going live: Atlas, Vercel and a protected `main` (0.21.4)](#13-going-live-atlas-vercel-and-a-protected-main-0214)
 14. [Noticing: health checks, security counters and an encrypted backup (0.22.0)](#14-noticing-health-checks-security-counters-and-an-encrypted-backup-0220)
+15. [A second platform, from the same core (0.25.0–0.27.0)](#15-a-second-platform-from-the-same-core-0250-0270)
+16. [What a phone can do that a browser can't (0.26.0–0.29.0)](#16-what-a-phone-can-do-that-a-browser-cant-0260-0290)
+17. [Files, and the standard library that isn't there (0.38.1–0.39.0)](#17-files-and-the-standard-library-that-isnt-there-0381-0390)
+18. [Designing it, not just building it (0.45.0–0.56.0)](#18-designing-it-not-just-building-it-0450-0560)
 
 ---
 
@@ -977,3 +981,278 @@ curl -s https://horizonroadmap.com/api/health
 **Files.** `lib/server/securityEvents.ts`, `lib/server/health.ts`, `scripts/ops-check.ts`,
 `scripts/backup.ts`, `.github/workflows/{uptime,ops,backup}.yml`, `docs/security/RUNBOOK.md` §7–§8,
 `lib/__tests__/securityEvents.db.test.ts`.
+
+---
+
+## 15. A second platform, from the same core (0.25.0–0.27.0)
+
+**What changed.** Horizon runs on Android, as a real app written with React Native and Expo, in
+`mobile/`. It shows today's plan, ticks items, keeps a streak, switches tracks, signs in with Google
+and syncs with the same account as the website.
+
+**Why.** A third module, Mobile App Development, whose exam falls on the same day as the other two.
+But the interesting part isn't the module: it's what building a second front end revealed about how
+the first one was built.
+
+**Concepts.**
+- **The architecture got tested, not described.** `lib/` — types, dates, completion rules, streak
+  calculation, selectors, the merge engine, the migrations — imports nothing from React and nothing
+  from the browser. About 1,500 lines moved to the phone *unchanged*, tests included. Nobody planned
+  that for mobile; it came from keeping business rules out of components, and this is the first time
+  it was cashed in. "Reflect on your software architecture" has a concrete answer: the architecture is
+  the reason this took weeks rather than months.
+- **What doesn't travel.** Drawing and storing. There is no DOM, so every component is rewritten, and
+  no IndexedDB, so storage is SQLite. Those were always going to be platform-specific; the point of
+  the layering is that *only* they were.
+- **The server didn't change at all** — well, almost (entry 16). The phone is a third device: it posts
+  its workspace to `/api/sync` and the server merges it in a transaction, using the same
+  `mergeWorkspace` the phone itself runs. Two devices ticking different boxes on the same day both
+  keep their tick, and the phone got that for free.
+- **A bundler that reads outside its own folder.** `mobile/` is a separate npm package, so Metro is
+  told to watch the repository root (for `../lib`) and to resolve `node_modules` only from `mobile/` —
+  two copies of React in one bundle is the classic monorepo crash.
+- **Where a session lives, when there is no browser.** The web keeps it in an HttpOnly cookie no
+  script can read. A phone has something better: the Android Keystore. So the app asks for the token
+  explicitly and sends it as a `Bearer` header, which is also safer against forgery — nothing attaches
+  a bearer token automatically, so no other app or page can make an authenticated request by accident.
+- **Storage, and its options.** SQLite for structured data that must survive; a key-value store for
+  small preferences; the keystore for the session; the server for the shared copy. The same question
+  the web answered with IndexedDB and `localStorage`, answered again with different tools.
+
+**See it yourself.** `cd mobile && npm start`, then open Horizon on the phone. Tick something, force
+close the app, reopen: still ticked. Tick something else on the laptop, sync both, and both survive.
+
+**Exam questions.**
+- *Why React Native rather than Flutter or Kotlin?* The domain logic is TypeScript that imports
+  nothing platform-specific, so it moves as it is. Dart or Kotlin would mean rewriting the merge
+  engine and the migrations, then maintaining two copies that can disagree — the exact risk this
+  project spent weeks removing. `MOBILE_PLAN.md` §3.
+- *What did you give up?* Memory, and a bridge between JavaScript and native code that Flutter doesn't
+  have. Both acceptable for an app whose heaviest operation is a merge over a few hundred documents.
+- *What is shared, and what can't be?* Logic travels; drawing and storing do not.
+- *How do two devices not overwrite each other?* They never merge locally. The server merges inside a
+  transaction, per item, with device-side timestamps deciding — entry 7.
+
+**Files.** `mobile/src/`, `mobile/metro.config.js`, `lib/` (unchanged), `MOBILE_PLAN.md`.
+
+---
+
+## 16. What a phone can do that a browser can't (0.26.0–0.29.0)
+
+**What changed.** The step counter, the permission that guards it, and Android's two directions of
+inter-app communication: a share sheet out, a deep link in.
+
+**Why.** A phone that only shows a smaller copy of the website is not worth installing, and the module
+asks for sensors, permissions and inter-app communication specifically — because they are what make
+mobile development different from web development.
+
+**Concepts.**
+- **A sensor is not a data source you can just read.** Android has no "how many steps today". There is
+  `watchStepCount`, which reports steps *since you subscribed* and only while the app is in the
+  foreground. So the app keeps its own running total and writes it immediately, and it says on screen
+  that steps taken while it's closed aren't counted. The alternative — Health Connect — is a second
+  permission system and a bigger build. Stating the limit is better than implying a full day.
+- **Permissions can be refused permanently.** Android's "don't ask again" means the app may never
+  prompt again; only the user can change it in settings. A well-behaved app detects that state, says
+  where to go, and notices the change when it returns to the foreground. Found by hitting it for real.
+- **Native code and JavaScript ship differently, and this is the platform's central fact.** JavaScript
+  can be replaced in an app already installed. Native code cannot: it needs a new build, downloaded
+  and installed by the user. That is why Expo Go — one shared app, containing what Expo chose — could
+  not run the pedometer, and why a build made before secure storage was added crashed on importing it.
+  It is also the client-server versioning problem from entry 13 in different clothes: an old app in
+  someone's pocket, talking to a server that has moved on.
+- **Intents, both ways.** Out: the share sheet hands Android text and the system offers whatever can
+  receive it, with no permission needed because the user picks the destination. In: `horizon://track/<id>`
+  opens the app on that track — and because a link is outside input, the handler may only choose
+  between tracks that already exist.
+- **A CSRF check that was measuring the wrong thing.** The server refused every request without an
+  `Origin` header, which a native app never sends, so sign-in from the phone was refused before the
+  token was read. The fix went back to what the check is *for*: cross-site forgery depends on the
+  browser attaching credentials by itself, so a request carrying no cookie has no authority to abuse.
+  No cookie, no `Origin` needed; a cookie without one is still refused. Found because the security
+  counters from entry 14 showed `sign-in-rejected` stuck at zero while the phone kept failing — the
+  monitoring paid for itself in a day.
+
+**See it yourself.** On the phone: tap "Count my steps", allow, walk. Then, from the laptop with the
+phone attached over USB:
+
+```bash
+adb shell am start -a android.intent.action.VIEW -d "horizon://track/<a track id>" com.horizonroadmap.app
+```
+
+The app switches to that track. And tap "Share where this track stands" to send a summary to any other
+app.
+
+**Exam questions.**
+- *Which sensor, and what did you have to consider?* The pedometer: the hardware may not exist, the
+  permission may be refused or permanently refused, the subscription costs battery so it is released
+  with the screen, and nothing arrives in the background.
+- *How does Android's permission system work?* Declared in the manifest, asked at the moment of use,
+  refusable, permanently refusable. An app that hasn't declared it is never even asked — which is
+  exactly why Expo Go couldn't do this.
+- *What is inter-app communication?* Intents. The share sheet and deep links here; also content
+  providers and broadcast receivers, which this app doesn't need.
+- *What's different about releasing a mobile app?* JavaScript can be updated over the air; native code
+  cannot. Old versions live on phones for months, so the server has to keep accepting what they send.
+- *How do you handle a missing native module?* Load it when first used, and report "this build can't
+  do that" instead of crashing the whole app on startup.
+
+**Files.** `mobile/src/steps/usePedometer.ts`, `mobile/src/share/shareTrack.ts`,
+`mobile/src/app/track/[id].tsx`, `mobile/src/auth/session.ts`, `lib/server/http.ts`, `mobile/app.json`.
+
+
+---
+
+## 17. Files, and the standard library that isn't there (0.38.1–0.39.0)
+
+**What changed.** Two things that both turned out to be about the same gap. The roadmap now *renders*
+on the phone instead of showing its markdown source. And Settings can write a backup of everything
+the device holds into a file, and read one back.
+
+**Why.** The roadmap was shipped as raw text on the judgement that "a page of prose reads fine with
+its headings intact". That judgement did not survive the first real roadmap on a real screen: a
+roadmap is `##`, `- ` and `**` on nearly every line, which is not prose. The backup was the last
+thing the website could do that the phone could not — and it matters more here than there. A
+laptop's copy can be reached from the machine itself; a phone's cannot, so a reset, a loss or an
+uninstall takes whatever was never synced with it.
+
+**Concepts.**
+
+- **React Native is not Node, and the difference shows up as a bundling failure.** Adding a markdown
+  renderer failed the entire export with `Unable to resolve module punycode`. Not a bug in the
+  library: `markdown-it` does `require("punycode")`, which on a server is the Node standard library,
+  and on a phone is nothing at all. React Native ships a JavaScript engine, not Node — no `fs`, no
+  `path`, no `crypto`, no `punycode`. The fix is to install the real implementation from npm and tell
+  the bundler where to find it (`resolver.extraNodeModules` in `metro.config.js`). Worth knowing
+  before choosing a dependency: a library written for the server can import something that does not
+  exist here, and nothing warns you until the bundle breaks.
+
+- **Android gives an app no access to the user's files.** Not "ask for permission and then you have
+  it" — there is no permission to ask for. An app reaches the user's storage only through the
+  *Storage Access Framework*: the system shows a picker, the user chooses one file or one folder, and
+  the app is handed access to exactly that. So the export asks for a folder and the import opens a
+  picker, and the whole feature involves no permission prompt at all. Contrast with the pedometer in
+  entry 16, which does need one: the difference is that the user's own choice *is* the grant here.
+
+- **A native dependency costs a release; a JavaScript one costs nothing.** Both changes could have
+  taken the obvious route — `react-native-markdown-display` needs no native code, but a share-sheet
+  module and a document picker both do, and a native dependency means a new build installed on every
+  phone rather than an update that arrives on next launch. `expo-file-system` is already in every
+  Expo app and carries both pickers, so the backup shipped over the air. Checking whether a
+  dependency contains native code *before* designing around it is now a habit, not an afterthought.
+
+- **Shared code has to be pulled apart along the right seam.** `lib/export.ts` and `lib/import.ts`
+  were not reusable: one builds a `Blob` and clicks an invisible `<a>`, the other takes a browser
+  `File` and writes to Dexie. But the *format* is the same file on both platforms, and a backup that
+  only restores where it was written is not a backup. Splitting out `lib/backupFormat.ts` — the
+  shape, the validation, the summary, importing nothing but types — left one parser instead of two
+  that drift. This is the third time the same move has paid off (`lib/bookkeeping.ts`,
+  `lib/apiTypes.ts` before it), and the test for it is mechanical: can React Native bundle this file?
+
+- **Restoring replaces; it does not merge.** The same decision the website makes, for the same
+  reason: a restore means "put it back the way it was", and a merge would need per-item timestamps
+  the file may predate. Because it replaces everything, the file is parsed and described before
+  anything happens — how many tracks, which ones, how many notes and recorded days, when it was
+  taken. A backup from the wrong week looks exactly like the right one until it has already
+  overwritten today.
+
+- **A restore has to reach the screen, not just the disk.** Writing the restored workspace to SQLite
+  and leaving the provider holding the old one would have been a silent data loss: what is on screen
+  is what the next edit is written from, so the next tap would have saved the old workspace straight
+  back over the new one. The same class of mistake as the bookkeeping bug in 0.30.1 — state in two
+  places, updated in one.
+
+**See it yourself.** Settings → *Save a backup…* → pick Downloads. Then open the file on the laptop:
+it is the same JSON the website's export produces, down to the filename. Settings → *Restore from a
+file…* → pick a backup the website wrote, and read what it says the file contains before confirming.
+
+**Exam questions.**
+- *How does a mobile app access files?* Through the Storage Access Framework on Android: the system
+  picker hands the app one file or folder the user chose. An app has no general access to storage and
+  no permission exists to grant it.
+- *What is different about dependencies in React Native?* There is no Node standard library, so a
+  package that imports `fs`, `crypto` or `punycode` will not bundle; and a package containing native
+  code cannot be delivered over the air, only in a new build.
+- *How do you decide what to share between platforms?* By what imports nothing platform-specific.
+  Format, rules and validation are shared; anything touching the DOM, Dexie, SQLite or the file
+  system is not.
+- *Why replace rather than merge on restore?* Merging needs per-item timestamps the backup may not
+  have. Replacing is predictable, which is why the user is shown what the file holds first.
+
+**Files.** `lib/backupFormat.ts`, `lib/export.ts`, `lib/import.ts`,
+`mobile/src/backup/backupFile.ts`, `mobile/src/app/settings.tsx`, `mobile/src/app/roadmap.tsx`,
+`mobile/metro.config.js`, `mobile/src/storage/db.ts`.
+
+
+---
+
+## 18. Designing it, not just building it (0.45.0–0.56.0)
+
+**What changed.** The phone app had every feature the website had and the shape of a prototype: one
+screen with the day's work on top and ten links stacked underneath. Twelve releases later it has
+four tabs, a home screen of panels you arrange yourself, swipe gestures, undo, haptics, an error
+boundary per panel, and a gym tracker. None of it added a feature. All of it was design.
+
+**Why.** Feature parity turned out to be the easy half. A list of everything the website can do,
+ported faithfully, is not an app — it is a menu. The second half was working out what a phone is
+*for*, which is a different question with different answers, and most of them only became obvious
+once the thing was in a hand.
+
+**Concepts.**
+
+- **Verify claims mechanically, not by reading.** Twice I said the phone had reached parity, having
+  checked by reading screens. Both times a proper check found real gaps — five the second time,
+  including the phone being locked to today. What finally worked was a mechanical proxy: list every
+  export in the shared core, diff which ones the website calls that `mobile/src` never does. Reading
+  code shows what a screen appears to do; it cannot show what the other platform can do that this
+  one cannot.
+
+- **Render the UI and measure it.** Three layout bugs were found by serving the React Native app
+  through react-native-web at 375×812 and measuring the DOM — category chips squeezing to 18px and
+  overlapping, the tab bar clipping its own labels to a 5-pixel sliver, a modal parked a whole
+  viewport below the screen. None were visible in the code. `.claude/launch.json` now carries the
+  config to do it.
+
+- **A touch screen has no hover, so editable and read-only look identical.** The app now opens
+  read-only everywhere and puts editing behind a pencil. The exceptions are the two things the app
+  exists for — ticking something off, and the timer — because a mode in front of those would be
+  absurd.
+
+- **Undo or confirmation, never both.** A dialog in front of every destructive action teaches people
+  to dismiss dialogs, so by the time one matters it has already gone. The rule that emerged: a swipe
+  is a flick and gets an undo; a considered tap on something that carries a lot gets a question.
+  Asking *and* offering to take it back is two decisions for one intent.
+
+- **Two editors for one fact will disagree.** The gym kept its own weekly split while the track's
+  rhythm already answered "what is Monday for" everywhere else. The fix was not to sync them but to
+  delete one: the rhythm names the days, the gym fills them. The same instinct killed a "Movement"
+  panel that was the step counter under a second name, and a menu grid that was a third route to
+  screens with two.
+
+- **Name the thing, not a use for it.** "Weekly Study Plan" assumed every track was about studying;
+  "Roadmap Timeline" sat one word from the Roadmap *document*. And a phase on a fitness track was
+  headed "Math Integration" over nothing, because four section keys from a computer-science
+  curriculum were being rendered regardless of content.
+
+- **New data goes where the schema already allows it.** The gym log is JSON in a note, because the
+  server refuses workspace fields it does not know (entry 13) and a note is `{id, content}` with
+  half a megabyte to spare. It syncs, it merges, and it needed no deploy — `lib/gym.ts` owns the
+  format so both platforms read the same log.
+
+- **Defaults, not gates.** A track's kind decides which panels it *opens* with and nothing else.
+  Hiding panels by kind would produce the unanswerable "where did it go?", and a real track is
+  hybrid: the student who also lifts wants the gym panel on a track filed under learning.
+
+**Exam questions.**
+- *How do you know a port is complete?* Not by reading it. Diff the shared core's exports against
+  what each platform actually calls.
+- *What is different about designing for touch?* No hover, no cursor, no tooltips, and a thumb
+  covering whatever it is pressing — so state has to be visible before the press, targets have to be
+  48dp, and destructive actions need a way back rather than a way to be certain.
+- *Where should new data live when the schema is strict?* Somewhere the schema already accepts.
+  Adding a field is a migration, a validator change and a deploy; the alternative may cost nothing.
+- *How do you decide what belongs on a phone?* By what someone does while holding one. Planning is
+  desk work; logging a set between sets is not.
+
+**Files.** `mobile/src/app/(tabs)/`, `mobile/src/panels/`, `mobile/src/components/`, `lib/gym.ts`,
+`lib/trackKinds.ts`, `lib/modules.ts`, `lib/phaseDetails.ts`, `components/GymTracker.tsx`.
