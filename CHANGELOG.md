@@ -7,6 +7,34 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.59.1] - 2026-09-24
+
+### Fixed
+- **Deleting the track you were standing on took two attempts.** Two provider calls in the same tick
+  both read a ref that React only reassigns on the next render, so the second was built on a
+  pre-first-call copy and wrote it back: the track was archived, then `switchTrack` rebuilt the
+  workspace from the snapshot *without* the archive and saved that. Every write now goes through one
+  `commit` that moves the ref before the state, so calls in a tick compose. This was a latent bug in
+  any pair of consecutive edits, not only this one.
+
+- **Scrolling felt sticky.** Two causes, both mine. Every row and every panel is wrapped in a swipe
+  gesture that waited 12 points of vertical movement before giving up — a dead zone at the start of
+  every scroll — now 4. And pull-to-refresh was pointing `simultaneousWithExternalGesture` at a
+  plain component ref, which does not register, so the pull and the scroll arbitrated instead of
+  running together; it composes with the scroll view's own gesture now.
+
+- **The step count stopped moving while the app was open.** It showed
+  `max(healthConnectTotal, sensorSinceSubscription)`, and Health Connect's whole-day total dwarfs a
+  freshly-subscribed sensor, so the number pinned itself to a snapshot taken on open and never
+  climbed. The snapshot is a *baseline* now: the sensor's reading is paired with it, and every step
+  since is added. Whole-day accurate and live, and re-read on resume, which is when the snapshot is
+  most stale.
+
+### Changed
+- **A day's accomplishments open under the day you tapped**, overlapping the weeks below rather than
+  pushing them down — the grid is the thing being read, and having it jump loses your place. Any tap
+  outside closes it. The backdrop covers the grid only, so the tabs and header keep working.
+
 ## [0.59.0] - 2026-09-24
 
 ### Changed
