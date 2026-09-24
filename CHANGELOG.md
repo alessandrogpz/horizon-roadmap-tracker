@@ -7,6 +7,35 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.41.0] - 2026-09-24
+
+### Added
+- **Today's list is editable on the phone.** It could tick items and nothing else, which made the
+  phone a viewer of a plan made elsewhere — the wrong way round for the screen that is actually in
+  your hand. Items can now be added to either list, renamed, or removed. Holding a row opens it for
+  editing rather than a visible button doing so: ticking happens a dozen times a day and editing
+  once a week, so the common action keeps the whole row.
+
+  Rotation items can be ticked but not edited there. Nothing is stored to edit — they are computed
+  from the rotation and the week number — and next week they will be something else. The list they
+  come from is on the Week screen.
+
+- **The pool of focus types**, on the Week screen: add a kind of day, rename one, recolour it,
+  delete it. Renaming rewrites every day showing the old name, and deleting moves its days to
+  whatever is left, because a day pointing at a type that no longer exists is worse than a day of
+  the wrong kind. Those rules moved to `lib/focusTypes.ts` with tests, out of the React component
+  that was holding them.
+
+- **A track's own settings**: its name, colour, start date and length. Changing the length rescales
+  every phase deadline in proportion, so making a track longer or shorter keeps the shape of its
+  roadmap. Unlike the rest of the app this panel saves on a tap rather than as you type — typing
+  "120" over "90" one digit at a time would otherwise rescale the whole roadmap three times on the
+  way to a number nobody had finished typing.
+
+- Colours are chosen from a fixed set rather than a colour picker, here and for focus types. A
+  picker is a native module — a new build on every phone for one field — and a fixed set stays
+  legible in both themes, which an arbitrary hex picked on a bright screen does not.
+
 ## [0.40.0] - 2026-09-24
 
 ### Added

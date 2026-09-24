@@ -1,6 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
+import {
+  addFocusType,
+  recolorFocusType,
+  removeFocusType,
+  renameFocusType,
+  type FocusPool,
+} from "@/lib/focusTypes";
 import { X } from "lucide-react";
 import type { FocusType, WeekDay } from "@/lib/types";
 
@@ -16,14 +23,17 @@ interface FocusTypeEditorProps {
 export default function FocusTypeEditor({ focusTypes, weekSchedule, onChange }: FocusTypeEditorProps) {
   const [draft, setDraft] = useState({ label: "", color: "#0ea5e9" });
 
-  const addType = () => {
-    const label = draft.label.trim();
-    // The key is derived from the label, so two types whose labels reduce to
-    // the same slug would collide — keep the first and ignore the duplicate.
-    const key = label.toLowerCase().replace(/[^a-z0-9]/g, "");
-    if (!key || focusTypes[key]) return;
+  // The rules — how a key is derived, what a rename does to the week, what a
+  // delete re-points its days at — live in lib/focusTypes.ts, because the phone
+  // has the same editor and the week has to end up in the same state either way.
+  const apply = (next: FocusPool) => onChange(next.focusTypes, next.weekSchedule);
+  const pool: FocusPool = { focusTypes, weekSchedule };
 
-    onChange({ ...focusTypes, [key]: { label, color: draft.color } }, weekSchedule);
+  const addType = () => {
+    const before = Object.keys(focusTypes).length;
+    const next = addFocusType(pool, draft.label, draft.color);
+    if (Object.keys(next.focusTypes).length === before) return; // blank or a duplicate
+    apply(next);
     setDraft({ label: "", color: draft.color });
   };
 
@@ -39,16 +49,7 @@ export default function FocusTypeEditor({ focusTypes, weekSchedule, onChange }: 
             <input
               type="text"
               value={val.label}
-              onChange={(e) => {
-                const updatedTypes = {
-                  ...focusTypes,
-                  [key]: { ...val, label: e.target.value }
-                };
-                const updatedSchedule = weekSchedule.map((d) =>
-                  d.type === key ? { ...d, label: e.target.value } : d
-                );
-                onChange(updatedTypes, updatedSchedule);
-              }}
+              onChange={(e) => apply(renameFocusType(pool, key, e.target.value))}
               placeholder="Label"
               className="flex-1 bg-input-bg border border-card-border rounded px-1.5 py-0.5 text-foreground text-xs outline-none"
             />
@@ -56,29 +57,12 @@ export default function FocusTypeEditor({ focusTypes, weekSchedule, onChange }: 
             <input
               type="color"
               value={val.color || "#a1a1aa"}
-              onChange={(e) => {
-                const updatedTypes = {
-                  ...focusTypes,
-                  [key]: { ...val, color: e.target.value }
-                };
-                onChange(updatedTypes, weekSchedule);
-              }}
+              onChange={(e) => apply(recolorFocusType(pool, key, e.target.value))}
               className="w-6 h-6 border-none bg-transparent cursor-pointer p-0"
             />
 
             <button
-              onClick={() => {
-                const updatedTypes = { ...focusTypes };
-                delete updatedTypes[key];
-
-                const fallbackType = Object.keys(updatedTypes)[0] || "free";
-                const fallbackLabel = updatedTypes[fallbackType]?.label || "Free";
-
-                const updatedSchedule = weekSchedule.map((d) =>
-                  d.type === key ? { ...d, type: fallbackType, label: fallbackLabel } : d
-                );
-                onChange(updatedTypes, updatedSchedule);
-              }}
+              onClick={() => apply(removeFocusType(pool, key))}
               disabled={Object.keys(focusTypes).length <= 1}
               className={`bg-transparent border-none text-[0.8rem] px-0.5 ${
                 Object.keys(focusTypes).length <= 1 ? "text-subtle-foreground cursor-not-allowed" : "text-red-500 cursor-pointer"
