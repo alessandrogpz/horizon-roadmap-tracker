@@ -10,8 +10,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import type { Material } from "@shared/types";
-import { MATERIAL_STATUSES } from "@shared/materialOptions";
-import { setMaterialStatus, updateMaterial } from "@shared/trackActions";
+import { categoriesFor, MATERIAL_STATUSES, MATERIAL_TYPES } from "@shared/materialOptions";
+import { addMaterial, removeMaterial, setMaterialStatus, updateMaterial } from "@shared/trackActions";
 import { loadNotes, saveNote } from "../storage/db";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../theme";
@@ -35,6 +35,32 @@ export default function MaterialsScreen() {
     [editTrack]
   );
 
+  const setTotal = useCallback(
+    (id: string, totalPages: number) => editTrack((t) => updateMaterial(t, id, { totalPages })),
+    [editTrack]
+  );
+
+  const remove = useCallback((id: string) => editTrack((t) => removeMaterial(t, id)), [editTrack]);
+
+  const add = useCallback(
+    (fields: { title: string; category: string; type: string }) => {
+      editTrack((t) =>
+        addMaterial(t, {
+          ...fields,
+          // The rest of a material is filled in as it is used, not asked for up
+          // front: a phone is where you add "that book someone just mentioned",
+          // and a form demanding page counts is how that does not get added.
+          status: "Not Started",
+          currentPage: 0,
+          totalPages: 0,
+          currentSubject: "",
+          link: "",
+        })
+      );
+    },
+    [editTrack]
+  );
+
   if (!track) {
     return (
       <View style={[styles.screen, styles.centered]}>
@@ -53,16 +79,21 @@ export default function MaterialsScreen() {
           onToggle={() => setOpen(open === material.id ? null : material.id)}
           onStatus={(status) => setStatus(material.id, status)}
           onPage={(page) => setPage(material.id, page)}
+          onTotal={(totalPages) => setTotal(material.id, totalPages)}
+          onRemove={() => remove(material.id)}
           styles={styles}
           palette={palette}
         />
       ))}
 
-      {materials.length === 0 && (
-        <Text style={styles.muted}>
-          No materials on this track yet. Add them in Horizon on the web, and they appear here.
-        </Text>
-      )}
+      {materials.length === 0 && <Text style={styles.muted}>No materials on this track yet.</Text>}
+
+      <AddMaterial
+        categories={categoriesFor(track.materials ?? [])}
+        onAdd={add}
+        styles={styles}
+        palette={palette}
+      />
     </ScrollView>
   );
 }
@@ -114,6 +145,8 @@ function MaterialCard({
   onToggle,
   onStatus,
   onPage,
+  onTotal,
+  onRemove,
   styles,
   palette,
 }: {
@@ -122,10 +155,14 @@ function MaterialCard({
   onToggle: () => void;
   onStatus: (status: string) => void;
   onPage: (page: number) => void;
+  onTotal: (total: number) => void;
+  onRemove: () => void;
   styles: ReturnType<typeof makeStyles>;
   palette: Palette;
 }) {
   const [draftPage, setDraftPage] = useState(String(material.currentPage ?? 0));
+  const [draftTotal, setDraftTotal] = useState(String(material.totalPages ?? 0));
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
   const note = useMaterialNote(material.id, expanded);
 
   const total = material.totalPages ?? 0;
@@ -169,6 +206,27 @@ function MaterialCard({
             ))}
           </View>
 
+          <View style={styles.pageRow}>
+            <Text style={styles.muted}>Pages in total</Text>
+            <TextInput
+              value={draftTotal}
+              onChangeText={setDraftTotal}
+              onEndEditing={() => {
+                // Without a total there is nothing to be a fraction of, so the
+                // progress bar and the page field only appear once one is set.
+                const parsed = Number.parseInt(draftTotal, 10);
+                const next = Number.isFinite(parsed) && parsed >= 0 ? parsed : total;
+                setDraftTotal(String(next));
+                if (next !== total) onTotal(next);
+              }}
+              keyboardType="number-pad"
+              returnKeyType="done"
+              style={styles.pageInput}
+              accessibilityLabel={`Total pages of ${material.title}`}
+            />
+            <Text style={styles.muted}>{total > 0 ? "" : "— leave 0 if it has none"}</Text>
+          </View>
+
           {total > 0 && (
             <View style={styles.pageRow}>
               <Text style={styles.muted}>Page</Text>
@@ -204,6 +262,16 @@ function MaterialCard({
             accessibilityLabel={`Notes on ${material.title}`}
           />
 
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => (confirmingRemove ? onRemove() : setConfirmingRemove(true))}
+            style={styles.linkButton}
+          >
+            <Text style={[styles.linkLabel, confirmingRemove && { color: palette.danger }]}>
+              {confirmingRemove ? "Tap again to remove it" : "Remove this material"}
+            </Text>
+          </Pressable>
+
           {material.link ? (
             <Pressable accessibilityRole="link" onPress={() => void Linking.openURL(material.link!)} style={styles.linkButton}>
               <Text style={styles.linkLabel}>Open link</Text>
@@ -211,6 +279,88 @@ function MaterialCard({
           ) : null}
         </View>
       )}
+    </View>
+  );
+}
+
+/**
+ * Adding a material from the phone.
+ *
+ * Three fields, not the website's ten. A phone is where "that book someone
+ * just mentioned" gets written down, and a form asking for page counts, links
+ * and a subject before it will accept anything is how that does not get
+ * written down. Everything else is filled in later, on the card, by which
+ * point the material is at least in the list.
+ */
+function AddMaterial({
+  categories,
+  onAdd,
+  styles,
+  palette,
+}: {
+  categories: string[];
+  onAdd: (fields: { title: string; category: string; type: string }) => void;
+  styles: ReturnType<typeof makeStyles>;
+  palette: Palette;
+}) {
+  const [title, setTitle] = useState("");
+  const [category, setCategory] = useState(categories[0] ?? "Other");
+  const [type, setType] = useState<string>(MATERIAL_TYPES[0]);
+
+  return (
+    <View style={styles.card}>
+      <Text style={styles.title}>Add a material</Text>
+
+      <TextInput
+        value={title}
+        onChangeText={setTitle}
+        placeholder="Title"
+        placeholderTextColor={palette.subtleForeground}
+        style={styles.pageInput}
+        accessibilityLabel="Material title"
+      />
+
+      <Text style={styles.muted}>What kind</Text>
+      <View style={styles.statusRow}>
+        {MATERIAL_TYPES.map((option) => (
+          <Pressable
+            key={option}
+            accessibilityRole="button"
+            accessibilityState={{ selected: type === option }}
+            onPress={() => setType(option)}
+            style={[styles.statusButton, type === option && { borderColor: palette.accent }]}
+          >
+            <Text style={[styles.statusLabel, type === option && { color: palette.foreground }]}>{option}</Text>
+          </Pressable>
+        ))}
+      </View>
+
+      <Text style={styles.muted}>Filed under</Text>
+      <View style={styles.statusRow}>
+        {categories.map((option) => (
+          <Pressable
+            key={option}
+            accessibilityRole="button"
+            accessibilityState={{ selected: category === option }}
+            onPress={() => setCategory(option)}
+            style={[styles.statusButton, category === option && { borderColor: palette.accent }]}
+          >
+            <Text style={[styles.statusLabel, category === option && { color: palette.foreground }]}>{option}</Text>
+          </Pressable>
+        ))}
+      </View>
+
+      <Pressable
+        accessibilityRole="button"
+        disabled={!title.trim()}
+        onPress={() => {
+          onAdd({ title: title.trim(), category, type });
+          setTitle("");
+        }}
+        style={styles.linkButton}
+      >
+        <Text style={[styles.linkLabel, !title.trim() && { color: palette.subtleForeground }]}>Add it</Text>
+      </Pressable>
     </View>
   );
 }
