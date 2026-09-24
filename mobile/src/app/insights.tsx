@@ -16,6 +16,7 @@ import type { Stats } from "@shared/apiTypes";
 import { authorized } from "../auth/session";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { Refreshable } from "../components/Refreshable";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -69,7 +70,7 @@ export default function InsightsScreen() {
   const monthPeak = Math.max(1, ...months.map((m) => m.activeDays));
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+    <Refreshable style={styles.screen} contentContainerStyle={styles.content}>
       <View style={styles.totals}>
         <Total label="active days" value={stats.totals.activeDays} styles={styles} />
         <Total label="things done" value={stats.totals.accomplishments} styles={styles} />
@@ -129,7 +130,7 @@ export default function InsightsScreen() {
           )}
         </View>
       ))}
-    </ScrollView>
+    </Refreshable>
   );
 }
 

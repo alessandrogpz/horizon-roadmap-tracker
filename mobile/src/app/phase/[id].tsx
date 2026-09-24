@@ -22,6 +22,7 @@ import { dateForDay, dayForDate, formatDateYMD, formatDayMonthYear, todayYMD } f
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../../theme";
 import { usePalette } from "../../theme/ThemeProvider";
+import { Refreshable } from "../../components/Refreshable";
 
 export default function PhaseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -55,7 +56,7 @@ export default function PhaseDetailScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <Refreshable contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <TextInput
           value={phase.title}
           onChangeText={(title) => change((p) => ({ ...p, title }))}
@@ -188,7 +189,7 @@ export default function PhaseDetailScreen() {
         <Text style={styles.footnote}>
           Everything on this screen saves as you type, and syncs with the rest of the track.
         </Text>
-      </ScrollView>
+      </Refreshable>
     </KeyboardAvoidingView>
   );
 }

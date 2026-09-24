@@ -15,6 +15,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Refreshable } from "../../components/Refreshable";
+import { stepsEnabled, setStepsEnabled } from "../../storage/deviceSettings";
 import { Link } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { DayKey, TrackState } from "@shared/types";
@@ -29,11 +31,11 @@ import {
 import { currentStreakLength } from "@shared/streak";
 import { DAYS_SHORT, formatDateYMD, formatDayMonthYear, getWeekNum, parseYMD } from "@shared/dates";
 import { computeRotationItemsForDay, isRotationItem } from "@shared/rotation";
-import { useWorkspace } from "../workspace/WorkspaceProvider";
-import { usePedometer } from "../steps/usePedometer";
-import { shareTrack } from "../share/shareTrack";
-import { RADIUS, SPACING, type Palette } from "../theme";
-import { usePalette } from "../theme/ThemeProvider";
+import { useWorkspace } from "../../workspace/WorkspaceProvider";
+import { usePedometer } from "../../steps/usePedometer";
+import { shareTrack } from "../../share/shareTrack";
+import { RADIUS, SPACING, type Palette } from "../../theme";
+import { usePalette } from "../../theme/ThemeProvider";
 
 interface Row {
   id: string;
@@ -137,7 +139,15 @@ export default function TodayScreen() {
     [editTrack]
   );
   const streak = useMemo(() => currentStreakLength(track?.streakHistory ?? [], today), [track, today]);
-  const steps = usePedometer(today);
+  // Per track, and off by default: a step count is exactly right on a fitness
+  // track and pure noise on a graphics engine. Kept on the device rather than
+  // in the workspace — see storage/deviceSettings.
+  const [showSteps, setShowSteps] = useState(() => stepsEnabled(track?.meta.id));
+  useEffect(() => setShowSteps(stepsEnabled(track?.meta.id)), [track?.meta.id]);
+
+  // The sensor is only subscribed to when the panel is actually shown, so a
+  // track that does not want it does not pay for it in battery either.
+  const steps = usePedometer(today, showSteps);
 
   if (loading) {
     return (
@@ -161,28 +171,18 @@ export default function TodayScreen() {
     isItemCompleted(track, viewing, row.kind, row.id)
   ).length;
   const total = rows.focus.length + rows.revision.length;
+  // How the day is going and how long the run is, in one line under the date —
+  // two numbers do not need two cards.
+  const summary =
+    (total ? `${done} of ${total} done` : "nothing planned") +
+    (streak > 0 ? ` · ${streak} day${streak === 1 ? "" : "s"} in a row` : "");
 
   return (
-    <ScrollView
+    <Refreshable
       style={styles.screen}
       contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + SPACING.xl }]}
+      keyboardShouldPersistTaps="handled"
     >
-      <View style={styles.header}>
-        <View style={styles.headerText}>
-          <Text style={styles.trackName} numberOfLines={1}>
-            {track.meta.name}
-          </Text>
-          <Text style={styles.muted}>
-            {total ? `${done} of ${total} done` : "nothing planned"}
-          </Text>
-        </View>
-        <Link href="/tracks" asChild>
-          <Pressable style={styles.switchButton} accessibilityRole="button">
-            <Text style={styles.switchLabel}>Switch</Text>
-          </Pressable>
-        </Link>
-      </View>
-
       <View style={styles.dayBar}>
         <Pressable
           accessibilityRole="button"
@@ -202,7 +202,9 @@ export default function TodayScreen() {
           <Text style={styles.dayLabel}>
             {onToday ? `Today · ${dayKey}` : `${dayKey} · ${formatDayMonthYear(parseYMD(viewing))}`}
           </Text>
-          {!onToday && <Text style={styles.dayHint}>Tap to come back to today</Text>}
+          <Text style={styles.dayHint}>
+            {onToday ? summary : "Tap to come back to today"}
+          </Text>
         </Pressable>
 
         <Pressable
@@ -215,14 +217,7 @@ export default function TodayScreen() {
         </Pressable>
       </View>
 
-      <Link href="/streak" asChild>
-        <Pressable style={styles.streakCard} accessibilityRole="button" accessibilityLabel="Consistency">
-          <Text style={styles.streakNumber}>{streak}</Text>
-          <Text style={styles.muted}>day{streak === 1 ? "" : "s"} in a row</Text>
-        </Pressable>
-      </Link>
-
-      {onToday && <StepsCard steps={steps} styles={styles} />}
+      {onToday && showSteps && <StepsCard steps={steps} styles={styles} />}
 
       {(["focus", "revision"] as const).map((kind) => (
         <Section
@@ -242,36 +237,28 @@ export default function TodayScreen() {
         />
       ))}
 
-      <View style={styles.links}>
-        {(
-          [
-            ["/materials", "Materials"],
-            ["/phases", "Phases"],
-            ["/roadmap", "Roadmap"],
-            ["/rhythm", "Week"],
-            ["/portfolio", "Deliverables"],
-            ["/notes", "Notes"],
-            ["/timer", "Focus"],
-            ["/search", "Search"],
-            ["/insights", "History"],
-            ["/settings", "Settings"],
-          ] as const
-        ).map(([href, label]) => (
-          <Link key={href} href={href} asChild>
-            <Pressable style={styles.link} accessibilityRole="button">
-              <Text style={styles.switchLabel}>{label}</Text>
-            </Pressable>
-          </Link>
-        ))}
-      </View>
+      <View style={styles.footerActions}>
+        <Pressable
+          accessibilityRole="switch"
+          accessibilityState={{ checked: showSteps }}
+          style={styles.footerAction}
+          onPress={() => {
+            const next = !showSteps;
+            setStepsEnabled(track.meta.id, next);
+            setShowSteps(next);
+          }}
+        >
+          <Text style={styles.footerLabel}>{showSteps ? "Hide steps" : "Count steps"}</Text>
+        </Pressable>
 
-      <Pressable
-        style={styles.shareButton}
-        accessibilityRole="button"
-        onPress={() => void shareTrack(track, today, { done, total })}
-      >
-        <Text style={styles.switchLabel}>Share where this track stands</Text>
-      </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          style={styles.footerAction}
+          onPress={() => void shareTrack(track, today, { done, total })}
+        >
+          <Text style={styles.footerLabel}>Share progress</Text>
+        </Pressable>
+      </View>
 
       {total === 0 && (
         <Text style={styles.empty}>
@@ -279,7 +266,7 @@ export default function TodayScreen() {
           every {dayKey}.
         </Text>
       )}
-    </ScrollView>
+    </Refreshable>
   );
 }
 
@@ -454,19 +441,17 @@ function makeStyles(palette: Palette) {
     screen: { flex: 1, backgroundColor: palette.background },
     content: { padding: SPACING.lg, gap: SPACING.lg },
     centered: { alignItems: "center", justifyContent: "center" },
-    header: { flexDirection: "row", alignItems: "center", gap: SPACING.md },
-    headerText: { flex: 1, gap: 2 },
-    trackName: { color: palette.foreground, fontSize: 22, fontWeight: "700" },
     muted: { color: palette.mutedForeground, fontSize: 13 },
-    switchButton: {
-      paddingHorizontal: SPACING.md,
+    footerActions: { flexDirection: "row", gap: SPACING.sm, marginTop: SPACING.md },
+    footerAction: {
+      flex: 1,
+      alignItems: "center",
       paddingVertical: SPACING.sm,
       borderRadius: RADIUS.control,
       borderWidth: 1,
       borderColor: palette.cardBorder,
-      backgroundColor: palette.surfaceMuted,
     },
-    switchLabel: { color: palette.foreground, fontSize: 13, fontWeight: "600" },
+    footerLabel: { color: palette.mutedForeground, fontSize: 12, fontWeight: "600" },
     dayBar: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
     dayStep: {
       width: 40,
@@ -500,17 +485,6 @@ function makeStyles(palette: Palette) {
       color: palette.foreground,
       fontSize: 14,
     },
-    streakCard: {
-      flexDirection: "row",
-      alignItems: "baseline",
-      gap: SPACING.sm,
-      padding: SPACING.lg,
-      borderRadius: RADIUS.card,
-      borderWidth: 1,
-      borderColor: palette.cardBorder,
-      backgroundColor: palette.card,
-    },
-    streakNumber: { color: palette.accent, fontSize: 30, fontWeight: "700" },
     stepsCard: {
       gap: SPACING.xs,
       padding: SPACING.lg,
@@ -556,23 +530,6 @@ function makeStyles(palette: Palette) {
     rowTitle: { color: palette.foreground, fontSize: 15, lineHeight: 20 },
     rowTitleDone: { color: palette.mutedForeground, textDecorationLine: "line-through" },
     rowDescription: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
-    links: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.sm },
-    link: {
-      paddingHorizontal: SPACING.lg,
-      paddingVertical: SPACING.md,
-      borderRadius: RADIUS.control,
-      borderWidth: 1,
-      borderColor: palette.cardBorder,
-      backgroundColor: palette.card,
-    },
-    shareButton: {
-      alignItems: "center",
-      paddingVertical: SPACING.md,
-      borderRadius: RADIUS.control,
-      borderWidth: 1,
-      borderColor: palette.cardBorder,
-      backgroundColor: palette.surfaceMuted,
-    },
     empty: { color: palette.mutedForeground, fontSize: 14, lineHeight: 20 },
   });
 }

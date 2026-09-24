@@ -46,7 +46,14 @@ export interface StepState {
   detail: string;
 }
 
-export function usePedometer(date: string): StepState {
+/**
+ * @param enabled Whether this track wants a step count at all. False keeps the
+ *   hook inert: no availability check, no permission prompt, and above all no
+ *   subscription to the sensor, which is the part that costs battery. A track
+ *   that has never asked for step counting should never cause Android to ask
+ *   for the activity permission either.
+ */
+export function usePedometer(date: string, enabled = true): StepState {
   const [status, setStatus] = useState<StepStatus>("checking");
   const [today, setToday] = useState(0);
   const [detail, setDetail] = useState("");
@@ -71,6 +78,7 @@ export function usePedometer(date: string): StepState {
   }, [date]);
 
   useEffect(() => {
+    if (!enabled) return setStatus("unavailable");
     let cancelled = false;
     (async () => {
       const available = await Pedometer.isAvailableAsync().catch(() => false);
@@ -90,7 +98,7 @@ export function usePedometer(date: string): StepState {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [enabled]);
 
   const request = useCallback(async () => {
     setDetail("asking…");

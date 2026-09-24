@@ -15,6 +15,7 @@ import type { SearchResult } from "@shared/apiTypes";
 import { authorized } from "../auth/session";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { Refreshable } from "../components/Refreshable";
 
 export default function SearchScreen() {
   const palette = usePalette();
@@ -42,7 +43,7 @@ export default function SearchScreen() {
   const nothing = result && result.tracks.length === 0 && result.notes.length === 0;
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <Refreshable style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <View style={styles.searchRow}>
         <TextInput
           value={query}
@@ -90,7 +91,7 @@ export default function SearchScreen() {
           <Text style={styles.line}>{hit.snippet}</Text>
         </View>
       ))}
-    </ScrollView>
+    </Refreshable>
   );
 }
 
