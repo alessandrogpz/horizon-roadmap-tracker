@@ -7,6 +7,27 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.44.0] - 2026-09-24
+
+### Added
+- **Any day, not just today.** The phone was locked to the current date, which made the commonest
+  evening job — ticking something from yesterday that never got ticked — impossible rather than
+  merely awkward. The day can now be stepped through in either direction, and tapping the date comes
+  back to today. The streak, the step count and the daily reset stay pinned to the real today: those
+  are facts about now, not about the day being looked at.
+- **A rotation's plan**, on its own screen. A list of topics does not explain itself — why these, in
+  this order, on these days — and that reasoning was editable on the website and invisible on the
+  phone.
+- **Archived materials.** A material can be archived from its card and brought back from a folded
+  group at the bottom of the list, as on the website. Archiving keeps the progress, the notes and
+  the history and takes the material off the list; removing does not, and the screen now says so.
+
+### Changed
+- The roadmap's reader and editor became `components/MarkdownDocument`, shared with a rotation's
+  plan. They are the same kind of document, and two copies would have drifted the first time one got
+  a fix.
+- These three were missed when 0.43.0 claimed parity was complete. It was not; this is.
+
 ## [0.43.0] - 2026-09-24
 
 ### Added

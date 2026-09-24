@@ -1,11 +1,19 @@
-// Today: what this track asks of you on this day, and the streak riding on it.
+// The day: what this track asks of you, and the streak riding on it.
 //
-// Every rule here comes from the shared core — which day of the week today is
+// Usually today, but not necessarily. A day can be stepped through in either
+// direction, because the common reason to open this app in the evening is to
+// tick something from yesterday that never got ticked — and a screen that can
+// only ever show today makes that impossible rather than merely awkward.
+//
+// What stays pinned to the real today: the streak, the step count, and the
+// daily reset. Those are facts about now, not about the day being looked at.
+//
+// Every rule here comes from the shared core — which day of the week a date is
 // (`dates`), whether an item counts as done (`completions`), how long the
 // streak is (`streak`). This screen decides only how it looks and what a tap
 // does.
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { Link } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -19,7 +27,7 @@ import {
   type ItemKind,
 } from "@shared/completions";
 import { currentStreakLength } from "@shared/streak";
-import { DAYS_SHORT, getWeekNum, parseYMD } from "@shared/dates";
+import { DAYS_SHORT, formatDateYMD, formatDayMonthYear, getWeekNum, parseYMD } from "@shared/dates";
 import { computeRotationItemsForDay, isRotationItem } from "@shared/rotation";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { usePedometer } from "../steps/usePedometer";
@@ -89,7 +97,22 @@ export default function TodayScreen() {
   const styles = useMemo(() => makeStyles(palette), [palette]);
   const insets = useSafeAreaInsets();
 
-  const rows = useMemo(() => (track ? rowsFor(track, today) : { focus: [], revision: [] }), [track, today]);
+  // The day on screen, which starts as today and is reset to it whenever the
+  // real date changes underneath (midnight, or coming back from the
+  // background) — otherwise a phone left open overnight would quietly keep
+  // showing yesterday as though it were today.
+  const [viewing, setViewing] = useState(today);
+  useEffect(() => setViewing(today), [today]);
+
+  const step = useCallback((days: number) => {
+    setViewing((current) => {
+      const date = parseYMD(current);
+      date.setDate(date.getDate() + days);
+      return formatDateYMD(date);
+    });
+  }, []);
+
+  const rows = useMemo(() => (track ? rowsFor(track, viewing) : { focus: [], revision: [] }), [track, viewing]);
 
   // A day's own items live under its weekday, not its date: "what Tuesdays are
   // for" rather than "what happened on the 24th". Adding one here adds it to
@@ -132,9 +155,10 @@ export default function TodayScreen() {
     );
   }
 
-  const dayKey = DAYS_SHORT[parseYMD(today).getDay()] as DayKey;
+  const dayKey = DAYS_SHORT[parseYMD(viewing).getDay()] as DayKey;
+  const onToday = viewing === today;
   const done = [...rows.focus, ...rows.revision].filter((row) =>
-    isItemCompleted(track, today, row.kind, row.id)
+    isItemCompleted(track, viewing, row.kind, row.id)
   ).length;
   const total = rows.focus.length + rows.revision.length;
 
@@ -149,7 +173,7 @@ export default function TodayScreen() {
             {track.meta.name}
           </Text>
           <Text style={styles.muted}>
-            {dayKey} · {total ? `${done} of ${total} done` : "nothing planned"}
+            {total ? `${done} of ${total} done` : "nothing planned"}
           </Text>
         </View>
         <Link href="/tracks" asChild>
@@ -159,6 +183,38 @@ export default function TodayScreen() {
         </Link>
       </View>
 
+      <View style={styles.dayBar}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="The day before"
+          onPress={() => step(-1)}
+          style={styles.dayStep}
+        >
+          <Text style={styles.dayStepLabel}>‹</Text>
+        </Pressable>
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={onToday ? "Today" : "Back to today"}
+          onPress={() => setViewing(today)}
+          style={styles.dayLabelWrap}
+        >
+          <Text style={styles.dayLabel}>
+            {onToday ? `Today · ${dayKey}` : `${dayKey} · ${formatDayMonthYear(parseYMD(viewing))}`}
+          </Text>
+          {!onToday && <Text style={styles.dayHint}>Tap to come back to today</Text>}
+        </Pressable>
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="The day after"
+          onPress={() => step(1)}
+          style={styles.dayStep}
+        >
+          <Text style={styles.dayStepLabel}>›</Text>
+        </Pressable>
+      </View>
+
       <Link href="/streak" asChild>
         <Pressable style={styles.streakCard} accessibilityRole="button" accessibilityLabel="Consistency">
           <Text style={styles.streakNumber}>{streak}</Text>
@@ -166,7 +222,7 @@ export default function TodayScreen() {
         </Pressable>
       </Link>
 
-      <StepsCard steps={steps} styles={styles} />
+      {onToday && <StepsCard steps={steps} styles={styles} />}
 
       {(["focus", "revision"] as const).map((kind) => (
         <Section
@@ -175,12 +231,12 @@ export default function TodayScreen() {
           kind={kind}
           rows={kind === "focus" ? rows.focus : rows.revision}
           track={track}
-          today={today}
+          date={viewing}
           toggle={toggleItem}
           dayKey={dayKey}
           onAdd={(title) => addItem(kind, dayKey, title)}
           onRename={(id, title) => renameItem(kind, dayKey, id, title)}
-          onRemove={(row) => deleteItem(row, dayKey, today)}
+          onRemove={(row) => deleteItem(row, dayKey, viewing)}
           styles={styles}
           palette={palette}
         />
@@ -274,7 +330,7 @@ function Section({
   kind,
   rows,
   track,
-  today,
+  date,
   toggle,
   dayKey,
   onAdd,
@@ -287,7 +343,8 @@ function Section({
   kind: ItemKind;
   rows: Row[];
   track: TrackState;
-  today: string;
+  /** The day being shown, which is not always today. */
+  date: string;
   toggle: (item: DayItemRef, completed: boolean) => void;
   dayKey: string;
   onAdd: (title: string) => void;
@@ -311,7 +368,7 @@ function Section({
       <Text style={styles.sectionTitle}>{title}</Text>
 
       {rows.map((row) => {
-        const completed = isItemCompleted(track, today, row.kind, row.id);
+        const completed = isItemCompleted(track, date, row.kind, row.id);
 
         if (editing === row.id) {
           return (
@@ -351,7 +408,7 @@ function Section({
             accessibilityLabel={row.title}
             accessibilityHint={row.generated ? undefined : "Hold to rename or remove"}
             onPress={() =>
-              toggle({ dateStr: today, kind: row.kind, id: row.id, title: row.title, description: row.description, dayKey }, !completed)
+              toggle({ dateStr: date, kind: row.kind, id: row.id, title: row.title, description: row.description, dayKey }, !completed)
             }
             onLongPress={
               row.generated
@@ -410,6 +467,20 @@ function makeStyles(palette: Palette) {
       backgroundColor: palette.surfaceMuted,
     },
     switchLabel: { color: palette.foreground, fontSize: 13, fontWeight: "600" },
+    dayBar: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
+    dayStep: {
+      width: 40,
+      alignItems: "center",
+      paddingVertical: SPACING.xs,
+      borderRadius: RADIUS.control,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.surfaceMuted,
+    },
+    dayStepLabel: { color: palette.foreground, fontSize: 20, lineHeight: 24 },
+    dayLabelWrap: { flex: 1, alignItems: "center" },
+    dayLabel: { color: palette.foreground, fontSize: 14, fontWeight: "600" },
+    dayHint: { color: palette.subtleForeground, fontSize: 11 },
     editInput: {
       flex: 1,
       color: palette.foreground,
