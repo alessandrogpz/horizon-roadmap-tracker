@@ -5,17 +5,19 @@
 // averaged 9,000 — so this is the week, the month and the year, and the last
 // fortnight day by day.
 //
-// Everything here is read back from the device's own `steps` table, which is
-// written as the sensor reports. That is also its limit, and the screen says
-// so rather than letting the totals imply more than they are: steps are only
-// counted while Horizon is open, so these are "steps while using the app",
-// not "steps taken". Making them the latter needs a reading the sensor keeps
-// but Expo does not expose, and therefore a new build.
+// Two sources, and the screen prefers the better one. Health Connect holds
+// whole days, written by whatever is actually counting — the phone's health
+// app, a watch, a band — so when it is available and permitted, these are real
+// totals. When it is not, the numbers fall back to Horizon's own table, which
+// only holds what was counted while the app was open. The difference is large
+// enough that the screen says which it is showing rather than letting a total
+// imply more than it is.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { parseYMD } from "@shared/dates";
 import { loadStepCount } from "../storage/db";
+import { dailySteps, describeHealth, healthStatus, requestHealthPermission, type HealthStatus } from "../steps/healthConnect";
 import { Refreshable } from "../components/Refreshable";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../theme";
@@ -30,6 +32,7 @@ export default function StepsScreen() {
   const styles = useMemo(() => makeStyles(palette), [palette]);
 
   const [counts, setCounts] = useState<{ date: string; count: number }[] | null>(null);
+  const [health, setHealth] = useState<HealthStatus>("unsupported");
 
   const load = useCallback(async () => {
     // A year is 365 tiny primary-key lookups, which SQLite does without
@@ -41,8 +44,23 @@ export default function StepsScreen() {
       dates.push(formatYMD(cursor));
       cursor.setDate(cursor.getDate() - 1);
     }
+    const status = await healthStatus();
+    setHealth(status);
+
+    // Health Connect first, and in one call for the whole year rather than a
+    // query per day.
+    const fromHealth =
+      status === "ready" ? await dailySteps(dates[dates.length - 1], dates[0]) : {};
+
     const rows = await Promise.all(
-      dates.map(async (date) => ({ date, count: await loadStepCount(date) }))
+      dates.map(async (date) => ({
+        date,
+        // Whichever source knows more about the day. Health Connect covers the
+        // whole of it; the local table covers the part spent in the app, so on
+        // a day Health Connect has nothing for, the local figure is still the
+        // best available answer rather than a zero.
+        count: Math.max(fromHealth[date] ?? 0, await loadStepCount(date)),
+      }))
     );
     setCounts(rows);
   }, [today]);
@@ -105,11 +123,21 @@ export default function StepsScreen() {
         )}
       </View>
 
-      <Text style={styles.footnote}>
-        Counted only while Horizon is open, so these are steps while using the app rather than steps
-        taken. Counting a whole day needs a reading the Android sensor keeps but Expo does not hand
-        out — which means a new build, not an update.
-      </Text>
+      {health === "needs-permission" ? (
+        <Pressable
+          accessibilityRole="button"
+          style={styles.permission}
+          onPress={() => void requestHealthPermission().then(setHealth).then(load)}
+        >
+          <Text style={styles.permissionLabel}>Use Health Connect</Text>
+          <Text style={styles.muted}>
+            Whole-day totals, including steps taken with Horizon closed and any counted by a watch.
+            Horizon only ever reads steps, and the decision is made in Android&apos;s own dialog.
+          </Text>
+        </Pressable>
+      ) : null}
+
+      <Text style={styles.footnote}>{describeHealth(health)}</Text>
     </Refreshable>
   );
 }
@@ -180,5 +208,15 @@ function makeStyles(palette: Palette) {
     barValue: { color: palette.mutedForeground, fontSize: 11, width: 52, textAlign: "right" },
     muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
     footnote: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16, marginTop: SPACING.md },
+    permission: {
+      gap: SPACING.xs,
+      padding: SPACING.lg,
+      marginTop: SPACING.md,
+      borderRadius: RADIUS.card,
+      borderWidth: 1,
+      borderColor: palette.accent,
+      backgroundColor: palette.card,
+    },
+    permissionLabel: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
   });
 }

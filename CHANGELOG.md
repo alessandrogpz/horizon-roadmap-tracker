@@ -7,6 +7,31 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.50.0] - 2026-09-24
+
+### Added
+- **Steps from Health Connect** — whole days, including steps taken with Horizon closed and any
+  counted by a watch or band. The on-device sensor could only ever report what happened while the
+  app was open; Health Connect is the platform's store that whatever is actually counting writes
+  into, and that other apps read with the user's permission.
+
+  The two are used together rather than one replacing the other: Health Connect covers the whole
+  day, the sensor covers the part spent in the app, and each day shows whichever knows more. A phone
+  without Health Connect set up keeps working exactly as before, and the screen says which of the
+  two it is showing rather than letting a total imply more than it is.
+
+  Permission is asked for in Android's own dialog, not Horizon's, and only `READ_STEPS` is
+  requested. The exercise, heart-rate and calorie permissions go in when the features that read them
+  do — declaring health permissions an app does not use is what Play review looks for.
+
+### Changed
+- **App version 0.2.0, version code 2.** This is a new native build, and the over-the-air runtime
+  version follows the app version, so builds carrying the Health Connect module get their own update
+  channel. The previously installed 0.1.0 build stops receiving updates and needs replacing with
+  this one.
+- `ACTIVITY_RECOGNITION` was listed twice in the manifest. It is still needed — the live count on an
+  open screen still comes from the sensor.
+
 ## [0.49.0] - 2026-09-24
 
 ### Changed
