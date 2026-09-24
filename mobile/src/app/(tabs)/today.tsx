@@ -38,6 +38,8 @@ import { useWorkspace } from "../../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../../theme";
 import { usePalette } from "../../theme/ThemeProvider";
 import { EditButton, useEditMode } from "../../components/EditToggle";
+import { TodaysTodos } from "../../components/TodaysTodos";
+import { setTodosOpen, todosOpen } from "../../storage/deviceSettings";
 
 interface Row {
   id: string;
@@ -106,6 +108,8 @@ export default function TodayScreen() {
   // background) — otherwise a phone left open overnight would quietly keep
   // showing yesterday as though it were today.
   const { editing, setEditing } = useEditMode();
+  const [todosShown, setTodosShown] = useState(() => todosOpen(track?.meta.id));
+  useEffect(() => setTodosShown(todosOpen(track?.meta.id)), [track?.meta.id]);
   const [viewing, setViewing] = useState(today);
   useEffect(() => setViewing(today), [today]);
 
@@ -235,6 +239,16 @@ export default function TodayScreen() {
           palette={palette}
         />
       ))}
+
+      <TodaysTodos
+        trackId={track.meta.id}
+        editing={editing}
+        open={todosShown}
+        onOpenChange={(next) => {
+          setTodosShown(next);
+          setTodosOpen(track.meta.id, next);
+        }}
+      />
 
       {total === 0 && (
         <Text style={styles.empty}>

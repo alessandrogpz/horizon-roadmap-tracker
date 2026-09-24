@@ -38,6 +38,11 @@ export default function ProgressScreen() {
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
   const [openDay, setOpenDay] = useState<string | null>(null);
+  // By month is the default: a calendar year as one unbroken ribbon of weeks
+  // is hard to read a month out of, because nothing marks where one ends. The
+  // continuous shape is still worth having for seeing a long run at a glance,
+  // so it is a toggle rather than a replacement.
+  const [byMonth, setByMonth] = useState(true);
 
   const weekStartsOn = getSettings().weekStartsOn;
   const days = useMemo(
@@ -83,6 +88,45 @@ export default function ProgressScreen() {
     return rows;
   }, [days]);
 
+  /** Each calendar month as its own block: leading blanks so the 1st lands
+   *  under the right weekday, then one cell per day. Months are separated, and
+   *  every block lines up with the same seven columns at the top of the screen
+   *  — which is the point of grouping them at all. */
+  const months = useMemo(() => {
+    if (!track?.startDate) return [];
+    const counts: Record<string, number> = {};
+    Object.entries(track.completedItemsHistory ?? {}).forEach(([date, items]) => {
+      counts[date] = items?.length ?? 0;
+    });
+
+    const first = parseYMD(track.startDate);
+    const last = parseYMD(today);
+    const blocks: { key: string; label: string; cells: (StreakDay | null)[] }[] = [];
+
+    const cursor = new Date(first.getFullYear(), first.getMonth(), 1);
+    while (cursor <= last) {
+      const year = cursor.getFullYear();
+      const month = cursor.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      const firstWeekday = new Date(year, month, 1).getDay();
+      const offset = weekStartsOn === "mon" ? (firstWeekday + 6) % 7 : firstWeekday;
+      const cells: (StreakDay | null)[] = Array.from({ length: offset }, () => null);
+
+      for (let day = 1; day <= daysInMonth; day += 1) {
+        const date = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        // Days outside the track's own life are left blank rather than drawn
+        // as zeroes: the track did not exist to be missed.
+        const inRange = date >= track.startDate && date <= today;
+        cells.push(inRange ? { date, count: counts[date] ?? 0 } : null);
+      }
+
+      blocks.push({ key: `${year}-${month}`, label: `${MONTHS[month]} ${year}`, cells });
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+    return blocks.reverse();
+  }, [today, track, weekStartsOn]);
+
   const titlesFor = useCallback(
     (date: string) => track?.completedItemsHistory?.[date] ?? [],
     [track]
@@ -100,11 +144,6 @@ export default function ProgressScreen() {
 
   return (
     <Refreshable style={styles.screen} contentContainerStyle={styles.content}>
-      {/* Only History. The timer used to sit here and does not belong to
-          progress at all — it is a thing you run, not a record of what you
-          did, and it is reachable from the menu and from its own panel. */}
-      <SubNav links={[{ href: "/insights", label: "History" }]} />
-
       {/* Three numbers across the top, not a paragraph. */}
       <View style={styles.stats}>
         <Stat value={streak} label="in a row" tint={palette.accent} styles={styles} />
@@ -112,6 +151,29 @@ export default function ProgressScreen() {
         <Stat value={stats?.activeLast30 ?? 0} label="of last 30" styles={styles} />
       </View>
 
+      <View style={styles.toggle}>
+        {([
+          ["months", "By month"],
+          ["continuous", "Continuous"],
+        ] as const).map(([value, label]) => {
+          const on = (value === "months") === byMonth;
+          return (
+            <Pressable
+              key={value}
+              accessibilityRole="button"
+              accessibilityState={{ selected: on }}
+              onPress={() => setByMonth(value === "months")}
+              style={[styles.toggleButton, on && { borderColor: palette.accent }]}
+            >
+              <Text style={[styles.toggleLabel, on && { color: palette.foreground }]}>{label}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      {/* The weekday header belongs to the screen, not to each block: every
+          month lines up with the same seven columns, which is what keeps a
+          Tuesday under "T" wherever it falls. */}
       <View style={styles.weekdayRow}>
         <View style={styles.gutter} />
         {labels.map((label, index) => (
@@ -121,39 +183,52 @@ export default function ProgressScreen() {
         ))}
       </View>
 
-      {weeks.map((week, index) => (
-        <View
-          key={index}
-          style={[
-            styles.week,
-            // Alternate a faint band behind every other month, so where one
-            // month ends and the next begins is visible without counting rows
-            // or reading every label.
-            week.month % 2 === 0 && { backgroundColor: palette.surfaceMuted },
-          ]}
-        >
-          <Text style={styles.gutterLabel}>{week.label ?? ""}</Text>
-          {week.days.map((day, cell) => {
-            if (!day.date) return <View key={cell} style={[styles.cell, styles.blank]} />;
-            const isToday = day.date === today;
-            const open = openDay === day.date;
-            return (
-              <Pressable
-                key={cell}
-                accessibilityRole="button"
-                accessibilityLabel={`${formatDayMonthYear(parseYMD(day.date))}, ${day.count} logged`}
-                onPress={() => setOpenDay(open ? null : day.date)}
-                style={[
-                  styles.cell,
-                  { backgroundColor: shade(day.count, palette) },
-                  isToday && { borderWidth: 2, borderColor: palette.foreground },
-                  open && { borderWidth: 2, borderColor: palette.accent },
-                ]}
-              />
-            );
-          })}
-        </View>
-      ))}
+      {byMonth
+        ? months.map((month) => (
+            <View key={month.key} style={styles.month}>
+              <Text style={styles.monthLabel}>{month.label}</Text>
+              <View style={styles.monthGrid}>
+                {month.cells.map((day, index) =>
+                  day ? (
+                    <Cell
+                      key={index}
+                      day={day}
+                      today={today}
+                      open={openDay === day.date}
+                      onPress={() => setOpenDay(openDay === day.date ? null : day.date)}
+                      styles={styles}
+                      palette={palette}
+                    />
+                  ) : (
+                    <View key={index} style={[styles.cell, styles.blank]} />
+                  )
+                )}
+              </View>
+            </View>
+          ))
+        : weeks.map((week, index) => (
+            <View
+              key={index}
+              style={[styles.week, week.month % 2 === 0 && { backgroundColor: palette.surfaceMuted }]}
+            >
+              <Text style={styles.gutterLabel}>{week.label ?? ""}</Text>
+              {week.days.map((day, cell) =>
+                day.date ? (
+                  <Cell
+                    key={cell}
+                    day={day}
+                    today={today}
+                    open={openDay === day.date}
+                    onPress={() => setOpenDay(openDay === day.date ? null : day.date)}
+                    styles={styles}
+                    palette={palette}
+                  />
+                ) : (
+                  <View key={cell} style={[styles.cell, styles.blank]} />
+                )
+              )}
+            </View>
+          ))}
 
       {weeks.length === 0 && <Text style={styles.muted}>Nothing recorded on this track yet.</Text>}
 
@@ -201,7 +276,44 @@ export default function ProgressScreen() {
         A day counts when something was logged against it — a task ticked, a material finished. The same
         rule the website uses, because it is the same code. Tap any day to see what.
       </Text>
+      <View style={styles.moreRow}>
+        <Text style={styles.moreTitle}>More on this track</Text>
+      </View>
+      <SubNav links={[{ href: "/insights", label: "History" }]} />
+
     </Refreshable>
+  );
+}
+
+/** One day. Shared by both shapes so a square means the same thing, and is
+ *  the same size, whichever way the grid is arranged. */
+function Cell({
+  day,
+  today,
+  open,
+  onPress,
+  styles,
+  palette,
+}: {
+  day: StreakDay;
+  today: string;
+  open: boolean;
+  onPress: () => void;
+  styles: ReturnType<typeof makeStyles>;
+  palette: Palette;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${formatDayMonthYear(parseYMD(day.date))}, ${day.count} logged`}
+      onPress={onPress}
+      style={[
+        styles.cell,
+        { backgroundColor: shade(day.count, palette) },
+        day.date === today && { borderWidth: 2, borderColor: palette.foreground },
+        open && { borderWidth: 2, borderColor: palette.accent },
+      ]}
+    />
   );
 }
 
@@ -272,6 +384,32 @@ function makeStyles(palette: Palette) {
       fontWeight: "700",
     },
     gutter: { width: GUTTER },
+    toggle: { flexDirection: "row", gap: SPACING.xs, marginBottom: SPACING.sm },
+    toggleButton: {
+      paddingHorizontal: SPACING.md,
+      paddingVertical: SPACING.xs,
+      borderRadius: RADIUS.control,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.surfaceMuted,
+    },
+    toggleLabel: { color: palette.mutedForeground, fontSize: 12, fontWeight: "600" },
+    month: { marginBottom: SPACING.lg },
+    monthLabel: {
+      color: palette.mutedForeground,
+      fontSize: 12,
+      fontWeight: "700",
+      marginBottom: SPACING.xs,
+      marginLeft: GUTTER + CELL_GAP,
+    },
+    monthGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: CELL_GAP,
+      marginLeft: GUTTER + CELL_GAP,
+      alignSelf: "flex-start",
+      width: 7 * CELL + 7 * CELL_GAP,
+    },
     gutterLabel: {
       width: GUTTER,
       color: palette.subtleForeground,
@@ -311,6 +449,14 @@ function makeStyles(palette: Palette) {
     legendCell: { width: 12, height: 12, borderRadius: 3 },
     legendLabel: { color: palette.subtleForeground, fontSize: 11, marginHorizontal: SPACING.xs },
     muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
+    moreRow: { marginTop: SPACING.xl },
+    moreTitle: {
+      color: palette.subtleForeground,
+      fontSize: 11,
+      fontWeight: "700",
+      letterSpacing: 1.2,
+      textTransform: "uppercase",
+    },
     footnote: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16, marginTop: SPACING.sm },
   });
 }
