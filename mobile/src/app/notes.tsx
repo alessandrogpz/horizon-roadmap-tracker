@@ -14,7 +14,17 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
-import { addTodo, notepadNoteId, parseTodos, removeTodo, serializeTodos, todoNoteId, toggleTodo, type TodoItem } from "@shared/quickNotes";
+import {
+  addTodo,
+  clearDoneTodos,
+  notepadNoteId,
+  parseTodos,
+  removeTodo,
+  serializeTodos,
+  todoNoteId,
+  toggleTodo,
+  type TodoItem,
+} from "@shared/quickNotes";
 import { loadNotes, saveNote } from "../storage/db";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../theme";
@@ -134,6 +144,18 @@ export default function NotesScreen() {
 
         {loaded && todos.length === 0 && <Text style={styles.muted}>Nothing on the list.</Text>}
 
+        {todos.some((item) => item.done) && (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => commitTodos(clearDoneTodos(todos))}
+            style={styles.clearButton}
+          >
+            <Text style={styles.clearLabel}>
+              Clear the {todos.filter((item) => item.done).length} done
+            </Text>
+          </Pressable>
+        )}
+
         <Text style={[styles.sectionTitle, { marginTop: SPACING.lg }]}>Notepad</Text>
         <TextInput
           value={notepad}
@@ -212,6 +234,8 @@ function makeStyles(palette: Palette) {
       lineHeight: 21,
     },
     muted: { color: palette.mutedForeground, fontSize: 13 },
+    clearButton: { alignSelf: "flex-start", paddingVertical: SPACING.sm },
+    clearLabel: { color: palette.mutedForeground, fontSize: 13, fontWeight: "600" },
     footnote: { color: palette.subtleForeground, fontSize: 11 },
   });
 }
