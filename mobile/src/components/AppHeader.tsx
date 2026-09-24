@@ -17,7 +17,7 @@ import { AppMenu } from "./AppMenu";
 import { SyncChip } from "./SyncChip";
 import { TimerChip } from "./TimerChip";
 import { ThemeButton } from "./ThemeButton";
-import { SPACING, type Palette } from "../theme";
+import { HEADER_CONTROL, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 export function AppHeader({ title }: { title?: string }) {
@@ -49,9 +49,22 @@ export function AppHeader({ title }: { title?: string }) {
             <Ionicons name="chevron-back" size={22} color={palette.foreground} />
           </Pressable>
         )}
-        <Text style={styles.title} numberOfLines={1}>
-          {title ?? track?.meta.name ?? "Horizon"}
-        </Text>
+        {/* The track name is the switcher. Which track you are in is the most
+            consequential thing on this bar, and it was three taps away inside
+            a menu; the name is already the label for that choice, so it may as
+            well be the control. */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Track: ${track?.meta.name ?? "none"}. Tap to switch or create a track.`}
+          onPress={() => router.push("/tracks")}
+          style={styles.titleButton}
+          hitSlop={8}
+        >
+          <Text style={styles.title} numberOfLines={1}>
+            {title ?? track?.meta.name ?? "Horizon"}
+          </Text>
+          <Ionicons name="chevron-down" size={14} color={palette.subtleForeground} />
+        </Pressable>
         <TimerChip />
         <SyncChip />
         <ThemeButton />
@@ -60,9 +73,9 @@ export function AppHeader({ title }: { title?: string }) {
           accessibilityLabel="Menu"
           onPress={() => setMenuOpen(true)}
           style={styles.menuButton}
-          hitSlop={8}
+          hitSlop={10}
         >
-          <Text style={styles.menuGlyph}>⋯</Text>
+          <Ionicons name="ellipsis-horizontal" size={17} color={palette.mutedForeground} />
         </Pressable>
       </View>
 
@@ -83,9 +96,19 @@ function makeStyles(palette: Palette) {
       borderBottomWidth: 1,
       borderBottomColor: palette.cardBorder,
     },
-    title: { flex: 1, color: palette.foreground, fontSize: 18, fontWeight: "700" },
+    titleButton: { flex: 1, flexDirection: "row", alignItems: "center", gap: 4, minHeight: HEADER_CONTROL.height },
+    title: { flexShrink: 1, color: palette.foreground, fontSize: 18, fontWeight: "700" },
     back: { paddingRight: 2, marginLeft: -SPACING.xs },
-    menuButton: { paddingHorizontal: SPACING.sm, paddingVertical: 2 },
-    menuGlyph: { color: palette.foreground, fontSize: 22, lineHeight: 24 },
+    menuButton: {
+      alignItems: "center",
+      justifyContent: "center",
+      height: HEADER_CONTROL.height,
+      minWidth: HEADER_CONTROL.minWidth,
+      paddingHorizontal: HEADER_CONTROL.paddingHorizontal,
+      borderRadius: HEADER_CONTROL.radius,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.surfaceMuted,
+    },
   });
 }

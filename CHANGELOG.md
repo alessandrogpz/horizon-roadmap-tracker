@@ -7,6 +7,44 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.53.0] - 2026-09-24
+
+### Added
+- **A Gym panel and screen**, replacing "Movement" — which was the step counter again under a second
+  name, reading the same numbers from the same place. The useful question in a gym is not whether
+  the body moved but what today is for and how much of it is done.
+
+  A weekly split says what each day is for (push, pull, legs, cardio…), a day can override it when
+  the plan meets reality, and exercises are logged as sets of reps and weight. Every exercise shows
+  **what it was last time**, because that is the question every working set starts with and looking
+  it up is what a paper notebook is bad at.
+
+  Built for one hand, standing up, between sets: reps and weight are steppers with real increments
+  (1 and 2.5 kg) rather than a keyboard, there is no save button, and the entry opens on the last
+  set of that exercise because "same again" is the overwhelmingly common case.
+
+  The log lives in a **note** rather than on the track. The server validates the workspace against a
+  strict schema that refuses unknown fields — the thing that once locked a real account out of
+  syncing — so a new field would have meant a schema change, a migration and a deploy before a
+  single set could be logged. Notes already sync, already merge per note, and hold half a megabyte
+  each, which is years of training. `lib/gym.ts` holds the format, so the website can read the same
+  log whenever it grows a gym panel.
+
+### Changed
+- **Tapping the track name switches track.** Which track you are in is the most consequential thing
+  on the header and it was three taps inside a menu; the name was already the label for that choice,
+  so it is now the control. It also reaches "new track", which was equally buried.
+- **The header controls are one size.** The sync chip, the theme button and the menu were three
+  different heights with three different borders, because each was written on its own day. They now
+  share `HEADER_CONTROL` — 30pt tall, one radius, one border. A row of controls that disagree about
+  their own height reads as unfinished however good each one is alone.
+- The menu's `⋯` was a text glyph among icons; it is an icon now, at the same weight as its
+  neighbours.
+
+### Fixed
+- A hundred-kilo session displayed as "0t". Volume shows kilograms until there are enough of them to
+  be tonnes.
+
 ## [0.52.0] - 2026-09-24
 
 ### Added

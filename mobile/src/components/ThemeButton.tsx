@@ -16,7 +16,7 @@ import { Pressable, StyleSheet } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useTheme } from "../theme/ThemeProvider";
 import { tap } from "../feedback/haptics";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { HEADER_CONTROL, type Palette } from "../theme";
 
 export function ThemeButton() {
   const { palette, resolved, setPreference } = useTheme();
@@ -45,10 +45,10 @@ function makeStyles(palette: Palette) {
     button: {
       alignItems: "center",
       justifyContent: "center",
-      minWidth: 34,
-      minHeight: 30,
-      paddingHorizontal: SPACING.sm,
-      borderRadius: RADIUS.control,
+      height: HEADER_CONTROL.height,
+      minWidth: HEADER_CONTROL.minWidth,
+      paddingHorizontal: HEADER_CONTROL.paddingHorizontal,
+      borderRadius: HEADER_CONTROL.radius,
       borderWidth: 1,
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,

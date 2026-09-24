@@ -21,7 +21,9 @@ import { phaseStats, progressStats, streakCalendar, timelineStats } from "@share
 import { PanelCard, Meter } from "./PanelCard";
 import { FITNESS_PANEL, STEPS_PANEL } from "./layout";
 import { usePedometer } from "../steps/usePedometer";
-import { dailySteps, describeHealth, healthStatus, todaysMovement, type HealthStatus, type Movement } from "./../steps/healthConnect";
+import { dailySteps, healthStatus } from "./../steps/healthConnect";
+import { FOCUS_LABEL, focusFor, sessionFor, setCountOf, volumeOf } from "@shared/gym";
+import { useGymLog } from "../gym/useGymLog";
 import { SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
@@ -69,7 +71,7 @@ export function PanelBody({ id, track, today }: { id: string } & PanelProps) {
     case STEPS_PANEL:
       return <StepsPanel today={today} />;
     case FITNESS_PANEL:
-      return <FitnessPanel today={today} />;
+      return <GymPanel track={track} today={today} />;
     default:
       return null;
   }
@@ -277,76 +279,52 @@ function StepsPanel({ today }: { today: string }) {
 }
 
 /**
- * What the body did today, as opposed to what the plan asked of it.
+ * Today's training: what the day is for, and what has been done of it.
  *
- * Steps, distance and active minutes, straight from Health Connect — so it
- * counts a walk to the shops and a session at the gym recorded by a watch,
- * neither of which Horizon knows anything about. Distance and active time need
- * permissions this build does not request yet, so they show as a dash rather
- * than a zero: "not asked for" and "none today" are different facts and should
- * not look the same.
+ * Replaced a "Movement" panel that read steps and distance out of Health
+ * Connect, which was the step counter with a second name. The useful question
+ * in a gym is not whether the body moved — it is what today is for and how
+ * much of it is left.
  */
-function FitnessPanel({ today }: { today: string }) {
+function GymPanel({ track, today }: PanelProps) {
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
-  const [movement, setMovement] = useState<Movement | null>(null);
-  const [status, setStatus] = useState<HealthStatus>("unsupported");
+  const { log, loaded } = useGymLog(track.meta.id);
 
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      const state = await healthStatus();
-      if (cancelled) return;
-      setStatus(state);
-      if (state !== "ready") return;
-      const today_ = await todaysMovement(today);
-      if (!cancelled) setMovement(today_);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [today]);
+  const dayKey = DAYS_SHORT[parseYMD(today).getDay()];
+  const focus = focusFor(log, today, dayKey);
+  const session = sessionFor(log, today);
+  const sets = setCountOf(session);
+  const volume = volumeOf(session);
 
-  if (status !== "ready") return <Text style={styles.muted}>{describeHealth(status)}</Text>;
+  if (!loaded) return <Text style={styles.muted}>Loading…</Text>;
 
   return (
     <>
       <View style={styles.headlineRow}>
-        <Text style={[styles.big, { color: TINTS[FITNESS_PANEL] }]}>
-          {(movement?.steps ?? 0).toLocaleString()}
+        <Text style={[styles.big, { color: TINTS[FITNESS_PANEL] }]} numberOfLines={1}>
+          {focus ? FOCUS_LABEL[focus] : "—"}
         </Text>
-        <Text style={styles.muted}>steps today</Text>
+        <View style={styles.headlineText}>
+          <Text style={styles.strong}>
+            {sets === 0 ? "Nothing logged yet" : `${sets} set${sets === 1 ? "" : "s"}`}
+          </Text>
+          <Text style={styles.muted}>
+            {volume > 0 ? `${Math.round(volume).toLocaleString()} kg lifted` : "Tap to log a set"}
+          </Text>
+        </View>
       </View>
-      <View style={styles.statRow}>
-        <Stat
-          label="distance"
-          value={movement && movement.metres > 0 ? `${(movement.metres / 1000).toFixed(1)} km` : "—"}
-          styles={styles}
-        />
-        <Stat
-          label="active"
-          value={movement && movement.activeMinutes > 0 ? `${movement.activeMinutes} min` : "—"}
-          styles={styles}
-        />
-      </View>
-    </>
-  );
-}
 
-function Stat({
-  label,
-  value,
-  styles,
-}: {
-  label: string;
-  value: string;
-  styles: ReturnType<typeof makeStyles>;
-}) {
-  return (
-    <View style={styles.stat}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.muted}>{label}</Text>
-    </View>
+      {session.exercises.slice(0, 3).map((exercise) => (
+        <View key={exercise.id} style={styles.line}>
+          <Ionicons name="barbell-outline" size={13} color={palette.subtleForeground} />
+          <Text style={styles.lineText} numberOfLines={1}>
+            {exercise.name}
+          </Text>
+          <Text style={styles.muted}>{exercise.sets.length}</Text>
+        </View>
+      ))}
+    </>
   );
 }
 
@@ -369,7 +347,7 @@ export const PANEL_HREF: Record<string, string> = {
   notepad: "/notes",
   todoList: "/notes",
   [STEPS_PANEL]: "/steps",
-  [FITNESS_PANEL]: "/steps",
+  [FITNESS_PANEL]: "/gym",
 };
 
 export const PANEL_ICON: Record<string, React.ComponentProps<typeof Ionicons>["name"]> = {
