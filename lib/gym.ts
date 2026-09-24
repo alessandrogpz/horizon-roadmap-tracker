@@ -28,37 +28,6 @@
 
 import type { DateStr, DayKey } from "./types";
 
-/** A ready-made week for a track that is about training, offered rather than
- *  assumed: these become the track's own focus types, so the Week screen edits
- *  them like any other track's days. */
-export const STARTER_WEEK: { key: string; label: string; color: string }[] = [
-  { key: "push", label: "Push", color: "#ef4444" },
-  { key: "pull", label: "Pull", color: "#0ea5e9" },
-  { key: "legs", label: "Legs", color: "#a855f7" },
-  { key: "cardio", label: "Cardio", color: "#f59e0b" },
-  { key: "rest", label: "Rest", color: "#64748b" },
-];
-
-/** Mon..Sun for the starter week. Two rest days, and legs away from push. */
-export const STARTER_SPLIT: Record<string, string> = {
-  Mon: "push",
-  Tue: "pull",
-  Wed: "legs",
-  Thu: "rest",
-  Fri: "push",
-  Sat: "cardio",
-  Sun: "rest",
-};
-
-/** What a starter week actually asks of you, per kind of day. */
-export const STARTER_PLAN: Record<string, string[]> = {
-  push: ["Bench press", "Overhead press", "Incline dumbbell press", "Triceps pushdown"],
-  pull: ["Deadlift", "Pull-up", "Barbell row", "Face pull", "Biceps curl"],
-  legs: ["Back squat", "Romanian deadlift", "Leg press", "Calf raise"],
-  cardio: ["Run", "Row"],
-  rest: [],
-};
-
 export interface GymSet {
   reps: number;
   /** Kilograms. Optional: bodyweight work has none, and a set with no weight
@@ -196,16 +165,6 @@ export const removeFromPlan = (log: GymLog, focusKey: string, name: string): Gym
     focusKey,
     plannedFor(log, focusKey).filter((existing) => existing !== name)
   );
-
-/** Seeds the exercises for a starter week, leaving anything already planned
- *  alone — running this twice should not double anyone's session. */
-export function applyStarterPlan(log: GymLog): GymLog {
-  const plans = { ...log.plans };
-  for (const [focus, names] of Object.entries(STARTER_PLAN)) {
-    if (!plans[focus]?.length) plans[focus] = [...names];
-  }
-  return { ...log, plans };
-}
 
 export const sessionFor = (log: GymLog, date: DateStr): GymSession =>
   log.sessions[date] ?? { exercises: [] };

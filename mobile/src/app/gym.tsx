@@ -23,7 +23,6 @@ import {
   addExercise,
   addSet,
   addToPlan,
-  applyStarterPlan,
   focusOfDay,
   lastTime,
   plannedFor,
@@ -32,11 +31,8 @@ import {
   removeSet,
   sessionFor,
   setCountOf,
-  STARTER_SPLIT,
-  STARTER_WEEK,
   volumeOf,
 } from "@shared/gym";
-import { setWeeklyRhythm } from "@shared/trackActions";
 import { DAYS_SHORT, formatDayMonthYear, parseYMD } from "@shared/dates";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { useGymLog } from "../gym/useGymLog";
@@ -48,7 +44,7 @@ import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 export default function GymScreen() {
-  const { track, today, editTrack } = useWorkspace();
+  const { track, today } = useWorkspace();
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
   const { log, change } = useGymLog(track?.meta.id);
@@ -59,27 +55,6 @@ export default function GymScreen() {
   const focus = focusOfDay(track?.weekSchedule, dayKey);
   const planned = plannedFor(log, focus?.key);
   const session = sessionFor(log, today);
-
-  /** The starter week writes the track's focus types and rhythm as well as the
-   *  exercises, because a plan for "push days" means nothing until the week
-   *  says which days those are. */
-  const useStarterWeek = useCallback(() => {
-    tap();
-    editTrack((current) => {
-      const focusTypes = { ...(current.focusTypes ?? {}) };
-      for (const entry of STARTER_WEEK) {
-        if (!focusTypes[entry.key]) focusTypes[entry.key] = { label: entry.label, color: entry.color };
-      }
-      const week = DAYS_SHORT.slice(1)
-        .concat(DAYS_SHORT[0])
-        .map((name) => {
-          const key = STARTER_SPLIT[name] ?? "rest";
-          return { name, type: key, label: focusTypes[key]?.label ?? key };
-        });
-      return setWeeklyRhythm(current, week, focusTypes);
-    });
-    change(applyStarterPlan);
-  }, [change, editTrack]);
 
   const logSet = useCallback(
     (exerciseId: string, reps: number, weight: number) => {
@@ -124,24 +99,6 @@ export default function GymScreen() {
           </View>
         )}
       </View>
-
-      {/* Offered whenever the track has no gym plan at all — not only when it
-          has no week. Every track starts with a week of some kind, so gating
-          this on "no week" meant a fitness track never saw it. */}
-      {Object.keys(log.plans).length === 0 && (
-        <View style={styles.card}>
-          <Text style={styles.exerciseName}>Start from a training week</Text>
-          <Text style={styles.muted}>
-            Sets this track&apos;s week to push / pull / legs with two rest days, and fills each kind
-            of day with the exercises to match. It renames the days this track currently has, so it
-            suits a track that is about training rather than one already in use for something else.
-            Everything is editable afterwards.
-          </Text>
-          <Pressable accessibilityRole="button" onPress={useStarterWeek} style={styles.logButton}>
-            <Text style={styles.logLabel}>Set up a training week</Text>
-          </Pressable>
-        </View>
-      )}
 
       {/* What today asks for and has not been started. Tapping one begins it. */}
       {todo.length > 0 && (
