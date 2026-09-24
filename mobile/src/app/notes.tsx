@@ -137,7 +137,12 @@ export default function NotesScreen() {
               </View>
               <Text style={[styles.todoText, item.done && styles.todoDone]}>{item.text}</Text>
             </Pressable>
-            <Pressable accessibilityRole="button" accessibilityLabel={`Remove ${item.text}`} onPress={() => commitTodos(removeTodo(todos, index))}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Remove ${item.text}`}
+              hitSlop={8}
+              onPress={() => commitTodos(removeTodo(todos, index))}
+            >
               <Text style={styles.remove}>×</Text>
             </Pressable>
           </View>

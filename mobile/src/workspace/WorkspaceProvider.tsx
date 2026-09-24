@@ -38,6 +38,10 @@ interface WorkspaceValue {
   switchTrack: (trackId: string) => void;
   /** After a sync: the merged workspace the server sent back, already stored. */
   replaceWorkspace: (workspace: Workspace) => void;
+  /** Puts a previous workspace back, on screen *and* on disk — what Undo needs.
+   *  `replaceWorkspace` deliberately does not write, because sync has already
+   *  written by the time it is called; an undo has not. */
+  restoreWorkspace: (workspace: Workspace) => void;
   /** Forgets everything this device holds and starts again, as on first run.
    *  What is in the account is untouched — signing in brings it back. */
   resetLocal: () => Promise<void>;
@@ -185,6 +189,11 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
   const replaceWorkspace = useCallback((next: Workspace) => setWorkspace(next), []);
 
+  const restoreWorkspace = useCallback((previous: Workspace) => {
+    setWorkspace(previous);
+    void saveWorkspace(previous);
+  }, []);
+
   const resetLocal = useCallback(async () => {
     await clearAll();
     await clearDeviceSettings();
@@ -192,8 +201,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo<WorkspaceValue>(
-    () => ({ workspace, track, today, loading, toggleItem, editTrack, editTrackById, addTrack, switchTrack, replaceWorkspace, resetLocal }),
-    [workspace, track, today, loading, toggleItem, editTrack, editTrackById, addTrack, switchTrack, replaceWorkspace, resetLocal]
+    () => ({ workspace, track, today, loading, toggleItem, editTrack, editTrackById, addTrack, switchTrack, replaceWorkspace, restoreWorkspace, resetLocal }),
+    [workspace, track, today, loading, toggleItem, editTrack, editTrackById, addTrack, switchTrack, replaceWorkspace, restoreWorkspace, resetLocal]
   );
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;

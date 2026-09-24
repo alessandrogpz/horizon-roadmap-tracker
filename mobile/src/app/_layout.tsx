@@ -22,6 +22,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { WorkspaceProvider } from "../workspace/WorkspaceProvider";
 import { SyncProvider } from "../sync/SyncProvider";
 import { TimerProvider } from "../timer/TimerProvider";
+import { UndoProvider } from "../components/UndoBar";
 import { ThemeProvider, useTheme } from "../theme/ThemeProvider";
 
 export default function RootLayout() {
@@ -39,7 +40,12 @@ export default function RootLayout() {
               {/* Above the screens so leaving the timer screen does not stop
                   the timer. */}
               <TimerProvider>
-                <Screens />
+                {/* Outermost of the three so the bar floats above every
+                    screen, and innermost of the data providers so an undo can
+                    put a workspace back. */}
+                <UndoProvider>
+                  <Screens />
+                </UndoProvider>
               </TimerProvider>
             </SyncProvider>
           </WorkspaceProvider>

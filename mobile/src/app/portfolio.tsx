@@ -18,15 +18,17 @@ import {
   updatePortfolioProject,
 } from "@shared/trackActions";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
+import { useUndo } from "../components/UndoBar";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { EditHeader, useEditMode } from "../components/EditToggle";
 import { Refreshable } from "../components/Refreshable";
 
 export default function PortfolioScreen() {
-  const { track, today, editTrack } = useWorkspace();
+  const { workspace, track, today, editTrack, restoreWorkspace } = useWorkspace();
   const palette = usePalette();
   const { editing, setEditing } = useEditMode();
+  const { offer } = useUndo();
   const styles = useMemo(() => makeStyles(palette), [palette]);
   const [draft, setDraft] = useState("");
 
@@ -112,7 +114,11 @@ export default function PortfolioScreen() {
               <Pressable
                 accessibilityRole="button"
                 style={styles.smallButton}
-                onPress={() => editTrack((t) => removePortfolioProject(t, project.id))}
+                onPress={() => {
+                  const previous = workspace;
+                  editTrack((t) => removePortfolioProject(t, project.id));
+                  if (previous) offer("Deliverable removed", () => restoreWorkspace(previous));
+                }}
               >
                 <Text style={styles.smallLabel}>Remove</Text>
               </Pressable>

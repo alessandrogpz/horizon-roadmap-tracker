@@ -17,6 +17,7 @@ import { phaseStats, progressStats, timelineStats } from "@shared/stats";
 import { addPhase, removePhase, setCurrentPhase } from "@shared/trackActions";
 import { formatDayMonthYear } from "@shared/dates";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
+import { useUndo } from "../../components/UndoBar";
 import { RADIUS, SPACING, type Palette } from "../../theme";
 import { usePalette } from "../../theme/ThemeProvider";
 import { EditHeader, useEditMode } from "../../components/EditToggle";
@@ -24,9 +25,10 @@ import { Refreshable } from "../../components/Refreshable";
 import { SubNav } from "../../components/SubNav";
 
 export default function PhasesScreen() {
-  const { track, today, editTrack } = useWorkspace();
+  const { workspace, track, today, editTrack, restoreWorkspace } = useWorkspace();
   const palette = usePalette();
   const { editing, setEditing } = useEditMode();
+  const { offer } = useUndo();
   const styles = useMemo(() => makeStyles(palette), [palette]);
 
   const timeline = useMemo(() => (track ? timelineStats(track) : null), [track]);
@@ -141,7 +143,14 @@ export default function PhasesScreen() {
             <Pressable
               accessibilityRole="button"
               style={styles.smallButton}
-              onPress={() => editTrack((t) => removePhase(t, phase.id))}
+              onPress={() => {
+                // Snapshot first: the undo puts a whole workspace back rather
+                // than trying to reverse the edit, which would have to know
+                // where in the list the phase sat.
+                const previous = workspace;
+                editTrack((t) => removePhase(t, phase.id));
+                if (previous) offer("Phase removed", () => restoreWorkspace(previous));
+              }}
             >
               <Text style={styles.smallLabel}>Remove</Text>
             </Pressable>

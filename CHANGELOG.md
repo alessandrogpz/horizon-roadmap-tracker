@@ -7,6 +7,46 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.52.0] - 2026-09-24
+
+### Added
+- **Undo, instead of "are you sure?".** Removing a phase, a deliverable, a rotation or a day's item
+  happens immediately and offers to put it back for a few seconds. A confirmation in front of every
+  destructive action teaches people to tap through confirmations, so by the time one matters it has
+  already been dismissed by reflex. The undo restores the whole previous workspace rather than
+  reversing the edit — reversing a removal exactly would mean knowing where in the list it sat.
+- **Panels are wrapped in an error boundary.** One panel throwing used to take the whole home screen
+  with it; now it costs one card, and the rest keep working. The website has had this for as long as
+  it has had panels.
+- **Haptics**, on the things that deserve them: ticking an item, lifting and dropping a panel,
+  flipping the theme, and anything destructive. Not on navigation, which would turn the phone into a
+  buzzing brick.
+- **Search works offline.** The phone already holds the open workspace and every note, so it answers
+  from those instantly and lets the server's better answer — every track on the account, archived
+  ones included — replace it when one arrives. Previously an offline search said "no connection" and
+  nothing else.
+- **A Movement panel**: today's steps, distance and active time from Health Connect, so a walk to
+  the shops or a session recorded by a watch counts without Horizon knowing anything about it.
+  Distance and active time show a dash rather than a zero until their permissions are requested —
+  "not asked for" and "none today" are different facts.
+- **Share progress is back**, in the `⋯` menu. It was taken off Today in 0.47.0 for being an odd
+  thing to meet every morning, and never given a new home.
+
+### Changed
+- **The theme is two states, not three.** The app starts on whatever the phone is set to, so a fresh
+  install already matches its surroundings and there is nothing to choose; the button flips it from
+  there. The website's Settings loses its Theme row for the same reason — the icon in the top bar
+  was always the faster path, and a "System" option that only mattered on first run was the least
+  useful third of it.
+- **Tap targets**: the bare `×` remove buttons were a glyph with a few points of padding, well under
+  Android's 48dp. They are 44pt targets now, which is most of why they felt fiddly.
+- **Font scaling**: the tab bar, the hour wheel and the grid's labels opt out of OS font scaling.
+  They are grid-locked layouts where a scaled label clips or breaks the maths deciding which row is
+  selected — the bug the tab bar already had once, waiting to be triggered by someone's
+  accessibility settings instead of my numbers.
+- Missing screen-reader labels on the remove buttons in Notes and the Week screen, and a disabled
+  state that now explains *why* it is disabled.
+
 ## [0.51.0] - 2026-09-24
 
 ### Changed

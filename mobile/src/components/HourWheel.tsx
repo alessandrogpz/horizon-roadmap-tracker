@@ -79,7 +79,10 @@ export function HourWheel({
             >
               {Array.from({ length: 24 }, (_, hour) => (
                 <View key={hour} style={styles.row}>
-                  <Text style={styles.rowLabel}>
+                  {/* The wheel snaps to a fixed row height, so this one label
+                      cannot grow with the OS font scale without breaking the
+                      maths that decides which hour is selected. */}
+                  <Text style={styles.rowLabel} allowFontScaling={false}>
                     {hour === 0 ? "Midnight" : hour === 12 ? "Midday" : `${String(hour).padStart(2, "0")}:00`}
                   </Text>
                 </View>

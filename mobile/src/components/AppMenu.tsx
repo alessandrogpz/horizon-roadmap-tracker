@@ -14,6 +14,8 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-nati
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { describeLastSync, useSync } from "../sync/SyncProvider";
+import { useWorkspace } from "../workspace/WorkspaceProvider";
+import { shareTrack } from "../share/shareTrack";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
@@ -50,6 +52,7 @@ export function AppMenu({ open, onClose }: { open: boolean; onClose: () => void 
   const styles = useMemo(() => makeStyles(palette), [palette]);
   const router = useRouter();
   const { state, message, lastSyncedAt, sync } = useSync();
+  const { track, today } = useWorkspace();
 
   // Close first: pushing a screen under an open sheet leaves the sheet on top.
   const go = (to: string) => {
@@ -120,6 +123,25 @@ export function AppMenu({ open, onClose }: { open: boolean; onClose: () => void 
             </View>
 
             <Text style={styles.sectionTitle}>This track &amp; account</Text>
+
+            {/* Sharing left Today, where it was an odd thing to meet every
+                morning. It belongs with the other occasional actions. */}
+            {track && (
+              <Pressable
+                accessibilityRole="button"
+                style={styles.row}
+                onPress={() => {
+                  onClose();
+                  void shareTrack(track, today, { done: 0, total: 0 });
+                }}
+              >
+                <View style={[styles.iconSquare, { backgroundColor: "#0ea5e922" }]}>
+                  <Ionicons name="share-outline" size={19} color="#0ea5e9" />
+                </View>
+                <Text style={styles.tileLabel}>Share progress</Text>
+                <Ionicons name="chevron-forward" size={17} color={palette.subtleForeground} />
+              </Pressable>
+            )}
             {MANAGE.map((tile) => (
               <Pressable key={tile.go} accessibilityRole="button" style={styles.row} onPress={() => go(tile.go)}>
                 <View style={[styles.iconSquare, { backgroundColor: `${tile.tint}22` }]}>

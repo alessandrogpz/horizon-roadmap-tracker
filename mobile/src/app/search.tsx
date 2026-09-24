@@ -13,6 +13,9 @@ import { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import type { SearchResult } from "@shared/apiTypes";
 import { authorized } from "../auth/session";
+import { searchLocally, type LocalHit } from "../search/localSearch";
+import { loadNotes } from "../storage/db";
+import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { Refreshable } from "../components/Refreshable";
@@ -24,11 +27,16 @@ export default function SearchScreen() {
   const [query, setQuery] = useState("");
   const [result, setResult] = useState<SearchResult | null>(null);
   const [state, setState] = useState<"idle" | "searching" | "signed-out" | "offline" | "failed">("idle");
+  // What the phone can answer by itself, shown immediately and replaced by the
+  // server's better answer only if one arrives.
+  const [local, setLocal] = useState<LocalHit[]>([]);
+  const { workspace } = useWorkspace();
 
   const run = useCallback(async () => {
     const q = query.trim();
     if (!q) return;
     setState("searching");
+    setLocal(searchLocally(workspace, await loadNotes(), q));
     try {
       const response = await authorized(`/api/search?q=${encodeURIComponent(q)}`);
       if (response.status === 401) return setState("signed-out");
@@ -38,7 +46,7 @@ export default function SearchScreen() {
     } catch {
       setState("offline");
     }
-  }, [query]);
+  }, [query, workspace]);
 
   const nothing = result && result.tracks.length === 0 && result.notes.length === 0;
 
@@ -62,10 +70,38 @@ export default function SearchScreen() {
       </View>
 
       {state === "searching" && <ActivityIndicator color={palette.accent} style={{ marginTop: SPACING.lg }} />}
-      {state === "signed-out" && <Text style={styles.muted}>Search runs on the server, so it needs you signed in.</Text>}
-      {state === "offline" && <Text style={styles.muted}>No connection. Everything on this phone still works.</Text>}
-      {state === "failed" && <Text style={styles.muted}>That search didn&apos;t work. Try again in a moment.</Text>}
-      {nothing && state === "idle" && <Text style={styles.muted}>Nothing matched.</Text>}
+      {state === "signed-out" && (
+        <Text style={styles.muted}>
+          Showing what is on this phone. Signing in searches every track on the account, including
+          archived ones.
+        </Text>
+      )}
+      {state === "offline" && (
+        <Text style={styles.muted}>
+          No connection — showing what is on this phone. The account&apos;s full history needs the
+          server.
+        </Text>
+      )}
+      {state === "failed" && (
+        <Text style={styles.muted}>The server search didn&apos;t work; this phone&apos;s results are below.</Text>
+      )}
+      {nothing && local.length === 0 && state === "idle" && (
+        <Text style={styles.muted}>Nothing matched.</Text>
+      )}
+
+      {/* On-device results, shown whenever the server has not answered with
+          something better. */}
+      {state !== "idle" && local.length > 0 && (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>On this phone</Text>
+          {local.map((hit, index) => (
+            <Text key={`${hit.kind}-${index}`} style={styles.line}>
+              · {hit.title}
+              {hit.context ? ` — ${hit.context}` : ""}
+            </Text>
+          ))}
+        </View>
+      )}
 
       {result?.tracks.map((hit) => (
         <View key={hit.trackId} style={styles.card}>
