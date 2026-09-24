@@ -35,6 +35,9 @@ export default function PhaseDetailScreen() {
   const [newTask, setNewTask] = useState("");
   const [newItem, setNewItem] = useState<Partial<Record<string, string>>>({});
   const { editing, setEditing } = useEditMode();
+  // Sections opened in this sitting but still empty: they have to stay on
+  // screen long enough to type into.
+  const [openSections, setOpenSections] = useState<string[]>([]);
 
   /** Every edit on this screen is "replace this phase with a changed copy", so
    *  there is one way through rather than a mutation per field. */
@@ -153,7 +156,14 @@ export default function PhaseDetailScreen() {
         />
         )}
 
-        {PHASE_DETAIL_SECTIONS.map(({ key, label }) => {
+        {/* Only sections that actually hold something. The four keys date from
+            when Horizon was one computer-science curriculum, so a phase on a
+            fitness track was being headed "Maths" and "Algorithms" with
+            nothing under either. An empty section is offered below instead of
+            being rendered as a heading over a void. */}
+        {PHASE_DETAIL_SECTIONS.filter(
+          ({ key }) => phaseDetailItems(phase.detailedInfo[key]).length > 0 || openSections.includes(key)
+        ).map(({ key, label }) => {
           const items = phaseDetailItems(phase.detailedInfo[key]);
           const set = (next: PhaseDetailItem[]) => change((p) => setPhaseDetail(p, key, next));
           return (
@@ -218,6 +228,25 @@ export default function PhaseDetailScreen() {
             </View>
           );
         })}
+
+        {editing && (
+          <View style={styles.addSections}>
+            {PHASE_DETAIL_SECTIONS.filter(
+              ({ key }) =>
+                phaseDetailItems(phase.detailedInfo[key]).length === 0 && !openSections.includes(key)
+            ).map(({ key, label }) => (
+              <Pressable
+                key={key}
+                accessibilityRole="button"
+                accessibilityLabel={`Add a ${label} section`}
+                onPress={() => setOpenSections((current) => [...current, key])}
+                style={styles.addSectionChip}
+              >
+                <Text style={styles.addSectionLabel}>+ {label}</Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
 
         <Text style={styles.footnote}>
           {editing
@@ -382,6 +411,16 @@ function makeStyles(palette: Palette) {
     detailItem: { flex: 1, color: palette.foreground, fontSize: 15, fontWeight: "600" },
     detailDesc: { color: palette.mutedForeground, fontSize: 13, lineHeight: 19, paddingLeft: SPACING.sm },
     muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
+    addSections: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.xs, marginTop: SPACING.md },
+    addSectionChip: {
+      paddingHorizontal: SPACING.md,
+      paddingVertical: SPACING.sm,
+      borderRadius: RADIUS.control,
+      borderWidth: 1,
+      borderStyle: "dashed",
+      borderColor: palette.cardBorder,
+    },
+    addSectionLabel: { color: palette.mutedForeground, fontSize: 12, fontWeight: "600" },
     footnote: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16, marginTop: SPACING.sm },
   });
 }

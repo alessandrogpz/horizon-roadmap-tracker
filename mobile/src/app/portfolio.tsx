@@ -21,6 +21,7 @@ import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { useUndo } from "../components/UndoBar";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { SwipeRow } from "../components/SwipeRow";
 import { EditHeader, useEditMode } from "../components/EditToggle";
 import { Refreshable } from "../components/Refreshable";
 
@@ -64,7 +65,20 @@ export default function PortfolioScreen() {
       />
 
       {projects.map((project) => (
-        <View key={project.id} style={styles.card}>
+        <SwipeRow
+          key={project.id}
+          right={{
+            label: "Remove",
+            icon: "trash-outline",
+            colour: "#ef4444",
+            onAct: () => {
+              const previous = workspace;
+              editTrack((t) => removePortfolioProject(t, project.id));
+              if (previous) offer("Deliverable removed", () => restoreWorkspace(previous));
+            },
+          }}
+        >
+        <View style={styles.card}>
           <Pressable
             accessibilityRole="checkbox"
             accessibilityState={{ checked: !!project.completed }}
@@ -125,6 +139,7 @@ export default function PortfolioScreen() {
             )}
           </View>
         </View>
+        </SwipeRow>
       ))}
 
       {projects.length === 0 && <Text style={styles.muted}>Nothing to deliver on this track yet.</Text>}

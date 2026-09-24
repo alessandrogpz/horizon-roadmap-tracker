@@ -7,6 +7,39 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.55.0] - 2026-09-24
+
+### Added
+- **Swipe a row to act on it.** Left archives, right removes — the gesture every list app on the
+  phone already has, and the one that was missing: archiving a track meant holding it, opening a
+  panel and finding a button. The action appears behind the row and grows as you pull, so it says
+  what it will do while you are still deciding, and a nudge marks the point where letting go
+  commits. On tracks, materials and deliverables so far.
+
+  Nothing is confirmed, because the undo bar is already the better answer. The two directions are
+  deliberately not interchangeable: the gentle action is always left, the destructive one always
+  right, and a row with only one of them only swipes that way.
+
+- **Pulling down actually pulls the page down.** Android's `RefreshControl` drops a spinner over the
+  top and leaves the page where it was, which reads as something happening *to* the screen rather
+  than because of your thumb. The page now follows the drag with square-root resistance — close at
+  first, stiffening as it stretches — reveals the indicator behind it, and springs back. Past the
+  threshold the arrow turns over and it commits.
+
+### Fixed
+- **A phase on a fitness track was headed "Math Integration" and "Algorithms & Data Structures"**,
+  with nothing under either. Those four sections are keys from when Horizon was one computer-science
+  curriculum, and every phase on every track rendered all of them regardless of content. Only
+  sections that hold something are shown now; the rest are offered as chips while editing. The
+  labels were shortened too — "Focus", "Maths", "Algorithms", "Deliverable" — so the ones that *are*
+  used read less like a syllabus. Changed on the website's phase modal as well.
+
+### Removed
+- **The "Set up a training week" card.** A card offering to rewrite the week of a track you had just
+  opened, which nobody asked for, is a confusing thing to meet — especially on a track already in
+  use for something else. Plans are built by adding exercises to a kind of day, which is the same
+  action without the surprise.
+
 ## [0.54.0] - 2026-09-24
 
 A coherence pass: several things in the app were the same idea wearing two names, or two editors for
