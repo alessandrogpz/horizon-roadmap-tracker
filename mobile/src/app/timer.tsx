@@ -1,95 +1,30 @@
-// A focus timer: twenty-five minutes of work, five of rest, the usual shape.
+// The timer.
 //
-// The phone is a better home for this than the laptop — it can sit next to you
-// while you work on something else — but it comes with the platform's central
-// constraint: JavaScript timers do not run while the app is in the background.
-// Android suspends them, and on a locked phone nothing ticks at all.
+// Not "focus timer" any more: twenty-five minutes of work and five of rest is
+// a shape that suits a set at the gym, a language drill or a stretch of
+// reading equally, and calling it "focus" implied it was for studying and made
+// it look out of place anywhere else.
 //
-// So the timer does not count ticks. It records the moment it should finish and
-// derives the remaining time from the clock, every second while visible and once
-// more whenever the app comes back. Coming back from ten minutes away shows the
-// right number — or "done" — rather than ten minutes of lost countdown. A
-// notification when it ends would need a native module and a new build; this
-// screen says so rather than pretending.
+// The state lives in ../timer/TimerProvider, above every screen, so leaving
+// this one does not stop it — which is the point of a timer you start and then
+// go and do the thing. The header says it is still running from wherever you
+// happen to be.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AppState, type AppStateStatus, Pressable, StyleSheet, Text, View } from "react-native";
+import { useMemo } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { formatRemaining, TIMER_MINUTES, useTimer, type TimerMode } from "../timer/TimerProvider";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
-
-const MINUTES = { focus: 25, rest: 5 } as const;
-type Mode = keyof typeof MINUTES;
 
 export default function TimerScreen() {
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
-
-  const [mode, setMode] = useState<Mode>("focus");
-  const [endsAt, setEndsAt] = useState<number | null>(null);
-  const [remaining, setRemaining] = useState(MINUTES.focus * 60_000);
-  const paused = useRef<number | null>(null);
-
-  const recompute = useCallback(() => {
-    if (endsAt === null) return;
-    setRemaining(Math.max(0, endsAt - Date.now()));
-  }, [endsAt]);
-
-  // One tick a second while the screen is up. Nothing depends on it being
-  // accurate — it only refreshes a number the clock already decided.
-  useEffect(() => {
-    if (endsAt === null) return;
-    recompute();
-    const interval = setInterval(recompute, 1000);
-    return () => clearInterval(interval);
-  }, [endsAt, recompute]);
-
-  // Back from the background: the clock moved on even though this app didn't.
-  useEffect(() => {
-    const onChange = (state: AppStateStatus) => {
-      if (state === "active") recompute();
-    };
-    const subscription = AppState.addEventListener("change", onChange);
-    return () => subscription.remove();
-  }, [recompute]);
-
-  const start = useCallback(
-    (which: Mode) => {
-      setMode(which);
-      paused.current = null;
-      setEndsAt(Date.now() + MINUTES[which] * 60_000);
-      setRemaining(MINUTES[which] * 60_000);
-    },
-    []
-  );
-
-  const pause = useCallback(() => {
-    if (endsAt === null) return;
-    paused.current = Math.max(0, endsAt - Date.now());
-    setEndsAt(null);
-    setRemaining(paused.current);
-  }, [endsAt]);
-
-  const resume = useCallback(() => {
-    const left = paused.current ?? MINUTES[mode] * 60_000;
-    paused.current = null;
-    setEndsAt(Date.now() + left);
-  }, [mode]);
-
-  const reset = useCallback(() => {
-    paused.current = null;
-    setEndsAt(null);
-    setRemaining(MINUTES[mode] * 60_000);
-  }, [mode]);
-
-  const running = endsAt !== null;
-  const finished = running && remaining === 0;
-  const minutes = Math.floor(remaining / 60_000);
-  const seconds = Math.floor((remaining % 60_000) / 1000);
+  const { mode, remaining, running, finished, paused, start, pause, resume, reset } = useTimer();
 
   return (
     <View style={styles.screen}>
       <View style={styles.modes}>
-        {(Object.keys(MINUTES) as Mode[]).map((option) => (
+        {(Object.keys(TIMER_MINUTES) as TimerMode[]).map((option) => (
           <Pressable
             key={option}
             accessibilityRole="button"
@@ -98,18 +33,18 @@ export default function TimerScreen() {
             style={[styles.mode, mode === option && { borderColor: palette.accent }]}
           >
             <Text style={[styles.modeLabel, mode === option && { color: palette.foreground }]}>
-              {option === "focus" ? "Focus · 25" : "Rest · 5"}
+              {option === "focus" ? `Work · ${TIMER_MINUTES.focus}` : `Rest · ${TIMER_MINUTES.rest}`}
             </Text>
           </Pressable>
         ))}
       </View>
 
       <Text style={[styles.clock, finished && { color: palette.success }]}>
-        {finished ? "done" : `${minutes}:${String(seconds).padStart(2, "0")}`}
+        {finished ? "done" : formatRemaining(remaining)}
       </Text>
 
       <View style={styles.controls}>
-        {!running && paused.current === null && (
+        {!running && !paused && (
           <Pressable accessibilityRole="button" onPress={() => start(mode)} style={[styles.button, styles.primary]}>
             <Text style={styles.primaryLabel}>Start</Text>
           </Pressable>
@@ -119,7 +54,7 @@ export default function TimerScreen() {
             <Text style={styles.buttonLabel}>Pause</Text>
           </Pressable>
         )}
-        {!running && paused.current !== null && (
+        {paused && (
           <Pressable accessibilityRole="button" onPress={resume} style={[styles.button, styles.primary]}>
             <Text style={styles.primaryLabel}>Resume</Text>
           </Pressable>
@@ -130,9 +65,9 @@ export default function TimerScreen() {
       </View>
 
       <Text style={styles.footnote}>
-        The countdown is worked out from the clock, not counted tick by tick, so leaving the app and
-        coming back shows the right time. It can&apos;t notify you when it ends — that needs a
-        notification permission and a new build.
+        Keeps running if you leave this screen — the header shows how long is left. The countdown is
+        worked out from the clock rather than counted tick by tick, so putting the phone away and
+        coming back shows the right time. It can&apos;t alert you when it ends yet.
       </Text>
     </View>
   );
@@ -140,7 +75,14 @@ export default function TimerScreen() {
 
 function makeStyles(palette: Palette) {
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: palette.background, padding: SPACING.xl, gap: SPACING.xl, alignItems: "center", justifyContent: "center" },
+    screen: {
+      flex: 1,
+      backgroundColor: palette.background,
+      padding: SPACING.xl,
+      gap: SPACING.xl,
+      alignItems: "center",
+      justifyContent: "center",
+    },
     modes: { flexDirection: "row", gap: SPACING.sm },
     mode: {
       paddingHorizontal: SPACING.lg,

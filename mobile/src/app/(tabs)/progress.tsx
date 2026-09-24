@@ -24,6 +24,12 @@ import { SubNav } from "../../components/SubNav";
 import { RADIUS, SPACING, type Palette } from "../../theme";
 import { usePalette } from "../../theme/ThemeProvider";
 
+const CELL = 26;
+const CELL_GAP = 4;
+/** Width of the left column that holds a month name when one starts. */
+const GUTTER = 30;
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
 const WEEKDAYS_SUN = ["S", "M", "T", "W", "T", "F", "S"];
 const WEEKDAYS_MON = ["M", "T", "W", "T", "F", "S", "S"];
 
@@ -45,9 +51,36 @@ export default function ProgressScreen() {
    *  them, which is what makes this a plain chunk rather than a date
    *  calculation. Newest first — the recent weeks are the ones anyone looks at. */
   const weeks = useMemo(() => {
-    const out: StreakDay[][] = [];
-    for (let i = 0; i < days.length; i += 7) out.push(days.slice(i, i + 7));
-    return out.reverse();
+    const rows: { days: StreakDay[]; month: number; label: string | null }[] = [];
+    let previous = -1;
+
+    for (let i = 0; i < days.length; i += 7) {
+      const slice = days.slice(i, i + 7);
+      // A week belongs to the month of its first real day. Weeks straddle
+      // month ends, so something has to decide, and "where the week started"
+      // keeps each month's band contiguous.
+      const anchor = slice.find((day) => day.date);
+      const date = anchor ? parseYMD(anchor.date) : null;
+      const month = date ? date.getFullYear() * 12 + date.getMonth() : previous;
+      previous = month;
+      rows.push({ days: slice, month, label: null });
+    }
+
+    // Newest first, because the recent weeks are the ones anyone looks at —
+    // and the labels are worked out *after* reversing, so each month's name
+    // sits at the top of its band where the eye meets it on the way down.
+    // Labelling before reversing put every name at the bottom of its own
+    // block, reading as though it belonged to the month above.
+    rows.reverse();
+    let seen = -1;
+    for (const row of rows) {
+      if (row.month !== seen) {
+        const anchor = row.days.find((day) => day.date);
+        if (anchor) row.label = MONTHS[parseYMD(anchor.date).getMonth()];
+        seen = row.month;
+      }
+    }
+    return rows;
   }, [days]);
 
   const titlesFor = useCallback(
@@ -67,7 +100,10 @@ export default function ProgressScreen() {
 
   return (
     <Refreshable style={styles.screen} contentContainerStyle={styles.content}>
-      <SubNav links={[{ href: "/insights", label: "History" }, { href: "/timer", label: "Focus timer" }]} />
+      {/* Only History. The timer used to sit here and does not belong to
+          progress at all — it is a thing you run, not a record of what you
+          did, and it is reachable from the menu and from its own panel. */}
+      <SubNav links={[{ href: "/insights", label: "History" }]} />
 
       {/* Three numbers across the top, not a paragraph. */}
       <View style={styles.stats}>
@@ -77,6 +113,7 @@ export default function ProgressScreen() {
       </View>
 
       <View style={styles.weekdayRow}>
+        <View style={styles.gutter} />
         {labels.map((label, index) => (
           <Text key={index} style={styles.weekdayLabel}>
             {label}
@@ -85,8 +122,18 @@ export default function ProgressScreen() {
       </View>
 
       {weeks.map((week, index) => (
-        <View key={index} style={styles.week}>
-          {week.map((day, cell) => {
+        <View
+          key={index}
+          style={[
+            styles.week,
+            // Alternate a faint band behind every other month, so where one
+            // month ends and the next begins is visible without counting rows
+            // or reading every label.
+            week.month % 2 === 0 && { backgroundColor: palette.surfaceMuted },
+          ]}
+        >
+          <Text style={styles.gutterLabel}>{week.label ?? ""}</Text>
+          {week.days.map((day, cell) => {
             if (!day.date) return <View key={cell} style={[styles.cell, styles.blank]} />;
             const isToday = day.date === today;
             const open = openDay === day.date;
@@ -102,9 +149,7 @@ export default function ProgressScreen() {
                   isToday && { borderWidth: 2, borderColor: palette.foreground },
                   open && { borderWidth: 2, borderColor: palette.accent },
                 ]}
-              >
-                {day.count > 0 && <Text style={styles.cellCount}>{day.count}</Text>}
-              </Pressable>
+              />
             );
           })}
         </View>
@@ -207,12 +252,34 @@ function makeStyles(palette: Palette) {
     },
     statValue: { color: palette.foreground, fontSize: 24, fontWeight: "700" },
     statLabel: { color: palette.mutedForeground, fontSize: 11 },
-    weekdayRow: { flexDirection: "row", gap: 4, marginBottom: 2 },
-    weekdayLabel: { flex: 1, textAlign: "center", color: palette.subtleForeground, fontSize: 10, fontWeight: "700" },
-    week: { flexDirection: "row", gap: 4, marginBottom: 4 },
-    cell: { flex: 1, aspectRatio: 1, borderRadius: 6, alignItems: "center", justifyContent: "center" },
+    // Fixed rather than stretched to the width. Stretching gave cells big
+    // enough to hold a number and left only a handful of weeks on screen,
+    // which is the opposite of what a consistency grid is for: the point is
+    // seeing months of it at once.
+    weekdayRow: { flexDirection: "row", gap: CELL_GAP, alignItems: "center", marginBottom: 2 },
+    weekdayLabel: {
+      width: CELL,
+      textAlign: "center",
+      color: palette.subtleForeground,
+      fontSize: 9,
+      fontWeight: "700",
+    },
+    gutter: { width: GUTTER },
+    gutterLabel: {
+      width: GUTTER,
+      color: palette.subtleForeground,
+      fontSize: 9,
+      fontWeight: "700",
+    },
+    week: {
+      flexDirection: "row",
+      gap: CELL_GAP,
+      alignItems: "center",
+      paddingVertical: 2,
+      borderRadius: 4,
+    },
+    cell: { width: CELL, height: CELL, borderRadius: 4 },
     blank: { opacity: 0 },
-    cellCount: { color: "rgba(255,255,255,0.85)", fontSize: 10, fontWeight: "700" },
     detail: {
       gap: SPACING.sm,
       padding: SPACING.lg,
@@ -229,7 +296,7 @@ function makeStyles(palette: Palette) {
     detailText: { color: palette.foreground, fontSize: 13, lineHeight: 18 },
     detailSub: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16 },
     legend: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: SPACING.lg },
-    legendCell: { width: 13, height: 13, borderRadius: 3 },
+    legendCell: { width: 12, height: 12, borderRadius: 3 },
     legendLabel: { color: palette.subtleForeground, fontSize: 11, marginHorizontal: SPACING.xs },
     muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
     footnote: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16, marginTop: SPACING.sm },
