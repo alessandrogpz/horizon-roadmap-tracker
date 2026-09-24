@@ -37,7 +37,8 @@ function Screens() {
           <Stack.Screen name="tracks" options={{ title: "Your tracks", presentation: "modal" }} />
           <Stack.Screen name="materials" options={{ title: "Materials" }} />
           <Stack.Screen name="streak" options={{ title: "Consistency" }} />
-          <Stack.Screen name="phases" options={{ title: "Roadmap" }} />
+          <Stack.Screen name="phases" options={{ title: "Phases" }} />
+          <Stack.Screen name="phase/[id]" options={{ title: "Phase" }} />
           <Stack.Screen name="notes" options={{ title: "Notes" }} />
           <Stack.Screen name="search" options={{ title: "Search" }} />
           <Stack.Screen name="timer" options={{ title: "Focus" }} />
