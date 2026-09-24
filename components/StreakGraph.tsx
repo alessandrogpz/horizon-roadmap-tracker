@@ -73,7 +73,7 @@ export default function StreakGraph({
       <div className="flex items-center justify-between gap-3 flex-wrap mb-1">
         <h2 className="section-title !mb-0">
           <Activity size={14} strokeWidth={2.5} className="section-icon" />
-          Consistency Streak
+          Consistency
         </h2>
         <div className="flex items-center gap-3 text-[0.75rem] font-mono">
           <span className="inline-flex items-center gap-1 text-warning font-semibold">
