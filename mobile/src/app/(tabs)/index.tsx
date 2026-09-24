@@ -22,6 +22,7 @@ import { useWorkspace } from "../../workspace/WorkspaceProvider";
 import { Refreshable } from "../../components/Refreshable";
 import { PanelCard } from "../../panels/PanelCard";
 import { PanelBoundary } from "../../components/PanelBoundary";
+import { SwipeRow } from "../../components/SwipeRow";
 import { settle, tap } from "../../feedback/haptics";
 import { PanelBody, PANEL_HREF, PANEL_ICON, tintFor } from "../../panels/registry";
 import { availablePanels, panelDefinition, setPanelHidden, visiblePanels } from "../../panels/layout";
@@ -177,6 +178,17 @@ export default function SpaceScreen() {
             return (
               // One panel failing should cost one panel, not the home screen.
               <PanelBoundary key={id} label={definition.label}>
+                {/* Swiping a panel away hides it, the same gesture as anywhere
+                    else. Nothing is lost — it is waiting in Arrange, and the
+                    data behind it is untouched — so this one needs no undo. */}
+                <SwipeRow
+                  left={{
+                    label: "Hide",
+                    icon: "eye-off-outline",
+                    colour: "#64748b",
+                    onAct: () => hide(id),
+                  }}
+                >
                 <PanelCard
                   title={definition.label}
                   icon={PANEL_ICON[id] ?? "square-outline"}
@@ -185,6 +197,7 @@ export default function SpaceScreen() {
                 >
                   <PanelBody id={id} track={track} today={today} />
                 </PanelCard>
+                </SwipeRow>
               </PanelBoundary>
             );
           })}
@@ -197,7 +210,7 @@ export default function SpaceScreen() {
           )}
 
           <Text style={styles.footnote}>
-            Hold any panel to rearrange. Which panels you have follows your account; the order they are
+            Hold any panel to rearrange, or swipe one away to hide it. Which panels you have follows your account; the order they are
             in is this phone&apos;s, because a phone has one column and the website has two.
           </Text>
         </Pressable>
