@@ -11,7 +11,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import type { Material } from "@shared/types";
 import { categoriesFor, MATERIAL_STATUSES, MATERIAL_TYPES } from "@shared/materialOptions";
-import { addMaterial, removeMaterial, setMaterialStatus, updateMaterial } from "@shared/trackActions";
+import { addMaterial, removeMaterial, setMaterialArchived, setMaterialStatus, updateMaterial } from "@shared/trackActions";
 import { loadNotes, saveNote } from "../storage/db";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../theme";
@@ -22,8 +22,13 @@ export default function MaterialsScreen() {
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
   const [open, setOpen] = useState<string | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
 
-  const materials = (track?.materials ?? []).filter((m) => !m.archived);
+  const all = track?.materials ?? [];
+  const materials = all.filter((m) => !m.archived);
+  // Archived material is history, not today's reading list, so the group
+  // starts folded — the same call the website makes.
+  const archived = all.filter((m) => m.archived);
 
   const setStatus = useCallback(
     (id: string, status: string) => editTrack((t) => setMaterialStatus(t, id, status, today)),
@@ -41,6 +46,11 @@ export default function MaterialsScreen() {
   );
 
   const remove = useCallback((id: string) => editTrack((t) => removeMaterial(t, id)), [editTrack]);
+
+  const setArchived = useCallback(
+    (id: string, value: boolean) => editTrack((t) => setMaterialArchived(t, id, value)),
+    [editTrack]
+  );
 
   const add = useCallback(
     (fields: { title: string; category: string; type: string }) => {
@@ -80,6 +90,7 @@ export default function MaterialsScreen() {
           onStatus={(status) => setStatus(material.id, status)}
           onPage={(page) => setPage(material.id, page)}
           onTotal={(totalPages) => setTotal(material.id, totalPages)}
+          onArchive={() => setArchived(material.id, true)}
           onRemove={() => remove(material.id)}
           styles={styles}
           palette={palette}
@@ -87,6 +98,37 @@ export default function MaterialsScreen() {
       ))}
 
       {materials.length === 0 && <Text style={styles.muted}>No materials on this track yet.</Text>}
+
+      {archived.length > 0 && (
+        <View style={styles.card}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ expanded: showArchived }}
+            onPress={() => setShowArchived(!showArchived)}
+          >
+            <Text style={styles.title}>
+              Archived ({archived.length}) {showArchived ? "▾" : "▸"}
+            </Text>
+          </Pressable>
+
+          {showArchived &&
+            archived.map((material) => (
+              <View key={material.id} style={styles.archivedRow}>
+                <Text style={styles.muted}>
+                  {material.title}
+                  {material.status === "Completed" ? " · finished" : ""}
+                </Text>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Bring back ${material.title}`}
+                  onPress={() => setArchived(material.id, false)}
+                >
+                  <Text style={styles.linkLabel}>Bring back</Text>
+                </Pressable>
+              </View>
+            ))}
+        </View>
+      )}
 
       <AddMaterial
         categories={categoriesFor(track.materials ?? [])}
@@ -146,6 +188,7 @@ function MaterialCard({
   onStatus,
   onPage,
   onTotal,
+  onArchive,
   onRemove,
   styles,
   palette,
@@ -156,6 +199,7 @@ function MaterialCard({
   onStatus: (status: string) => void;
   onPage: (page: number) => void;
   onTotal: (total: number) => void;
+  onArchive: () => void;
   onRemove: () => void;
   styles: ReturnType<typeof makeStyles>;
   palette: Palette;
@@ -261,6 +305,14 @@ function MaterialCard({
             style={styles.note}
             accessibilityLabel={`Notes on ${material.title}`}
           />
+
+          <Pressable accessibilityRole="button" onPress={onArchive} style={styles.linkButton}>
+            <Text style={styles.linkLabel}>Archive it</Text>
+          </Pressable>
+          <Text style={styles.footnote}>
+            Archiving keeps the progress, the notes and the history, and takes it off the list.
+            Removing does not.
+          </Text>
 
           <Pressable
             accessibilityRole="button"
@@ -382,6 +434,8 @@ function makeStyles(palette: Palette) {
     cardText: { flex: 1, gap: 2 },
     title: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
     muted: { color: palette.mutedForeground, fontSize: 13 },
+    footnote: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16 },
+    archivedRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: SPACING.md, paddingTop: SPACING.sm },
     statusDot: { width: 9, height: 9, borderRadius: 5 },
     progressTrack: { height: 4, borderRadius: 2, backgroundColor: palette.surfaceMuted, overflow: "hidden" },
     progressFill: { height: 4, borderRadius: 2 },

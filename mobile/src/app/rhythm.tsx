@@ -17,6 +17,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Link } from "expo-router";
 import type { RotationDef } from "@shared/types";
 import { setWeeklyRhythm } from "@shared/trackActions";
 import {
@@ -267,6 +268,14 @@ export default function RhythmScreen() {
             accessibilityLabel={`Starting week of ${rotation.label}`}
           />
 
+          <Link href={{ pathname: "/rotation/[id]", params: { id: rotation.id } }} asChild>
+            <Pressable accessibilityRole="button" style={styles.planButton}>
+              <Text style={styles.planLabel}>
+                {rotation.explanation?.trim() ? "The plan behind this" : "Write the plan behind this"}
+              </Text>
+            </Pressable>
+          </Link>
+
           <Text style={styles.fieldLabel}>Topics, in order</Text>
 
           {rotation.items.map((item, index) => (
@@ -392,6 +401,16 @@ function makeStyles(palette: Palette) {
       marginTop: SPACING.sm,
     },
     addLabel: { color: palette.foreground, fontSize: 14, fontWeight: "600" },
+    planButton: {
+      alignItems: "center",
+      paddingVertical: SPACING.sm,
+      marginTop: SPACING.sm,
+      borderRadius: RADIUS.control,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.surfaceMuted,
+    },
+    planLabel: { color: palette.foreground, fontSize: 13, fontWeight: "600" },
     itemRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
     item: { flex: 1, color: palette.mutedForeground, fontSize: 14 },
     remove: { color: palette.subtleForeground, fontSize: 20, paddingHorizontal: SPACING.sm },
