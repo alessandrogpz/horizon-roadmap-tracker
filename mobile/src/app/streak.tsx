@@ -9,7 +9,7 @@
 
 import { useMemo, useRef } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { streakCalendar, type StreakDay } from "@shared/stats";
+import { streakCalendar, streakStats, type StreakDay } from "@shared/stats";
 import { currentStreakLength } from "@shared/streak";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../theme";
@@ -28,6 +28,7 @@ export default function StreakScreen() {
   const scroller = useRef<ScrollView>(null);
 
   const days = useMemo(() => (track ? streakCalendar(track, today) : []), [track, today]);
+  const stats = useMemo(() => (track ? streakStats(track, today) : null), [track, today]);
   const streak = useMemo(() => currentStreakLength(track?.streakHistory ?? [], today), [track, today]);
 
   // Seven rows, one column per week: the calendar is already week-major, so
@@ -53,6 +54,12 @@ export default function StreakScreen() {
       <View style={styles.headline}>
         <Text style={styles.number}>{streak}</Text>
         <Text style={styles.muted}>day{streak === 1 ? "" : "s"} in a row</Text>
+        {stats ? (
+          <Text style={styles.muted}>
+            Longest run {stats.longest} day{stats.longest === 1 ? "" : "s"} · {stats.activeDays} active
+            day{stats.activeDays === 1 ? "" : "s"} · {stats.activeLast30} in the last 30
+          </Text>
+        ) : null}
       </View>
 
       <Text style={styles.muted}>
