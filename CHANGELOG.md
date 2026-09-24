@@ -7,6 +7,25 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.63.4] - 2026-09-25
+
+### Fixed
+- **Releasing a panel sent the whole column to the top of the page before it opened back up.** The
+  column's offset while folded is `columnShift x collapse`, and the release was zeroing the shift
+  outright while animating only the collapse. Zeroing it moves the column back to the top of the
+  page in a single frame, so what played was: everything jumps up there, then grows downwards. The
+  fold as a cut rather than in reverse.
+
+  The shift is now left where it is and `collapse` falls to zero on its own, which unwinds the
+  offset along the path it came in on: the panel just dropped holds its place and the others open
+  outward from it, the mirror of them closing in. Nothing needs resetting, because at rest the
+  collapse is zero and the offset is zero whatever the shift holds — and the next pick-up recomputes
+  it from scratch.
+- **A panel dropped exactly where it was picked up waited on an animation with nowhere to go.** The
+  release settles the panel into its slot first, and when that slot is the one it is already in, it
+  was handing `withTiming` a value it already held and waiting for the callback. It now finishes
+  straight away.
+
 ## [0.63.3] - 2026-09-25
 
 ### Changed
