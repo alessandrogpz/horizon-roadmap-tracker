@@ -101,7 +101,7 @@ export default function PomodoroTimer() {
     <div className="glass-panel p-6 flex flex-col gap-4">
       <h2 className="section-title">
         <Timer size={14} strokeWidth={2.5} className="section-icon" />
-        Focus Timer
+        Timer
       </h2>
 
       <div className="flex flex-col items-center gap-4 py-2">

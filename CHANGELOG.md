@@ -7,6 +7,31 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.47.0] - 2026-09-24
+
+### Changed
+- **My Space is the home tab**, first on the left and what opens. It is the screen that answers
+  "where does this track stand" without being asked anything; everything else is a way of drilling
+  into part of it. Being first also does the back gesture a favour — the system back from any other
+  tab now returns here instead of leaving the app — and every other tab carries a back arrow to it,
+  since one tab is not "back" from another and nothing gives them one by itself.
+- **The step counter is only a panel now.** It had a card and a toggle on Today as well, which made
+  it look like part of every track's day rather than the opt-in it is. Today is the day's checklist
+  and nothing else; "Share progress" went with it, being not a daily action.
+- **"Focus Timer" is now "Timer", on both platforms.** Twenty-five minutes of work and five of rest
+  suits a set at the gym, a language drill or a stretch of reading equally; calling it *focus*
+  implied it was for studying and made it look out of place anywhere else. Its modes are "Work" and
+  "Rest" for the same reason, and it has left the Progress screen's links — a thing you run is not a
+  record of what you did.
+- **The timer keeps running when you leave its screen**, which is the point of a timer you start and
+  then go and do the thing. It lives above every screen now, and the header shows how long is left
+  from wherever you are — tapping that takes you back to it. Still no sound or vibration when it
+  ends; that needs a notification permission and a new build.
+- **The consistency grid shows months, not weeks.** The cells were sized to fill the width, which
+  left only a handful of weeks on screen — the opposite of what the grid is for. Fixed and smaller,
+  about five months fit at once, with the month named down the left-hand side and a faint band
+  behind alternate months so where one ends and the next begins is visible without counting rows.
+
 ## [0.46.0] - 2026-09-24
 
 0.45.0 gave the phone the *shape* of an app. This gives it the idea behind the website: a track is a

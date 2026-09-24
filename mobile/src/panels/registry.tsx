@@ -223,7 +223,7 @@ function MaterialsPanel({ track }: PanelProps) {
 }
 
 function TimerPanel() {
-  return <LinkPanel label="Start a focus session" />;
+  return <LinkPanel label="Start a session" />;
 }
 
 function StepsPanel({ today }: { today: string }) {

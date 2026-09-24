@@ -34,7 +34,7 @@ export default function SortablePanel({ id, children, index = 0, onEdit, onHide 
     // Translate only, never CSS.Transform — that one also emits the scaleX/
     // scaleY dnd-kit computes from the ratio between the dragged panel and
     // whatever it's currently over. Dashboard panels differ enormously in
-    // height (a Focus Timer against a full Roadmap Timeline), so those factors
+    // height (a Timer against a full Roadmap Timeline), so those factors
     // visibly squashed and stretched the panel's text mid-drag, snapping back
     // only once the transform was dropped on release.
     transform: CSS.Translate.toString(transform),

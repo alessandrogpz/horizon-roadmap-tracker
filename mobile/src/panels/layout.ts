@@ -34,7 +34,7 @@ const HINTS: Record<string, string> = {
   weeklyPlan: "The week at a glance, and what each day is for",
   phaseTracker: "Where you are on the roadmap",
   streakGraph: "The run of days you have shown up",
-  pomodoroTimer: "Twenty-five minutes of work, five of rest",
+  pomodoroTimer: "Twenty-five minutes of work, five of rest — for anything, not just study",
   portfolioTracker: "The things this track has to produce",
   materialsTracker: "What you are reading, and how far in",
   notepad: "Somewhere to put a thought",
