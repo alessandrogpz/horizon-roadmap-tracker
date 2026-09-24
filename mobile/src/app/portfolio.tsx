@@ -11,7 +11,12 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
-import { addPortfolioProject, removePortfolioProject, togglePortfolioProject } from "@shared/trackActions";
+import {
+  addPortfolioProject,
+  removePortfolioProject,
+  togglePortfolioProject,
+  updatePortfolioProject,
+} from "@shared/trackActions";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
@@ -58,8 +63,28 @@ export default function PortfolioScreen() {
             <View style={[styles.checkbox, project.completed && { backgroundColor: palette.success, borderColor: palette.success }]}>
               {project.completed && <Text style={styles.tick}>✓</Text>}
             </View>
-            <Text style={[styles.title, project.completed && styles.done]}>{project.title}</Text>
+            <TextInput
+              value={project.title}
+              onChangeText={(title) => editTrack((t) => updatePortfolioProject(t, project.id, { title }))}
+              style={[styles.title, project.completed && styles.done]}
+              accessibilityLabel={`Name of ${project.title}`}
+            />
           </Pressable>
+
+          <TextInput
+            value={project.repoUrl ?? ""}
+            onChangeText={(repoUrl) =>
+              // Empty means "no repository", not an empty string — the field is
+              // optional and a blank one should not be stored.
+              editTrack((t) => updatePortfolioProject(t, project.id, { repoUrl: repoUrl.trim() || undefined }))
+            }
+            placeholder="Repository link, if it has one…"
+            placeholderTextColor={palette.subtleForeground}
+            autoCapitalize="none"
+            keyboardType="url"
+            style={styles.repoInput}
+            accessibilityLabel={`Repository link for ${project.title}`}
+          />
 
           <View style={styles.actions}>
             {project.repoUrl ? (
@@ -123,7 +148,16 @@ function makeStyles(palette: Palette) {
       justifyContent: "center",
     },
     tick: { color: "#fff", fontSize: 13, fontWeight: "800" },
-    title: { flex: 1, color: palette.foreground, fontSize: 15 },
+    title: { flex: 1, color: palette.foreground, fontSize: 15, paddingVertical: 2 },
+    repoInput: {
+      color: palette.mutedForeground,
+      fontSize: 12,
+      paddingVertical: SPACING.xs,
+      paddingHorizontal: SPACING.sm,
+      borderRadius: RADIUS.control,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+    },
     done: { color: palette.mutedForeground, textDecorationLine: "line-through" },
     actions: { flexDirection: "row", gap: SPACING.sm },
     smallButton: {
