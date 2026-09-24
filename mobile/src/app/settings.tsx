@@ -137,11 +137,14 @@ export default function SettingsScreen() {
       <View style={styles.row}>
         <Text style={styles.rowTitle}>My day starts at</Text>
         <Text style={styles.muted}>
-          Work logged before this hour counts for the previous day, so a late session doesn&apos;t land
-          on tomorrow and break a streak.
+          Midnight, unless you say otherwise. Work logged before this hour counts for the previous
+          day, so a late session doesn&apos;t land on tomorrow and break a streak.
         </Text>
+        {/* Every hour, not a handful. The old list stopped at 6am on the
+            assumption that only night owls would want this, which is not ours
+            to assume — a shift worker's day may well begin at 19:00. */}
         <View style={styles.choices}>
-          {[0, 2, 3, 4, 5, 6].map((hour) => (
+          {Array.from({ length: 24 }, (_, hour) => hour).map((hour) => (
             <Pressable
               key={hour}
               accessibilityRole="button"
@@ -150,7 +153,7 @@ export default function SettingsScreen() {
               style={[styles.choice, settings.dayRolloverHour === hour && { borderColor: palette.accent }]}
             >
               <Text style={[styles.choiceLabel, settings.dayRolloverHour === hour && { color: palette.foreground }]}>
-                {hour === 0 ? "Midnight" : `${hour}am`}
+                {hour === 0 ? "Midnight" : `${String(hour).padStart(2, "0")}:00`}
               </Text>
             </Pressable>
           ))}

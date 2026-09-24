@@ -239,14 +239,14 @@ export default function SettingsModal({
         <Row
           icon={<Clock size={16} strokeWidth={2} />}
           title="My day starts at"
-          hint="Work logged before this hour counts for the previous day, so a late session doesn't land on tomorrow and break a streak."
+          hint="Midnight unless you say otherwise. Work logged before this hour counts for the previous day, so a late session doesn't land on tomorrow and break a streak."
         >
           <select
             value={settings.dayRolloverHour}
             onChange={(e) => updateSettings({ dayRolloverHour: Number(e.target.value) })}
             className={selectClass}
           >
-            {Array.from({ length: 12 }, (_, h) => (
+            {Array.from({ length: 24 }, (_, h) => (
               <option key={h} value={h}>
                 {h === 0 ? "Midnight" : `${String(h).padStart(2, "0")}:00`}
               </option>
