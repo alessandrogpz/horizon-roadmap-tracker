@@ -16,9 +16,11 @@ import { Link } from "expo-router";
 import { phaseStats, progressStats, timelineStats } from "@shared/stats";
 import { addPhase, removePhase, setCurrentPhase } from "@shared/trackActions";
 import { formatDayMonthYear } from "@shared/dates";
-import { useWorkspace } from "../workspace/WorkspaceProvider";
-import { RADIUS, SPACING, type Palette } from "../theme";
-import { usePalette } from "../theme/ThemeProvider";
+import { useWorkspace } from "../../workspace/WorkspaceProvider";
+import { RADIUS, SPACING, type Palette } from "../../theme";
+import { usePalette } from "../../theme/ThemeProvider";
+import { Refreshable } from "../../components/Refreshable";
+import { SubNav } from "../../components/SubNav";
 
 export default function PhasesScreen() {
   const { track, today, editTrack } = useWorkspace();
@@ -38,7 +40,9 @@ export default function PhasesScreen() {
   }
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+    <Refreshable style={styles.screen} contentContainerStyle={styles.content}>
+      <SubNav links={[{"href": "/roadmap", "label": "Roadmap"}, {"href": "/rhythm", "label": "Week & rotations"}, {"href": "/portfolio", "label": "Deliverables"}]} />
+
       <View style={styles.summary}>
         <Text style={styles.headline}>
           Day {timeline.daysPassed} of {timeline.totalDays}
@@ -148,7 +152,7 @@ export default function PhasesScreen() {
       {timeline.windows.length === 0 && (
         <Text style={styles.muted}>This track has no phases yet.</Text>
       )}
-    </ScrollView>
+    </Refreshable>
   );
 }
 

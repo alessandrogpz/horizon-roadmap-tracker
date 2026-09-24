@@ -18,6 +18,7 @@ import { todayYMD } from "@shared/dates";
 import { applyDailyResetIfNeeded } from "@shared/dailyReset";
 import { clearAll, loadWorkspace, saveWorkspace } from "../storage/db";
 import { loadSettings } from "../storage/settingsStore";
+import { clearDeviceSettings, loadDeviceSettings } from "../storage/deviceSettings";
 
 interface WorkspaceValue {
   workspace: Workspace | null;
@@ -66,6 +67,9 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       // Before anything reads a date: the rollover hour and week start live in
       // the settings blob, and reading them must not be async.
       await loadSettings();
+      // Phone-only preferences, read before first paint for the same reason:
+      // screens ask for them synchronously while rendering.
+      await loadDeviceSettings();
       const stored = await loadWorkspace();
       if (cancelled) return;
 
@@ -183,6 +187,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
   const resetLocal = useCallback(async () => {
     await clearAll();
+    await clearDeviceSettings();
     setWorkspace(await freshWorkspace());
   }, []);
 

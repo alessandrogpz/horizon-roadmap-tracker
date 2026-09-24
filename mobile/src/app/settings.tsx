@@ -31,6 +31,7 @@ import { SERVER_URL } from "../config";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { useTheme, type ThemePreference } from "../theme/ThemeProvider";
+import { Refreshable } from "../components/Refreshable";
 
 export default function SettingsScreen() {
   const { workspace, replaceWorkspace, resetLocal } = useWorkspace();
@@ -105,7 +106,7 @@ export default function SettingsScreen() {
   const version = Constants.expoConfig?.version ?? "";
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+    <Refreshable style={styles.screen} contentContainerStyle={styles.content}>
       <Link href="/account" asChild>
         <Pressable style={styles.row} accessibilityRole="button">
           <Text style={styles.rowTitle}>Account</Text>
@@ -274,7 +275,7 @@ export default function SettingsScreen() {
           </Text>
         </Pressable>
       </View>
-    </ScrollView>
+    </Refreshable>
   );
 }
 

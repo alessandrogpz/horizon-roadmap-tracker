@@ -13,6 +13,7 @@ import type { TrackState } from "@shared/types";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { Refreshable } from "../components/Refreshable";
 
 /** The colours a track can be. A fixed set rather than a picker: the picker
  *  is a native module, and these stay legible in both themes. */
@@ -53,7 +54,7 @@ export default function TracksScreen() {
   );
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+    <Refreshable style={styles.screen} contentContainerStyle={styles.content}>
       {tracks.map((track) => {
         const active = track.meta.id === workspace?.activeTrackId;
         const streak = currentStreakLength(track.streakHistory ?? [], today);
@@ -141,7 +142,7 @@ export default function TracksScreen() {
           <Text style={styles.panelLabel}>New track…</Text>
         </Pressable>
       )}
-    </ScrollView>
+    </Refreshable>
   );
 }
 

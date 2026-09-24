@@ -4,15 +4,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { currentAccount, deleteAccount, signIn, signOut, storedToken, type Account } from "../auth/session";
-import { syncWithServer } from "../sync/syncWithServer";
-import { useWorkspace } from "../workspace/WorkspaceProvider";
+import { describeLastSync, useSync } from "../sync/SyncProvider";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { Refreshable } from "../components/Refreshable";
 
 export default function AccountScreen() {
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
-  const { replaceWorkspace } = useWorkspace();
+  const { state: syncState, message: syncMessage, lastSyncedAt, sync, refreshAccount } = useSync();
 
   const [account, setAccount] = useState<Account | null>(null);
   const [checking, setChecking] = useState(true);
@@ -34,7 +34,11 @@ export default function AccountScreen() {
     setMessage("");
     try {
       setAccount(await signIn());
-      setMessage("Signed in. Sync to bring your tracks over.");
+      // The provider decides whether anything can sync, and it decided
+      // "signed-out" before this happened.
+      await refreshAccount();
+      void sync();
+      setMessage("Signed in — bringing your tracks over.");
     } catch (error) {
       const cancelled = (error as { cancelled?: boolean }).cancelled;
       setMessage(cancelled ? "" : error instanceof Error ? error.message : "Sign-in failed.");
@@ -43,13 +47,12 @@ export default function AccountScreen() {
     }
   }, []);
 
+  // Sync itself lives in SyncProvider, so the header chip, a pull-to-refresh
+  // anywhere and this button are all the same operation with the same status
+  // — rather than this screen having a private idea of whether it worked.
   const doSync = useCallback(async () => {
-    setBusy("syncing");
-    const outcome = await syncWithServer();
-    if (outcome.workspace) replaceWorkspace(outcome.workspace);
-    setMessage(outcome.message);
-    setBusy(null);
-  }, [replaceWorkspace]);
+    await sync();
+  }, [sync]);
 
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
@@ -65,6 +68,7 @@ export default function AccountScreen() {
     try {
       await deleteAccount();
       setAccount(null);
+      await refreshAccount();
       setMessage("Account deleted. Everything it held on the server is gone; this phone kept its own copy.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "That didn't work.");
@@ -78,9 +82,10 @@ export default function AccountScreen() {
     setBusy("signing-out");
     await signOut();
     setAccount(null);
+    await refreshAccount();
     setMessage("Signed out. Everything on this phone stays here.");
     setBusy(null);
-  }, []);
+  }, [refreshAccount]);
 
   if (checking) {
     return (
@@ -91,7 +96,7 @@ export default function AccountScreen() {
   }
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+    <Refreshable style={styles.screen} contentContainerStyle={styles.content}>
       <View style={styles.card}>
         <Text style={styles.title}>{account ? account.name || account.email : "Not signed in"}</Text>
         <Text style={styles.muted}>
@@ -103,7 +108,10 @@ export default function AccountScreen() {
 
       {account ? (
         <>
-          <Button label="Sync now" busy={busy === "syncing"} onPress={doSync} styles={styles} primary />
+          <Button label="Sync now" busy={syncState === "syncing"} onPress={doSync} styles={styles} primary />
+          <Text style={styles.muted}>
+            {syncMessage || `Last synced ${describeLastSync(lastSyncedAt)}.`}
+          </Text>
           <Button label="Sign out" busy={busy === "signing-out"} onPress={doSignOut} styles={styles} />
         </>
       ) : (
@@ -128,7 +136,7 @@ export default function AccountScreen() {
           />
         </View>
       )}
-    </ScrollView>
+    </Refreshable>
   );
 }
 

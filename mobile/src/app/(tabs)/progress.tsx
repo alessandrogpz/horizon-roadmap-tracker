@@ -11,9 +11,11 @@ import { useMemo, useRef } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { streakCalendar, streakStats, type StreakDay } from "@shared/stats";
 import { currentStreakLength } from "@shared/streak";
-import { useWorkspace } from "../workspace/WorkspaceProvider";
-import { RADIUS, SPACING, type Palette } from "../theme";
-import { usePalette } from "../theme/ThemeProvider";
+import { useWorkspace } from "../../workspace/WorkspaceProvider";
+import { RADIUS, SPACING, type Palette } from "../../theme";
+import { usePalette } from "../../theme/ThemeProvider";
+import { Refreshable } from "../../components/Refreshable";
+import { SubNav } from "../../components/SubNav";
 
 /** How many things done in a day reaches each shade. The website's thresholds. */
 const levelFor = (count: number): number => (count === 0 ? 0 : count <= 1 ? 1 : count <= 2 ? 2 : count <= 3 ? 3 : 4);
@@ -50,10 +52,14 @@ export default function StreakScreen() {
   }
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+    <Refreshable style={styles.screen} contentContainerStyle={styles.content}>
+      <SubNav links={[{"href": "/insights", "label": "History"}, {"href": "/timer", "label": "Focus timer"}]} />
+
       <View style={styles.headline}>
-        <Text style={styles.number}>{streak}</Text>
-        <Text style={styles.muted}>day{streak === 1 ? "" : "s"} in a row</Text>
+        <View style={styles.headlineTop}>
+          <Text style={styles.number}>{streak}</Text>
+          <Text style={styles.muted}>day{streak === 1 ? "" : "s"} in a row</Text>
+        </View>
         {stats ? (
           <Text style={styles.muted}>
             Longest run {stats.longest} day{stats.longest === 1 ? "" : "s"} · {stats.activeDays} active
@@ -99,7 +105,7 @@ export default function StreakScreen() {
         A day counts when something was logged against it — a task ticked, a material finished. The same
         rule the website uses, because it is the same code.
       </Text>
-    </ScrollView>
+    </Refreshable>
   );
 }
 
@@ -108,7 +114,8 @@ function makeStyles(palette: Palette) {
     screen: { flex: 1, backgroundColor: palette.background },
     content: { padding: SPACING.lg, gap: SPACING.md },
     centered: { alignItems: "center", justifyContent: "center" },
-    headline: { flexDirection: "row", alignItems: "baseline", gap: SPACING.sm },
+    headline: { gap: SPACING.xs },
+    headlineTop: { flexDirection: "row", alignItems: "baseline", gap: SPACING.sm },
     number: { color: palette.accent, fontSize: 34, fontWeight: "700" },
     muted: { color: palette.mutedForeground, fontSize: 13 },
     grid: { flexDirection: "row", gap: GAP, paddingVertical: SPACING.sm },
