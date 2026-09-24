@@ -7,6 +7,20 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.63.2] - 2026-09-25
+
+### Fixed
+- **The column folded up at the top of the page while the held panel stayed at the thumb**, so the
+  gap the panel would drop into opened somewhere else entirely — most of a screen above where you
+  were pointing. 0.63.1 fixed where the held panel *looked*, and in doing so separated it from the
+  column it belongs to.
+
+  The fold now happens around the held panel instead of at the top of the page: the whole column
+  moves so that the held panel's folded slot lands exactly where that panel already is, and the
+  others stack up and down from there. Measured while holding the seventh of eight panels: it moves
+  3px, every neighbour sits at exactly one slot's distance, and the column arranges itself around it
+  rather than collapsing away from it.
+
 ## [0.63.1] - 2026-09-25
 
 ### Fixed
