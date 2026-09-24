@@ -7,6 +7,43 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.60.0] - 2026-09-24
+
+A cleanup pass, found by asking the code rather than reading it: which files nothing imports, which
+exports nothing references, which dependencies nothing uses, which comments describe things that no
+longer exist.
+
+### Removed
+- **Seven files of `create-expo-app` template theming** — `themed-text`, `themed-view`,
+  `ui/collapsible`, `constants/theme`, `hooks/use-theme`, `hooks/use-color-scheme` and its web
+  variant. They formed a closed island importing only each other, superseded by `src/theme.ts` and
+  the theme provider the app actually uses.
+- **Five unused dependencies**: `@expo/ui`, `expo-device`, `expo-glass-effect`, `expo-image`,
+  `expo-symbols` — all template leftovers, none referenced in source or config.
+- **Dead exports.** `getThemePreference` died when the website's Settings lost its theme row.
+  `stepsEnabled` / `setStepsEnabled` died when the step panel became opt-in through `hiddenPanels`
+  and Today lost its toggle. The edit-mode React context was written, never threaded, and the flag
+  passed as a prop instead.
+
+### Fixed
+- **Five headings on the website still used the old panel names** — "Weekly Study Plan", "Roadmap
+  Timeline", "Portfolio Deliverables", "Consistency Streak". The labels in `lib/modules.ts` were
+  renamed in 0.54.0 but these components hardcode their own titles, so the dashboard disagreed with
+  its own modules menu.
+- **Comments describing Google Drive sync**, removed in 0.32.0, in the server's sync handlers, the
+  web workspace provider, `useQuickNote` and a test. The one in `lib/import.ts` stays: it is
+  genuinely about clearing the tokens a device that once used Drive still has.
+
+### Changed
+- **`isDateStr` in `lib/dates.ts`** replaces six copies of the same `YYYY-MM-DD` regex, with tests.
+  It guards the boundary where a pasted or half-written value could otherwise reach date arithmetic.
+- **The README documents the Android app**, which it had never mentioned despite being half the
+  project — what it shares with the website, what only a phone can do, and where the build workflow
+  is written down. Its feature list uses the current names.
+- **`MODULES_PLAN.md` records that Drive sync was removed**, rather than leaving a decision that
+  reads as current. The plan is a record of what was decided; a superseded decision is worth keeping
+  alongside why it was superseded.
+
 ## [0.59.1] - 2026-09-24
 
 ### Fixed

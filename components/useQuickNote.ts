@@ -8,7 +8,7 @@ export type QuickNoteSaveState = "idle" | "saving" | "saved" | "error";
 
 /**
  * A track's notepad or to-do list (lib/quickNotes.ts): loads it, saves
- * edits after `saveDelayMs`, and re-reads it whenever a Drive sync or a
+ * edits after `saveDelayMs`, and re-reads it whenever an account sync or a
  * restore lands. These panels stay mounted across a sync, so without that
  * re-read an open panel would save its stale copy over newer content just
  * pulled from another device. The one exception is an edit still waiting to

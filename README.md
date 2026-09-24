@@ -38,11 +38,11 @@ no business logic.
 │   ├── workspace/                # WorkspaceProvider — app state & persistence
 │   ├── panels/                   # Panel registry, panel wiring, error boundary
 │   ├── DashboardHeader.tsx       # Top status line & sync controls
-│   ├── WeeklyPlan.tsx            # 7-day study planner
+│   ├── WeeklyPlan.tsx            # 7-day overview built from the track's rhythm
 │   ├── MaterialsTracker.tsx      # Syllabus reference materials & notes
-│   ├── PortfolioTracker.tsx      # Repository checklist & live git stats
+│   ├── PortfolioTracker.tsx      # Deliverables: checklist & live git stats
 │   ├── PhaseTracker.tsx          # Roadmap phases list
-│   └── PomodoroTimer.tsx         # Focus timer component
+│   └── PomodoroTimer.tsx         # Timer — work and rest, for anything
 ├── lib/                          # Framework-free logic
 │   ├── server/                   # Server only: MongoDB, sign-in, sessions, sync, request checks
 │   ├── serverSync.ts             # The device's side of account sync
@@ -162,11 +162,39 @@ You can install the tracker as a native standalone application on your Android/i
 
 ---
 
+## The Android app
+
+`mobile/` is a real Android app, not a wrapper: React Native and Expo, sharing
+this repository's `lib/` unchanged — the types, dates, completion rules, streak
+maths, merge engine and migrations. About 1,500 lines moved across without
+edits, which is what made a second platform weeks rather than a rewrite.
+
+It has everything the website has, arranged for a phone rather than a desk:
+
+- **My Space** is the home — the whole track as a column of panels you drag
+  into the order you want. Which panels you have follows the account; the order
+  is the phone's own, because one column and two columns are different
+  questions.
+- **Reading is the default.** Every screen that can change a plan opens
+  read-only behind a pencil, because a touch screen has no hover and an
+  editable field looks identical to a label until one of them moves.
+- **Phone-only things the web cannot do:** a step counter (Health Connect for
+  whole days, the sensor for live movement), the share sheet, deep links
+  (`horizon://track/<id>`) and backups written through Android's Storage Access
+  Framework.
+
+JavaScript changes reach installed phones over the air; native ones need a new
+build. `MOBILE_PLAN.md` covers the architecture and `mobile/README.md` the
+build and release workflow.
+
+---
+
 ## Core Features & Mechanics
 
-*   **Roadmap Timeline:** Interactive vertical timeline detailing the monthly phases and specific syllabi.
-*   **Consistency Streak:** GitHub-style contributions graph (rounded squares) tracking your revisions in real-time.
-*   **Portfolio Tracker:** Displays repository checklists and pulls live git statistics (branch, modified status, last commit message) from local git repos or GitHub.
+*   **Phases:** Interactive vertical timeline of a track's phases, their deadlines and what each one asks for.
+*   **Consistency:** GitHub-style contributions graph tracking every day you showed up, in real time.
+*   **Deliverables:** Repository checklists, with live git statistics (branch, modified status, last commit message) pulled from local git repos or GitHub.
+*   **Gym plan:** The exercises a training day asks for, with sets and reps against each and a tick as you work through them. Which days it applies to comes from the track's weekly rhythm, so the plan and the week are never two answers to one question.
 *   **Materials & Notes:** Track references, edit study notes in a Markdown editor with a live Preview pane, and query repo statistics.
 *   **Search & insights (signed in):** Full-text search across your tracks, materials, phases, roadmaps and notes, and your history (active days, weekday habits, months, per-track streaks), both computed by MongoDB on the server.
 *   **Cloud Sync:** All data lives in your browser (IndexedDB). Signed in, the same data syncs through your Horizon account (MongoDB on the server), merged per item on the server so two devices never overwrite each other. Signed out, nothing leaves the device — which is a complete way to use it, not a degraded one.

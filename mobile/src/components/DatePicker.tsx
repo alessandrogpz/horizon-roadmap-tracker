@@ -18,7 +18,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { formatDateYMD, parseYMD } from "@shared/dates";
+import { formatDateYMD, isDateStr, parseYMD } from "@shared/dates";
 import { tap } from "../feedback/haptics";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
@@ -200,7 +200,7 @@ export function DatePicker({
 
 /** "24 Sept 2026", or a prompt when nothing is set yet. */
 export function describeDate(value: string, empty = "Choose a date"): string {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return empty;
+  if (!isDateStr(value)) return empty;
   const date = parseYMD(value);
   return `${date.getDate()} ${SHORT[date.getMonth()]} ${date.getFullYear()}`;
 }
