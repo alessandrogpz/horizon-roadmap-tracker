@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatDateYMD, parseYMD, getMondayOfDateWeek, getWeekNum, getDateForDayName } from "../dates";
+import { formatDateYMD, isDateStr, parseYMD, getMondayOfDateWeek, getWeekNum, getDateForDayName } from "../dates";
 
 describe("formatDateYMD / parseYMD", () => {
   it("round-trips local dates", () => {
@@ -50,5 +50,19 @@ describe("getDateForDayName", () => {
     const thisMon = parseYMD(getDateForDayName("Mon", 0));
     const nextMon = parseYMD(getDateForDayName("Mon", 1));
     expect(nextMon.getTime() - thisMon.getTime()).toBe(7 * 24 * 60 * 60 * 1000);
+  });
+});
+
+describe("isDateStr", () => {
+  // Shape only: it guards the boundary where a pasted or half-written value
+  // could otherwise reach date arithmetic.
+  it("accepts what the app stores", () => {
+    expect(isDateStr("2026-09-24")).toBe(true);
+  });
+
+  it("rejects anything else, including nothing", () => {
+    for (const bad of ["", "24/09/2026", "2026-9-4", "2026-09-24T00:00", "today", undefined, null]) {
+      expect(isDateStr(bad as string)).toBe(false);
+    }
   });
 });

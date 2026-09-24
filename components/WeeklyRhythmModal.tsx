@@ -47,7 +47,7 @@ export default function WeeklyRhythmModal({ weekSchedule, focusTypes, onSave, on
         <div className="flex items-center justify-between pr-8">
           <div>
             <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold uppercase font-mono tracking-[0.05em]">
-              Weekly Study Plan
+              Weekly Overview
             </span>
             <h2 className="text-[1.3rem] font-bold text-foreground mt-2">Edit Weekly Rhythm</h2>
           </div>

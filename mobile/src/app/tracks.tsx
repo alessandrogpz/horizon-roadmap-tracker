@@ -10,7 +10,7 @@ import { seedTrackFromTemplate, TEMPLATE_LIST } from "@shared/templates";
 import { hiddenPanelsFor, trackKind, type TrackKind } from "@shared/trackKinds";
 import { PANELS } from "../panels/layout";
 import { trackTotalDays, updateTrackIdentity } from "@shared/trackActions";
-import { dateForDay, dayForDate, formatDateYMD, todayYMD } from "@shared/dates";
+import { dateForDay, dayForDate, formatDateYMD, isDateStr, todayYMD } from "@shared/dates";
 import { currentStreakLength } from "@shared/streak";
 import type { TrackState } from "@shared/types";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
@@ -76,8 +76,8 @@ export default function TracksScreen() {
       // what most people accept there anyway. Everything is editable after.
       // A blank or unreadable end date means "however long the template runs",
       // which is what happened before this field existed.
-      const start = /^\d{4}-\d{2}-\d{2}$/.test(newStart) ? newStart : todayYMD();
-      const asked = /^\d{4}-\d{2}-\d{2}$/.test(newEnd) ? dayForDate(start, newEnd) : 0;
+      const start = isDateStr(newStart) ? newStart : todayYMD();
+      const asked = isDateStr(newEnd) ? dayForDate(start, newEnd) : 0;
       const days = asked > 0 ? asked : template.defaultDurationDays;
 
       const seeded = seedTrackFromTemplate(template, {
@@ -297,8 +297,8 @@ function TrackSettings({
 
   if (!track) return null;
 
-  const validStart = /^\d{4}-\d{2}-\d{2}$/.test(startDate);
-  const validEnd = /^\d{4}-\d{2}-\d{2}$/.test(endDate);
+  const validStart = isDateStr(startDate);
+  const validEnd = isDateStr(endDate);
   // The stored length is a count of days from the start, which is what lets a
   // whole track be re-dated without rewriting every phase.
   const days = validStart && validEnd ? dayForDate(startDate, endDate) : 0;
@@ -413,7 +413,7 @@ function DateField({
   styles: ReturnType<typeof makeStyles>;
   palette: Palette;
 }) {
-  const set = /^\d{4}-\d{2}-\d{2}$/.test(value);
+  const set = isDateStr(value);
   return (
     <Pressable
       accessibilityRole="button"
