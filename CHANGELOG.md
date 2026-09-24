@@ -7,6 +7,44 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.48.0] - 2026-09-24
+
+### Changed
+- **Reading is the default; editing is a decision.** Every screen that can change the plan now opens
+  read-only and carries a pencil: Today, Plan, a phase, the Week and its rotations, Materials,
+  Deliverables. Tap it and the fields, the add boxes and the destructive controls appear together;
+  tap Done and they all go away.
+
+  The reason is that a touch screen has no hover, so an editable field and a label look identical
+  until one of them moves — and most of the time someone opens Horizon they are checking where
+  things stand, not rewriting the plan. A screen whose every field was a live text box invited
+  exactly the accident it looked like it wanted.
+
+  Two things are deliberately never behind the switch, because they are the app's whole point:
+  ticking something off on Today, and the timer.
+
+- **"My day starts at" accepts any hour**, not a handful ending at 6am, and is midnight by default.
+  The old range assumed only night owls would want this. The hour someone's day turns over is theirs
+  to state — a shift worker's may well begin at 19:00. Changed on the website too.
+
+### Added
+- **A step counter screen**, behind the panel: this week, the last thirty days and the year, the
+  last fortnight day by day, and a typical day against the best one. A bare number has no shape —
+  4,000 means nothing without knowing last week averaged 9,000.
+
+### Fixed
+- The month bands in the consistency grid ran the full width of the screen while the cells stopped a
+  third of the way across, so the shading looked like it belonged to nothing. They are now exactly
+  as wide as the grid.
+
+### Known limitation
+- **Steps are still only counted while the app is open**, and the screen says so rather than letting
+  its totals imply otherwise. Counting a whole day is possible in principle — Android's step sensor
+  is cumulative since boot, so the difference between two readings is the steps in between — but
+  `expo-sensors` normalises that away and its `getStepCountAsync` throws on Android outright. Doing
+  it properly needs Health Connect or a small native module, which is a new build rather than an
+  update.
+
 ## [0.47.0] - 2026-09-24
 
 ### Changed

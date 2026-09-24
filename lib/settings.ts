@@ -10,8 +10,14 @@
 // back to the defaults / an in-memory copy).
 
 export interface AppSettings {
-  /** Hour (0-11, local) at which a new day begins. 0 = calendar midnight.
-   *  Set it to 4 and work logged at 01:00 still counts for the previous day. */
+  /** Hour (0-23, local) at which a new day begins. 0 = calendar midnight, and
+   *  that is the default: a day starting anywhere else is the exception, not
+   *  something to be chosen on the way in.
+   *
+   *  Set it to 4 and work logged at 01:00 still counts for the previous day.
+   *  The range used to stop at 11, on the assumption that only night owls would
+   *  want this — but the hour someone's day turns over is theirs to state, not
+   *  ours to bound, and a shift worker's day may well begin at 19:00. */
   dayRolloverHour: number;
   /** Which column the consistency grid starts its weeks on. */
   weekStartsOn: "sun" | "mon";
@@ -63,7 +69,7 @@ let cache: AppSettings | null = null;
 
 const clampHour = (value: unknown): number => {
   const n = typeof value === "number" ? Math.floor(value) : NaN;
-  return Number.isFinite(n) ? Math.min(11, Math.max(0, n)) : DEFAULT_SETTINGS.dayRolloverHour;
+  return Number.isFinite(n) ? Math.min(23, Math.max(0, n)) : DEFAULT_SETTINGS.dayRolloverHour;
 };
 
 /** Merges a stored (possibly older, possibly hand-edited) blob over the

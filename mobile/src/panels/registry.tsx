@@ -270,6 +270,7 @@ export const PANEL_HREF: Record<string, string> = {
   materialsTracker: "/materials",
   notepad: "/notes",
   todoList: "/notes",
+  [STEPS_PANEL]: "/steps",
 };
 
 export const PANEL_ICON: Record<string, React.ComponentProps<typeof Ionicons>["name"]> = {
