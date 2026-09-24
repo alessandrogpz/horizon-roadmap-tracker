@@ -16,7 +16,6 @@ import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { SwipeRow } from "../components/SwipeRow";
-import { useUndo } from "../components/UndoBar";
 import { ConfirmSheet, type Confirmation } from "../components/ConfirmSheet";
 import { Refreshable } from "../components/Refreshable";
 
@@ -26,7 +25,6 @@ const TRACK_COLOURS = ["#0ea5e9", "#22c55e", "#f59e0b", "#ef4444", "#a855f7", "#
 
 export default function TracksScreen() {
   const { workspace, today, switchTrack, addTrack, editTrackById, restoreWorkspace } = useWorkspace();
-  const { offer } = useUndo();
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
 
@@ -39,6 +37,12 @@ export default function TracksScreen() {
   /**
    * Deleting a track.
    *
+   * Confirmed, and *not* also undoable. Asking and then offering to take it
+   * back is two decisions for one intent — the sheet has already had the
+   * conversation. Elsewhere in the app it is the other way round: no question,
+   * but an undo. One or the other, chosen by whether the action is a
+   * considered tap or a flick.
+   *
    * Implemented as `meta.archived`, and that is not a euphemism for the sake
    * of it: the sync merge reconciles two devices by comparing records, so a
    * track removed by *absence* on this phone would simply be handed back by
@@ -48,14 +52,12 @@ export default function TracksScreen() {
    */
   const remove = useCallback(
     (id: string) => {
-      const previous = workspace;
       const remaining = tracks.filter((other) => other.meta.id !== id);
       editTrackById(id, (current) => ({ ...current, meta: { ...current.meta, archived: true } }));
       if (workspace?.activeTrackId === id && remaining[0]) switchTrack(remaining[0].meta.id);
       setSettingsFor(null);
-      if (previous) offer("Track deleted", () => restoreWorkspace(previous));
     },
-    [editTrackById, offer, restoreWorkspace, switchTrack, tracks, workspace]
+    [editTrackById, switchTrack, tracks, workspace]
   );
 
   const create = useCallback(
@@ -245,7 +247,6 @@ function TrackSettings({
   const [color, setColor] = useState(track?.meta.color || TRACK_COLOURS[0]);
   const [startDate, setStartDate] = useState(track?.startDate ?? todayYMD());
   const [totalDays, setTotalDays] = useState(String(track ? trackTotalDays(track) : 90));
-  const [confirmingArchive, setConfirmingArchive] = useState(false);
 
   if (!track) return null;
 
