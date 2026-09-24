@@ -7,6 +7,25 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.51.0] - 2026-09-24
+
+### Changed
+- **"My day starts at" is one button and a wheel**, not twenty-four chips. A grid of options is fine
+  for two or three and absurd for a full day: it fills the screen, every hour looks as likely as
+  every other, and the one you want is buried in the middle. The wheel is built from a snapping
+  ScrollView rather than a native picker, so it arrived over the air.
+- **It sits with "Weeks start on" under one heading**, "Your week and day". They are the same kind of
+  decision and were in two places.
+- **Monday is the default week start**, on both platforms. It is the ISO week, what most of the
+  world writes on a calendar, and it keeps the weekend as two adjacent columns instead of splitting
+  it across both ends of the row. A stored value that is neither "sun" nor "mon" now falls back to
+  the default rather than to whichever branch happened to be the else.
+- **The theme is an icon in the header**, as on the website, and has left Settings. Three chips was a
+  lot of screen for something people flip on a train when the light changes — and Settings is
+  exactly where they are not when that happens. Tapping cycles follow-the-phone → light → dark, and
+  the choice survives a restart. Three states rather than two so the default stays reachable: a
+  two-way toggle would strand you on an explicit choice forever.
+
 ## [0.50.1] - 2026-09-24
 
 ### Fixed
