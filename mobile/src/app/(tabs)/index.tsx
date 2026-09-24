@@ -21,6 +21,8 @@ import Animated, { runOnJS, useAnimatedStyle, useSharedValue } from "react-nativ
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
 import { Refreshable } from "../../components/Refreshable";
 import { PanelCard } from "../../panels/PanelCard";
+import { PanelBoundary } from "../../components/PanelBoundary";
+import { settle, tap } from "../../feedback/haptics";
 import { PanelBody, PANEL_HREF, PANEL_ICON, tintFor } from "../../panels/registry";
 import { availablePanels, panelDefinition, setPanelHidden, visiblePanels } from "../../panels/layout";
 import { panelOrder, setPanelOrder } from "../../storage/deviceSettings";
@@ -173,15 +175,17 @@ export default function SpaceScreen() {
             const definition = panelDefinition(id);
             if (!definition) return null;
             return (
-              <PanelCard
-                key={id}
-                title={definition.label}
-                icon={PANEL_ICON[id] ?? "square-outline"}
-                accent={tintFor(id)}
-                href={PANEL_HREF[id]}
-              >
-                <PanelBody id={id} track={track} today={today} />
-              </PanelCard>
+              // One panel failing should cost one panel, not the home screen.
+              <PanelBoundary key={id} label={definition.label}>
+                <PanelCard
+                  title={definition.label}
+                  icon={PANEL_ICON[id] ?? "square-outline"}
+                  accent={tintFor(id)}
+                  href={PANEL_HREF[id]}
+                >
+                  <PanelBody id={id} track={track} today={today} />
+                </PanelCard>
+              </PanelBoundary>
             );
           })}
 
@@ -235,6 +239,7 @@ function ArrangeRow({
     .activateAfterLongPress(120)
     .onStart(() => {
       lifted.value = 1;
+      runOnJS(tap)();
     })
     .onUpdate((event) => {
       offset.value = event.translationY;
@@ -244,7 +249,10 @@ function ArrangeRow({
       const target = Math.max(0, Math.min(count - 1, index + moved));
       offset.value = 0;
       lifted.value = 0;
-      if (target !== index) runOnJS(onMove)(index, target);
+      if (target !== index) {
+        runOnJS(onMove)(index, target);
+        runOnJS(settle)();
+      }
     });
 
   const animated = useAnimatedStyle(() => ({

@@ -35,6 +35,8 @@ import { currentStreakLength } from "@shared/streak";
 import { DAYS_SHORT, formatDateYMD, formatDayMonthYear, getWeekNum, parseYMD } from "@shared/dates";
 import { computeRotationItemsForDay, isRotationItem } from "@shared/rotation";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
+import { useUndo } from "../../components/UndoBar";
+import { tap } from "../../feedback/haptics";
 import { RADIUS, SPACING, type Palette } from "../../theme";
 import { usePalette } from "../../theme/ThemeProvider";
 import { EditButton, useEditMode } from "../../components/EditToggle";
@@ -98,7 +100,7 @@ function rowsFor(track: TrackState, dateStr: string): { focus: Row[]; revision: 
 }
 
 export default function TodayScreen() {
-  const { track, today, loading, toggleItem, editTrack } = useWorkspace();
+  const { workspace, track, today, loading, toggleItem, editTrack, restoreWorkspace } = useWorkspace();
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
   const insets = useSafeAreaInsets();
@@ -108,6 +110,7 @@ export default function TodayScreen() {
   // background) — otherwise a phone left open overnight would quietly keep
   // showing yesterday as though it were today.
   const { editing, setEditing } = useEditMode();
+  const { offer } = useUndo();
   const [todosShown, setTodosShown] = useState(() => todosOpen(track?.meta.id));
   useEffect(() => setTodosShown(todosOpen(track?.meta.id)), [track?.meta.id]);
   const [viewing, setViewing] = useState(today);
@@ -139,11 +142,14 @@ export default function TodayScreen() {
   );
 
   const deleteItem = useCallback(
-    (row: Row, key: DayKey, date: string) =>
+    (row: Row, key: DayKey, date: string) => {
+      const previous = workspace;
       editTrack((t) =>
         removeDayItem(t, { dateStr: date, kind: row.kind, id: row.id, title: row.title, dayKey: key })
-      ),
-    [editTrack]
+      );
+      if (previous) offer("Item removed", () => restoreWorkspace(previous));
+    },
+    [editTrack, offer, restoreWorkspace, workspace]
   );
   const streak = useMemo(() => currentStreakLength(track?.streakHistory ?? [], today), [track, today]);
 
@@ -357,9 +363,13 @@ function Section({
             accessibilityState={{ checked: completed }}
             accessibilityLabel={row.title}
             accessibilityHint={editing && !row.generated ? "Hold to rename or remove" : undefined}
-            onPress={() =>
-              toggle({ dateStr: date, kind: row.kind, id: row.id, title: row.title, description: row.description, dayKey }, !completed)
-            }
+            onPress={() => {
+              tap();
+              toggle(
+                { dateStr: date, kind: row.kind, id: row.id, title: row.title, description: row.description, dayKey },
+                !completed
+              );
+            }}
             onLongPress={
               !editing || row.generated
                 ? undefined

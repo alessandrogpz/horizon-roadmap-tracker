@@ -29,6 +29,7 @@ import {
 } from "@shared/focusTypes";
 import { DAYS_SHORT } from "@shared/dates";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
+import { useUndo } from "../components/UndoBar";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { EditHeader, useEditMode } from "../components/EditToggle";
@@ -43,12 +44,13 @@ const WEEK = DAYS_SHORT.slice(1).concat(DAYS_SHORT[0]); // Mon..Sun
 const SWATCHES = ["#0ea5e9", "#22c55e", "#f59e0b", "#ef4444", "#a855f7", "#64748b"];
 
 export default function RhythmScreen() {
-  const { track, editTrack } = useWorkspace();
+  const { workspace, track, editTrack, restoreWorkspace } = useWorkspace();
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
   const [newItem, setNewItem] = useState<Record<string, string>>({});
   const [newType, setNewType] = useState("");
   const { editing, setEditing } = useEditMode();
+  const { offer } = useUndo();
 
   /** Every focus-type edit is the same shape: take the pool, change it with a
    *  shared rule, write both halves back. The rules keep the week consistent —
@@ -176,7 +178,13 @@ export default function RhythmScreen() {
             </View>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`Remove ${type.label}`}
+              accessibilityLabel={
+                focusTypes.length <= 1
+                  ? `Can't remove ${type.label} — a week needs at least one kind of day`
+                  : `Remove ${type.label}`
+              }
+              accessibilityState={{ disabled: focusTypes.length <= 1 }}
+              hitSlop={8}
               disabled={focusTypes.length <= 1}
               onPress={() => changePool((pool) => removeFocusType(pool, key))}
             >
@@ -230,9 +238,11 @@ export default function RhythmScreen() {
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={`Remove ${rotation.label}`}
-                onPress={() =>
-                  editTrack((t) => ({ ...t, rotations: (t.rotations ?? []).filter((r) => r.id !== rotation.id) }))
-                }
+                onPress={() => {
+                  const previous = workspace;
+                  editTrack((t) => ({ ...t, rotations: (t.rotations ?? []).filter((r) => r.id !== rotation.id) }));
+                  if (previous) offer("Rotation removed", () => restoreWorkspace(previous));
+                }}
               >
                 <Text style={styles.remove}>×</Text>
               </Pressable>
@@ -453,7 +463,16 @@ function makeStyles(palette: Palette) {
     planLabel: { color: palette.foreground, fontSize: 13, fontWeight: "600" },
     itemRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
     item: { flex: 1, color: palette.mutedForeground, fontSize: 14 },
-    remove: { color: palette.subtleForeground, fontSize: 20, paddingHorizontal: SPACING.sm },
+    remove: {
+      color: palette.subtleForeground,
+      fontSize: 20,
+      // Android asks for 48dp; a bare glyph was nowhere near it, which is
+      // most of why these felt fiddly to hit.
+      minWidth: 44,
+      minHeight: 44,
+      lineHeight: 44,
+      textAlign: "center",
+    },
     swatches: { flexDirection: "row", gap: 4 },
     swatch: { width: 18, height: 18, borderRadius: 9, borderWidth: 1, borderColor: "rgba(0,0,0,0.2)" },
     input: {

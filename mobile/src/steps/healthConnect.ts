@@ -32,6 +32,14 @@ export type HealthStatus =
 
 const READ_STEPS = { accessType: "read", recordType: "Steps" } as const;
 
+export interface Movement {
+  steps: number;
+  /** Metres. Absent from Health Connect unless something recorded it. */
+  metres: number;
+  /** Minutes the body was actually working, as Health Connect counts it. */
+  activeMinutes: number;
+}
+
 /** Loaded on demand. A static import would run the module's native lookup at
  *  startup, which on a build without it takes the whole app down. */
 function healthConnect() {
@@ -125,6 +133,41 @@ export async function dailySteps(from: string, to: string): Promise<Record<strin
     // no provider: all "no history", none worth an error.
     return {};
   }
+}
+
+/**
+ * Today's movement: steps, distance and active time in one read.
+ *
+ * Distance and active minutes need their own permissions, which this build
+ * does not request — so they come back zero rather than failing, and the panel
+ * shows what it has. Asking for permissions the app cannot yet use is what
+ * Play review looks for, so they are added alongside the gym features that
+ * will read them.
+ */
+export async function todaysMovement(date: string): Promise<Movement> {
+  const steps = (await dailySteps(date, date))[date] ?? 0;
+  const hc = healthConnect();
+  if (!hc) return { steps, metres: 0, activeMinutes: 0 };
+
+  const between = {
+    operator: "between" as const,
+    startTime: new Date(`${date}T00:00:00`).toISOString(),
+    endTime: new Date(`${date}T23:59:59`).toISOString(),
+  };
+
+  const read = async (recordType: "Distance" | "ExerciseSession", key: string): Promise<number> => {
+    try {
+      const result = await hc.aggregateRecord({ recordType, timeRangeFilter: between } as never);
+      return (result as unknown as Record<string, number>)[key] ?? 0;
+    } catch {
+      // No permission, or nothing recorded: both mean "nothing to show".
+      return 0;
+    }
+  };
+
+  const metres = await read("Distance", "DISTANCE");
+  const activeMs = await read("ExerciseSession", "EXERCISE_DURATION_TOTAL");
+  return { steps, metres, activeMinutes: Math.round(activeMs / 60_000) };
 }
 
 /** What to say about each state, in one place so the panel and the screen do

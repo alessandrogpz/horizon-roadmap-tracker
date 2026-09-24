@@ -19,9 +19,9 @@ import { DAYS_SHORT, getWeekNum, parseYMD } from "@shared/dates";
 import { currentStreakLength } from "@shared/streak";
 import { phaseStats, progressStats, streakCalendar, timelineStats } from "@shared/stats";
 import { PanelCard, Meter } from "./PanelCard";
-import { STEPS_PANEL } from "./layout";
+import { FITNESS_PANEL, STEPS_PANEL } from "./layout";
 import { usePedometer } from "../steps/usePedometer";
-import { dailySteps, healthStatus } from "./../steps/healthConnect";
+import { dailySteps, describeHealth, healthStatus, todaysMovement, type HealthStatus, type Movement } from "./../steps/healthConnect";
 import { SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
@@ -41,6 +41,7 @@ const TINTS: Record<string, string> = {
   notepad: "#64748b",
   todoList: "#6366f1",
   [STEPS_PANEL]: "#22c55e",
+  [FITNESS_PANEL]: "#ef4444",
 };
 
 export function tintFor(id: string): string | undefined {
@@ -67,6 +68,8 @@ export function PanelBody({ id, track, today }: { id: string } & PanelProps) {
       return <LinkPanel label="Open the to-do list" />;
     case STEPS_PANEL:
       return <StepsPanel today={today} />;
+    case FITNESS_PANEL:
+      return <FitnessPanel today={today} />;
     default:
       return null;
   }
@@ -273,6 +276,80 @@ function StepsPanel({ today }: { today: string }) {
   );
 }
 
+/**
+ * What the body did today, as opposed to what the plan asked of it.
+ *
+ * Steps, distance and active minutes, straight from Health Connect — so it
+ * counts a walk to the shops and a session at the gym recorded by a watch,
+ * neither of which Horizon knows anything about. Distance and active time need
+ * permissions this build does not request yet, so they show as a dash rather
+ * than a zero: "not asked for" and "none today" are different facts and should
+ * not look the same.
+ */
+function FitnessPanel({ today }: { today: string }) {
+  const palette = usePalette();
+  const styles = useMemo(() => makeStyles(palette), [palette]);
+  const [movement, setMovement] = useState<Movement | null>(null);
+  const [status, setStatus] = useState<HealthStatus>("unsupported");
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const state = await healthStatus();
+      if (cancelled) return;
+      setStatus(state);
+      if (state !== "ready") return;
+      const today_ = await todaysMovement(today);
+      if (!cancelled) setMovement(today_);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [today]);
+
+  if (status !== "ready") return <Text style={styles.muted}>{describeHealth(status)}</Text>;
+
+  return (
+    <>
+      <View style={styles.headlineRow}>
+        <Text style={[styles.big, { color: TINTS[FITNESS_PANEL] }]}>
+          {(movement?.steps ?? 0).toLocaleString()}
+        </Text>
+        <Text style={styles.muted}>steps today</Text>
+      </View>
+      <View style={styles.statRow}>
+        <Stat
+          label="distance"
+          value={movement && movement.metres > 0 ? `${(movement.metres / 1000).toFixed(1)} km` : "—"}
+          styles={styles}
+        />
+        <Stat
+          label="active"
+          value={movement && movement.activeMinutes > 0 ? `${movement.activeMinutes} min` : "—"}
+          styles={styles}
+        />
+      </View>
+    </>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  styles,
+}: {
+  label: string;
+  value: string;
+  styles: ReturnType<typeof makeStyles>;
+}) {
+  return (
+    <View style={styles.stat}>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.muted}>{label}</Text>
+    </View>
+  );
+}
+
 /** For panels whose whole content is an action: a timer, a notepad. Drawing a
  *  fake preview of a text editor would be decoration pretending to be data. */
 function LinkPanel({ label }: { label: string }) {
@@ -292,6 +369,7 @@ export const PANEL_HREF: Record<string, string> = {
   notepad: "/notes",
   todoList: "/notes",
   [STEPS_PANEL]: "/steps",
+  [FITNESS_PANEL]: "/steps",
 };
 
 export const PANEL_ICON: Record<string, React.ComponentProps<typeof Ionicons>["name"]> = {
@@ -304,6 +382,7 @@ export const PANEL_ICON: Record<string, React.ComponentProps<typeof Ionicons>["n
   notepad: "create-outline",
   todoList: "checkbox-outline",
   [STEPS_PANEL]: "walk-outline",
+  [FITNESS_PANEL]: "barbell-outline",
 };
 
 export { PanelCard };
@@ -324,5 +403,8 @@ function makeStyles(palette: Palette) {
     line: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
     lineText: { flex: 1, color: palette.foreground, fontSize: 13 },
     struck: { color: palette.mutedForeground, textDecorationLine: "line-through" },
+    statRow: { flexDirection: "row", gap: SPACING.sm },
+    stat: { flex: 1, gap: 1 },
+    statValue: { color: palette.foreground, fontSize: 16, fontWeight: "700" },
   });
 }

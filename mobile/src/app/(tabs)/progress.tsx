@@ -177,7 +177,7 @@ export default function ProgressScreen() {
       <View style={styles.weekdayRow}>
         <View style={styles.gutter} />
         {labels.map((label, index) => (
-          <Text key={index} style={styles.weekdayLabel}>
+          <Text key={index} style={styles.weekdayLabel} allowFontScaling={false}>
             {label}
           </Text>
         ))}
@@ -211,7 +211,7 @@ export default function ProgressScreen() {
               key={index}
               style={[styles.week, week.month % 2 === 0 && { backgroundColor: palette.surfaceMuted }]}
             >
-              <Text style={styles.gutterLabel}>{week.label ?? ""}</Text>
+              <Text style={styles.gutterLabel} allowFontScaling={false}>{week.label ?? ""}</Text>
               {week.days.map((day, cell) =>
                 day.date ? (
                   <Cell
