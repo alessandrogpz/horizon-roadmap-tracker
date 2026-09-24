@@ -12,9 +12,13 @@ import type { TrackState, Workspace } from "@shared/types";
 import { setItemCompletion, type DayItemRef } from "@shared/completions";
 import { activeTrack, withActiveTrack } from "@shared/selectors";
 import { migrateWorkspace } from "@shared/migrations";
+import { applyTrackBookkeeping } from "@shared/bookkeeping";
 import { blankTrack } from "@shared/templates";
 import { todayYMD } from "@shared/dates";
-import { loadWorkspace, saveWorkspace } from "../storage/db";
+import { applyDailyResetIfNeeded } from "@shared/dailyReset";
+import { clearAll, loadWorkspace, saveWorkspace } from "../storage/db";
+import { loadSettings } from "../storage/settingsStore";
+import { clearDeviceSettings, loadDeviceSettings } from "../storage/deviceSettings";
 
 interface WorkspaceValue {
   workspace: Workspace | null;
@@ -24,9 +28,23 @@ interface WorkspaceValue {
   today: string;
   loading: boolean;
   toggleItem: (item: DayItemRef, completed: boolean) => void;
+  /** Any other change to the open track, expressed with the shared core's own
+   *  mutations (`trackActions`), stamped and stored the same way. */
+  editTrack: (change: (track: TrackState) => TrackState) => void;
+  /** Any track, not just the open one — archiving from a list, say. */
+  editTrackById: (trackId: string, change: (track: TrackState) => TrackState) => void;
+  /** Adds a track and opens it. */
+  addTrack: (track: TrackState) => void;
   switchTrack: (trackId: string) => void;
   /** After a sync: the merged workspace the server sent back, already stored. */
   replaceWorkspace: (workspace: Workspace) => void;
+  /** Puts a previous workspace back, on screen *and* on disk — what Undo needs.
+   *  `replaceWorkspace` deliberately does not write, because sync has already
+   *  written by the time it is called; an undo has not. */
+  restoreWorkspace: (workspace: Workspace) => void;
+  /** Forgets everything this device holds and starts again, as on first run.
+   *  What is in the account is untouched — signing in brings it back. */
+  resetLocal: () => Promise<void>;
 }
 
 const WorkspaceContext = createContext<WorkspaceValue | null>(null);
@@ -50,6 +68,12 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      // Before anything reads a date: the rollover hour and week start live in
+      // the settings blob, and reading them must not be async.
+      await loadSettings();
+      // Phone-only preferences, read before first paint for the same reason:
+      // screens ask for them synchronously while rendering.
+      await loadDeviceSettings();
       const stored = await loadWorkspace();
       if (cancelled) return;
 
@@ -57,14 +81,9 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         // Data written by an older version is brought up to date by the same
         // migrations the web app runs, so a phone that has been closed for
         // months opens correctly.
-        setWorkspace(migrateWorkspace(stored).workspace);
+        setWorkspace(await withDailyReset(migrateWorkspace(stored).workspace));
       } else {
-        // A first run with no account: start on something usable rather than
-        // an empty screen, exactly as the website does.
-        const track = blankTrack("My Track", todayYMD());
-        const fresh: Workspace = { activeTrackId: track.meta.id, tracks: { [track.meta.id]: track } };
-        setWorkspace(fresh);
-        await saveWorkspace(fresh);
+        setWorkspace(await freshWorkspace());
       }
       setLoading(false);
     })();
@@ -79,19 +98,30 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     const onChange = (state: AppStateStatus) => {
       if (state !== "active") return;
       setToday(todayYMD());
-      loadWorkspace().then((stored) => {
-        if (stored) setWorkspace(migrateWorkspace(stored).workspace);
+      loadWorkspace().then(async (stored) => {
+        if (stored) setWorkspace(await withDailyReset(migrateWorkspace(stored).workspace));
       });
     };
     const subscription = AppState.addEventListener("change", onChange);
     return () => subscription.remove();
   }, []);
 
-  /** Applies a change and writes it immediately: there is no "save" moment on
-   *  a phone, because there is no reliable moment before being killed. */
-  const apply = useCallback((next: Workspace) => {
-    setWorkspace(next);
-    void saveWorkspace(next);
+  /**
+   * Applies a change and writes it immediately: there is no "save" moment on a
+   * phone, because there is no reliable moment before being killed.
+   *
+   * `applyTrackBookkeeping` first, and it is not optional. It stamps which
+   * items changed on this device and when — the timestamps the server's merge
+   * compares. Without them an untick carries no evidence that it happened, so
+   * the account's timestamped copy wins and the tick reappears on the next
+   * sync. The website has always run this on every save; the phone skipped it
+   * until a real untick came back from the server.
+   */
+  const apply = useCallback((previous: Workspace, next: Workspace, trackId: string) => {
+    const { track: bookkept } = applyTrackBookkeeping(previous.tracks[trackId], next.tracks[trackId], false);
+    const stamped: Workspace = { ...next, tracks: { ...next.tracks, [trackId]: bookkept } };
+    setWorkspace(stamped);
+    void saveWorkspace(stamped);
   }, []);
 
   const track = workspace ? activeTrack(workspace) : null;
@@ -102,26 +132,113 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       if (!workspaceNow) return;
       const trackNow = activeTrack(workspaceNow);
       if (!trackNow) return;
-      apply(withActiveTrack(workspaceNow, setItemCompletion(trackNow, item, completed)));
+      apply(workspaceNow, withActiveTrack(workspaceNow, setItemCompletion(trackNow, item, completed)), trackNow.meta.id);
     },
     [apply]
+  );
+
+  const editTrack = useCallback(
+    (change: (track: TrackState) => TrackState) => {
+      const workspaceNow = current.current;
+      if (!workspaceNow) return;
+      const trackNow = activeTrack(workspaceNow);
+      if (!trackNow) return;
+      apply(workspaceNow, withActiveTrack(workspaceNow, change(trackNow)), trackNow.meta.id);
+    },
+    [apply]
+  );
+
+  const editTrackById = useCallback(
+    (trackId: string, change: (track: TrackState) => TrackState) => {
+      const workspaceNow = current.current;
+      const target = workspaceNow?.tracks[trackId];
+      if (!workspaceNow || !target) return;
+      apply(workspaceNow, { ...workspaceNow, tracks: { ...workspaceNow.tracks, [trackId]: change(target) } }, trackId);
+    },
+    [apply]
+  );
+
+  const addTrack = useCallback(
+    (track: TrackState) => {
+      const workspaceNow = current.current;
+      if (!workspaceNow) return;
+      const next: Workspace = {
+        ...workspaceNow,
+        activeTrackId: track.meta.id,
+        tracks: { ...workspaceNow.tracks, [track.meta.id]: track },
+      };
+      // A new track has no previous version to compare against, so bookkeeping
+      // has nothing to stamp; it is written as it is.
+      setWorkspace(next);
+      void saveWorkspace(next);
+    },
+    []
   );
 
   const switchTrack = useCallback(
     (trackId: string) => {
       const workspaceNow = current.current;
       if (!workspaceNow || !workspaceNow.tracks[trackId]) return;
-      apply({ ...workspaceNow, activeTrackId: trackId });
+      // Switching tracks changes no track's contents, so it needs no stamping.
+      const next = { ...workspaceNow, activeTrackId: trackId };
+      setWorkspace(next);
+      void saveWorkspace(next);
     },
     [apply]
   );
 
   const replaceWorkspace = useCallback((next: Workspace) => setWorkspace(next), []);
 
+  const restoreWorkspace = useCallback((previous: Workspace) => {
+    setWorkspace(previous);
+    void saveWorkspace(previous);
+  }, []);
+
+  const resetLocal = useCallback(async () => {
+    await clearAll();
+    await clearDeviceSettings();
+    setWorkspace(await freshWorkspace());
+  }, []);
+
   const value = useMemo<WorkspaceValue>(
-    () => ({ workspace, track, today, loading, toggleItem, switchTrack, replaceWorkspace }),
-    [workspace, track, today, loading, toggleItem, switchTrack, replaceWorkspace]
+    () => ({ workspace, track, today, loading, toggleItem, editTrack, editTrackById, addTrack, switchTrack, replaceWorkspace, restoreWorkspace, resetLocal }),
+    [workspace, track, today, loading, toggleItem, editTrack, editTrackById, addTrack, switchTrack, replaceWorkspace, restoreWorkspace, resetLocal]
   );
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
+}
+
+/** A first run: something usable rather than an empty screen, exactly as the
+ *  website does. Also what "delete local data" leaves behind. */
+async function freshWorkspace(): Promise<Workspace> {
+  const track = blankTrack("My Track", todayYMD());
+  const fresh: Workspace = { activeTrackId: track.meta.id, tracks: { [track.meta.id]: track } };
+  await saveWorkspace(fresh);
+  return fresh;
+}
+
+/**
+ * Yesterday's ticks don't carry into today. The website runs this on load and
+ * whenever a track comes into view; a phone needs it in the same places and one
+ * more — coming back from the background, where the day may have rolled over
+ * while the app sat in the switcher.
+ *
+ * It is written back immediately, because a reset that exists only in memory
+ * would be undone by the next process kill.
+ */
+async function withDailyReset(workspace: Workspace): Promise<Workspace> {
+  const today = todayYMD();
+  let changedAny = false;
+  const tracks: Workspace["tracks"] = {};
+
+  for (const [id, track] of Object.entries(workspace.tracks)) {
+    const { data, changed } = applyDailyResetIfNeeded(track, today);
+    tracks[id] = data;
+    changedAny ||= changed;
+  }
+
+  if (!changedAny) return workspace;
+  const next = { ...workspace, tracks };
+  await saveWorkspace(next);
+  return next;
 }

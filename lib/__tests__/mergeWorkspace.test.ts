@@ -165,3 +165,54 @@ describe("legacy Drive database.json upgrade", () => {
     expect(Object.keys(data.tracks)).toEqual([LEGACY_TRACK_ID]);
   });
 });
+
+describe("unticking, and why bookkeeping isn't optional", () => {
+  // Found on a phone (0.30.1): ticking an item synced fine, but unticking one
+  // came back ticked on the next sync. The phone was saving the new state
+  // without stamping *when* it changed, so the merge had nothing to compare
+  // against the account's timestamped copy — and "I removed this" is only
+  // distinguishable from "I never had this" by a timestamp.
+  const DAY = "2026-07-10";
+
+  const device = (fields: Partial<AppState>) => workspace([track({ id: "track_a" }, fields)]);
+
+  it("keeps an untick that carries a newer timestamp than the account's tick", () => {
+    const phone = device({
+      weeklyCompletions: { [DAY]: { tasks: [], revisions: [] } },
+      itemUpdatedAt: { [DAY]: { "t:cpp": 2000 } }, // unticked at 2000
+    });
+    const account = device({
+      weeklyCompletions: { [DAY]: { tasks: ["cpp"], revisions: [] } },
+      itemUpdatedAt: { [DAY]: { "t:cpp": 1000 } }, // ticked at 1000
+    });
+
+    const merged = mergeWorkspace(phone, account).data;
+    expect(merged.tracks.track_a.weeklyCompletions?.[DAY]?.tasks ?? []).toEqual([]);
+  });
+
+  it("loses that untick when it carries no timestamp — the bug, kept as a warning", () => {
+    const phoneWithoutBookkeeping = device({
+      weeklyCompletions: { [DAY]: { tasks: [], revisions: [] } },
+      itemUpdatedAt: {}, // what saving without applyTrackBookkeeping produces
+    });
+    const account = device({
+      weeklyCompletions: { [DAY]: { tasks: ["cpp"], revisions: [] } },
+      itemUpdatedAt: { [DAY]: { "t:cpp": 1000 } },
+    });
+
+    const merged = mergeWorkspace(phoneWithoutBookkeeping, account).data;
+    // The tick returns, because nothing said it was ever removed.
+    expect(merged.tracks.track_a.weeklyCompletions?.[DAY]?.tasks ?? []).toEqual(["cpp"]);
+  });
+
+  it("still accepts a tick that the account doesn't have", () => {
+    const phone = device({
+      weeklyCompletions: { [DAY]: { tasks: ["maths"], revisions: [] } },
+      itemUpdatedAt: { [DAY]: { "t:maths": 2000 } },
+    });
+    const account = device({ weeklyCompletions: { [DAY]: { tasks: [], revisions: [] } }, itemUpdatedAt: {} });
+
+    const merged = mergeWorkspace(phone, account).data;
+    expect(merged.tracks.track_a.weeklyCompletions?.[DAY]?.tasks ?? []).toEqual(["maths"]);
+  });
+});

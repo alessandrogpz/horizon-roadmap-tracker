@@ -66,6 +66,12 @@ export async function saveNote(note: StoredNote): Promise<void> {
   write(NOTES_KEY, [...notes, note]);
 }
 
+/** Swaps the whole notes table for another set. See db.ts — only a restore
+ *  needs it, and localStorage has no transaction to do it inside. */
+export async function replaceNotes(notes: StoredNote[]): Promise<void> {
+  write(NOTES_KEY, notes);
+}
+
 export async function loadStepCount(date: string): Promise<number> {
   return read<Record<string, number>>(STEPS_KEY, {})[date] ?? 0;
 }

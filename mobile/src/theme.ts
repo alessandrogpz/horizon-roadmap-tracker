@@ -5,6 +5,10 @@
 // of what does and doesn't cross the platform boundary: logic travels, styling
 // does not (MOBILE_PLAN.md §3).
 
+/** The five shades a day can take in the consistency grid, from "nothing" to
+ *  "a lot", matching the web app's `--streak-0` … `--streak-4`. */
+export type StreakShades = readonly [string, string, string, string, string];
+
 export interface Palette {
   background: string;
   foreground: string;
@@ -16,6 +20,7 @@ export interface Palette {
   surfaceMuted: string;
   success: string;
   danger: string;
+  streak: StreakShades;
 }
 
 export const DARK: Palette = {
@@ -29,6 +34,7 @@ export const DARK: Palette = {
   surfaceMuted: "rgba(255, 255, 255, 0.035)",
   success: "#10b981",
   danger: "#f87171",
+  streak: ["#17171b", "#0b5747", "#068466", "#10b981", "#4ade80"],
 };
 
 export const LIGHT: Palette = {
@@ -42,7 +48,20 @@ export const LIGHT: Palette = {
   surfaceMuted: "rgba(0, 0, 0, 0.03)",
   success: "#059669",
   danger: "#dc2626",
+  streak: ["#ebedf0", "#9be9a8", "#40c463", "#30a14e", "#216e39"],
 };
 
 export const SPACING = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 } as const;
 export const RADIUS = { control: 8, card: 14 } as const;
+
+/** Every control in the app header — the sync chip, the theme button, the
+ *  menu — is this tall, with this radius and this border. They were three
+ *  different sizes because each was written on its own day; a row of controls
+ *  that disagree about their own height reads as unfinished however good each
+ *  one is in isolation. */
+export const HEADER_CONTROL = {
+  height: 30,
+  minWidth: 32,
+  radius: RADIUS.control,
+  paddingHorizontal: SPACING.sm,
+} as const;

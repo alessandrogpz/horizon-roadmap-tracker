@@ -7,6 +7,834 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.57.0] - 2026-09-24
+
+### Fixed
+- **Deleting a track asked twice.** It had a confirmation *and* an undo, which is two decisions for
+  one intent — the sheet has already had the conversation. The rule now: a swipe is a flick and gets
+  an undo; a considered tap on something that carries a lot gets a question. One or the other,
+  never both.
+
+### Added
+- **The Gym panel is on the website.** The log lives in a note, so both platforms read and write the
+  same `gym-<trackId>` and neither knows which one wrote it. The website leans to planning — typing
+  names, setting numbers, seeing the week — since that is what a desk is better at, with logging
+  kept to one click per set.
+- **Modules can be opt-in**, which `lib/modules.ts` now says directly. Anything not opt-in still
+  appears by itself when a new version adds it; the gym does not, because a gym panel on a track
+  about a database course is noise nobody asked for. The two platforms share the answer instead of
+  each keeping their own list.
+
+### Changed
+- The landing page calls the modules what the app calls them — Weekly overview, Phases, Consistency,
+  Deliverables, Timer — and lists the Gym alongside them.
+- `MOBILE_PLAN.md` records how the plan actually resolved: four tabs rather than a smaller website,
+  read-only by default, undo *or* confirmation, and new data going in a note rather than a new field.
+- **Learning log entry 18**, on the twelve releases that added no features and were all design:
+  verifying parity mechanically rather than by reading, rendering the UI to find layout bugs code
+  review cannot, and why two editors for one fact will always disagree.
+
+## [0.56.0] - 2026-09-24
+
+### Fixed
+- **A fast flick downwards sometimes got eaten by pull-to-refresh.** Flicking down is also how you
+  scroll back to the top, and the pull was re-checking "are we at the top?" on every frame — so half
+  way up the check would start passing and it would grab a gesture that was already a scroll. It now
+  decides once, when the finger lands, and needs a deliberate 24-point drag rather than a flick.
+
+### Changed
+- **A plan has sets and reps, not just names.** A name said which exercise and nothing about the
+  work, so the numbers had to be remembered every session. The **Gym panel now shows the day's
+  exercises the way a workout app does** — name, sets done against sets planned, reps — with a tick
+  per exercise as you finish it.
+- **The Weekly Overview is just a tick**: "Push: 2 of 3 exercises", or done. The plan belongs to the
+  gym panel, and repeating it in the week put the same information in two places — which is how the
+  two came to disagree in the first place.
+- **Tracks are deleted, not archived**, with a confirmation. Swiping is a flick rather than a
+  considered tap and a track carries everything on it, so this one asks first — and the undo bar
+  still catches it afterwards. It is still stored as a flag underneath, because the sync merge
+  reconciles by comparing records: a track removed by *absence* would be handed straight back by the
+  next sync from the account's copy. Nothing in the app shows a deleted track; a true erase needs a
+  tombstone the server understands.
+- **Swiping a panel in My Space hides it**, the same gesture as everywhere else. No undo on this
+  one — nothing is lost, it is waiting in Arrange.
+- **New tracks say what the field is for.** The name field is labelled "Name" and says so, and the
+  kind below it says plainly that it only decides which panels the track opens with.
+
+### Added
+- **Track kinds seed default panels** — and nothing else. A fitness track opens with the gym, the
+  week, consistency and steps; a learning track with materials and phases. Every panel stays
+  available to every track from Arrange, for ever: hiding by kind would produce the unanswerable
+  "where did it go?", and a real track is hybrid anyway. `lib/trackKinds.ts` is keyed to the
+  existing template ids, because choosing "Fitness" when creating a track already answers the
+  question.
+
+## [0.55.0] - 2026-09-24
+
+### Added
+- **Swipe a row to act on it.** Left archives, right removes — the gesture every list app on the
+  phone already has, and the one that was missing: archiving a track meant holding it, opening a
+  panel and finding a button. The action appears behind the row and grows as you pull, so it says
+  what it will do while you are still deciding, and a nudge marks the point where letting go
+  commits. On tracks, materials and deliverables so far.
+
+  Nothing is confirmed, because the undo bar is already the better answer. The two directions are
+  deliberately not interchangeable: the gentle action is always left, the destructive one always
+  right, and a row with only one of them only swipes that way.
+
+- **Pulling down actually pulls the page down.** Android's `RefreshControl` drops a spinner over the
+  top and leaves the page where it was, which reads as something happening *to* the screen rather
+  than because of your thumb. The page now follows the drag with square-root resistance — close at
+  first, stiffening as it stretches — reveals the indicator behind it, and springs back. Past the
+  threshold the arrow turns over and it commits.
+
+### Fixed
+- **A phase on a fitness track was headed "Math Integration" and "Algorithms & Data Structures"**,
+  with nothing under either. Those four sections are keys from when Horizon was one computer-science
+  curriculum, and every phase on every track rendered all of them regardless of content. Only
+  sections that hold something are shown now; the rest are offered as chips while editing. The
+  labels were shortened too — "Focus", "Maths", "Algorithms", "Deliverable" — so the ones that *are*
+  used read less like a syllabus. Changed on the website's phase modal as well.
+
+### Removed
+- **The "Set up a training week" card.** A card offering to rewrite the week of a track you had just
+  opened, which nobody asked for, is a confusing thing to meet — especially on a track already in
+  use for something else. Plans are built by adding exercises to a kind of day, which is the same
+  action without the surprise.
+
+## [0.54.0] - 2026-09-24
+
+A coherence pass: several things in the app were the same idea wearing two names, or two editors for
+one piece of data.
+
+### Changed
+- **The gym no longer decides what day it is.** It kept its own weekly split — push on Monday, pull
+  on Tuesday — while the track's weekly rhythm already answered exactly that question for every
+  other part of the app. Two editors for one fact, free to disagree.
+
+  The rhythm now names the days and the gym fills them: a plan is held per *kind of day*, so "what a
+  push day asks for" is a list of exercises, and which days are push days is set on the Week screen
+  like any other track's days. `lib/gym.ts` lost `split` and gained `plans`.
+
+- **The plan shows up in the week.** The Week screen puts the exercise count under each day, and the
+  Weekly Overview panel lists what today asks for and how much of it is done. A day's contents come
+  from wherever that kind of day keeps them — a checklist for an ordinary track, a gym plan for a
+  training day — and the panel answers without caring which.
+
+- **A "Set up a training week" button** writes a push / pull / legs week with two rest days, its
+  focus types, and the exercises for each — all editable afterwards. Offered whenever a track has no
+  gym plan, because every track already has a week of some kind and gating it on "no week" meant a
+  fitness track never saw it.
+
+- **Panel names name the thing, not a use for it.** "Weekly Study Plan" became **Weekly Overview**,
+  since a track stopped being necessarily about studying the moment it could be about training.
+  "Roadmap Timeline" became **Phases** — it sat one word away from the Roadmap *document*, which is
+  something else entirely. "Portfolio Deliverables" became **Deliverables** and "Consistency Streak"
+  became **Consistency**, both matching the screens they open. Changed on the website too.
+
+- **The menu lost its track switcher and its shortcut grid.** Switching track is the track name in
+  the header now, and having both meant two ways to do one thing with one of them three taps deep.
+  Materials, Notes and the Timer all have panels that link straight to them, so the grid was a third
+  route to screens that already had two. Search moved into what remains, being the one thing with no
+  other home.
+
+## [0.53.0] - 2026-09-24
+
+### Added
+- **A Gym panel and screen**, replacing "Movement" — which was the step counter again under a second
+  name, reading the same numbers from the same place. The useful question in a gym is not whether
+  the body moved but what today is for and how much of it is done.
+
+  A weekly split says what each day is for (push, pull, legs, cardio…), a day can override it when
+  the plan meets reality, and exercises are logged as sets of reps and weight. Every exercise shows
+  **what it was last time**, because that is the question every working set starts with and looking
+  it up is what a paper notebook is bad at.
+
+  Built for one hand, standing up, between sets: reps and weight are steppers with real increments
+  (1 and 2.5 kg) rather than a keyboard, there is no save button, and the entry opens on the last
+  set of that exercise because "same again" is the overwhelmingly common case.
+
+  The log lives in a **note** rather than on the track. The server validates the workspace against a
+  strict schema that refuses unknown fields — the thing that once locked a real account out of
+  syncing — so a new field would have meant a schema change, a migration and a deploy before a
+  single set could be logged. Notes already sync, already merge per note, and hold half a megabyte
+  each, which is years of training. `lib/gym.ts` holds the format, so the website can read the same
+  log whenever it grows a gym panel.
+
+### Changed
+- **Tapping the track name switches track.** Which track you are in is the most consequential thing
+  on the header and it was three taps inside a menu; the name was already the label for that choice,
+  so it is now the control. It also reaches "new track", which was equally buried.
+- **The header controls are one size.** The sync chip, the theme button and the menu were three
+  different heights with three different borders, because each was written on its own day. They now
+  share `HEADER_CONTROL` — 30pt tall, one radius, one border. A row of controls that disagree about
+  their own height reads as unfinished however good each one is alone.
+- The menu's `⋯` was a text glyph among icons; it is an icon now, at the same weight as its
+  neighbours.
+
+### Fixed
+- A hundred-kilo session displayed as "0t". Volume shows kilograms until there are enough of them to
+  be tonnes.
+
+## [0.52.0] - 2026-09-24
+
+### Added
+- **Undo, instead of "are you sure?".** Removing a phase, a deliverable, a rotation or a day's item
+  happens immediately and offers to put it back for a few seconds. A confirmation in front of every
+  destructive action teaches people to tap through confirmations, so by the time one matters it has
+  already been dismissed by reflex. The undo restores the whole previous workspace rather than
+  reversing the edit — reversing a removal exactly would mean knowing where in the list it sat.
+- **Panels are wrapped in an error boundary.** One panel throwing used to take the whole home screen
+  with it; now it costs one card, and the rest keep working. The website has had this for as long as
+  it has had panels.
+- **Haptics**, on the things that deserve them: ticking an item, lifting and dropping a panel,
+  flipping the theme, and anything destructive. Not on navigation, which would turn the phone into a
+  buzzing brick.
+- **Search works offline.** The phone already holds the open workspace and every note, so it answers
+  from those instantly and lets the server's better answer — every track on the account, archived
+  ones included — replace it when one arrives. Previously an offline search said "no connection" and
+  nothing else.
+- **A Movement panel**: today's steps, distance and active time from Health Connect, so a walk to
+  the shops or a session recorded by a watch counts without Horizon knowing anything about it.
+  Distance and active time show a dash rather than a zero until their permissions are requested —
+  "not asked for" and "none today" are different facts.
+- **Share progress is back**, in the `⋯` menu. It was taken off Today in 0.47.0 for being an odd
+  thing to meet every morning, and never given a new home.
+
+### Changed
+- **The theme is two states, not three.** The app starts on whatever the phone is set to, so a fresh
+  install already matches its surroundings and there is nothing to choose; the button flips it from
+  there. The website's Settings loses its Theme row for the same reason — the icon in the top bar
+  was always the faster path, and a "System" option that only mattered on first run was the least
+  useful third of it.
+- **Tap targets**: the bare `×` remove buttons were a glyph with a few points of padding, well under
+  Android's 48dp. They are 44pt targets now, which is most of why they felt fiddly.
+- **Font scaling**: the tab bar, the hour wheel and the grid's labels opt out of OS font scaling.
+  They are grid-locked layouts where a scaled label clips or breaks the maths deciding which row is
+  selected — the bug the tab bar already had once, waiting to be triggered by someone's
+  accessibility settings instead of my numbers.
+- Missing screen-reader labels on the remove buttons in Notes and the Week screen, and a disabled
+  state that now explains *why* it is disabled.
+
+## [0.51.0] - 2026-09-24
+
+### Changed
+- **"My day starts at" is one button and a wheel**, not twenty-four chips. A grid of options is fine
+  for two or three and absurd for a full day: it fills the screen, every hour looks as likely as
+  every other, and the one you want is buried in the middle. The wheel is built from a snapping
+  ScrollView rather than a native picker, so it arrived over the air.
+- **It sits with "Weeks start on" under one heading**, "Your week and day". They are the same kind of
+  decision and were in two places.
+- **Monday is the default week start**, on both platforms. It is the ISO week, what most of the
+  world writes on a calendar, and it keeps the weekend as two adjacent columns instead of splitting
+  it across both ends of the row. A stored value that is neither "sun" nor "mon" now falls back to
+  the default rather than to whichever branch happened to be the else.
+- **The theme is an icon in the header**, as on the website, and has left Settings. Three chips was a
+  lot of screen for something people flip on a train when the light changes — and Settings is
+  exactly where they are not when that happens. Tapping cycles follow-the-phone → light → dark, and
+  the choice survives a restart. Three states rather than two so the default stays reachable: a
+  two-way toggle would strand you on an explicit choice forever.
+
+## [0.50.1] - 2026-09-24
+
+### Fixed
+- **The Health Connect build failed: Android's minimum SDK was too low.** Expo defaults
+  `minSdkVersion` to 24 (Android 7) and Health Connect's client library declares 26 (Android 8), and
+  the manifest merger refuses to build rather than quietly picking one. `expo-build-properties` now
+  sets the floor to 26.
+
+  Nothing is lost by raising it: Health Connect needs Android 9 anyway, so no device that could have
+  used the feature is excluded — and Android 7 is well under 1% of phones.
+
+## [0.50.0] - 2026-09-24
+
+### Added
+- **Steps from Health Connect** — whole days, including steps taken with Horizon closed and any
+  counted by a watch or band. The on-device sensor could only ever report what happened while the
+  app was open; Health Connect is the platform's store that whatever is actually counting writes
+  into, and that other apps read with the user's permission.
+
+  The two are used together rather than one replacing the other: Health Connect covers the whole
+  day, the sensor covers the part spent in the app, and each day shows whichever knows more. A phone
+  without Health Connect set up keeps working exactly as before, and the screen says which of the
+  two it is showing rather than letting a total imply more than it is.
+
+  Permission is asked for in Android's own dialog, not Horizon's, and only `READ_STEPS` is
+  requested. The exercise, heart-rate and calorie permissions go in when the features that read them
+  do — declaring health permissions an app does not use is what Play review looks for.
+
+### Changed
+- **App version 0.2.0, version code 2.** This is a new native build, and the over-the-air runtime
+  version follows the app version, so builds carrying the Health Connect module get their own update
+  channel. The previously installed 0.1.0 build stops receiving updates and needs replacing with
+  this one.
+- `ACTIVITY_RECOGNITION` was listed twice in the manifest. It is still needed — the live count on an
+  open screen still comes from the sensor.
+
+## [0.49.0] - 2026-09-24
+
+### Changed
+- **The consistency grid is grouped by month.** Each month is its own block, starting on the weekday
+  it actually starts on, separated from the one before. A year as an unbroken ribbon of weeks is
+  hard to read a month out of, because nothing marks where one ends. The weekday header stays at the
+  top of the screen and every block lines up with it, so a Tuesday sits under "T" wherever it falls.
+  The old continuous shape is a toggle away — it is still the better way to see a long run at a
+  glance.
+- **The row of links moved off the top of Plan, Progress and Materials.** Roadmap, Week & rotations,
+  Deliverables, History and Search are places you might go, not what those screens are about, and
+  they were sitting above the thing you came to read. They are at the foot now, under "More on this
+  track".
+
+### Added
+- **The to-do list on Today**, collapsed until asked for and remembered per track. The two checklists
+  above it are the plan — what this weekday is for, every week; a to-do is the loose end that came up
+  today and has no place in a repeating schedule. Different things, same question: what am I doing
+  today. It is the same list the Notes screen and the website edit.
+
+## [0.48.0] - 2026-09-24
+
+### Changed
+- **Reading is the default; editing is a decision.** Every screen that can change the plan now opens
+  read-only and carries a pencil: Today, Plan, a phase, the Week and its rotations, Materials,
+  Deliverables. Tap it and the fields, the add boxes and the destructive controls appear together;
+  tap Done and they all go away.
+
+  The reason is that a touch screen has no hover, so an editable field and a label look identical
+  until one of them moves — and most of the time someone opens Horizon they are checking where
+  things stand, not rewriting the plan. A screen whose every field was a live text box invited
+  exactly the accident it looked like it wanted.
+
+  Two things are deliberately never behind the switch, because they are the app's whole point:
+  ticking something off on Today, and the timer.
+
+- **"My day starts at" accepts any hour**, not a handful ending at 6am, and is midnight by default.
+  The old range assumed only night owls would want this. The hour someone's day turns over is theirs
+  to state — a shift worker's may well begin at 19:00. Changed on the website too.
+
+### Added
+- **A step counter screen**, behind the panel: this week, the last thirty days and the year, the
+  last fortnight day by day, and a typical day against the best one. A bare number has no shape —
+  4,000 means nothing without knowing last week averaged 9,000.
+
+### Fixed
+- The month bands in the consistency grid ran the full width of the screen while the cells stopped a
+  third of the way across, so the shading looked like it belonged to nothing. They are now exactly
+  as wide as the grid.
+
+### Known limitation
+- **Steps are still only counted while the app is open**, and the screen says so rather than letting
+  its totals imply otherwise. Counting a whole day is possible in principle — Android's step sensor
+  is cumulative since boot, so the difference between two readings is the steps in between — but
+  `expo-sensors` normalises that away and its `getStepCountAsync` throws on Android outright. Doing
+  it properly needs Health Connect or a small native module, which is a new build rather than an
+  update.
+
+## [0.47.0] - 2026-09-24
+
+### Changed
+- **My Space is the home tab**, first on the left and what opens. It is the screen that answers
+  "where does this track stand" without being asked anything; everything else is a way of drilling
+  into part of it. Being first also does the back gesture a favour — the system back from any other
+  tab now returns here instead of leaving the app — and every other tab carries a back arrow to it,
+  since one tab is not "back" from another and nothing gives them one by itself.
+- **The step counter is only a panel now.** It had a card and a toggle on Today as well, which made
+  it look like part of every track's day rather than the opt-in it is. Today is the day's checklist
+  and nothing else; "Share progress" went with it, being not a daily action.
+- **"Focus Timer" is now "Timer", on both platforms.** Twenty-five minutes of work and five of rest
+  suits a set at the gym, a language drill or a stretch of reading equally; calling it *focus*
+  implied it was for studying and made it look out of place anywhere else. Its modes are "Work" and
+  "Rest" for the same reason, and it has left the Progress screen's links — a thing you run is not a
+  record of what you did.
+- **The timer keeps running when you leave its screen**, which is the point of a timer you start and
+  then go and do the thing. It lives above every screen now, and the header shows how long is left
+  from wherever you are — tapping that takes you back to it. Still no sound or vibration when it
+  ends; that needs a notification permission and a new build.
+- **The consistency grid shows months, not weeks.** The cells were sized to fill the width, which
+  left only a handful of weeks on screen — the opposite of what the grid is for. Fixed and smaller,
+  about five months fit at once, with the month named down the left-hand side and a faint band
+  behind alternate months so where one ends and the next begins is visible without counting rows.
+
+## [0.46.0] - 2026-09-24
+
+0.45.0 gave the phone the *shape* of an app. This gives it the idea behind the website: a track is a
+set of panels you arrange yourself, and the app should be looked at more than it is read.
+
+### Added
+- **My Space**, a new tab: the whole track as a column of panels — the week as seven coloured dots,
+  the roadmap as time-spent against work-done, the streak as a block of days, what you are reading as
+  bars. Hold any panel, or tap Arrange, to drag them into the order you want, remove one, or add one
+  from the list of what is available.
+
+  The model is shared with the website, not reinvented: the same module ids, and closing a panel here
+  closes it on the laptop because it writes the same `hiddenPanels`. The *order* deliberately does
+  not travel — the website arranges two columns and a phone has one, so a phone writing its single
+  order into `panelColumns` would flatten the laptop's layout every time someone dragged something on
+  a train. Which panels you have is the same question everywhere; what order they are in is not.
+
+- **The step counter is a panel** like any other, and the only one the website cannot have. Added
+  from the same list, removed the same way, off until a track asks for it.
+
+### Changed
+- **Progress is vertical.** The website's consistency grid runs weeks across and weekdays down, which
+  works on a desk and not in a hand — at phone width it either shrinks below what a thumb can hit or
+  scrolls sideways, the one direction a phone is bad at. Turned ninety degrees, seven cells fit
+  across at a size you can actually land on, which is what makes **every day tappable**: tap one and
+  it says what was done that day. Three numbers across the top replace the paragraph.
+- **The menu has icons.** It was a list of sentences; it is now a sync card that shows its own state,
+  a grid of tinted shortcuts, and labelled rows — recognisable rather than readable.
+- **Library is gone as a tab.** A tab whose whole job was holding the reading list did not earn being
+  one tap from everywhere, and the materials panel says more in less space. The full list is still
+  there, from that panel and from the menu.
+
+### Fixed
+- **Coming back from the background switched the step sensor on for tracks that had said no.** The
+  resume handler only looked at the Android permission, never at whether this track wanted a step
+  count — so any track could start subscribing to the pedometer after a trip to another app.
+- A missing sensor module now leaves the rest of the screen working instead of white-screening
+  Today. It is a checklist; it has nothing to do with walking.
+- The streak panel gave several cells the same React key: the calendar pads each week out to seven
+  with cells whose date is the empty string.
+- Panel meters rendered with no labels — just bars and numbers. The label borrowed the card title's
+  `flex: 1`, which resolves to `flexBasis: 0` and collapses a fixed width to nothing.
+- `semver` resolved to the hoisted v6, which has no `functions/satisfies` subpath, so importing
+  Reanimated failed the whole bundle.
+
+## [0.45.0] - 2026-09-24
+
+The phone app had every feature and the shape of a prototype: one screen with the day's work on top
+and ten links stacked underneath, sync four taps away on a settings page, and a step counter on
+every track whether it meant anything there or not. This is the shape it should have had.
+
+### Added
+- **A bottom tab bar** — Today, Plan, Library, Progress — with icons, so the four places you spend
+  time are one tap apart from anywhere. Each tab lands on real content rather than a menu of further
+  choices: Plan opens on the phases, Library on the reading list, Progress on the streak grid. Their
+  siblings are a row of chips at the top.
+- **A shared header** carrying the track name, a live sync chip and a `⋯` menu. The track name is
+  not decoration: with a dozen screens, "which track am I editing?" stops being obvious the moment
+  you leave Today, and every edit belongs to one.
+- **Sync is visible and always in reach.** The chip says synced, syncing, offline or local-only, and
+  tapping it syncs. It also runs by itself when the app returns to the foreground — the moment most
+  likely to follow an edit made on the laptop.
+- **Pull down to sync, on every screen.** The gesture people already try, working everywhere rather
+  than on a chosen few.
+- **The step counter is opt-in, per track.** Off unless turned on, from a control at the foot of
+  Today. Right on a fitness track and noise on a graphics engine, which is the whole point. When it
+  is off the sensor is never subscribed to, so a track that does not want it does not pay for it in
+  battery — and Android is never asked for the activity permission at all.
+
+### Changed
+- Today is the day's work and nothing else: the day stepper with the summary under it, the two
+  checklists, and two quiet footer actions. The wall of links, the switch button and the streak card
+  are gone — the header, the tabs and the Progress tab already carry those.
+- Sync lives in one provider instead of on the Account screen, so the chip, a pull-to-refresh and
+  the Account button are the same operation with the same status rather than three ideas of it.
+- The step-panel preference is stored on the device, not in the workspace. The server validates the
+  workspace against a strict schema and refuses unknown fields (learning log 13), and a per-track
+  display toggle is not worth a migration on the server — nor does a reading from *this* phone's
+  hardware mean anything on another device.
+
+### Fixed
+- Material category chips overlapped each other: they were sharing a row evenly, which is right for
+  three status buttons and wrong for twelve category names. They size to their labels and wrap now.
+- The tab bar clipped its own labels, having given the icon the space first.
+- The menu sheet is anchored to the bottom edge and fades in, rather than being slid a whole
+  viewport and animated back — which left it off-screen when the animation did not run.
+
+## [0.44.1] - 2026-09-24
+
+### Added
+- A deliverable's name and repository link are editable on the phone; it could only be added, ticked
+  and removed before.
+- "Clear the done" on the to-do list, which the website has had all along.
+
+Both were found by checking which shared actions the website calls and the phone never does — a
+mechanical check worth more than reading the screens, which is how the previous two parity claims
+came out wrong. Everything in `trackActions`, `completions`, `quickNotes`, `stats`, `rotation` and
+`selectors` is now reachable from the phone, except `recommendedPhaseId`, which the phone reaches
+through `phaseStats` instead.
+
+## [0.44.0] - 2026-09-24
+
+### Added
+- **Any day, not just today.** The phone was locked to the current date, which made the commonest
+  evening job — ticking something from yesterday that never got ticked — impossible rather than
+  merely awkward. The day can now be stepped through in either direction, and tapping the date comes
+  back to today. The streak, the step count and the daily reset stay pinned to the real today: those
+  are facts about now, not about the day being looked at.
+- **A rotation's plan**, on its own screen. A list of topics does not explain itself — why these, in
+  this order, on these days — and that reasoning was editable on the website and invisible on the
+  phone.
+- **Archived materials.** A material can be archived from its card and brought back from a folded
+  group at the bottom of the list, as on the website. Archiving keeps the progress, the notes and
+  the history and takes the material off the list; removing does not, and the screen now says so.
+
+### Changed
+- The roadmap's reader and editor became `components/MarkdownDocument`, shared with a rotation's
+  plan. They are the same kind of document, and two copies would have drifted the first time one got
+  a fix.
+- These three were missed when 0.43.0 claimed parity was complete. It was not; this is.
+
+## [0.43.0] - 2026-09-24
+
+### Added
+- **Materials can be added and removed on the phone**, which was the last screen still telling you
+  to go to the website. Three fields — title, kind, category — not the website's ten: a phone is
+  where "that book someone just mentioned" gets written down, and a form demanding page counts and
+  links before it accepts anything is how that does not get written down. A material's page count
+  can be set from its card afterwards, which is what makes the progress bar and the bookmark appear.
+
+### Changed
+- With this, every feature the website has that a phone can meaningfully hold is on the phone. What
+  is left is deliberate: git statistics read a repository on the computer running the app, and a
+  phone has no checkout to read.
+
+## [0.42.0] - 2026-09-24
+
+### Added
+- **Rotations can be created and configured on the phone**, not only have their topics edited: the
+  name, which list they feed, which days they run on, and the week they count from. A new one starts
+  empty and on no days, so creating it doesn't change today's plan before it has been given any
+  topics. The Week screen no longer tells you to go to the website for this, because it no longer
+  has to.
+- **Longest run, active days and the last thirty** on the consistency screen, and **progress against
+  the calendar** on the phases screen — time spent beside work done, broken down by phases, phase
+  tasks, deliverables and materials. The pace is the point: a track can be 70% through its calendar
+  with 30% of the work finished, and neither figure says that alone.
+
+## [0.41.0] - 2026-09-24
+
+### Added
+- **Today's list is editable on the phone.** It could tick items and nothing else, which made the
+  phone a viewer of a plan made elsewhere — the wrong way round for the screen that is actually in
+  your hand. Items can now be added to either list, renamed, or removed. Holding a row opens it for
+  editing rather than a visible button doing so: ticking happens a dozen times a day and editing
+  once a week, so the common action keeps the whole row.
+
+  Rotation items can be ticked but not edited there. Nothing is stored to edit — they are computed
+  from the rotation and the week number — and next week they will be something else. The list they
+  come from is on the Week screen.
+
+- **The pool of focus types**, on the Week screen: add a kind of day, rename one, recolour it,
+  delete it. Renaming rewrites every day showing the old name, and deleting moves its days to
+  whatever is left, because a day pointing at a type that no longer exists is worse than a day of
+  the wrong kind. Those rules moved to `lib/focusTypes.ts` with tests, out of the React component
+  that was holding them.
+
+- **A track's own settings**: its name, colour, start date and length. Changing the length rescales
+  every phase deadline in proportion, so making a track longer or shorter keeps the shape of its
+  roadmap. Unlike the rest of the app this panel saves on a tap rather than as you type — typing
+  "120" over "90" one digit at a time would otherwise rescale the whole roadmap three times on the
+  way to a number nobody had finished typing.
+
+- Colours are chosen from a fixed set rather than a colour picker, here and for focus types. A
+  picker is a native module — a new build on every phone for one field — and a fixed set stays
+  legible in both themes, which an arbitrary hex picked on a bright screen does not.
+
+## [0.40.0] - 2026-09-24
+
+### Added
+- **A phase, in full, on the phone.** Tapping a phase opens it: its title, what it is about, its
+  tasks, its deadline, and the four detail sections — core focus, math integration, algorithms and
+  data structures, the deliverable goal. All editable, all saving as you type. This was the last
+  real gap against the website, where the same thing is a modal; on a phone it is a route, so the
+  back gesture works and a phase can be linked to.
+
+  The phases list keeps its job — the shape of the plan, where today falls, adding and removing and
+  making current — and hands off the inside of a phase to the new screen. The inline title edit went
+  with it, because editing one field of something in a list is worse than opening it.
+
+- The deadline is edited as a date and stored as a day number from the track's start, so re-dating a
+  track moves its phases with it. A date that falls before the track begins is refused rather than
+  clamped — silently moving a deadline somewhere nobody asked for is worse than ignoring a typo.
+  Typed rather than picked from a calendar: a date picker is a native module, and a native module is
+  a new build on every phone for one field.
+
+### Changed
+- `lib/phaseDetails.ts` holds the four sections' labels and order, and the normaliser for the older
+  tracks that stored a section as a sentence rather than a list. That normaliser lived inside a
+  React component while there was one reader; both platforms import it now, so a track shows the
+  same headings wherever it is opened.
+- The phases screen no longer says phases must be added on the website — they can be added from
+  either, and have been able to for a while.
+- The phases screen's header said "Roadmap", which is the *other* screen's name.
+
+## [0.39.1] - 2026-09-24
+
+### Changed
+- **Learning log entry 17** and the mobile exam notes: what the last two releases actually taught —
+  that React Native has no Node standard library (which is why a markdown renderer broke the
+  bundle), that Android grants file access one user-chosen item at a time rather than by permission,
+  and that whether a dependency contains native code decides whether a feature ships over the air or
+  waits for a new build.
+
+## [0.39.0] - 2026-09-24
+
+### Added
+- **Backups on the phone, in both directions.** Settings can write every track, phase, tick and note
+  this device holds into a file, and read one back. It is the same file the website writes, so a
+  backup taken on the laptop restores on the phone and the other way round — the shape and its
+  validation moved into `lib/backupFormat.ts`, which both platforms import, so there is one parser
+  rather than two that drift.
+
+  This matters more on a phone than on a laptop. A laptop's copy can be reached from the machine
+  itself; a phone's cannot, so a reset, a loss or an uninstall takes whatever was never synced with
+  it.
+
+  Restoring replaces rather than merges — the same decision the website makes, because a restore
+  means "put it back the way it was" and a merge would need per-item timestamps the file may
+  predate. Because it replaces everything, the file is parsed and described first: how many tracks,
+  which ones, how many notes and recorded days, and when it was taken. A backup from the wrong week
+  looks exactly like the right one until it has already overwritten today.
+
+  Step counts are deliberately left out, for the same reason they are left out of sync: they are a
+  reading from this particular phone's hardware and mean nothing on another device.
+
+### Changed
+- Files get in and out through Android's Storage Access Framework — the export asks for a folder,
+  the import opens the system picker. An app has no access to the user's storage and cannot ask for
+  any; it is only ever handed one location at a time, by the user. That is why the feature involves
+  no permission prompt, and why it needed no new native dependency: `expo-file-system`, already part
+  of every Expo app, carries both pickers, so this shipped over the air rather than as a new build.
+- `MOBILE_PLAN.md`'s storage table said exports would go to the share sheet. They do not, and the
+  reason they do not is the more interesting answer.
+
+## [0.38.1] - 2026-09-23
+
+### Fixed
+- **The roadmap is rendered on the phone, not shown as its source.** The earlier judgement that a
+  page of prose "reads fine with its headings intact" did not survive contact with a real roadmap:
+  `##`, `- ` and `**` on every line is not prose. It now goes through a markdown renderer styled
+  from the app's palette, with the raw text still shown while editing — that is what you are
+  editing. The renderer is pure JavaScript, so the fix reached the phone as an over-the-air update
+  rather than a new build.
+- **Metro can resolve `punycode`.** React Native ships no Node standard library, so the markdown
+  parser's `require("punycode")` — used for internationalised domain names in links — resolved to
+  nothing and failed the entire bundle. The npm package is now installed and aliased in
+  `metro.config.js`.
+
+## [0.38.0] - 2026-09-23
+
+### Added
+- **The week and its rotations, on the phone.** Tap a day to change what it is for; add or remove a
+  rotation's topics. Which topic shows today is computed from the week number rather than stored, so
+  editing the list changes what comes up without touching anything already logged.
+- **The roadmap**, readable in full and editable behind a deliberate switch — a stray tap in a
+  4,000-word document on a touch keyboard is how plans get mangled. Shown as markdown rather than
+  rendered: a parser and a component library would be a lot of machinery for a page of prose that
+  reads fine with its headings intact.
+- **Deliverables**, with ticking one off feeding the streak exactly as on the website. The git
+  statistics stay on the web, because they read a repository on the machine running the app and a
+  phone has no checkout.
+- **Archiving a track**, from the same long-press that renames it. Archiving rather than deleting, so
+  the change merges like any other edit rather than having to represent a deletion as an absence.
+
+## [0.37.0] - 2026-09-23
+
+### Added
+- **History on the phone**: totals, which weekdays you actually show up, the last twelve months, and
+  per-track figures with longest runs — all computed by the aggregation pipelines on the server,
+  because they read every day document the account owns. The bars are plain views; a charting library
+  would be a megabyte of dependency for what flexbox already does.
+- **Track management**: create a track from any of the four templates, and hold a track in the list to
+  rename it. The templates answer the questions the website's wizard asks, since a five-step form is
+  the wrong shape for a phone and everything stays editable afterwards.
+- **Phase editing**: tap a title to change it, make any phase current, add one, remove one.
+  Descriptions stay on the website — a paragraph of prose on a phone keyboard is desk work.
+
+### Changed
+- The `Stats` response shape joined `SearchResult` in `lib/apiTypes.ts`, so the phone can name what the
+  API returns without reading a file that imports Mongoose.
+
+## [0.36.0] - 2026-09-23
+
+### Added
+- **Material notes on the phone.** Notes are keyed by the material's own id, the same as on the
+  website, so one written on the sofa opens on the laptop. Saved after a short pause rather than per
+  keystroke.
+- **Delete account** from the phone, calling the same endpoint the website does. The device keeps its
+  own copy and carries on offline — which is what the privacy page promises, now reachable from both
+  places.
+- **A focus timer.** It derives the remaining time from the clock rather than counting ticks, because
+  JavaScript timers stop when Android backgrounds an app; coming back from ten minutes away shows the
+  right number instead of ten lost minutes. It says plainly that it cannot notify you when it ends —
+  that needs a notification permission and a new build.
+- **Device settings on the phone**: theme (system, light or dark), when a day starts, and which day a
+  week begins on.
+
+### Changed
+- `lib/settings.ts` takes its storage as a dependency instead of assuming `localStorage`. The browser
+  keeps using it; the phone installs a key-value store loaded once at startup, because settings are
+  read synchronously from hot paths like "which day is it" and an async read there would spread
+  `await` through every caller.
+- Every phone screen now takes its palette from a theme provider rather than reading the system
+  scheme directly, which is what makes an explicit light/dark choice possible.
+
+## [0.35.1] - 2026-09-23
+
+### Fixed
+- **The phone showed the wrong rotation items.** Rotations cycle — one topic this week, another next —
+  so their items are computed from the rotation's definition and the week number, never read back
+  from storage, and a stored one is last week's answer. Today's list now computes them exactly as the
+  website's weekly plan does, from the same shared functions, and filters the stale stored copies out.
+- **The daily reset didn't run on the phone.** Yesterday's ticks could carry into today. It now runs
+  on load and whenever the app returns to the foreground — where the day may well have rolled over
+  while the app sat in the switcher — and is written back immediately, since a reset held only in
+  memory would be undone by the next process kill.
+
+## [0.35.0] - 2026-09-23
+
+### Added
+- **The rest of the phone-first port**, all shipped over the air:
+  - **Roadmap** — the phases between the start and the deadline, which one today falls in, and how
+    far behind the schedule thinks you are. Read-only: rewriting a phase description is desk work,
+    knowing where you are is not.
+  - **Notes** — the notepad and the to-do list for the open track, saved as you type because Android
+    can end the process without warning. The to-do list is the same markdown checklist the website
+    reads and writes, through the same `quickNotes` functions.
+  - **Search** — a thin client over `/api/search`, so the database's text index does the work instead
+    of the phone loading every track and note into memory to scan them. Says plainly when it needs an
+    account or a connection.
+  - **Settings** — account, what this device holds, links to the privacy and security pages, and
+    "delete local data" with a confirmation that disarms itself after a few seconds.
+
+### Changed
+- The API's response shapes moved to `lib/apiTypes.ts`. A type-only import is erased at build time,
+  but TypeScript still reads the file it came from — and reading `lib/server/**` from a React Native
+  project means resolving Mongoose's types in an environment that has no business having them. One
+  definition, imported by both sides.
+
+## [0.34.0] - 2026-09-23
+
+### Added
+- **The consistency grid on the phone.** One cell per day since the track began, shaded by how much
+  landed on it, scrolling sideways and opening on the present — a year is 53 columns, which is more
+  than a phone can show without the cells becoming meaningless. Tapping the streak on Today opens it.
+- The cells come from `streakCalendar` in the shared core, the same function the website's grid and
+  the landing page's miniature use, so the three cannot drift into disagreeing about what a day was
+  worth.
+
+## [0.33.1] - 2026-09-23
+
+### Documentation
+- Corrected a wrong claim: a build variant does **not** share the original's signing key. EAS keeps
+  credentials per application identifier, so `com.horizonroadmap.app.dev` got its own keystore, and
+  Google refused sign-in there with "This android application is not registered to use OAuth2.0". The
+  mobile README and the runbook now say to read the fingerprint from the built APK
+  (`apksigner verify --print-certs`) and list both variants' fingerprints.
+
+## [0.33.0] - 2026-09-23
+
+### Added
+- **Materials on the phone.** Every book, course and paper on the open track, with its author, status
+  and progress bar; tap one to change its status, move the bookmark, or open its link. Marking one
+  Completed feeds the streak, because the shared core decides that — `setMaterialStatus` is the same
+  function the website calls.
+- The phone can now make any change the shared `trackActions` express, not just tick items: the
+  workspace provider gained `editTrack`, which stamps and stores the result exactly as a tick does.
+
+## [0.32.0] - 2026-09-23
+
+### Removed
+- **Google Drive sync is gone.** It predated accounts and did the same job worse: a second copy of
+  everyone's data in a place this project doesn't operate, reached with an access token the browser
+  had to hold. Signing in now covers every reason it existed, and signed out the app is local-only —
+  a complete way to use it, not a degraded one.
+- What went with it: `lib/googleDrive.ts`, the connect/disconnect modal, the cloud entries in the
+  menu and settings, the Drive token in `localStorage`, and `https://www.googleapis.com` from the
+  content security policy's `connect-src`. "Delete local data" still clears the old Drive keys, since
+  a device that used it still has them.
+- **The only sensitive Google scope went with it.** `drive.appdata` was what would have required a
+  verification review before the OAuth app could be published publicly; sign-in alone needs none.
+- The threat model records I12 as **Removed** rather than mitigated: deleting a feature is the
+  strongest mitigation available, and it is worth distinguishing from defending one.
+
+### Changed
+- The sync button now says "On this device" when signed out, and opens Settings rather than
+  pretending there is somewhere to sync to.
+- `loadGoogleGisScript` moved into `lib/googleSignIn.ts`, where it belongs — it loads Google's
+  identity script, which sign-in still needs.
+
+## [0.31.1] - 2026-09-23
+
+### Documentation
+- `mobile/README.md` now carries the day-to-day workflow: the dev loop, what needs only a saved file,
+  what needs an over-the-air update, what forces a rebuild and how long each takes — and the rule
+  underneath, that JavaScript can be replaced in an installed app while native code cannot.
+- The three Google OAuth clients are written down with what identifies each: the web client whose ID
+  the server verifies as the token's audience, and an Android client per package name carrying the
+  signing fingerprint. Also in `docs/security/RUNBOOK.md` §1, next to the other one-time account
+  settings, with the consequence noted — a new build variant needs a new Android client, or sign-in
+  fails there while the real app keeps working.
+- `docs/README.md` indexes both `mobile/README.md` and `MOBILE_PLAN.md`.
+
+## [0.31.0] - 2026-09-23
+
+### Changed
+- **The development build is now a separate app on the phone.** `app.config.ts` gives the
+  `development` profile its own package name (`com.horizonroadmap.app.dev`), display name and deep
+  link scheme, so it no longer replaces the real app on install — hot reload and the standalone build
+  can coexist. The cost, documented in `mobile/README.md`: Google ties an OAuth client to a package
+  name, so signing in from the development variant needs a second Android client in Google Cloud with
+  the same fingerprint.
+
+## [0.30.1] - 2026-09-23
+
+### Fixed
+- **Unticking an item on the phone came back ticked after a sync.** Ticking worked; unticking didn't.
+  The website records an edit in two steps — what the new state is, then *which items changed and
+  when* (`applyTrackBookkeeping`) — and the phone only did the first. Without those timestamps an
+  untick is indistinguishable from "never ticked", so the account's timestamped copy won and the tick
+  returned.
+- The bookkeeping moved out of `lib/workspaceRepo.ts`, which is tied to Dexie and the browser, into
+  `lib/bookkeeping.ts`, which is pure. Both the website and the phone now run the same code — two
+  copies of a merge rule would be two rules.
+- Three tests pin it: an untick with a newer timestamp survives, a tick the account lacks is still
+  accepted, and — kept deliberately — an untick with *no* timestamp is shown losing, which is the bug
+  itself preserved as a warning.
+
+## [0.30.0] - 2026-09-23
+
+### Added
+- **Over-the-air updates for the phone app.** `expo-updates` with a channel per build profile, so a
+  change to a screen, a layout or any other JavaScript reaches installed apps on their next launch —
+  no rebuild, no queue, no store review. This is the practical half of the rule the platform keeps
+  teaching: JavaScript can be replaced in an app that is already installed; native code cannot.
+- A `runtimeVersion` tied to the app version, which is the safety catch. An update whose JavaScript
+  expects native code the installed build doesn't have would crash on launch for everyone, with no
+  way back from the user's side. Tying the runtime version to the app version means any release that
+  changes native code gets a new one, and older builds stop receiving updates rather than receiving
+  broken ones.
+
+## [0.29.2] - 2026-09-23
+
+### Documentation
+- The exam date is confirmed: all three are on the same day in the **first week of November 2026**,
+  about a week later than the estimate both plans were written against. `MOBILE_PLAN.md`'s schedule
+  is rewritten around it — weeks 1 and 2 were finished in two days, so the time bought back goes to
+  rehearsal rather than to more features.
+
+## [0.29.1] - 2026-09-23
+
+### Documentation
+- Learning log entries 15 and 16, covering the phone: what moved between platforms unchanged and what
+  could never move; where a session lives when there is no browser; why a sensor is not a data source
+  you can simply read; how a permission can be refused permanently; why native code and JavaScript
+  ship differently, which is the platform's central fact; and the CSRF check that was measuring the
+  wrong thing, found because the security counters stayed at zero while the phone kept failing.
+
+## [0.29.0] - 2026-09-23
+
+### Added
+- **Inter-app communication on the phone, both directions.** Outgoing: a share button hands Android a
+  plain-text summary of where a track stands, and the system offers whatever can receive it — a
+  message, a note, an email — with no permission involved, because the user picks the destination.
+  Incoming: `horizon://track/<id>` opens the app on that track, matched by the scheme declared in
+  `app.json`. A link is outside input, so it may only choose between tracks that already exist, and
+  an unknown id falls back to Today rather than failing.
+- Verified over USB: `adb shell am start -a android.intent.action.VIEW -d "horizon://track/…"`
+  reached the running app and switched to that track.
+
 ## [0.28.2] - 2026-09-23
 
 ### Fixed

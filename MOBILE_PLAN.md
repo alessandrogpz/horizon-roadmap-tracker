@@ -1,9 +1,9 @@
 # Plan: Mobile App Development, on Horizon
 
 > **Written 2026-09-22 against v0.24.0.** The exam is on the same day as SE_06 NoSQL and Cyber
-> Security — around 2026-10-25, roughly four and a half weeks out — and those two are already
-> ready. So this plan is scoped to what can be built *and rehearsed* in that time, not to
-> everything that would be nice.
+> Security — **the first week of November 2026**, confirmed on 2026-09-23, so about six weeks out —
+> and those two are already ready. So this plan is scoped to what can be built *and rehearsed* in
+> that time, not to everything that would be nice.
 >
 > **Target: Level 1 in full, with the Level 2 items that come cheaply.** Level 3 needs a second
 > framework and is not reachable here; saying so plainly is better than pretending.
@@ -103,7 +103,7 @@ because it is a good exam question.
 | **SQLite** (`expo-sqlite`) | Tracks, days, notes | Structured, queryable, survives restarts, handles a year of data without loading it all. The phone's equivalent of IndexedDB on the web. |
 | **Key-value** (`AsyncStorage`) | Device preferences: theme, when the day starts | Small, synchronous-feeling, no schema. What `lib/settings.ts` uses `localStorage` for on the web. |
 | **Secure storage** (`expo-secure-store`) | The session token | Backed by the Keychain and the Android Keystore, so another app or a rooted-device dump cannot read it. The web's HttpOnly cookie has no direct equivalent on a phone, and this is the closest thing. |
-| **Files** | Exports | A .json or .zip handed to the system share sheet. |
+| **Files** (`expo-file-system`) | Backups, in and out | A .json written into a folder the user picks, and read back from a file the user picks. Android gives an app no access to the user's storage at all — only to a location handed over through the Storage Access Framework, one item at a time. That is why there is no storage permission prompt: there is no storage permission involved. |
 | **The server** | The synced copy | Already built. |
 
 ---
@@ -176,13 +176,18 @@ desktop-shaped work, or a second implementation of something the web already doe
 
 Four and a half weeks, with two other exams to rehearse for. Rehearsal happens alongside, not after.
 
+The exam is in the **first week of November**. Weeks 1 and 2 of this plan were both done on
+2026-09-22–23, which buys back a fortnight; the rest of the time goes to rehearsal, not to more
+features.
+
 | Week (from) | Mobile | Also |
 |---|---|---|
-| 1 (09-22) | Expo app, shared core wired up, SQLite storage, tracks and today's plan on screen | First full rehearsal of the other two exams |
-| 2 (09-29) | Sign-in, sync against the live server, the streak and materials screens | Second rehearsal |
-| 3 (10-06) | The pedometer, permissions, lifecycle and state restoration, the share target | Hand-in admin |
-| 4 (10-13) | Internal testing release, the demo script, this plan finished as documentation | Rehearse all three (docs/exams/) |
-| 5 (10-20) | Buffer, and rehearsal only | — |
+| ~~1–2~~ (09-22) | **Done:** Expo app, shared core, SQLite, today's plan, sign-in, sync, the pedometer, permissions, share sheet and deep links | — |
+| 3 (09-29) | Play internal-testing release once identity verification clears; the standalone preview build on the phone | First full rehearsal of the security talk |
+| 4 (10-06) | Polish what the rehearsals expose; optional: today's checklist in the share text, Health Connect | Rehearse NoSQL and mobile |
+| 5 (10-13) | Hand-in admin: repo access, the Learning Platform forms | Rehearse all three (`docs/exams/`) |
+| 6 (10-20) | Buffer | Rehearse |
+| 7 (10-27) | Buffer, and the day-before checklist | Rehearse |
 
 If a week slips, the share target goes first, then materials. The sensor and state restoration never
 go: they are Level 1 criteria.
@@ -194,3 +199,33 @@ go: they are Level 1 criteria.
 - A Google Play Console account ($25, once) before week 4.
 - An Android phone to test on — the pedometer needs real hardware; an emulator cannot walk.
 - Decide whether iOS is worth $99 this term.
+
+
+---
+
+## 9. Where it ended up
+
+The plan above was written before any of it existed. What shipped differs in
+four ways worth recording, because each was a decision rather than a drift:
+
+- **The phone is not a smaller website; it is the same app with a different
+  shape.** Four tabs — My Space, Today, Plan, Progress — with My Space as the
+  home: the whole track as a column of panels you arrange yourself. The
+  website's two-column dashboard and the phone's single column are the same
+  model (`lib/modules.ts`, `hiddenPanels`), and only the *order* is per-device,
+  because one column and two columns are not the same question.
+
+- **Reading is the default; editing is a decision.** Every screen that can
+  change a plan opens read-only behind a pencil. A touch screen has no hover,
+  so an editable field and a label look identical until one of them moves.
+
+- **Destructive actions get either an undo or a confirmation, never both.** A
+  swipe is a flick, so it gets an undo; a considered tap on something that
+  carries a lot — deleting a track — gets a question. Asking *and* offering to
+  take it back is two decisions for one intent.
+
+- **New data goes in a note, not a new field.** The gym log is JSON in
+  `gym-<trackId>`. The server validates the workspace against a strict schema
+  that refuses unknown fields (learning log 13), so a field would have meant a
+  migration and a deploy before a single set could be logged. Notes already
+  sync, already merge per note, and hold half a megabyte each.

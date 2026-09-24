@@ -7,6 +7,7 @@ import {
   CloudOff,
   Download,
   Flame,
+  Dumbbell,
   GitBranch,
   HardDrive,
   LayoutGrid,
@@ -44,17 +45,17 @@ export const metadata: Metadata = {
 const MODULES = [
   {
     icon: CalendarDays,
-    title: "Weekly plan",
+    title: "Weekly overview",
     body: "A seven-day board built from the rhythm you set — focus types you name and colour yourself. Tick off today; tomorrow arrives already laid out.",
   },
   {
     icon: Route,
-    title: "Roadmap timeline",
+    title: "Phases",
     body: "Your phases as a dated vertical timeline with editable deadlines. Horizon works out which phase today belongs to and flags it when you drift.",
   },
   {
     icon: Flame,
-    title: "Consistency streak",
+    title: "Consistency",
     body: "A contributions-style grid of every day you showed up, and the streak riding on it. The one number that beats motivation.",
   },
   {
@@ -64,13 +65,18 @@ const MODULES = [
   },
   {
     icon: GitBranch,
-    title: "Portfolio deliverables",
+    title: "Deliverables",
     body: "The things a track has to actually produce. Repo-backed items pull live git stats: branch, uncommitted changes, last commit message.",
   },
   {
     icon: Timer,
-    title: "Focus timer",
-    body: "A Pomodoro clock sitting right next to the plan it belongs to, so a session starts where the work is.",
+    title: "Timer",
+    body: "Twenty-five minutes of work, five of rest, sitting next to the plan it belongs to — for a set at the gym as readily as a stretch of reading.",
+  },
+  {
+    icon: Dumbbell,
+    title: "Gym",
+    body: "A plan per kind of day — push, pull, legs — with the sets and reps it asks for, and a tick against each as you work through it. The week says which days those are.",
   },
 ];
 
@@ -168,8 +174,8 @@ const DATA_POINTS = [
   },
   {
     icon: CloudOff,
-    title: "Or your own Google Drive",
-    body: "Signed out, you can still sync between devices through a hidden folder in your own Drive that only Horizon can read, with day-level conflict resolution. Optional, always.",
+    title: "Offline is the normal case",
+    body: "No connection, no problem: everything is read and written locally first. A sync catches up whenever you have signal, and the server merges it with whatever your other devices did meanwhile.",
   },
   {
     icon: Smartphone,
@@ -429,12 +435,13 @@ export default function LandingPage() {
             <div className="flex flex-col gap-3 max-w-2xl">
               <SectionLabel>The dashboard</SectionLabel>
               <h2 className="text-[1.6rem] font-semibold leading-tight tracking-tight sm:text-[2.1rem]">
-                Six modules. Arranged the way you think.
+                Modules. Arranged the way you think.
               </h2>
               <p className="text-[0.95rem] leading-relaxed text-muted-foreground">
                 Drag panels between columns, reorder them, close the ones a track doesn&apos;t
                 need — closing only hides the panel, the data behind it stays untouched until
-                you bring it back. Every track keeps its own layout.
+                you bring it back. Every track keeps its own layout, and what a new track opens
+                with follows from what it is about.
               </p>
             </div>
 

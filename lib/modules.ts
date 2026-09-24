@@ -8,10 +8,22 @@ export interface ModuleDefinition {
   label: string;
   /** Which column the module sits in by default, and returns to when reopened. */
   homeColumn: ColumnId;
+  /** Asked for rather than assumed: absent from a new track's layout, and not
+   *  appended to an existing one when it appears in a later version. Everything
+   *  else is shown unless explicitly closed, which is right for a panel most
+   *  tracks want and wrong for one most tracks do not — a gym panel on a track
+   *  about a database course is noise nobody asked for. */
+  optIn?: boolean;
 }
 
 /**
  * Every dashboard module, in the order they appear by default.
+ *
+ * The labels name the thing, not a use for it. "Weekly Study Plan" assumed
+ * every track was about studying, which stopped being true the moment a track
+ * could be about training or anything else; and "Roadmap Timeline" sat one
+ * letter away from the Roadmap *document*, which is a different thing
+ * entirely.
  *
  * This is the source of truth for *which* modules exist. It stays free of
  * React so the layout logic below (and its tests) can run headless; each id's
@@ -20,25 +32,32 @@ export interface ModuleDefinition {
  * compile error rather than a blank space on the dashboard.
  */
 export const MODULES = [
-  { id: "weeklyPlan", label: "Weekly Study Plan", homeColumn: "left" },
-  { id: "phaseTracker", label: "Roadmap Timeline", homeColumn: "left" },
-  { id: "streakGraph", label: "Consistency Streak", homeColumn: "left" },
-  { id: "pomodoroTimer", label: "Focus Timer", homeColumn: "left" },
-  { id: "portfolioTracker", label: "Portfolio Deliverables", homeColumn: "right" },
+  { id: "weeklyPlan", label: "Weekly Overview", homeColumn: "left" },
+  { id: "phaseTracker", label: "Phases", homeColumn: "left" },
+  { id: "streakGraph", label: "Consistency", homeColumn: "left" },
+  { id: "pomodoroTimer", label: "Timer", homeColumn: "left" },
+  { id: "portfolioTracker", label: "Deliverables", homeColumn: "right" },
   { id: "materialsTracker", label: "Materials", homeColumn: "right" },
   { id: "notepad", label: "Notepad", homeColumn: "right" },
   { id: "todoList", label: "To-do List", homeColumn: "right" },
+  { id: "gym", label: "Gym", homeColumn: "right", optIn: true },
 ] as const satisfies readonly ModuleDefinition[];
 
 export type ModuleId = (typeof MODULES)[number]["id"];
 
 export const MODULE_IDS: readonly string[] = MODULES.map((m) => m.id);
 
+/** `as const satisfies` narrows each entry to its own literal type, so a
+ *  module that does not declare `optIn` has no such property to read. This
+ *  asks the question once, in one place, instead of widening the whole list. */
+export const isOptIn = (id: string): boolean =>
+  MODULES.some((module) => module.id === id && "optIn" in module && module.optIn === true);
+
 /** Fresh copy each call — never share one object across tracks, or two tracks
  *  would alias the same array and edits to one would silently affect the other. */
 export const defaultPanelColumns = (): PanelColumns => ({
-  left: MODULES.filter((m) => m.homeColumn === "left").map((m) => m.id),
-  right: MODULES.filter((m) => m.homeColumn === "right").map((m) => m.id),
+  left: MODULES.filter((m) => m.homeColumn === "left" && !isOptIn(m.id)).map((m) => m.id),
+  right: MODULES.filter((m) => m.homeColumn === "right" && !isOptIn(m.id)).map((m) => m.id),
 });
 
 /** Which column a module returns to when reopened. */
@@ -62,9 +81,10 @@ export function resolveTrackLayout(track: Pick<TrackState, "panelColumns" | "hid
   const accountedFor = new Set([...left, ...right, ...hidden]);
 
   for (const id of MODULE_IDS) {
-    if (!accountedFor.has(id)) {
-      (homeColumnFor(id) === "right" ? right : left).push(id);
-    }
+    // Opt-in modules are not placed for someone who has never asked for one;
+    // they wait in the modules menu instead.
+    if (isOptIn(id) || accountedFor.has(id)) continue;
+    (homeColumnFor(id) === "right" ? right : left).push(id);
   }
   return { columns: { left, right }, hidden };
 }

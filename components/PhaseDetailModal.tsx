@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { X } from "lucide-react";
 import { dateForDay, dayForDate, formatDateYMD, formatDayMonthYear } from "@/lib/dates";
 import type { Phase, PhaseDetailItem, TaskItem } from "@/lib/types";
+import { phaseDetailItems } from "@/lib/phaseDetails";
 
 interface PhaseDetailModalProps {
   phase: Phase;
@@ -18,11 +19,9 @@ interface PhaseDetailModalProps {
   canDelete: boolean;
 }
 
-// Placeholder state stores these sections as plain strings; normalize to array form.
-const asItems = (v: PhaseDetailItem[] | string | undefined): PhaseDetailItem[] => {
-  if (!v) return [];
-  return Array.isArray(v) ? v : [{ item: v, desc: "" }];
-};
+// Some tracks still store these sections as a plain string; `phaseDetailItems`
+// normalises both shapes, and the phone reads them through the same function.
+const asItems = phaseDetailItems;
 
 function ReadOnlyDetailSection({ title, items }: { title: string; items: PhaseDetailItem[] }) {
   if (items.length === 0) return null;
