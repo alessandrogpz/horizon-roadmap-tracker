@@ -7,6 +7,25 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.58.0] - 2026-09-24
+
+### Fixed
+- **Deleting a track still promised an undo it no longer offers.** The undo was removed in 0.57.0
+  but the confirmation's own text still said "You can undo this for a few seconds afterwards" — so
+  the dialog was describing behaviour that had gone. It now says what actually happens.
+- **A new track on the phone never asked when it starts or when it should be done.** The template
+  decided both silently, so a track arrived with a horizon nobody had chosen and a phase timeline
+  scaled to it. Both are asked for now; leaving the end blank keeps the template's own length.
+
+### Changed
+- **"Total days" is an end date**, on both platforms. Nobody knows their track is 92 days long; they
+  know it should be done by Christmas. The day count is still what gets stored — it is what lets a
+  whole track be re-dated without rewriting every phase — so the field converts on the way in and
+  out, and the line underneath says how many days that came to.
+- **"My day starts at" and "Weeks start on" are one row on the website**, as they already were on
+  the phone. When a week begins and when a day rolls over are the same kind of decision, and
+  splitting them made one of them easy to miss.
+
 ## [0.57.0] - 2026-09-24
 
 ### Fixed
