@@ -17,6 +17,13 @@ import { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import type { RotationDef } from "@shared/types";
 import { setWeeklyRhythm } from "@shared/trackActions";
+import {
+  addFocusType,
+  recolorFocusType,
+  removeFocusType,
+  renameFocusType,
+  type FocusPool,
+} from "@shared/focusTypes";
 import { DAYS_SHORT } from "@shared/dates";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../theme";
@@ -24,11 +31,32 @@ import { usePalette } from "../theme/ThemeProvider";
 
 const WEEK = DAYS_SHORT.slice(1).concat(DAYS_SHORT[0]); // Mon..Sun
 
+/** A fixed set of colours rather than a colour picker. The picker is a
+ *  native module, and a native module means a new build on every phone for
+ *  one field; these also stay legible against both themes, which an
+ *  arbitrary hex chosen on a bright screen does not. */
+const SWATCHES = ["#0ea5e9", "#22c55e", "#f59e0b", "#ef4444", "#a855f7", "#64748b"];
+
 export default function RhythmScreen() {
   const { track, editTrack } = useWorkspace();
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
   const [newItem, setNewItem] = useState<Record<string, string>>({});
+  const [newType, setNewType] = useState("");
+
+  /** Every focus-type edit is the same shape: take the pool, change it with a
+   *  shared rule, write both halves back. The rules keep the week consistent —
+   *  a rename rewrites the days showing the old name, a delete re-points its
+   *  days at what is left. */
+  const changePool = useCallback(
+    (change: (pool: FocusPool) => FocusPool) => {
+      editTrack((t) => {
+        const next = change({ focusTypes: t.focusTypes ?? {}, weekSchedule: t.weekSchedule ?? [] });
+        return setWeeklyRhythm(t, next.weekSchedule, next.focusTypes);
+      });
+    },
+    [editTrack]
+  );
 
   const focusTypes = useMemo(() => Object.entries(track?.focusTypes ?? {}), [track]);
 
@@ -90,6 +118,66 @@ export default function RhythmScreen() {
             </Pressable>
           );
         })}
+      </View>
+
+      <Text style={styles.sectionTitle}>What a day can be for</Text>
+      <Text style={styles.muted}>
+        The pool the days above cycle through. Renaming one renames it everywhere it is used; deleting
+        one moves its days to whatever is left, because a day pointing at a type that is gone is worse
+        than a day of the wrong kind.
+      </Text>
+
+      <View style={styles.card}>
+        {focusTypes.map(([key, type]) => (
+          <View key={key} style={styles.itemRow}>
+            <TextInput
+              value={type.label}
+              onChangeText={(label) => changePool((pool) => renameFocusType(pool, key, label))}
+              style={[styles.input, { flex: 1 }]}
+              accessibilityLabel={`Name of ${type.label}`}
+            />
+            <View style={styles.swatches}>
+              {SWATCHES.map((colour) => (
+                <Pressable
+                  key={colour}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Colour ${type.label} ${colour}`}
+                  accessibilityState={{ selected: type.color === colour }}
+                  onPress={() => changePool((pool) => recolorFocusType(pool, key, colour))}
+                  style={[
+                    styles.swatch,
+                    { backgroundColor: colour },
+                    type.color === colour && { borderColor: palette.foreground, borderWidth: 2 },
+                  ]}
+                />
+              ))}
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Remove ${type.label}`}
+              disabled={focusTypes.length <= 1}
+              onPress={() => changePool((pool) => removeFocusType(pool, key))}
+            >
+              <Text style={[styles.remove, focusTypes.length <= 1 && { color: palette.subtleForeground }]}>×</Text>
+            </Pressable>
+          </View>
+        ))}
+
+        <TextInput
+          value={newType}
+          onChangeText={setNewType}
+          onSubmitEditing={() => {
+            const label = newType.trim();
+            if (!label) return;
+            changePool((pool) => addFocusType(pool, label, SWATCHES[focusTypes.length % SWATCHES.length]));
+            setNewType("");
+          }}
+          placeholder="Add a kind of day…"
+          placeholderTextColor={palette.subtleForeground}
+          returnKeyType="done"
+          style={styles.input}
+          accessibilityLabel="New focus type"
+        />
       </View>
 
       <Text style={styles.sectionTitle}>Rotations</Text>
@@ -185,6 +273,8 @@ function makeStyles(palette: Palette) {
     itemRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
     item: { flex: 1, color: palette.mutedForeground, fontSize: 14 },
     remove: { color: palette.subtleForeground, fontSize: 20, paddingHorizontal: SPACING.sm },
+    swatches: { flexDirection: "row", gap: 4 },
+    swatch: { width: 18, height: 18, borderRadius: 9, borderWidth: 1, borderColor: "rgba(0,0,0,0.2)" },
     input: {
       paddingHorizontal: SPACING.md,
       paddingVertical: SPACING.sm,
