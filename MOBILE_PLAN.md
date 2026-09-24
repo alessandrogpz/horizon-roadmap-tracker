@@ -103,7 +103,7 @@ because it is a good exam question.
 | **SQLite** (`expo-sqlite`) | Tracks, days, notes | Structured, queryable, survives restarts, handles a year of data without loading it all. The phone's equivalent of IndexedDB on the web. |
 | **Key-value** (`AsyncStorage`) | Device preferences: theme, when the day starts | Small, synchronous-feeling, no schema. What `lib/settings.ts` uses `localStorage` for on the web. |
 | **Secure storage** (`expo-secure-store`) | The session token | Backed by the Keychain and the Android Keystore, so another app or a rooted-device dump cannot read it. The web's HttpOnly cookie has no direct equivalent on a phone, and this is the closest thing. |
-| **Files** | Exports | A .json or .zip handed to the system share sheet. |
+| **Files** (`expo-file-system`) | Backups, in and out | A .json written into a folder the user picks, and read back from a file the user picks. Android gives an app no access to the user's storage at all — only to a location handed over through the Storage Access Framework, one item at a time. That is why there is no storage permission prompt: there is no storage permission involved. |
 | **The server** | The synced copy | Already built. |
 
 ---

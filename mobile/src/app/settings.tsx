@@ -1,9 +1,15 @@
 // Settings: the few things worth changing from a phone, and the honest exits.
 //
-// Deliberately short. The website has the full set — theme, when a day starts,
-// which day a week begins on, exporting a backup — and most of it is desk work
-// done once. What belongs here is what you might need *while holding the
+// Deliberately short. The website has the full set, and most of it is desk
+// work done once. What belongs here is what you might need *while holding the
 // phone*: the account, what this device is holding, and how to get rid of it.
+//
+// Backups are here for a reason that is specific to phones. A laptop's copy
+// can be reached from the machine itself; a phone's cannot — if the phone is
+// lost, reset, or the app is uninstalled, whatever was never synced is simply
+// gone. Being able to write the file out from the device that holds it, and
+// read one back onto a replacement, is the difference between an account and
+// an only copy.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -11,13 +17,23 @@ import { Link } from "expo-router";
 import Constants from "expo-constants";
 import { visibleTracks } from "@shared/selectors";
 import { getSettings, updateSettings, type AppSettings } from "@shared/settings";
+import {
+  CancelledError,
+  exportBackup,
+  InvalidBackupError,
+  readBackupToRestore,
+  restoreBackup,
+  summarizeBackup,
+  type BackupBundle,
+  type BackupSummary,
+} from "../backup/backupFile";
 import { SERVER_URL } from "../config";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { useTheme, type ThemePreference } from "../theme/ThemeProvider";
 
 export default function SettingsScreen() {
-  const { workspace, resetLocal } = useWorkspace();
+  const { workspace, replaceWorkspace, resetLocal } = useWorkspace();
   const { palette, preference, setPreference } = useTheme();
   const styles = useMemo(() => makeStyles(palette), [palette]);
 
@@ -38,6 +54,47 @@ export default function SettingsScreen() {
     setBusy(false);
     setConfirming(false);
   }, [resetLocal]);
+
+  // One state for the whole backup section rather than a flag each: the steps
+  // are strictly sequential — pick, confirm, restore — and separate booleans
+  // would allow combinations that cannot happen, like "restoring" while also
+  // "waiting for confirmation".
+  const [backup, setBackup] = useState<BackupState>({ kind: "idle" });
+
+  const runExport = useCallback(async () => {
+    setBackup({ kind: "working", what: "Choose where to save it…" });
+    try {
+      setBackup({ kind: "wrote", name: await exportBackup() });
+    } catch (error) {
+      setBackup(error instanceof CancelledError ? { kind: "idle" } : failure(error));
+    }
+  }, []);
+
+  const pickToRestore = useCallback(async () => {
+    setBackup({ kind: "working", what: "Choose the backup file…" });
+    try {
+      const bundle = await readBackupToRestore();
+      setBackup({ kind: "confirm", bundle, summary: summarizeBackup(bundle) });
+    } catch (error) {
+      setBackup(error instanceof CancelledError ? { kind: "idle" } : failure(error));
+    }
+  }, []);
+
+  const runRestore = useCallback(
+    async (bundle: BackupBundle) => {
+      setBackup({ kind: "working", what: "Restoring…" });
+      try {
+        // The provider has to be told, not just storage: what is on screen is
+        // what the next edit is written from, so leaving it stale would save
+        // the old workspace straight back over the restored one.
+        replaceWorkspace(await restoreBackup(bundle));
+        setBackup({ kind: "restored" });
+      } catch (error) {
+        setBackup(failure(error));
+      }
+    },
+    [replaceWorkspace]
+  );
 
   // Settings are read synchronously and change rarely; keeping a copy in state
   // is enough to re-render the controls after a write.
@@ -136,6 +193,69 @@ export default function SettingsScreen() {
         <Text style={styles.muted}>How your data is protected</Text>
       </Pressable>
 
+      <View style={styles.row}>
+        <Text style={styles.rowTitle}>Backup</Text>
+        <Text style={styles.muted}>
+          One file with every track, phase, tick and note this phone holds — the same file the
+          website writes, so either one can read the other&apos;s. Step counts are left out: they are
+          this phone&apos;s hardware talking, and mean nothing on another device.
+        </Text>
+
+        <View style={styles.choices}>
+          <Pressable
+            accessibilityRole="button"
+            disabled={backup.kind === "working"}
+            onPress={() => void runExport()}
+            style={styles.choice}
+          >
+            <Text style={styles.choiceLabel}>Save a backup…</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            disabled={backup.kind === "working"}
+            onPress={() => void pickToRestore()}
+            style={styles.choice}
+          >
+            <Text style={styles.choiceLabel}>Restore from a file…</Text>
+          </Pressable>
+        </View>
+
+        {backup.kind === "working" && <Text style={styles.muted}>{backup.what}</Text>}
+        {backup.kind === "wrote" && <Text style={styles.good}>Saved as {backup.name}.</Text>}
+        {backup.kind === "restored" && <Text style={styles.good}>Restored. Everything here is the backup&apos;s now.</Text>}
+        {backup.kind === "error" && <Text style={styles.bad}>{backup.message}</Text>}
+
+        {backup.kind === "confirm" && (
+          <View style={styles.confirm}>
+            {/* Restoring replaces everything, so what is in the file gets said
+                out loud first — a backup from the wrong week looks exactly like
+                the right one until it has already overwritten today. */}
+            <Text style={styles.muted}>
+              That file holds {backup.summary.trackCount} track
+              {backup.summary.trackCount === 1 ? "" : "s"} ({backup.summary.trackNames.join(", ")}),{" "}
+              {backup.summary.noteCount} note{backup.summary.noteCount === 1 ? "" : "s"} and{" "}
+              {backup.summary.activeDays} recorded day{backup.summary.activeDays === 1 ? "" : "s"}
+              {backup.summary.exportedAt ? `, saved ${backup.summary.exportedAt.slice(0, 10)}` : ""}.
+            </Text>
+            <Text style={styles.muted}>
+              Restoring replaces what is on this phone with it. Nothing is merged.
+            </Text>
+            <View style={styles.choices}>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => void runRestore(backup.bundle)}
+                style={[styles.choice, { borderColor: palette.accent }]}
+              >
+                <Text style={[styles.choiceLabel, { color: palette.foreground }]}>Replace everything</Text>
+              </Pressable>
+              <Pressable accessibilityRole="button" onPress={() => setBackup({ kind: "idle" })} style={styles.choice}>
+                <Text style={styles.choiceLabel}>Cancel</Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
+      </View>
+
       <View style={styles.danger}>
         <Text style={styles.dangerTitle}>Delete local data</Text>
         <Text style={styles.muted}>
@@ -182,6 +302,15 @@ function makeStyles(palette: Palette) {
     },
     choiceLabel: { color: palette.mutedForeground, fontSize: 13, fontWeight: "600" },
     muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
+    good: { color: palette.success, fontSize: 13, lineHeight: 18, marginTop: SPACING.sm },
+    bad: { color: palette.danger, fontSize: 13, lineHeight: 18, marginTop: SPACING.sm },
+    confirm: {
+      gap: SPACING.sm,
+      marginTop: SPACING.sm,
+      paddingTop: SPACING.md,
+      borderTopWidth: 1,
+      borderTopColor: palette.cardBorder,
+    },
     danger: {
       gap: SPACING.sm,
       padding: SPACING.lg,
@@ -200,4 +329,21 @@ function makeStyles(palette: Palette) {
     },
     dangerLabel: { color: palette.mutedForeground, fontSize: 14, fontWeight: "600" },
   });
+}
+
+/** The backup section's one state. `confirm` carries the parsed bundle so the
+ *  restore does not have to re-open the file the user already chose. */
+type BackupState =
+  | { kind: "idle" }
+  | { kind: "working"; what: string }
+  | { kind: "wrote"; name: string }
+  | { kind: "confirm"; bundle: BackupBundle; summary: BackupSummary }
+  | { kind: "restored" }
+  | { kind: "error"; message: string };
+
+/** A bad file is the user's problem to fix and says exactly what is wrong;
+ *  anything else is the app's problem and should not be dressed up as advice. */
+function failure(error: unknown): BackupState {
+  if (error instanceof InvalidBackupError) return { kind: "error", message: error.message };
+  return { kind: "error", message: "That didn't work. Try again in a moment." };
 }

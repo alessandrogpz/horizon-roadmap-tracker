@@ -1,17 +1,14 @@
+// Writing a backup out of the browser. The file's *shape* lives in
+// ./backupFormat.ts, which the phone reads too; everything here — Blobs, a
+// synthetic click, fflate — is browser-only by nature.
+
 import { zipSync, strToU8 } from "fflate";
 import { fetchWorkspace } from "./workspaceRepo";
 import { db } from "./localDb";
-import type { Workspace } from "./types";
+import { backupFilename, type BackupBundle } from "./backupFormat";
 import { notepadNoteId, todoNoteId } from "./quickNotes";
 
-export interface BackupBundle {
-  exportedAt: string;
-  version: 1;
-  workspace: Workspace;
-  /** note id -> markdown content: material notes (keyed by material id), plus
-   *  each track's notepad and to-do list (lib/quickNotes.ts). */
-  notes: Record<string, string>;
-}
+export type { BackupBundle };
 
 export async function buildBackupBundle(): Promise<BackupBundle> {
   const workspace = await fetchWorkspace();
@@ -21,10 +18,6 @@ export async function buildBackupBundle(): Promise<BackupBundle> {
     notes[n.id] = n.content;
   });
   return { exportedAt: new Date().toISOString(), version: 1, workspace, notes };
-}
-
-function dateStamp(): string {
-  return new Date().toISOString().slice(0, 10);
 }
 
 function triggerDownload(blob: Blob, filename: string) {
@@ -98,7 +91,7 @@ export function buildZipFiles(bundle: BackupBundle): Record<string, Uint8Array> 
 export async function exportSingleFile(): Promise<void> {
   const bundle = await buildBackupBundle();
   const json = JSON.stringify(bundle, null, 2);
-  triggerDownload(new Blob([json], { type: "application/json" }), `horizon-backup-${dateStamp()}.json`);
+  triggerDownload(new Blob([json], { type: "application/json" }), backupFilename("json"));
 }
 
 /**
@@ -110,5 +103,5 @@ export async function exportZipBundle(): Promise<void> {
   const bundle = await buildBackupBundle();
   const files = buildZipFiles(bundle);
   const zipped = zipSync(files, { level: 6 });
-  triggerDownload(new Blob([zipped as BlobPart], { type: "application/zip" }), `horizon-backup-${dateStamp()}.zip`);
+  triggerDownload(new Blob([zipped as BlobPart], { type: "application/zip" }), backupFilename("zip"));
 }
