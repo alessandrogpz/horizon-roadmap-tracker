@@ -177,6 +177,11 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
   const lastThresholdPhase = [...data.phases].reverse().find((p) => p.recommendedByDay !== undefined);
   const totalDays = lastThresholdPhase?.recommendedByDay ?? 365;
   const progressPct = totalDays > 0 ? (daysPassed / totalDays) * 100 : 0;
+  // A plan that has run out is the ordinary end of a plan. Once it has, the
+  // track stops being counted against a total it no longer has: "573 / 92
+  // days" described a track that had gone wrong, when all that happened is
+  // that the estimate was short, which estimates are.
+  const overrunDays = Math.max(0, daysPassed - totalDays);
 
   const streak = data.isSynced ? currentStreakLength(data.streakHistory, todayYMD()) : 0;
 
@@ -289,7 +294,9 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
         >
           <div className="flex items-baseline gap-1.5">
             <span className="text-[1.5rem] font-bold font-mono text-foreground leading-none">{daysPassed}</span>
-            <span className="text-[0.8rem] text-muted-foreground">/ {totalDays} days</span>
+            <span className="text-[0.8rem] text-muted-foreground">
+              {overrunDays > 0 ? `days · ${overrunDays} past plan` : `/ ${totalDays} days`}
+            </span>
           </div>
         </StatTile>
 

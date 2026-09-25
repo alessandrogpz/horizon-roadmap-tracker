@@ -7,6 +7,32 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.68.0] - 2026-09-25
+
+A plan running past its estimate is the ordinary end of a plan, not a failure of one — and the app
+treated it as a failure. A 92-day plan a year and a half old read "Day 573 of 92" over a bar pinned
+at full, "100 points behind the calendar", and four phases each "Ending" on a date long gone. The
+screen meant to tell you where you are said only that you were late.
+
+### Added
+- **`overrunDays` on `timelineStats`**, with tests: how far past the planned total a track is, or
+  zero while it is still inside it. One number, computed once, so both platforms say the same thing
+  about the same track.
+- **A way out.** Past the end of its plan the summary offers Extend, which opens the track's own
+  settings where the end date is set.
+
+### Changed
+- **Past its last day a track is no longer measured against a total it has outlived.** It reads
+  "Day 573" and "481 days past the plan" instead of "Day 573 of 92"; the bar fills but turns grey,
+  because a bar at its end should not look like a bar at its goal.
+- **Two comparisons stop being made once there is nothing left to compare against**: the pace line
+  ("N points behind the calendar") and the phase-behind banner. Both measure work against remaining
+  time, and there is none.
+- **Phase deadlines read "Due" rather than "Ends"**, which is correct whether the date is ahead or
+  behind.
+- **The website no longer prints "573 / 92 days"** in its day counter either. Its bars were already
+  clamped; the number beside them was not.
+
 ## [0.67.0] - 2026-09-25
 
 ### Fixed

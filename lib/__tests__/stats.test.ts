@@ -93,6 +93,30 @@ describe("streakStats", () => {
   });
 });
 
+describe("timelineStats overrun", () => {
+  const planned = (startDate: string) => ({
+    ...track(),
+    startDate,
+    phases: [phase(1, 92)],
+  });
+
+  it("reports no overrun while the track is still inside its plan", () => {
+    const stats = timelineStats(planned("2026-07-01"));
+    expect(stats.overrunDays).toBe(0);
+  });
+
+  it("counts the days past the plan once it has run out", () => {
+    // A 92-day plan begun well over a year ago: the ordinary way a plan ends.
+    const stats = timelineStats(planned("2025-03-01"));
+    expect(stats.totalDays).toBe(92);
+    expect(stats.overrunDays).toBe(stats.daysPassed - 92);
+    expect(stats.overrunDays).toBeGreaterThan(0);
+    // The bar still has somewhere to stop, and nothing is left to run.
+    expect(stats.progressPct).toBe(100);
+    expect(stats.daysRemaining).toBe(0);
+  });
+});
+
 describe("streakCalendar", () => {
   it("starts on the Sunday before the track and pads to whole weeks", () => {
     // 2026-07-01 is a Wednesday, so the grid opens on Sunday 2026-06-28.
