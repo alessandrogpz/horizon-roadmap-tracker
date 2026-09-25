@@ -247,7 +247,13 @@ export default function PhasesScreen() {
       <View style={styles.moreRow}>
         <Text style={styles.moreTitle}>More on this track</Text>
       </View>
-      <SubNav links={[{"href": "/roadmap", "label": "Roadmap"}, {"href": "/rhythm", "label": "Week & rotations"}, {"href": "/portfolio", "label": "Deliverables"}]} />
+      <SubNav
+        links={[
+          { href: "/roadmap", label: "Roadmap", icon: "map-outline" },
+          { href: "/rhythm", label: "Week & rotations", icon: "calendar-outline" },
+          { href: "/portfolio", label: "Deliverables", icon: "cube-outline" },
+        ]}
+      />
 
     </Refreshable>
   );
