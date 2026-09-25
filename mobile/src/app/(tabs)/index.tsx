@@ -105,6 +105,12 @@ export default function SpaceScreen() {
    *  page there is no offset to pull back, which is why it only showed up
    *  after scrolling. */
   const lockedHeight = useSharedValue(0);
+  /** The same pair the folded column uses, for the rows in Arrange: which
+   *  one is in the hand, and where it would land. Without them a row moved
+   *  under the thumb and the rest sat still, so there was nothing to say
+   *  where it was going until it was already there. */
+  const rowHeld = useSharedValue(-1);
+  const rowTarget = useSharedValue(-1);
   /** The column itself, so the drag can measure where it really is rather
    *  than reconstruct it from arithmetic. */
   const stackRef = useAnimatedRef<View>();
@@ -241,20 +247,6 @@ export default function SpaceScreen() {
     <Refreshable style={styles.screen} contentContainerStyle={styles.content} scrollEnabled={!dragging}>
       <View style={styles.bar}>
         <Text style={styles.barTitle}>{arranging ? "Drag to reorder" : "My space"}</Text>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => (arranging ? setArranging(false) : startArranging())}
-          style={[styles.barButton, arranging && { borderColor: palette.accent }]}
-        >
-          <Ionicons
-            name={arranging ? "checkmark" : "options-outline"}
-            size={14}
-            color={arranging ? palette.accent : palette.mutedForeground}
-          />
-          <Text style={[styles.barLabel, arranging && { color: palette.accent }]}>
-            {arranging ? "Done" : "Arrange"}
-          </Text>
-        </Pressable>
       </View>
 
       {arranging ? (
@@ -268,6 +260,8 @@ export default function SpaceScreen() {
                 count={shown.length}
                 onMove={move}
                 onRemove={() => hide(id)}
+                held={rowHeld}
+                target={rowTarget}
                 styles={styles}
                 palette={palette}
               />
@@ -331,25 +325,33 @@ export default function SpaceScreen() {
         </Animated.View>
       )}
 
-      {/* Outside the column, because the column moves to the thumb when a
-          panel is picked up and a footnote has no business following it —
-          and faded out entirely while it is held. */}
-      {!arranging && (
-        <Animated.View style={[styles.chrome, chrome]} pointerEvents={dragging ? "none" : "auto"}>
-          {shown.length === 0 && (
-            <Text style={styles.muted}>
-              No panels yet. Tap Arrange to add some — this is the screen that shows the whole track
-              at once.
-            </Text>
-          )}
-
-          <Text style={styles.footnote}>
-            Hold a panel anywhere to pick it up and drag it somewhere else, or swipe one away to
-            hide it. Which panels you have follows your account; the order they are
-            in is this phone&apos;s, because a phone has one column and the website has two.
+      {/* The way in and out of arranging, under everything it arranges rather
+          than in the bar above it — it is the last thing you reach for, not
+          the first. It goes while a panel is in the hand, because arranging is
+          what you are already doing. */}
+      <Animated.View style={chrome} pointerEvents={dragging ? "none" : "auto"}>
+        {!arranging && shown.length === 0 && (
+          <Text style={styles.muted}>
+            No panels yet — the button below adds them. This is the screen that shows the whole
+            track at once.
           </Text>
-        </Animated.View>
-      )}
+        )}
+
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => (arranging ? setArranging(false) : startArranging())}
+          style={[styles.arrangeButton, arranging && { borderColor: palette.accent }]}
+        >
+          <Ionicons
+            name={arranging ? "checkmark" : "options-outline"}
+            size={16}
+            color={arranging ? palette.accent : palette.foreground}
+          />
+          <Text style={[styles.arrangeLabel, arranging && { color: palette.accent }]}>
+            {arranging ? "Done" : "Arrange & add panels"}
+          </Text>
+        </Pressable>
+      </Animated.View>
     </Refreshable>
   );
 }
@@ -603,6 +605,8 @@ function ArrangeRow({
   count,
   onMove,
   onRemove,
+  held,
+  target,
   styles,
   palette,
 }: {
@@ -611,35 +615,76 @@ function ArrangeRow({
   count: number;
   onMove: (from: number, to: number) => void;
   onRemove: () => void;
+  /** Which row is in the hand, and where it would land — shared, because a row
+   *  has to know about its neighbours to get out of their way. */
+  held: SharedValue<number>;
+  target: SharedValue<number>;
   styles: ReturnType<typeof makeStyles>;
   palette: Palette;
 }) {
   const offset = useSharedValue(0);
   const lifted = useSharedValue(0);
+  /** This row's step aside, animated so the list parts rather than snaps. */
+  const shift = useSharedValue(0);
   const definition = panelDefinition(id);
+
+  useAnimatedReaction(
+    () => ({ h: held.value, t: target.value }),
+    ({ h, t }) => {
+      if (h < 0 || h === index || t < 0) {
+        shift.value = 0;
+        return;
+      }
+      const step = index > h && index <= t ? -ROW : index < h && index >= t ? ROW : 0;
+      shift.value = withTiming(step, { duration: 160 });
+    },
+    [index]
+  );
 
   const drag = Gesture.Pan()
     .activateAfterLongPress(120)
     .onStart(() => {
       lifted.value = 1;
+      held.value = index;
+      target.value = index;
       runOnJS(tap)();
     })
     .onUpdate((event) => {
       offset.value = event.translationY;
+      const next = Math.max(0, Math.min(count - 1, index + Math.round(offset.value / ROW)));
+      if (next !== target.value) {
+        target.value = next;
+        runOnJS(tap)();
+      }
     })
     .onEnd(() => {
-      const moved = Math.round(offset.value / ROW);
-      const target = Math.max(0, Math.min(count - 1, index + moved));
+      const landing = target.value;
       offset.value = 0;
       lifted.value = 0;
-      if (target !== index) {
-        runOnJS(onMove)(index, target);
+      held.value = -1;
+      target.value = -1;
+      if (landing !== index && landing >= 0) {
+        runOnJS(onMove)(index, landing);
         runOnJS(settle)();
+      }
+    })
+    .onFinalize(() => {
+      // A cancelled drag must not leave the list parted around a row that is
+      // no longer being held.
+      if (held.value === index) {
+        held.value = -1;
+        target.value = -1;
+        offset.value = 0;
+        lifted.value = 0;
       }
     });
 
   const animated = useAnimatedStyle(() => ({
-    transform: [{ translateY: offset.value }, { scale: lifted.value ? 1.03 : 1 }],
+    // The held row follows the thumb; every other row carries its step aside.
+    transform: [
+      { translateY: lifted.value ? offset.value : shift.value },
+      { scale: lifted.value ? 1.03 : 1 },
+    ],
     zIndex: lifted.value ? 10 : 1,
     opacity: lifted.value ? 0.95 : 1,
   }));
@@ -693,6 +738,19 @@ function makeStyles(palette: Palette) {
     },
     bar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
     barTitle: { color: palette.foreground, ...TYPE.subhead, fontWeight: "700" },
+    arrangeButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: SPACING.sm,
+      marginTop: SPACING.md,
+      paddingVertical: SPACING.md,
+      borderRadius: RADIUS.card,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.card,
+    },
+    arrangeLabel: { ...TYPE.label, color: palette.foreground, fontWeight: "600" },
     barButton: {
       flexDirection: "row",
       alignItems: "center",
@@ -741,6 +799,5 @@ function makeStyles(palette: Palette) {
     addText: { flex: 1, gap: 1 },
     addLabel: { flex: 1, color: palette.foreground, ...TYPE.body, fontWeight: "600" },
     muted: { color: palette.mutedForeground, ...TYPE.caption, lineHeight: 17 },
-    footnote: { color: palette.subtleForeground, ...TYPE.micro, lineHeight: 16, marginTop: SPACING.md },
   });
 }
