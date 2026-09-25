@@ -7,6 +7,25 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.74.0] - 2026-09-25
+
+### Fixed
+- **Dragging a row in Arrange left the others where they were.** Holding a panel in the ordinary
+  view parts the column around it; the rows behind the Arrange button did not, so there was nothing
+  to say where a row was going until it was already there. They now share the same pair of values
+  the folded column uses — which row is in the hand, and where it would land — and step aside the
+  same way.
+
+### Changed
+- **The way into arranging is at the foot of the screen**, under everything it arranges, and says
+  what it does: "Arrange & add panels". It was a small button in the bar at the top, which is the
+  first thing you reach and the last thing you want. It disappears while a panel is being dragged,
+  because arranging is what you are already doing.
+
+### Removed
+- **The paragraph at the bottom of My Space**, explaining how to hold a panel and where the order is
+  kept. Three lines of instructions under a screen whose gestures people had already found.
+
 ## [0.73.3] - 2026-09-25
 
 ### Changed
