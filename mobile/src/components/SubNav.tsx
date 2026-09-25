@@ -35,6 +35,11 @@ export function SubNav({ links }: { links: SubNavLink[] }) {
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
+      // A scroll view will take all the room it is offered, and this one
+      // scrolls sideways — so on a screen that does not scroll itself it was
+      // claiming a couple of hundred points of *height* for a single row of
+      // chips, starving whatever it sat beside.
+      style={styles.scroller}
       contentContainerStyle={styles.row}
       // Without this the row steals the vertical pull-to-refresh gesture from
       // the screen it sits on.
@@ -92,6 +97,7 @@ function makeStyles(palette: Palette) {
     // No horizontal padding of its own: every screen that uses this already
     // pads its content, and adding a second gutter would push the row in
     // twice as far as everything under it.
+    scroller: { flexGrow: 0 },
     row: { gap: SPACING.sm, paddingBottom: SPACING.sm },
     chip: {
       flexDirection: "row",
