@@ -12,6 +12,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, { FadeIn } from "react-native-reanimated";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import type { StreakDay } from "@shared/stats";
 import type { CompletedItem } from "@shared/types";
@@ -22,6 +23,7 @@ import { getSettings } from "@shared/settings";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
 import { Refreshable } from "../../components/Refreshable";
 import { SubNav } from "../../components/SubNav";
+import { Segmented } from "../../components/Segmented";
 import { RADIUS, SPACING, type Palette } from "../../theme";
 import { usePalette } from "../../theme/ThemeProvider";
 
@@ -30,6 +32,11 @@ const CELL_GAP = 4;
 /** Width of the left column that holds a month name when one starts. */
 const GUTTER = 30;
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+/** The two ways of laying the same days out. */
+const SHAPES = [
+  { value: "months", label: "By month" },
+  { value: "continuous", label: "Continuous" },
+] as const;
 
 const WEEKDAYS_SUN = ["S", "M", "T", "W", "T", "F", "S"];
 const WEEKDAYS_MON = ["M", "T", "W", "T", "F", "S", "S"];
@@ -153,23 +160,11 @@ export default function ProgressScreen() {
       </View>
 
       <View style={styles.toggle}>
-        {([
-          ["months", "By month"],
-          ["continuous", "Continuous"],
-        ] as const).map(([value, label]) => {
-          const on = (value === "months") === byMonth;
-          return (
-            <Pressable
-              key={value}
-              accessibilityRole="button"
-              accessibilityState={{ selected: on }}
-              onPress={() => setByMonth(value === "months")}
-              style={[styles.toggleButton, on && { borderColor: palette.accent }]}
-            >
-              <Text style={[styles.toggleLabel, on && { color: palette.foreground }]}>{label}</Text>
-            </Pressable>
-          );
-        })}
+        <Segmented
+          options={SHAPES}
+          value={byMonth ? "months" : "continuous"}
+          onChange={(shape) => setByMonth(shape === "months")}
+        />
       </View>
 
       {/* The weekday header belongs to the screen, not to each block: every
@@ -186,15 +181,27 @@ export default function ProgressScreen() {
         />
       )}
 
-      <View style={styles.weekdayRow}>
-        <View style={styles.gutter} />
-        {labels.map((label, index) => (
-          <Text key={index} style={styles.weekdayLabel} allowFontScaling={false}>
-            {label}
-          </Text>
-        ))}
-      </View>
+      {/* One centred column holding the weekday header and the grid under it,
+          rather than each part finding its own left edge. The grid is a fixed
+          width — cells stretched to fill a phone are big enough to hold a
+          number and leave a handful of weeks on screen, which is the opposite
+          of what a consistency grid is for — and a fixed width left to sit at
+          `flex-start` is a grid pushed into the left third of the screen with
+          nothing beside it. */}
+      <View style={styles.chart}>
+        <View style={styles.weekdayRow}>
+          {labels.map((label, index) => (
+            <Text key={index} style={styles.weekdayLabel} allowFontScaling={false}>
+              {label}
+            </Text>
+          ))}
+        </View>
 
+        {/* Keyed by shape, so changing it is a change you watch rather than
+            one you find has happened. Only this one view animates: the grid
+            below it is a couple of hundred cells, and fading each of them
+            would cost far more than the effect is worth. */}
+        <Animated.View key={byMonth ? "months" : "continuous"} entering={FadeIn.duration(240)}>
       {byMonth
         ? months.map((month) => (
             // Raised above its neighbours only while it holds the open day, so
@@ -241,7 +248,9 @@ export default function ProgressScreen() {
                 week.days.some((day) => day.date === openDay) && styles.raised,
               ]}
             >
-              <Text style={styles.gutterLabel} allowFontScaling={false}>{week.label ?? ""}</Text>
+              <Text style={styles.gutterLabel} allowFontScaling={false}>
+                {week.label ?? ""}
+              </Text>
               {week.days.map((day, cell) =>
                 day.date ? (
                   <Cell
@@ -268,6 +277,8 @@ export default function ProgressScreen() {
               )}
             </View>
           ))}
+        </Animated.View>
+      </View>
 
       {weeks.length === 0 && <Text style={styles.muted}>Nothing recorded on this track yet.</Text>}
 
@@ -286,7 +297,7 @@ export default function ProgressScreen() {
       <View style={styles.moreRow}>
         <Text style={styles.moreTitle}>More on this track</Text>
       </View>
-      <SubNav links={[{ href: "/insights", label: "History" }]} />
+      <SubNav links={[{ href: "/insights", label: "History", icon: "stats-chart-outline" }]} />
 
     </Refreshable>
   );
@@ -432,8 +443,6 @@ function makeStyles(palette: Palette) {
       gap: CELL_GAP,
       alignItems: "center",
       marginBottom: 2,
-      alignSelf: "flex-start",
-      width: GUTTER + 7 * CELL + 7 * CELL_GAP,
     },
     weekdayLabel: {
       width: CELL,
@@ -442,35 +451,35 @@ function makeStyles(palette: Palette) {
       fontSize: 9,
       fontWeight: "700",
     },
-    gutter: { width: GUTTER },
-    toggle: { flexDirection: "row", gap: SPACING.xs, marginBottom: SPACING.sm },
-    toggleButton: {
-      paddingHorizontal: SPACING.md,
-      paddingVertical: SPACING.xs,
-      borderRadius: RADIUS.control,
-      borderWidth: 1,
-      borderColor: palette.cardBorder,
-      backgroundColor: palette.surfaceMuted,
-    },
-    toggleLabel: { color: palette.mutedForeground, fontSize: 12, fontWeight: "600" },
+    // The whole chart, centred as one block. Its children keep their own
+    // fixed widths so the columns still line up with each other.
+    // Exactly the seven columns wide, and centred on that. The month
+    // labels down the side hang into the margin rather than taking a
+    // column of their own, because a gutter counted into the width is a
+    // gutter that pushes the grid off-centre by half of itself — and in
+    // the month layout, where nothing is written in it, it did that for
+    // no reason at all.
+    chart: { alignSelf: "center", width: 7 * CELL + 7 * CELL_GAP },
+    toggle: { marginBottom: SPACING.md },
     month: { marginBottom: SPACING.lg },
     monthLabel: {
       color: palette.mutedForeground,
       fontSize: 12,
       fontWeight: "700",
       marginBottom: SPACING.xs,
-      marginLeft: GUTTER + CELL_GAP,
     },
     monthGrid: {
       flexDirection: "row",
       flexWrap: "wrap",
       gap: CELL_GAP,
-      marginLeft: GUTTER + CELL_GAP,
-      alignSelf: "flex-start",
       width: 7 * CELL + 7 * CELL_GAP,
     },
     gutterLabel: {
+      position: "absolute",
+      right: "100%",
+      paddingRight: CELL_GAP,
       width: GUTTER,
+      textAlign: "right",
       color: palette.subtleForeground,
       fontSize: 9,
       fontWeight: "700",
@@ -481,11 +490,9 @@ function makeStyles(palette: Palette) {
       alignItems: "center",
       paddingVertical: 2,
       borderRadius: 4,
-      // Only as wide as the grid it sits behind. Left to stretch, the month
-      // band ran the full width of the screen while the cells stopped a third
-      // of the way across, so the shading looked like it belonged to nothing.
-      alignSelf: "flex-start",
-      width: GUTTER + 7 * CELL + 7 * CELL_GAP,
+      // The band is exactly as wide as the row it shades. It used to be left
+      // to stretch, which ran it the full width of the screen while the cells
+      // stopped a third of the way across.
     },
     cell: { width: CELL, height: CELL, borderRadius: 4 },
     blank: { opacity: 0 },

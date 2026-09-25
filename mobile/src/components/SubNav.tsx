@@ -1,20 +1,33 @@
-// The row of links at the top of a tab.
+// The row of links to a tab's siblings.
 //
 // Each tab lands on something useful — Plan opens on the phases themselves,
 // Library on the reading list — rather than on a menu of further choices. But
 // each one does have two or three siblings, and this is how you reach them: a
-// short scrollable row of chips, above content that is already worth reading.
+// short scrollable row, under content that is already worth reading.
 //
-// Chips rather than a list because they take one line instead of four, and the
-// content underneath is the point of the screen.
+// These used to be bare outlined pills, which is also what the view switches
+// looked like, so a row of them read as a set of options where one ought to be
+// on. They are not options; they are places. Each one now carries the icon of
+// where it goes and a chevron saying that it goes there at all, and the switch
+// between views has become a single track with a sliding thumb (Segmented), so
+// the two are no longer drawn the same way.
 
 import { useMemo } from "react";
-import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable } from "react-native-gesture-handler";
 import { Link } from "expo-router";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
-export function SubNav({ links }: { links: { href: string; label: string }[] }) {
+export interface SubNavLink {
+  href: string;
+  label: string;
+  icon?: React.ComponentProps<typeof Ionicons>["name"];
+}
+
+export function SubNav({ links }: { links: SubNavLink[] }) {
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
 
@@ -28,13 +41,49 @@ export function SubNav({ links }: { links: { href: string; label: string }[] }) 
       directionalLockEnabled
     >
       {links.map((link) => (
-        <Link key={link.href} href={link.href as never} asChild>
-          <Pressable accessibilityRole="button" style={styles.chip}>
-            <Text style={styles.label}>{link.label}</Text>
-          </Pressable>
-        </Link>
+        <Chip key={link.href} link={link} styles={styles} palette={palette} />
       ))}
     </ScrollView>
+  );
+}
+
+function Chip({
+  link,
+  styles,
+  palette,
+}: {
+  link: SubNavLink;
+  styles: ReturnType<typeof makeStyles>;
+  palette: Palette;
+}) {
+  // Presses answer rather than just registering. The chip gives under the
+  // thumb and springs back, which is the smallest amount of motion that still
+  // tells you the tap landed on this one and not the one beside it.
+  const pressed = useSharedValue(0);
+  const animated = useAnimatedStyle(() => ({
+    transform: [{ scale: 1 - pressed.value * 0.04 }],
+    opacity: 1 - pressed.value * 0.25,
+  }));
+
+  return (
+    <Link href={link.href as never} asChild>
+      <Pressable
+        accessibilityRole="link"
+        accessibilityLabel={link.label}
+        onPressIn={() => {
+          pressed.value = withSpring(1, { damping: 22, stiffness: 320 });
+        }}
+        onPressOut={() => {
+          pressed.value = withSpring(0, { damping: 22, stiffness: 320 });
+        }}
+      >
+        <Animated.View style={[styles.chip, animated]}>
+          {link.icon ? <Ionicons name={link.icon} size={14} color={palette.mutedForeground} /> : null}
+          <Text style={styles.label}>{link.label}</Text>
+          <Ionicons name="chevron-forward" size={13} color={palette.subtleForeground} />
+        </Animated.View>
+      </Pressable>
+    </Link>
   );
 }
 
@@ -45,12 +94,16 @@ function makeStyles(palette: Palette) {
     // twice as far as everything under it.
     row: { gap: SPACING.sm, paddingBottom: SPACING.sm },
     chip: {
-      paddingHorizontal: SPACING.md,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: SPACING.sm,
+      paddingLeft: SPACING.md,
+      paddingRight: SPACING.sm,
       paddingVertical: SPACING.sm,
-      borderRadius: RADIUS.control,
+      borderRadius: RADIUS.card,
       borderWidth: 1,
       borderColor: palette.cardBorder,
-      backgroundColor: palette.surfaceMuted,
+      backgroundColor: palette.card,
     },
     label: { color: palette.foreground, fontSize: 13, fontWeight: "600" },
   });

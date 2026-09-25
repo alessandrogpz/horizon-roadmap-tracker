@@ -175,7 +175,12 @@ export default function MaterialsScreen() {
       <View style={styles.moreRow}>
         <Text style={styles.moreTitle}>More on this track</Text>
       </View>
-      <SubNav links={[{"href": "/notes", "label": "Notes & to-dos"}, {"href": "/search", "label": "Search"}]} />
+      <SubNav
+        links={[
+          { href: "/notes", label: "Notes & to-dos", icon: "document-text-outline" },
+          { href: "/search", label: "Search", icon: "search-outline" },
+        ]}
+      />
 
     </Refreshable>
   );

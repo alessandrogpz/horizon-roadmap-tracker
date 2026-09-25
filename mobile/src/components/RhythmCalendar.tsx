@@ -20,6 +20,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import Animated, { FadeIn } from "react-native-reanimated";
 import type { TrackState } from "@shared/types";
 import type { GymLog } from "@shared/gym";
 import { focusOfDay, plannedFor } from "@shared/gym";
@@ -29,10 +30,17 @@ import { getSettings } from "@shared/settings";
 import { tap } from "../feedback/haptics";
 import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { Segmented } from "./Segmented";
 
 type Scope = "week" | "month";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** How much of the calendar to show at once. */
+const SCOPES = [
+  { value: "week", label: "Week" },
+  { value: "month", label: "Month" },
+] as const;
 
 /** What a given date asks for, worked out rather than looked up. */
 interface DayPlan {
@@ -190,23 +198,16 @@ export function RhythmCalendar({ track, gym }: { track: TrackState; gym: GymLog 
       </View>
 
       <View style={styles.controls}>
-        {(["week", "month"] as Scope[]).map((option) => (
-          <Pressable
-            key={option}
-            accessibilityRole="button"
-            accessibilityState={{ selected: scope === option }}
-            onPress={() => {
-              tap();
-              setScope(option);
+        <View style={styles.scopes}>
+          <Segmented
+            options={SCOPES}
+            value={scope}
+            onChange={(next) => {
+              setScope(next);
               setOpenDay(null);
             }}
-            style={[styles.scope, scope === option && { borderColor: palette.accent }]}
-          >
-            <Text style={[styles.scopeLabel, scope === option && { color: palette.foreground }]}>
-              {option === "week" ? "Week" : "Month"}
-            </Text>
-          </Pressable>
-        ))}
+          />
+        </View>
 
         {/* Only offered when it would do something. A button that is already
             where you are is furniture. */}
@@ -225,6 +226,10 @@ export function RhythmCalendar({ track, gym }: { track: TrackState; gym: GymLog 
         )}
       </View>
 
+      {/* Keyed by scope so the change is something you watch: the two views
+          share a place on the screen, and without it one simply becomes the
+          other between frames. */}
+      <Animated.View key={scope} entering={FadeIn.duration(240)} style={styles.block}>
       {scope === "week" ? (
         days.map((day) => (
           <WeekRow
@@ -287,6 +292,8 @@ export function RhythmCalendar({ track, gym }: { track: TrackState; gym: GymLog 
           </View>
         </>
       )}
+
+      </Animated.View>
 
       {openDay && scope === "month" && (
         <DayCard
@@ -403,7 +410,9 @@ function makeStyles(palette: Palette) {
       backgroundColor: palette.surfaceMuted,
     },
     title: { flex: 1, textAlign: "center", color: palette.foreground, fontSize: 15, fontWeight: "700" },
-    controls: { flexDirection: "row", gap: SPACING.xs },
+    controls: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
+    // Wide enough to read, not so wide it takes the row from the Today chip.
+    scopes: { width: 150 },
     scope: {
       paddingHorizontal: SPACING.md,
       paddingVertical: SPACING.xs,
