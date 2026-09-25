@@ -1,5 +1,39 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_REPS, DEFAULT_SETS, addExercise, addSet, addToPlan, clearSession, doneCountOf, emptyGymLog, focusOfDay, gymNoteId, lastTime, parseGymLog, planComplete, plannedFor, removeFromPlan, removeSet, renameExercise, serializeGymLog, sessionFor, setCountOf, type GymLog, updatePlanItem, updateSet, volumeOf } from "../gym";
+import {
+  DEFAULT_REPS,
+  DEFAULT_SETS,
+  addExercise,
+  addSet,
+  addToPlan,
+  addWorkout,
+  addWorkoutExercise,
+  addWorkoutSet,
+  clearSession,
+  doneCountOf,
+  emptyGymLog,
+  focusOfDay,
+  gymNoteId,
+  lastTime,
+  parseGymLog,
+  planComplete,
+  plannedFor,
+  removeFromPlan,
+  removeSet,
+  removeWorkout,
+  renameExercise,
+  resetWorkout,
+  serializeGymLog,
+  sessionFor,
+  setCountOf,
+  setsInWorkout,
+  type GymLog,
+  updatePlanItem,
+  updateSet,
+  updateWorkoutSet,
+  volumeOf,
+  workoutById,
+  workoutsOf,
+} from "../gym";
 
 const log = (): GymLog => {
   let l = emptyGymLog();
@@ -273,5 +307,62 @@ describe("logging a session set by set", () => {
     const next = clearSession(other, day);
     expect(sessionFor(next, day).exercises).toHaveLength(0);
     expect(sessionFor(next, "2026-09-24").exercises).toHaveLength(1);
+  });
+});
+
+describe("named workouts", () => {
+  const pushDay = () => {
+    const { log, workout } = addWorkout(emptyGymLog(), "Push");
+    return { log: addWorkoutExercise(log, workout.id, "Bench"), id: workout.id };
+  };
+
+  it("keeps each workout's exercises to itself", () => {
+    let { log, id: push } = pushDay();
+    const made = addWorkout(log, "Pull");
+    log = addWorkoutExercise(made.log, made.workout.id, "Row");
+
+    expect(workoutById(log, push)?.exercises.map((e) => e.name)).toEqual(["Bench"]);
+    expect(workoutById(log, made.workout.id)?.exercises.map((e) => e.name)).toEqual(["Row"]);
+  });
+
+  it("holds the weights put into it, so coming back shows what was lifted", () => {
+    const { log, id } = pushDay();
+    const exerciseId = workoutById(log, id)!.exercises[0].id;
+    const withSets = addWorkoutSet(
+      addWorkoutSet(log, id, exerciseId, { reps: 5, weight: 60, done: false }),
+      id,
+      exerciseId,
+      { reps: 5, weight: 70, done: false }
+    );
+
+    const reloaded = parseGymLog(serializeGymLog(withSets));
+    expect(workoutById(reloaded, id)?.exercises[0].sets).toEqual([
+      { reps: 5, weight: 60, done: false },
+      { reps: 5, weight: 70, done: false },
+    ]);
+    expect(setsInWorkout(workoutById(reloaded, id)!)).toBe(2);
+  });
+
+  it("unticks every set when the workout is done again, keeping the weights", () => {
+    const { log, id } = pushDay();
+    const exerciseId = workoutById(log, id)!.exercises[0].id;
+    let next = addWorkoutSet(log, id, exerciseId, { reps: 5, weight: 60, done: false });
+    next = updateWorkoutSet(next, id, exerciseId, 0, { done: true });
+    expect(workoutById(next, id)?.exercises[0].sets[0].done).toBe(true);
+
+    const fresh = resetWorkout(next, id);
+    expect(workoutById(fresh, id)?.exercises[0].sets[0]).toEqual({ reps: 5, weight: 60, done: false });
+  });
+
+  it("removing one leaves the others alone", () => {
+    let { log, id } = pushDay();
+    const made = addWorkout(log, "Pull");
+    const next = removeWorkout(made.log, id);
+    expect(workoutsOf(next).map((w) => w.name)).toEqual(["Pull"]);
+  });
+
+  it("reads a log written before workouts existed", () => {
+    const older = JSON.stringify({ version: 1, plans: {}, sessions: {} });
+    expect(workoutsOf(parseGymLog(older))).toEqual([]);
   });
 });
