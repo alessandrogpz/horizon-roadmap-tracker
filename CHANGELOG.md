@@ -7,6 +7,21 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.73.0] - 2026-09-25
+
+### Added
+- **`StatTile`**, one shape for every figure that leads a screen: a mark on the left — an icon, or a
+  ring when the number is a proportion — then the name in small caps, then the figure with its unit
+  beside it. These were being rebuilt per screen, and numbers meaning the same kind of thing should
+  not be laid out three different ways.
+- **Progress opens on the streak**, as the website does: a flame, the run you are on, and the days.
+  The longest run and the last thirty days sit under it as context rather than as two tiles of their
+  own — the run is the number the screen exists to move, and the other two only say whether it is a
+  good one. That also gives the graph back the row they were taking.
+- **Time spent and work done share one bar** on Plan, one drawn over the other, so the gap between
+  their two ends is the pace without having to be read. The card is now headed like the tiles above
+  it rather than opening on a sentence.
+
 ## [0.72.0] - 2026-09-25
 
 ### Added
