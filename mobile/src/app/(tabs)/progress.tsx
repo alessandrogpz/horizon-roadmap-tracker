@@ -24,6 +24,7 @@ import { getSettings } from "@shared/settings";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
 import { Refreshable } from "../../components/Refreshable";
 import { Segmented } from "../../components/Segmented";
+import { StatTile } from "../../components/StatTile";
 import { RADIUS, SPACING, TYPE, type Palette } from "../../theme";
 import { usePalette } from "../../theme/ThemeProvider";
 
@@ -210,10 +211,25 @@ export default function ProgressScreen() {
     // looking for the month.
     <View style={styles.screen}>
       {/* Three numbers across the top, not a paragraph. */}
+      {/* The run you are on, given the room it deserves — it is the number
+          this screen exists to move — with the two that put it in context
+          beside it. */}
+      {/* One tile, not three. The run you are on is the number this screen
+          exists to move; the other two only say whether it is a good one, so
+          they sit under it as context rather than taking a row of their own —
+          a row the graph would rather have. */}
       <View style={styles.stats}>
-        <Stat value={streak} label="in a row" tint={palette.accent} styles={styles} />
-        <Stat value={stats?.longest ?? 0} label="longest run" styles={styles} />
-        <Stat value={stats?.activeLast30 ?? 0} label="of last 30" styles={styles} />
+        <StatTile
+          label="Current streak"
+          value={streak}
+          unit={streak === 1 ? "day" : "days"}
+          icon="flame"
+          tint="#f59e0b"
+        >
+          <Text style={styles.statContext}>
+            longest {stats?.longest ?? 0} · {stats?.activeLast30 ?? 0} of the last 30
+          </Text>
+        </StatTile>
       </View>
 
       <View style={styles.toggle}>
@@ -546,25 +562,6 @@ function DayDetail({
   );
 }
 
-function Stat({
-  value,
-  label,
-  tint,
-  styles,
-}: {
-  value: number;
-  label: string;
-  tint?: string;
-  styles: ReturnType<typeof makeStyles>;
-}) {
-  return (
-    <View style={styles.stat}>
-      <Text style={[styles.statValue, tint ? { color: tint } : null]}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
-  );
-}
-
 /** Four steps of green, so a busy day reads as darker rather than needing its
  *  number read. */
 function shade(count: number, palette: Palette): string {
@@ -604,18 +601,7 @@ function makeStyles(palette: Palette) {
     yearStepOff: { opacity: 0.4 },
     centered: { alignItems: "center", justifyContent: "center" },
     stats: { flexDirection: "row", gap: SPACING.sm, marginBottom: SPACING.md },
-    stat: {
-      flex: 1,
-      alignItems: "center",
-      gap: 2,
-      paddingVertical: SPACING.md,
-      borderRadius: RADIUS.card,
-      borderWidth: 1,
-      borderColor: palette.cardBorder,
-      backgroundColor: palette.card,
-    },
-    statValue: { color: palette.foreground, ...TYPE.figure, fontWeight: "700" },
-    statLabel: { color: palette.mutedForeground, ...TYPE.micro},
+    statContext: { ...TYPE.micro, color: palette.subtleForeground, fontWeight: "400", marginTop: 1 },
     // Fixed rather than stretched to the width. Stretching gave cells big
     // enough to hold a number and left only a handful of weeks on screen,
     // which is the opposite of what a consistency grid is for: the point is
