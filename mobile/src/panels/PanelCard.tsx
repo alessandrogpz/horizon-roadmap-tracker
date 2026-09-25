@@ -7,12 +7,6 @@
 
 import { useMemo, type ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
-// Gesture Handler's Pressable, not React Native's, and the difference is
-// load-bearing: this one is built on a gesture, so it takes part in the
-// arbitration around it. React Native's does not, which is why holding the
-// header used to open the panel instead of picking it up — the drag above it
-// had no way to say "this touch is mine now".
-import { Pressable } from "react-native-gesture-handler";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
@@ -63,17 +57,26 @@ export function PanelCard({
   // looking at. Holding still picks the panel up: the drag above this only
   // activates after the finger has been still a moment, so a tap never
   // reaches it and a hold never becomes a tap.
-  return onOpen ? (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`Open ${title}`}
-      onPress={onOpen}
+  // No touch handler of its own. Opening the panel is one of the things the
+  // gesture above this can decide a touch was (panels/../(tabs)/index.tsx),
+  // alongside picking it up and scrolling past it — and it is the only one of
+  // the three that can tell a press from the end of a drag, because it is the
+  // only one watching how far the finger travelled. A Pressable here saw a
+  // press whenever a finger went down and came up on the card, which is also
+  // what dragging the column to its end looks like.
+  //
+  // Screen readers keep a way in through `onAccessibilityTap`, which is not a
+  // touch and so has nothing to be confused with.
+  return (
+    <View
       style={styles.card}
+      accessible={Boolean(onOpen)}
+      accessibilityRole={onOpen ? "button" : undefined}
+      accessibilityLabel={onOpen ? `Open ${title}` : undefined}
+      onAccessibilityTap={onOpen}
     >
       {inside}
-    </Pressable>
-  ) : (
-    <View style={styles.card}>{inside}</View>
+    </View>
   );
 }
 

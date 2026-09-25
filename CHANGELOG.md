@@ -7,6 +7,22 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.70.2] - 2026-09-25
+
+### Fixed
+- **Scrolling My Space to the bottom still landed on Progress.** 0.70.1 assumed the stray press was
+  a finger stopping a coasting list, and guarded it with the scroll view's own start and end
+  callbacks. The real case was simpler and earlier: a finger dragging the column, reaching the end
+  of it, and lifting. The list had stopped moving because there was nowhere left to go, and a press
+  that goes down and comes up on a card is a press as far as anything counting touches can tell.
+
+  A panel is no longer a button at all. Opening one is a `Gesture.Tap` with a distance limit,
+  composed with the drag that picks it up, so a touch has to prove it stayed still to count as a
+  press — a finger that travelled the length of the screen is not pressing what it happens to end
+  on. Screen readers keep their way in through `onAccessibilityTap`, which is not a touch and so
+  has nothing to be confused with. The scroll-state guard stays as well: it still covers the case
+  0.70.1 was aimed at.
+
 ## [0.70.1] - 2026-09-25
 
 ### Fixed
