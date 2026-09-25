@@ -83,6 +83,48 @@ Rules of thumb: `lib/` stays free of React, components stay free of business
 rules. A new mutation belongs in `lib/trackActions.ts` as a pure
 `(track, args) => nextTrack` function with a test, not inline in a component.
 
+## The phone updates before the server does
+
+An over-the-air update reaches installed phones within minutes of `eas update`.
+The server changes only when the site is deployed from `main`. So a phone is
+routinely running code newer than the server it syncs with, and anything the
+phone sends that the server has not heard of has to be survivable.
+
+`TrackSchema` and `WorkspaceSchema` therefore *drop* unknown fields rather than
+refusing them: the field is lost until the deploy catches up, and nothing else
+is. Refusing meant one unrecognised key rejected the whole payload — every
+track and every note — which is how sync broke twice: once on a retired field
+(0.21.4) and once on `phaseDaysSpent`, which shipped to phones over the air
+while `main` sat several versions behind.
+
+The envelope around them, `SyncRequestSchema`, stays strict. It gains nothing
+as features are added, so anything unexpected in it is a reason to stop.
+
+When a change adds a field that must reach the server, deploy `main` before or
+alongside the OTA update — the schema tolerating it is a safety net, not a
+substitute for the field actually arriving.
+
+## Type on the phone
+
+`mobile/src/theme.ts` holds `TYPE`: nine sizes, one per role — `display`,
+`figure`, `title`, `heading`, `subhead`, `body`, `label`, `caption`, `micro`
+and `eyebrow`. Spread the role first in a style and set colour and weight
+after it:
+
+```ts
+title: { ...TYPE.subhead, color: palette.foreground, fontWeight: "600" },
+```
+
+There should be no `fontSize:` literal anywhere under `mobile/src` except in
+`theme.ts`; `grep -rn "fontSize:" mobile/src | grep -v theme.ts` should come
+back empty. If a role does not fit, the answer is usually that a role is
+missing, not that this one place is special.
+
+`TYPE` deliberately carries size only. An earlier version gave each role a
+weight as well, which turned every muted 13pt explanation semi-bold, because
+the role that matched its size was the one meant for control labels. Two texts
+can be the same size and mean differently, so weight stays with the style.
+
 ## Adding a dashboard module
 
 1. Append it to `MODULES` in `lib/modules.ts` (id, label, home column).

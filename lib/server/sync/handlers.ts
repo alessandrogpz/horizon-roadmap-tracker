@@ -5,7 +5,7 @@
 //        plus any notes the device is missing
 //
 // The merge runs on the server, inside a transaction, with the same
-// mergeWorkspace the Drive sync uses, so two devices syncing at once can't
+// mergeWorkspace every client uses, so two devices syncing at once can't
 // overwrite each other (threat T4).
 
 import type { NextRequest } from "next/server";
@@ -118,7 +118,7 @@ export async function handleSyncPut(request: NextRequest): Promise<Response> {
       } else if (!device.isSynced) {
         // This device has only an untouched starter track: replace it with the
         // account's data instead of merging a stray "My Track" into it (the
-        // same rule as Drive sync, see lib/workspaceRepo.ts ensureStarterTrack).
+        // same rule the client follows, see lib/workspaceRepo.ts ensureStarterTrack).
         mode = "adopt";
         merged = markSynced(stored, now);
       } else {

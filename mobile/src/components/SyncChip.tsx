@@ -13,7 +13,7 @@
 import { useMemo } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { describeLastSync, useSync } from "../sync/SyncProvider";
-import { HEADER_CONTROL, SPACING, type Palette } from "../theme";
+import { HEADER_CONTROL, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 export function SyncChip() {
@@ -74,6 +74,6 @@ function makeStyles(palette: Palette) {
       maxWidth: 120,
     },
     dot: { width: 7, height: 7, borderRadius: 4 },
-    label: { fontSize: 11, fontWeight: "600" },
+    label: { ...TYPE.micro, fontWeight: "600" },
   });
 }

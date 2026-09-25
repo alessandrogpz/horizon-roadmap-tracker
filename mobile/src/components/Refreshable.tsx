@@ -15,7 +15,7 @@
 // instead of it (`simultaneousWithExternalGesture`), so ordinary scrolling is
 // untouched — the pull only exists in the one place the scroll cannot go.
 
-import { useCallback, useRef, useState, type ComponentProps } from "react";
+import { useCallback, useState, type ComponentProps } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -40,7 +40,15 @@ const RESTING = 56;
 /** Beyond this the page stops following the thumb at all. */
 const MAX = 120;
 
-export function Refreshable({ children, ...props }: ComponentProps<typeof ScrollView>) {
+export function Refreshable({
+  children,
+  scrollRef,
+  ...props
+}: ComponentProps<typeof ScrollView> & {
+  /** For screens that need to drive the scroll themselves — the consistency
+   *  graph opens at its most recent end rather than its oldest. */
+  scrollRef?: React.Ref<ScrollView>;
+}) {
   const palette = usePalette();
   const { sync } = useSync();
   const [pulling, setPulling] = useState(false);
@@ -54,10 +62,12 @@ export function Refreshable({ children, ...props }: ComponentProps<typeof Scroll
   // top, so half way up the check would start passing and the pull would grab
   // a gesture that was already a scroll.
   const canPull = useSharedValue(false);
-  // Typed loosely on purpose: `simultaneousWithExternalGesture` wants a ref
-  // to a gesture-aware component, and a ScrollView ref satisfies it at
-  // runtime without satisfying the declared type.
-  const scroller = useRef<React.ComponentType<object>>(undefined);
+  // The scroll view's own gesture, named so the pull can be composed *with* it
+  // rather than pointed at a ref and hoped for. Handing
+  // `simultaneousWithExternalGesture` a plain component ref is the part that
+  // made scrolling unreliable: it does not register, so the two gestures
+  // arbitrate instead of running together.
+  const native = Gesture.Native();
 
   const onScroll = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
@@ -74,7 +84,6 @@ export function Refreshable({ children, ...props }: ComponentProps<typeof Scroll
   }, [pull, sync]);
 
   const pan = Gesture.Pan()
-    .simultaneousWithExternalGesture(scroller)
     // A deliberate drag, not a flick: 24 points is past what a scroll gesture
     // covers before the list starts moving, so an ordinary swipe never trips
     // it. Any upward movement fails it outright.
@@ -129,18 +138,13 @@ export function Refreshable({ children, ...props }: ComponentProps<typeof Scroll
         )}
       </Animated.View>
 
-      <GestureDetector gesture={pan}>
-        <Animated.View style={[styles.fill, content]}>
-          <AnimatedScrollView
-            {...props}
-            ref={scroller as never}
-            onScroll={onScroll}
-            scrollEventThrottle={16}
-          >
+      <Animated.View style={[styles.fill, content]}>
+        <GestureDetector gesture={Gesture.Simultaneous(pan, native)}>
+          <AnimatedScrollView ref={scrollRef} {...props} onScroll={onScroll} scrollEventThrottle={16}>
             {children}
           </AnimatedScrollView>
-        </Animated.View>
-      </GestureDetector>
+        </GestureDetector>
+      </Animated.View>
     </View>
   );
 }

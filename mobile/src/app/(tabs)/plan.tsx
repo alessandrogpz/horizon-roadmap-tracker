@@ -11,18 +11,20 @@
 // agree today.
 
 import { useMemo } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Link } from "expo-router";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { phaseStats, progressStats, timelineStats } from "@shared/stats";
 import { addPhase, removePhase, setCurrentPhase } from "@shared/trackActions";
 import { formatDayMonthYear } from "@shared/dates";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
 import { useUndo } from "../../components/UndoBar";
-import { RADIUS, SPACING, type Palette } from "../../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../../theme";
 import { usePalette } from "../../theme/ThemeProvider";
 import { EditHeader, useEditMode } from "../../components/EditToggle";
 import { Refreshable } from "../../components/Refreshable";
-import { SubNav } from "../../components/SubNav";
+import { Ring } from "../../components/Ring";
+import { StatTile } from "../../components/StatTile";
 
 export default function PhasesScreen() {
   const { workspace, track, today, editTrack, restoreWorkspace } = useWorkspace();
@@ -34,6 +36,14 @@ export default function PhasesScreen() {
   const timeline = useMemo(() => (track ? timelineStats(track) : null), [track]);
   const current = useMemo(() => (track ? phaseStats(track, today) : null), [track, today]);
   const progress = useMemo(() => (track ? progressStats(track) : null), [track]);
+  /** Past its last day the plan is spent, and the screen stops measuring
+   *  the track against a total it has outlived. */
+  const overrun = (timeline?.overrunDays ?? 0) > 0;
+
+  const currentIndex = useMemo(
+    () => timeline?.windows.findIndex((w) => w.state === "current") ?? -1,
+    [timeline]
+  );
 
   if (!track || !timeline) {
     return (
@@ -52,33 +62,79 @@ export default function PhasesScreen() {
         hint="Add or remove a phase, or move the track to a different one."
       />
 
-      <View style={styles.summary}>
-        <Text style={styles.headline}>
-          Day {timeline.daysPassed} of {timeline.totalDays}
-        </Text>
-        <Text style={styles.muted}>
-          {timeline.daysRemaining > 0
-            ? `${timeline.daysRemaining} days left · ends ${formatDayMonthYear(timeline.endDate)}`
-            : `Ended ${formatDayMonthYear(timeline.endDate)}`}
-        </Text>
-        <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${Math.min(100, timeline.progressPct)}%` }]} />
-        </View>
+      {/* Where the track stands, as two figures rather than a sentence. The
+          ring is the same idea as the website's: a proportion is a shape
+          before it is a number, and the number beside it says of what. */}
+      <View style={styles.tiles}>
+        <StatTile
+          wide
+          label="Timeline"
+          value={timeline.daysPassed}
+          // Past the plan there is no total left to be a fraction of, and the
+          // line under the tiles says by how much.
+          unit={overrun ? "days" : `/ ${timeline.totalDays} days`}
+          leading={
+            <Ring pct={timeline.progressPct} tint={overrun ? palette.subtleForeground : palette.accent}>
+              <Text style={styles.ringPct} allowFontScaling={false}>
+                {Math.round(timeline.progressPct)}%
+              </Text>
+            </Ring>
+          }
+        />
+        <StatTile
+          label="Phase day"
+          // Days spent in this phase, including time from before the track
+          // last moved away and came back to it.
+          value={current?.dayInPhase ?? 0}
+          // Short enough to survive the narrower of the two tiles.
+          unit={current?.phase?.id !== undefined ? `phase ${current.phase.id}` : undefined}
+          icon="flag-outline"
+        />
       </View>
+
+      {overrun && (
+        <View style={styles.overrunRow}>
+          <Text style={styles.muted}>
+            The plan ran out {timeline.overrunDays} day{timeline.overrunDays === 1 ? "" : "s"} ago
+          </Text>
+          <Link href="/tracks" asChild>
+            <Pressable accessibilityRole="link" accessibilityLabel="Extend the plan" style={styles.extend}>
+              <Text style={styles.extendLabel}>Extend</Text>
+              <Ionicons name="chevron-forward" size={12} color={palette.accent} />
+            </Pressable>
+          </Link>
+        </View>
+      )}
 
       {progress ? (
         <View style={styles.card}>
           {/* Time spent against work done. The pace is the interesting number:
               a track can be 70% through its calendar with 30% of the work
-              finished, and neither figure says that on its own. */}
+              finished, and neither figure says that on its own — so both bars
+              are drawn on the same track, one over the other, and the gap
+              between them is the thing to look at. */}
+          <View style={styles.cardHead}>
+            <Ionicons name="trending-up-outline" size={16} color={palette.accent} />
+            <Text style={styles.tileLabel}>Progress</Text>
+          </View>
           <Text style={styles.cardTitle}>
             {Math.round(progress.workPct)}% done · {Math.round(progress.timePct)}% of the time spent
           </Text>
-          <Text style={styles.muted}>
-            {progress.paceDelta >= 0
-              ? `${Math.round(progress.paceDelta)} points ahead of the calendar.`
-              : `${Math.abs(Math.round(progress.paceDelta))} points behind the calendar.`}
-          </Text>
+
+          <View style={styles.compareTrack}>
+            <View style={[styles.compareTime, { width: `${Math.min(100, progress.timePct)}%` }]} />
+            <View style={[styles.compareWork, { width: `${Math.min(100, progress.workPct)}%` }]} />
+          </View>
+          {/* Pace compares work done against time spent. Past the end of the
+              plan there is no time left to be behind on, so the comparison
+              stops meaning anything and is not made. */}
+          {!overrun && (
+            <Text style={styles.muted}>
+              {progress.paceDelta >= 0
+                ? `${Math.round(progress.paceDelta)} points ahead of the calendar.`
+                : `${Math.abs(Math.round(progress.paceDelta))} points behind the calendar.`}
+            </Text>
+          )}
           {progress.breakdown
             .filter((part) => part.total > 0)
             .map((part) => (
@@ -95,69 +151,140 @@ export default function PhasesScreen() {
         </View>
       ) : null}
 
-      {current?.behindBy ? (
+      {current?.behindBy && !overrun ? (
         <Text style={styles.behind}>
           The schedule expects phase {current.recommendedPhase?.id ?? "?"} by now — {current.behindBy} phase
           {current.behindBy === 1 ? "" : "s"} ahead of where this track is. Worth a look, not a panic.
         </Text>
       ) : null}
 
-      {timeline.windows.map(({ phase, state, startDate, endDate }) => (
-        <View
-          key={phase.id}
-          style={[styles.phase, state === "current" && { borderColor: palette.accent }]}
-        >
-          <View style={styles.phaseHead}>
-            <Text style={[styles.phaseLabel, state === "current" && { color: palette.accent }]}>
-              Phase {phase.id}
-              {state === "done" ? " · done" : state === "current" ? " · now" : ""}
-            </Text>
-            <Text style={styles.dates}>
-              {formatDayMonthYear(startDate)}
-              {endDate ? ` – ${formatDayMonthYear(endDate)}` : ""}
-            </Text>
-          </View>
-          <Link href={{ pathname: "/phase/[id]", params: { id: phase.id } }} asChild>
-            <Pressable accessibilityRole="button" accessibilityLabel={`Open ${phase.title}`}>
-              <Text style={styles.phaseTitle}>{phase.title}</Text>
-              {phase.description ? (
-                <Text style={styles.muted} numberOfLines={2}>
-                  {phase.description}
-                </Text>
-              ) : null}
-              {phase.tasks.length > 0 && (
-                <Text style={styles.taskCount}>
-                  {phase.tasks.filter((t) => t.completed).length} of {phase.tasks.length} tasks done
-                </Text>
-              )}
-            </Pressable>
-          </Link>
+      {/* One continuous line down the left, with a dot per phase — the shape
+          of the plan read in a glance, which eight bordered cards did not
+          give. The line is what carries the state: green behind you, accent
+          at the phase you are in, then fading out ahead, so how far along the
+          track is does not have to be spelled out in words.
 
-          {editing && (
-          <View style={styles.actions}>
-            {state !== "current" && (
-              <Pressable accessibilityRole="button" style={styles.smallButton} onPress={() => editTrack((t) => setCurrentPhase(t, phase.id))}>
-                <Text style={styles.smallLabel}>Make current</Text>
-              </Pressable>
-            )}
-            <Pressable
-              accessibilityRole="button"
-              style={styles.smallButton}
-              onPress={() => {
-                // Snapshot first: the undo puts a whole workspace back rather
-                // than trying to reverse the edit, which would have to know
-                // where in the list the phase sat.
-                const previous = workspace;
-                editTrack((t) => removePhase(t, phase.id));
-                if (previous) offer("Phase removed", () => restoreWorkspace(previous));
-              }}
-            >
-              <Text style={styles.smallLabel}>Remove</Text>
-            </Pressable>
-          </View>
-          )}
-        </View>
-      ))}
+          Wrapped in its own View because the screen's content container has a
+          gap between children, and a gap would cut the line into pieces. */}
+      <View style={styles.timeline}>
+        {timeline.windows.map(({ phase, state, startDate, endDate, endDay }, index) => {
+          const last = index === timeline.windows.length - 1;
+          const previous = timeline.windows[index - 1];
+
+          // A segment's colour is the state of the phase it leads *out* of,
+          // so the change of colour happens at the dot rather than between.
+          const colourOf = (windowState: string | undefined) =>
+            windowState === "done" ? palette.success : windowState === "current" ? palette.accent : palette.cardBorder;
+
+          // Ahead of the current phase, everything dims with distance. Nothing
+          // beyond the current phase has been decided yet, and the display
+          // should say so rather than presenting phase 8 as vividly as phase 2.
+          const ahead = currentIndex >= 0 && index > currentIndex ? index - currentIndex : 0;
+          const fade = Math.max(0.42, 1 - ahead * 0.17);
+          const dim = state === "done" ? 0.65 : state === "current" ? 1 : fade;
+
+          return (
+            <View key={phase.id} style={styles.row}>
+              {index > 0 && (
+                <View
+                  style={[styles.lineTop, { backgroundColor: colourOf(previous?.state), opacity: 0.5 * dim + 0.1 }]}
+                />
+              )}
+              {!last && (
+                <View style={[styles.lineBottom, { backgroundColor: colourOf(state), opacity: 0.5 * dim + 0.1 }]} />
+              )}
+
+              {/* The glow around the current phase, as a circle behind the dot
+                  rather than a shadow — coloured shadows do not survive the
+                  trip to Android. */}
+              {state === "current" && <View style={styles.halo} />}
+              <View
+                style={[
+                  styles.dot,
+                  state === "done" && { backgroundColor: palette.success, borderColor: palette.success },
+                  state === "current" && {
+                    backgroundColor: palette.background,
+                    borderColor: palette.accent,
+                    borderWidth: 3,
+                  },
+                  state === "upcoming" && { opacity: fade },
+                ]}
+              />
+
+              <Link href={{ pathname: "/phase/[id]", params: { id: phase.id } }} asChild>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Open ${phase.title}`}
+                  // Flattened: expo-router's Link passes styles straight
+                  // through to its child and will not take an array.
+                  style={StyleSheet.flatten([styles.rowBody, { opacity: dim }])}
+                >
+                  <View style={styles.rowHead}>
+                    <Text
+                      style={[
+                        styles.phaseLabel,
+                        state === "current" && { color: palette.accent },
+                        state === "done" && { color: palette.success },
+                      ]}
+                    >
+                      PHASE {String(phase.id).padStart(2, "0")}
+                    </Text>
+                    <Text style={styles.phaseTitle} numberOfLines={1}>
+                      {/* The label already says which number this is. */}
+                      {phase.title.replace(/^Phase \d+:\s*/, "")}
+                    </Text>
+                  </View>
+
+                  {phase.description ? (
+                    <Text style={styles.muted} numberOfLines={2}>
+                      {phase.description}
+                    </Text>
+                  ) : null}
+
+                  <Text style={styles.dates}>
+                    {/* "Due", not "Ends": every one of these dates is in the
+                        past on a track that has run long, and a deadline that
+                        has been and gone still reads correctly as a due date. */}
+                    {endDate ? `Due ${formatDayMonthYear(endDate)}` : `From ${formatDayMonthYear(startDate)}`}
+                    {endDay !== undefined ? ` · day ${endDay}` : ""}
+                    {phase.tasks.length > 0
+                      ? ` · ${phase.tasks.filter((t) => t.completed).length}/${phase.tasks.length} done`
+                      : ""}
+                  </Text>
+                </Pressable>
+              </Link>
+
+              {editing && (
+                <View style={styles.actions}>
+                  {state !== "current" && (
+                    <Pressable
+                      accessibilityRole="button"
+                      style={styles.smallButton}
+                      onPress={() => editTrack((t) => setCurrentPhase(t, phase.id))}
+                    >
+                      <Text style={styles.smallLabel}>Make current</Text>
+                    </Pressable>
+                  )}
+                  <Pressable
+                    accessibilityRole="button"
+                    style={styles.smallButton}
+                    onPress={() => {
+                      // Snapshot first: the undo puts a whole workspace back
+                      // rather than trying to reverse the edit, which would
+                      // have to know where in the list the phase sat.
+                      const previousWorkspace = workspace;
+                      editTrack((t) => removePhase(t, phase.id));
+                      if (previousWorkspace) offer("Phase removed", () => restoreWorkspace(previousWorkspace));
+                    }}
+                  >
+                    <Text style={styles.smallLabel}>Remove</Text>
+                  </Pressable>
+                </View>
+              )}
+            </View>
+          );
+        })}
+      </View>
 
       {editing && (
         <Pressable
@@ -172,10 +299,18 @@ export default function PhasesScreen() {
       {timeline.windows.length === 0 && (
         <Text style={styles.muted}>This track has no phases yet.</Text>
       )}
-      <View style={styles.moreRow}>
-        <Text style={styles.moreTitle}>More on this track</Text>
-      </View>
-      <SubNav links={[{"href": "/roadmap", "label": "Roadmap"}, {"href": "/rhythm", "label": "Week & rotations"}, {"href": "/portfolio", "label": "Deliverables"}]} />
+      {/* The roadmap, and nothing beside it. The week and the deliverables have
+          their own places to be reached from; a row of somewhere-elses under a
+          heading saying "more on this track" was a menu appended to a screen
+          that had already finished saying what it came to say. This one earns
+          the spot: the timeline above is a summary of it. */}
+      <Link href="/roadmap" asChild>
+        <Pressable accessibilityRole="link" style={styles.roadmapRow}>
+          <Ionicons name="map-outline" size={16} color={palette.accent} />
+          <Text style={styles.roadmapLabel}>Full roadmap</Text>
+          <Ionicons name="chevron-forward" size={15} color={palette.subtleForeground} />
+        </Pressable>
+      </Link>
 
     </Refreshable>
   );
@@ -187,16 +322,21 @@ function makeStyles(palette: Palette) {
     content: { padding: SPACING.lg, gap: SPACING.md },
     centered: { alignItems: "center", justifyContent: "center" },
     summary: { gap: SPACING.sm },
-    headline: { color: palette.foreground, fontSize: 20, fontWeight: "700" },
-    muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
-    moreRow: { marginTop: SPACING.xl },
-    moreTitle: {
-      color: palette.subtleForeground,
-      fontSize: 11,
-      fontWeight: "700",
-      letterSpacing: 1.2,
-      textTransform: "uppercase",
+    headline: { color: palette.foreground, ...TYPE.title, fontWeight: "700" },
+    muted: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },
+    roadmapRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: SPACING.md,
+      marginTop: SPACING.lg,
+      paddingHorizontal: SPACING.lg,
+      paddingVertical: SPACING.md,
+      borderRadius: RADIUS.card,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.card,
     },
+    roadmapLabel: { ...TYPE.subhead, flex: 1, color: palette.foreground, fontWeight: "600" },
     card: {
       gap: SPACING.sm,
       padding: SPACING.lg,
@@ -205,29 +345,82 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
     },
-    cardTitle: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
+    cardTitle: { color: palette.foreground, ...TYPE.subhead, fontWeight: "600" },
     barRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
-    barLabel: { color: palette.mutedForeground, fontSize: 12, width: 84 },
+    barLabel: { color: palette.mutedForeground, ...TYPE.caption, width: 84 },
     barTrack: { flex: 1, height: 8, borderRadius: 4, backgroundColor: palette.surfaceMuted, overflow: "hidden" },
     barFill: { height: 8, borderRadius: 4, backgroundColor: palette.accent },
-    barValue: { color: palette.mutedForeground, fontSize: 12, width: 44, textAlign: "right" },
-    taskCount: { color: palette.subtleForeground, fontSize: 11, marginTop: 2 },
+    barValue: { color: palette.mutedForeground, ...TYPE.caption, width: 44, textAlign: "right" },
     progressTrack: { height: 6, borderRadius: 3, backgroundColor: palette.surfaceMuted, overflow: "hidden" },
     progressFill: { height: 6, borderRadius: 3, backgroundColor: palette.accent },
-    behind: { color: palette.foreground, fontSize: 13, lineHeight: 18 },
-    phase: {
-      gap: SPACING.xs,
-      padding: SPACING.lg,
-      borderRadius: RADIUS.card,
-      borderWidth: 1,
+    behind: { color: palette.foreground, ...TYPE.label, lineHeight: 18 },
+    tiles: { flexDirection: "row", gap: SPACING.sm, marginBottom: SPACING.sm },
+    // Time spent behind, work done in front: the same track, so the distance
+    // between the two ends is the pace without having to be told.
+    compareTrack: {
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: palette.surfaceMuted,
+      overflow: "hidden",
+      marginTop: SPACING.xs,
+    },
+    compareTime: {
+      position: "absolute",
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: palette.cardBorder,
+    },
+    compareWork: { height: 8, borderRadius: 4, backgroundColor: palette.accent },
+    cardHead: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
+    tileLabel: {
+      ...TYPE.eyebrow,
+      color: palette.subtleForeground,
+      fontWeight: "700",
+    },
+    ringPct: { ...TYPE.micro, color: palette.mutedForeground, fontWeight: "700" },
+    overrunRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: SPACING.sm },
+    extend: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 2,
+      paddingVertical: SPACING.xs,
+      paddingLeft: SPACING.sm,
+    },
+    extendLabel: { color: palette.accent, ...TYPE.label, fontWeight: "600" },
+    // Rows sit flush against each other so the line running through them is
+    // continuous; each row supplies its own breathing room instead.
+    timeline: { marginVertical: SPACING.xs },
+    row: { position: "relative", paddingLeft: 36, paddingRight: SPACING.xs, paddingVertical: SPACING.sm },
+    // Both halves meet at the dot's centre, 18 from the row's top.
+    lineTop: { position: "absolute", left: 12, top: 0, height: 18, width: 2 },
+    lineBottom: { position: "absolute", left: 12, top: 18, bottom: 0, width: 2 },
+    dot: {
+      position: "absolute",
+      left: 5,
+      top: 10,
+      width: 16,
+      height: 16,
+      borderRadius: 8,
+      borderWidth: 2,
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
     },
-    phaseHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: SPACING.sm },
-    phaseLabel: { color: palette.subtleForeground, fontSize: 11, fontWeight: "700", letterSpacing: 1 },
-    dates: { color: palette.subtleForeground, fontSize: 11 },
-    phaseTitle: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
-    actions: { flexDirection: "row", gap: SPACING.sm, marginTop: SPACING.xs },
+    halo: {
+      position: "absolute",
+      left: 0,
+      top: 5,
+      width: 26,
+      height: 26,
+      borderRadius: 13,
+      backgroundColor: palette.accent,
+      opacity: 0.16,
+    },
+    rowBody: { gap: 3 },
+    rowHead: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
+    phaseLabel: { color: palette.mutedForeground, ...TYPE.micro, fontWeight: "700", letterSpacing: 1.1 },
+    dates: { color: palette.subtleForeground, ...TYPE.micro, marginTop: 1 },
+    phaseTitle: { flex: 1, color: palette.foreground, ...TYPE.subhead, fontWeight: "600" },
+    actions: { flexDirection: "row", gap: SPACING.sm, marginTop: SPACING.sm },
     editRow: { flexDirection: "row", gap: SPACING.sm, alignItems: "center" },
     input: {
       flex: 1,
@@ -238,7 +431,7 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
       color: palette.foreground,
-      fontSize: 15,
+      ...TYPE.subhead,
     },
     smallButton: {
       paddingHorizontal: SPACING.md,
@@ -248,7 +441,7 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    smallLabel: { color: palette.mutedForeground, fontSize: 12, fontWeight: "600" },
+    smallLabel: { color: palette.mutedForeground, ...TYPE.caption, fontWeight: "600" },
     addButton: {
       alignItems: "center",
       paddingVertical: SPACING.md,

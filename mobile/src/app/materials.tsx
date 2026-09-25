@@ -14,11 +14,12 @@ import { categoriesFor, MATERIAL_STATUSES, MATERIAL_TYPES } from "@shared/materi
 import { addMaterial, removeMaterial, setMaterialArchived, setMaterialStatus, updateMaterial } from "@shared/trackActions";
 import { loadNotes, saveNote } from "../storage/db";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { SwipeRow } from "../components/SwipeRow";
 import { useUndo } from "../components/UndoBar";
 import { EditHeader, useEditMode } from "../components/EditToggle";
+import { EmptyState } from "../components/EmptyState";
 import { Refreshable } from "../components/Refreshable";
 import { SubNav } from "../components/SubNav";
 
@@ -89,7 +90,10 @@ export default function MaterialsScreen() {
   return (
     <Refreshable style={styles.screen} contentContainerStyle={styles.content}>
       <EditHeader
-        title="Materials"
+        // The bar above already says "Materials". This says how many —
+        // a heading that repeats the one above it costs a row and tells
+        // you nothing you did not know a moment ago.
+        title={materials.length === 1 ? "1 material" : `${materials.length} materials`}
         editing={editing}
         onChange={setEditing}
         hint="Add something, archive what is finished, or correct a page count. Marking progress works either way."
@@ -131,7 +135,14 @@ export default function MaterialsScreen() {
         </SwipeRow>
       ))}
 
-      {materials.length === 0 && <Text style={styles.muted}>No materials on this track yet.</Text>}
+      {materials.length === 0 && !editing && (
+        <EmptyState
+          title="Nothing on the list yet"
+          hint="Books, courses, papers — whatever this track is built out of."
+          action="Add a material"
+          onAct={() => setEditing(true)}
+        />
+      )}
 
       {archived.length > 0 && (
         <View style={styles.card}>
@@ -175,7 +186,12 @@ export default function MaterialsScreen() {
       <View style={styles.moreRow}>
         <Text style={styles.moreTitle}>More on this track</Text>
       </View>
-      <SubNav links={[{"href": "/notes", "label": "Notes & to-dos"}, {"href": "/search", "label": "Search"}]} />
+      <SubNav
+        links={[
+          { href: "/notes", label: "Notes & to-dos", icon: "document-text-outline" },
+          { href: "/search", label: "Search", icon: "search-outline" },
+        ]}
+      />
 
     </Refreshable>
   );
@@ -484,17 +500,16 @@ function makeStyles(palette: Palette) {
     },
     cardHead: { flexDirection: "row", alignItems: "center", gap: SPACING.md },
     cardText: { flex: 1, gap: 2 },
-    title: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
-    muted: { color: palette.mutedForeground, fontSize: 13 },
+    title: { color: palette.foreground, ...TYPE.subhead, fontWeight: "600" },
+    muted: { color: palette.mutedForeground, ...TYPE.label},
     moreRow: { marginTop: SPACING.xl },
     moreTitle: {
       color: palette.subtleForeground,
-      fontSize: 11,
+      ...TYPE.eyebrow,
       fontWeight: "700",
       letterSpacing: 1.2,
-      textTransform: "uppercase",
     },
-    footnote: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16 },
+    footnote: { color: palette.subtleForeground, ...TYPE.micro, lineHeight: 16 },
     archivedRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: SPACING.md, paddingTop: SPACING.sm },
     statusDot: { width: 9, height: 9, borderRadius: 5 },
     progressTrack: { height: 4, borderRadius: 2, backgroundColor: palette.surfaceMuted, overflow: "hidden" },
@@ -516,7 +531,7 @@ function makeStyles(palette: Palette) {
       backgroundColor: palette.surfaceMuted,
     },
     evenly: { flex: 1 },
-    statusLabel: { color: palette.mutedForeground, fontSize: 12, fontWeight: "600" },
+    statusLabel: { color: palette.mutedForeground, ...TYPE.caption, fontWeight: "600" },
     pageRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
     pageInput: {
       minWidth: 72,
@@ -527,7 +542,7 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
       color: palette.foreground,
-      fontSize: 15,
+      ...TYPE.subhead,
       textAlign: "center",
     },
     note: {
@@ -538,7 +553,7 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
       color: palette.foreground,
-      fontSize: 14,
+      ...TYPE.body,
       lineHeight: 20,
     },
     linkButton: {
@@ -548,6 +563,6 @@ function makeStyles(palette: Palette) {
       borderWidth: 1,
       borderColor: palette.cardBorder,
     },
-    linkLabel: { color: palette.accent, fontSize: 14, fontWeight: "600" },
+    linkLabel: { color: palette.accent, ...TYPE.body, fontWeight: "600" },
   });
 }

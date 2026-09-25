@@ -21,8 +21,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const KEY = "horizon-device";
 
 interface DeviceSettings {
-  /** track id -> whether the step panel is shown on Today for that track. */
-  stepsByTrack: Record<string, boolean>;
   /** track id -> the order its panels are stacked in on this phone.
    *
    *  Order is deliberately *not* synced, while which panels you have is (it
@@ -37,7 +35,7 @@ interface DeviceSettings {
   todosOnTodayByTrack: Record<string, boolean>;
 }
 
-const EMPTY: DeviceSettings = { stepsByTrack: {}, panelOrderByTrack: {}, todosOnTodayByTrack: {} };
+const EMPTY: DeviceSettings = { panelOrderByTrack: {}, todosOnTodayByTrack: {} };
 
 // Read once into memory so screens can ask synchronously during render, the
 // same shape `@shared/settings` uses and for the same reason.
@@ -51,18 +49,6 @@ export async function loadDeviceSettings(): Promise<void> {
     // Unreadable or absent: the defaults are a perfectly good answer.
     cache = EMPTY;
   }
-}
-
-/** Off unless it has been turned on. A step counter that appeared on every
- *  track by default would be noise on most of them — which is the whole reason
- *  this setting exists. */
-export function stepsEnabled(trackId: string | null | undefined): boolean {
-  return trackId ? cache.stepsByTrack[trackId] === true : false;
-}
-
-export function setStepsEnabled(trackId: string, enabled: boolean): void {
-  cache = { ...cache, stepsByTrack: { ...cache.stepsByTrack, [trackId]: enabled } };
-  void AsyncStorage.setItem(KEY, JSON.stringify(cache));
 }
 
 export function panelOrder(trackId: string | null | undefined): string[] {

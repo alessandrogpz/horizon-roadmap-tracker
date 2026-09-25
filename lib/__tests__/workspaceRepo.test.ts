@@ -214,7 +214,7 @@ describe("starter track", () => {
     expect(ws.activeTrackId).toBe(tracks[0].meta.id);
     expect(tracks[0].meta.name).toBe("My Track");
     expect(tracks[0].lastTasksResetDate).toBe("2026-09-10"); // today's plan already laid out
-    // Unset, so a first Drive sync replaces the untouched starter instead of
+    // Unset, so a first sync replaces the untouched starter instead of
     // merging it into the tracks already in Drive.
     expect((await fetchWorkspace()).isSynced).toBeUndefined();
   });

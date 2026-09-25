@@ -29,7 +29,7 @@ import {
 } from "../backup/backupFile";
 import { SERVER_URL } from "../config";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { useTheme } from "../theme/ThemeProvider";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { describeHour, HourWheel } from "../components/HourWheel";
@@ -112,12 +112,15 @@ export default function SettingsScreen() {
     <Refreshable style={styles.screen} contentContainerStyle={styles.content}>
       <Link href="/account" asChild>
         <Pressable style={styles.row} accessibilityRole="button">
-          <Text style={styles.rowTitle}>Account</Text>
-          <Text style={styles.muted}>Sign in, sync, or sign out</Text>
+          <View style={styles.rowText}>
+            <Text style={styles.rowTitle}>Account</Text>
+            <Text style={styles.muted}>Sign in, sync, or sign out</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color={palette.subtleForeground} />
         </Pressable>
       </Link>
 
-      <View style={styles.row}>
+      <View style={[styles.row, styles.rowStack]}>
         <Text style={styles.rowTitle}>Your week and day</Text>
         <Text style={styles.muted}>
           When a week begins on the consistency grid, and when a day rolls over. Monday and midnight
@@ -155,7 +158,7 @@ export default function SettingsScreen() {
         </Pressable>
       </View>
 
-      <View style={styles.row}>
+      <View style={[styles.row, styles.rowStack]}>
         <Text style={styles.rowTitle}>This device</Text>
         <Text style={styles.muted}>
           Horizon {version} · {tracks} track{tracks === 1 ? "" : "s"} stored here
@@ -163,16 +166,22 @@ export default function SettingsScreen() {
       </View>
 
       <Pressable style={styles.row} accessibilityRole="link" onPress={() => void Linking.openURL(`${SERVER_URL}/privacy`)}>
-        <Text style={styles.rowTitle}>Privacy</Text>
-        <Text style={styles.muted}>What is stored, where it lives, how to delete it</Text>
+        <View style={styles.rowText}>
+          <Text style={styles.rowTitle}>Privacy</Text>
+          <Text style={styles.muted}>What is stored, where it lives, how to delete it</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={16} color={palette.subtleForeground} />
       </Pressable>
 
       <Pressable style={styles.row} accessibilityRole="link" onPress={() => void Linking.openURL(`${SERVER_URL}/security`)}>
-        <Text style={styles.rowTitle}>Security</Text>
-        <Text style={styles.muted}>How your data is protected</Text>
+        <View style={styles.rowText}>
+          <Text style={styles.rowTitle}>Security</Text>
+          <Text style={styles.muted}>How your data is protected</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={16} color={palette.subtleForeground} />
       </Pressable>
 
-      <View style={styles.row}>
+      <View style={[styles.row, styles.rowStack]}>
         <Text style={styles.rowTitle}>Backup</Text>
         <Text style={styles.muted}>
           One file with every track, phase, tick and note this phone holds — the same file the
@@ -268,14 +277,20 @@ function makeStyles(palette: Palette) {
     screen: { flex: 1, backgroundColor: palette.background },
     content: { padding: SPACING.lg, gap: SPACING.md },
     row: {
-      gap: 3,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: SPACING.md,
       padding: SPACING.lg,
       borderRadius: RADIUS.card,
       borderWidth: 1,
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
     },
-    rowTitle: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
+    rowText: { flex: 1, gap: 2 },
+    // Rows that only state something keep their lines stacked; rows that
+    // go somewhere put the text beside the mark that says so.
+    rowStack: { flexDirection: "column", alignItems: "stretch", gap: 2 },
+    rowTitle: { color: palette.foreground, ...TYPE.subhead, fontWeight: "600" },
     choices: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.sm, marginTop: SPACING.sm },
     choice: {
       paddingHorizontal: SPACING.md,
@@ -285,13 +300,12 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    choiceLabel: { color: palette.mutedForeground, fontSize: 13, fontWeight: "600" },
+    choiceLabel: { color: palette.mutedForeground, ...TYPE.label, fontWeight: "600" },
     fieldLabel: {
       color: palette.subtleForeground,
-      fontSize: 11,
+      ...TYPE.eyebrow,
       fontWeight: "700",
       letterSpacing: 1,
-      textTransform: "uppercase",
       marginTop: SPACING.md,
     },
     picker: {
@@ -306,10 +320,10 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    pickerValue: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
-    muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
-    good: { color: palette.success, fontSize: 13, lineHeight: 18, marginTop: SPACING.sm },
-    bad: { color: palette.danger, fontSize: 13, lineHeight: 18, marginTop: SPACING.sm },
+    pickerValue: { color: palette.foreground, ...TYPE.subhead, fontWeight: "600" },
+    muted: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },
+    good: { color: palette.success, ...TYPE.label, lineHeight: 18, marginTop: SPACING.sm },
+    bad: { color: palette.danger, ...TYPE.label, lineHeight: 18, marginTop: SPACING.sm },
     confirm: {
       gap: SPACING.sm,
       marginTop: SPACING.sm,
@@ -325,7 +339,7 @@ function makeStyles(palette: Palette) {
       borderColor: "rgba(248, 113, 113, 0.3)",
       backgroundColor: "rgba(248, 113, 113, 0.05)",
     },
-    dangerTitle: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
+    dangerTitle: { color: palette.foreground, ...TYPE.subhead, fontWeight: "600" },
     dangerButton: {
       alignItems: "center",
       paddingVertical: SPACING.md,
@@ -333,7 +347,7 @@ function makeStyles(palette: Palette) {
       borderWidth: 1,
       borderColor: palette.cardBorder,
     },
-    dangerLabel: { color: palette.mutedForeground, fontSize: 14, fontWeight: "600" },
+    dangerLabel: { color: palette.mutedForeground, ...TYPE.body, fontWeight: "600" },
   });
 }
 

@@ -13,7 +13,7 @@
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 const ROW = 44;
@@ -136,8 +136,8 @@ function makeStyles(palette: Palette) {
       borderTopWidth: 1,
       borderColor: palette.cardBorder,
     },
-    title: { color: palette.foreground, fontSize: 16, fontWeight: "700" },
-    hint: { color: palette.mutedForeground, fontSize: 12, lineHeight: 17 },
+    title: { color: palette.foreground, ...TYPE.heading, fontWeight: "700" },
+    hint: { color: palette.mutedForeground, ...TYPE.caption, lineHeight: 17 },
     wheel: { height: ROW * (PAD * 2 + 1), marginVertical: SPACING.sm },
     band: {
       position: "absolute",
@@ -150,7 +150,7 @@ function makeStyles(palette: Palette) {
       borderColor: palette.accent,
     },
     row: { height: ROW, alignItems: "center", justifyContent: "center" },
-    rowLabel: { color: palette.foreground, fontSize: 17, fontWeight: "600" },
+    rowLabel: { color: palette.foreground, ...TYPE.heading, fontWeight: "600" },
     actions: { flexDirection: "row", gap: SPACING.sm },
     button: {
       flex: 1,
@@ -162,7 +162,7 @@ function makeStyles(palette: Palette) {
       backgroundColor: palette.surfaceMuted,
     },
     primary: { backgroundColor: palette.accent, borderColor: palette.accent },
-    buttonLabel: { color: palette.mutedForeground, fontSize: 15, fontWeight: "600" },
-    primaryLabel: { color: "#04121c", fontSize: 15, fontWeight: "700" },
+    buttonLabel: { color: palette.mutedForeground, ...TYPE.subhead, fontWeight: "600" },
+    primaryLabel: { color: "#04121c", ...TYPE.subhead, fontWeight: "700" },
   });
 }

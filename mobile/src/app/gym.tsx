@@ -1,567 +1,530 @@
-// The gym screen: today's plan, and the sets logged against it.
+// Workouts: a push day, a pull day, whatever you have made — and inside one,
+// a table per exercise.
 //
-// It does not decide what today is for — the track's weekly rhythm does, the
-// same one Today and the Week overview read. This screen owns the other half:
-// which exercises each *kind* of day asks for, and what was actually done.
-// Those were one concept split across two editors before, and the two could
-// disagree about whether Monday was a push day.
+// The exercises belong to the workout rather than to a date, because a workout
+// is a thing you come back to. You do not open this to see what the 12th of
+// March was; you open it to do pull day again, and to see what you lifted last
+// time you did it. So opening the screen asks which one, and opening one shows
+// it exactly as you left it — the same weights, ready to be beaten.
 //
-// Built for use with one hand, standing up, between sets, which rules out most
-// of what a form normally does. No save button, no modal per set, no keyboard
-// for the common case: reps and weight are steppers with real increments,
-// because typing "8" into a numeric field with chalky hands is worse than
-// tapping + twice.
+// Rows exist before they are done. You arrive knowing roughly what you are
+// about to do, the rows are already there with last time's numbers in them,
+// and you tick each off as you finish it. A screen that could only record what
+// had already happened would have nothing to show you between sets, which is
+// exactly when it is in your hand.
 //
-// Every exercise shows what it was last time. That is the question every
-// working set starts with, and looking it up is what a paper notebook is worst
-// at.
+// Nothing here is joined to the calendar or the week yet.
 
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import Animated, { FadeIn } from "react-native-reanimated";
 import {
-  addExercise,
-  updatePlanItem,
-  addSet,
-  addToPlan,
-  focusOfDay,
-  lastTime,
-  plannedFor,
-  removeExercise,
-  removeFromPlan,
-  removeSet,
-  sessionFor,
-  setCountOf,
-  volumeOf,
+  addWorkout,
+  addWorkoutExercise,
+  addWorkoutSet,
+  removeWorkout,
+  removeWorkoutExercise,
+  removeWorkoutSet,
+  renameWorkout,
+  renameWorkoutExercise,
+  resetWorkout,
+  setsInWorkout,
+  updateWorkoutSet,
+  workoutById,
+  workoutsOf,
+  type GymSet,
 } from "@shared/gym";
-import { DAYS_SHORT, formatDayMonthYear, parseYMD } from "@shared/dates";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { useGymLog } from "../gym/useGymLog";
 import { Refreshable } from "../components/Refreshable";
-import { EditButton, useEditMode } from "../components/EditToggle";
-import { NoTrack } from "../components/NoTrack";
-import { tap, warn } from "../feedback/haptics";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { EmptyState } from "../components/EmptyState";
+import { ConfirmSheet, type Confirmation } from "../components/ConfirmSheet";
+import { settle, tap } from "../feedback/haptics";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
-export default function GymScreen() {
-  const { track, today } = useWorkspace();
+export default function WorkoutScreen() {
+  const { track } = useWorkspace();
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
   const { log, change } = useGymLog(track?.meta.id);
-  const { editing, setEditing } = useEditMode();
-  const [newExercise, setNewExercise] = useState("");
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState<Confirmation | null>(null);
 
-  const dayKey = DAYS_SHORT[parseYMD(today).getDay()];
-  const focus = focusOfDay(track?.weekSchedule, dayKey);
-  const planned = plannedFor(log, focus?.key);
-  const session = sessionFor(log, today);
+  const workouts = workoutsOf(log);
+  const open = openId ? workoutById(log, openId) : undefined;
 
-  const logSet = useCallback(
-    (exerciseId: string, reps: number, weight: number) => {
-      tap();
-      change((current) =>
-        addSet(current, today, exerciseId, { reps, ...(weight > 0 ? { weight } : {}) })
-      );
-    },
-    [change, today]
-  );
+  const create = useCallback(() => {
+    tap();
+    change((current) => {
+      const { log: next, workout } = addWorkout(current, `Workout ${workoutsOf(current).length + 1}`);
+      // Straight into the new one: nobody makes a workout in order to look at
+      // it in a list.
+      setOpenId(workout.id);
+      return next;
+    });
+  }, [change]);
 
-  /** A planned exercise becomes a logged one the moment a set goes on it, so
-   *  the plan is a starting point rather than a separate list to tick off. */
-  const startExercise = useCallback(
-    (name: string) => {
-      tap();
-      change((current) => addExercise(current, today, name));
-    },
-    [change, today]
-  );
+  if (!track) {
+    return (
+      <View style={[styles.screen, styles.centered]}>
+        <Text style={styles.muted}>No track open.</Text>
+      </View>
+    );
+  }
 
-  if (!track) return <NoTrack />;
+  if (!open) {
+    return (
+      <Refreshable style={styles.screen} contentContainerStyle={styles.content}>
+        {workouts.length === 0 ? (
+          <EmptyState
+            title="No workouts yet"
+            hint="A workout is a day you repeat — push, pull, legs. Make one and fill it with exercises."
+            action="New workout"
+            onAct={create}
+          />
+        ) : (
+          <>
+            {workouts.map((workout) => (
+              <Pressable
+                key={workout.id}
+                accessibilityRole="button"
+                accessibilityLabel={`Open ${workout.name}`}
+                onPress={() => {
+                  tap();
+                  setOpenId(workout.id);
+                }}
+                style={styles.pick}
+              >
+                <View style={[styles.pickIcon, { backgroundColor: `${palette.accent}22` }]}>
+                  <Ionicons name="barbell-outline" size={17} color={palette.accent} />
+                </View>
+                <View style={styles.pickText}>
+                  <Text style={styles.pickName}>{workout.name}</Text>
+                  <Text style={styles.muted}>
+                    {workout.exercises.length === 0
+                      ? "Nothing in it yet"
+                      : `${workout.exercises.length} exercise${workout.exercises.length === 1 ? "" : "s"} · ${setsInWorkout(workout)} set${setsInWorkout(workout) === 1 ? "" : "s"}`}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={palette.subtleForeground} />
+              </Pressable>
+            ))}
 
-  const started = new Set(session.exercises.map((exercise) => exercise.name.toLowerCase()));
-  const todo = planned.filter((item) => !started.has(item.name.toLowerCase()));
+            <Pressable accessibilityRole="button" onPress={create} style={styles.addExercise}>
+              <Ionicons name="add" size={16} color={palette.accent} />
+              <Text style={styles.addExerciseLabel}>New workout</Text>
+            </Pressable>
+          </>
+        )}
+
+        <ConfirmSheet confirmation={confirming} onClose={() => setConfirming(null)} />
+      </Refreshable>
+    );
+  }
 
   return (
     <Refreshable style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-      <View style={styles.headline}>
-        <View style={styles.headlineText}>
-          <Text style={styles.focus}>{focus?.label ?? "No focus set"}</Text>
-          <Text style={styles.muted}>{formatDayMonthYear(parseYMD(today))}</Text>
-        </View>
-        <View style={styles.totals}>
-          <Text style={styles.totalValue}>{setCountOf(session)}</Text>
-          <Text style={styles.muted}>sets</Text>
-        </View>
-        {volumeOf(session) > 0 && (
-          <View style={styles.totals}>
-            <Text style={styles.totalValue}>{describeVolume(volumeOf(session))}</Text>
-            <Text style={styles.muted}>lifted</Text>
-          </View>
-        )}
+      <View style={styles.bar}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Back to workouts"
+          onPress={() => setOpenId(null)}
+          hitSlop={8}
+          style={styles.back}
+        >
+          <Ionicons name="chevron-back" size={18} color={palette.foreground} />
+        </Pressable>
+
+        <TextInput
+          value={open.name}
+          onChangeText={(name) => change((current) => renameWorkout(current, open.id, name))}
+          placeholder="Workout"
+          placeholderTextColor={palette.subtleForeground}
+          style={styles.workoutName}
+          accessibilityLabel="Workout name"
+        />
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Start this workout again"
+          onPress={() =>
+            setConfirming({
+              title: `Start ${open.name} again?`,
+              body: "Every set is unticked. The weights and reps stay where they are.",
+              verb: "Start again",
+              onConfirm: () => {
+                change((current) => resetWorkout(current, open.id));
+                settle();
+              },
+            })
+          }
+          hitSlop={8}
+          style={styles.back}
+        >
+          <Ionicons name="refresh" size={17} color={palette.mutedForeground} />
+        </Pressable>
       </View>
 
-      {/* What today asks for and has not been started. Tapping one begins it. */}
-      {todo.length > 0 && (
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Still to do</Text>
-          {todo.map((item) => (
-            <Pressable
-              key={item.name}
-              accessibilityRole="button"
-              accessibilityLabel={`Start ${item.name}, ${item.sets} sets of ${item.reps}`}
-              onPress={() => startExercise(item.name)}
-              style={styles.todoRow}
-            >
-              <Ionicons name="ellipse-outline" size={16} color={palette.subtleForeground} />
-              <Text style={styles.todoName} numberOfLines={1}>
-                {item.name}
-              </Text>
-              <Text style={styles.todoNumbers}>
-                {item.sets} × {item.reps}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      )}
+      <Animated.View key={open.id} entering={FadeIn.duration(200)} style={styles.stack}>
+        {open.exercises.map((exercise) => (
+          <Exercise
+            key={exercise.id}
+            exercise={exercise}
+            onRename={(name) => change((current) => renameWorkoutExercise(current, open.id, exercise.id, name))}
+            onAddSet={(set) => change((current) => addWorkoutSet(current, open.id, exercise.id, set))}
+            onUpdateSet={(index, patch) =>
+              change((current) => updateWorkoutSet(current, open.id, exercise.id, index, patch))
+            }
+            onRemoveSet={(index) => change((current) => removeWorkoutSet(current, open.id, exercise.id, index))}
+            onRemove={() =>
+              setConfirming({
+                title: `Remove ${exercise.name}?`,
+                body: "Its sets go with it. Nothing else in the workout changes.",
+                verb: "Remove",
+                onConfirm: () => change((current) => removeWorkoutExercise(current, open.id, exercise.id)),
+              })
+            }
+            styles={styles}
+            palette={palette}
+          />
+        ))}
 
-      {session.exercises.map((exercise) => {
-        const previous = lastTime(log, exercise.name, today);
-        return (
-          <View key={exercise.id} style={styles.card}>
-            <View style={styles.cardHead}>
-              <Text style={styles.exerciseName}>{exercise.name}</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Remove ${exercise.name}`}
-                hitSlop={10}
-                onPress={() => {
-                  warn();
-                  change((current) => removeExercise(current, today, exercise.id));
-                }}
-              >
-                <Ionicons name="close" size={18} color={palette.subtleForeground} />
-              </Pressable>
-            </View>
+        {open.exercises.length === 0 ? (
+          <EmptyState
+            title={`Nothing in ${open.name} yet`}
+            hint="Add an exercise and its sets appear underneath, ready to tick off."
+            action="Add an exercise"
+            onAct={() => {
+              tap();
+              change((current) => addWorkoutExercise(current, open.id, "New exercise"));
+            }}
+          />
+        ) : (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => {
+              tap();
+              change((current) => addWorkoutExercise(current, open.id, "New exercise"));
+            }}
+            style={styles.addExercise}
+          >
+            <Ionicons name="add" size={16} color={palette.accent} />
+            <Text style={styles.addExerciseLabel}>Add exercise</Text>
+          </Pressable>
+        )}
+      </Animated.View>
 
-            {previous && (
-              <Text style={styles.lastTime}>
-                Last time ({previous.date.slice(5)}):{" "}
-                {previous.sets.map((set) => `${set.reps}${set.weight ? `×${set.weight}` : ""}`).join(", ")}
-              </Text>
-            )}
+      <Pressable
+        accessibilityRole="button"
+        onPress={() =>
+          setConfirming({
+            title: `Delete ${open.name}?`,
+            body: "The workout and everything in it goes. Other workouts are untouched.",
+            verb: "Delete",
+            onConfirm: () => {
+              change((current) => removeWorkout(current, open.id));
+              setOpenId(null);
+              settle();
+            },
+          })
+        }
+        style={styles.cancel}
+      >
+        <Text style={styles.cancelLabel}>Delete workout</Text>
+      </Pressable>
 
-            {exercise.sets.length > 0 && (
-              <View style={styles.setRow}>
-                {exercise.sets.map((set, index) => (
-                  <Pressable
-                    key={index}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Set ${index + 1}: ${set.reps} reps${set.weight ? ` at ${set.weight} kilos` : ""}. Tap to remove.`}
-                    onPress={() => {
-                      warn();
-                      change((current) => removeSet(current, today, exercise.id, index));
-                    }}
-                    style={styles.setPill}
-                  >
-                    <Text style={styles.setLabel}>
-                      {set.reps}
-                      {set.weight ? ` × ${set.weight}` : ""}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-            )}
-
-            <SetEntry
-              previous={previous?.sets[previous.sets.length - 1]}
-              onLog={(reps, weight) => logSet(exercise.id, reps, weight)}
-              styles={styles}
-              palette={palette}
-            />
-          </View>
-        );
-      })}
-
-      <TextInput
-        value={newExercise}
-        onChangeText={setNewExercise}
-        onSubmitEditing={() => {
-          const name = newExercise.trim();
-          if (!name) return;
-          change((current) => addExercise(current, today, name));
-          setNewExercise("");
-        }}
-        placeholder="Add something not in the plan…"
-        placeholderTextColor={palette.subtleForeground}
-        returnKeyType="done"
-        style={styles.input}
-        accessibilityLabel="New exercise"
-      />
-
-      {/* The plan for this kind of day — a setting, so it sits behind the same
-          read-only switch as everything else that changes a plan. */}
-      {focus && (
-        <>
-          <View style={styles.splitHead}>
-            <Text style={styles.sectionTitle}>What a {focus.label.toLowerCase()} day asks for</Text>
-            <EditButton editing={editing} onChange={setEditing} what={`the ${focus.label} plan`} />
-          </View>
-
-          {planned.length === 0 && !editing && (
-            <Text style={styles.muted}>
-              Nothing planned for {focus.label.toLowerCase()} days yet. Tap Edit to add exercises, and
-              they will be waiting every {focus.label.toLowerCase()} day.
-            </Text>
-          )}
-
-          {planned.map((item) => (
-            <View key={item.name} style={styles.planRow}>
-              <Text style={styles.planName} numberOfLines={1}>
-                {item.name}
-              </Text>
-              {editing ? (
-                <>
-                  <PlanNumber
-                    value={item.sets}
-                    unit="sets"
-                    onChange={(sets) =>
-                      change((current) => updatePlanItem(current, focus.key, item.name, { sets }))
-                    }
-                    styles={styles}
-                    palette={palette}
-                  />
-                  <PlanNumber
-                    value={item.reps}
-                    unit="reps"
-                    onChange={(reps) =>
-                      change((current) => updatePlanItem(current, focus.key, item.name, { reps }))
-                    }
-                    styles={styles}
-                    palette={palette}
-                  />
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={`Remove ${item.name} from the ${focus.label} plan`}
-                    hitSlop={10}
-                    onPress={() => change((current) => removeFromPlan(current, focus.key, item.name))}
-                  >
-                    <Ionicons name="close" size={16} color={palette.subtleForeground} />
-                  </Pressable>
-                </>
-              ) : (
-                <Text style={styles.planNumbers}>
-                  {item.sets} sets · {item.reps} reps
-                </Text>
-              )}
-            </View>
-          ))}
-
-          {editing && (
-            <PlanEntry
-              onAdd={(name) => change((current) => addToPlan(current, focus.key, name))}
-              styles={styles}
-              palette={palette}
-            />
-          )}
-
-          <Text style={styles.footnote}>
-            Which days are {focus.label.toLowerCase()} days is set on the Week screen, along with every
-            other kind of day this track has.
-          </Text>
-        </>
-      )}
+      <ConfirmSheet confirmation={confirming} onClose={() => setConfirming(null)} />
     </Refreshable>
   );
 }
 
-/** One editable number on a plan row. Tapping cycles it up and wraps round at
- *  a sensible ceiling — a stepper per number would be six controls on a line
- *  that has to stay readable, and nobody plans nineteen sets. */
-function PlanNumber({
-  value,
-  unit,
-  onChange,
+/** One exercise: its name, and a row per set. */
+function Exercise({
+  exercise,
+  onRename,
+  onAddSet,
+  onUpdateSet,
+  onRemoveSet,
+  onRemove,
   styles,
   palette,
 }: {
-  value: number;
-  unit: "sets" | "reps";
-  onChange: (value: number) => void;
+  exercise: { id: string; name: string; sets: GymSet[] };
+  onRename: (name: string) => void;
+  onAddSet: (set: GymSet) => void;
+  onUpdateSet: (index: number, patch: Partial<GymSet>) => void;
+  onRemoveSet: (index: number) => void;
+  onRemove: () => void;
   styles: ReturnType<typeof makeStyles>;
   palette: Palette;
 }) {
-  const ceiling = unit === "sets" ? 8 : 30;
-  const step = unit === "sets" ? 1 : 5;
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`${value} ${unit}. Tap to change.`}
-      hitSlop={6}
-      onPress={() => {
-        tap();
-        const next = value + step;
-        onChange(next > ceiling ? step : next);
-      }}
-      style={styles.planNumberButton}
-    >
-      <Text style={[styles.planNumbers, { color: palette.foreground }]}>
-        {value} {unit}
-      </Text>
-    </Pressable>
+    <View style={styles.card}>
+      <View style={styles.cardHead}>
+        <TextInput
+          value={exercise.name}
+          onChangeText={onRename}
+          placeholder="Exercise"
+          placeholderTextColor={palette.subtleForeground}
+          style={styles.name}
+          accessibilityLabel="Exercise name"
+        />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Remove ${exercise.name}`}
+          onPress={onRemove}
+          hitSlop={8}
+        >
+          <Ionicons name="ellipsis-vertical" size={18} color={palette.subtleForeground} />
+        </Pressable>
+      </View>
+
+      <View style={styles.headRow}>
+        <Text style={[styles.headCell, styles.colSet]}>Set</Text>
+        {/* No "last time" column: the weights live in the workout itself, so
+            what is in the Kg box already is what you left there. A column that
+            is empty on every row is a column that says nothing. */}
+        <View style={styles.colPrev} />
+        <Text style={[styles.headCell, styles.colNum]}>Kg</Text>
+        <Text style={[styles.headCell, styles.colNum]}>Reps</Text>
+        <View style={styles.colTick} />
+      </View>
+
+      {exercise.sets.map((set, index) => (
+        <SetRow
+          key={index}
+          index={index}
+          set={set}
+          onChange={(patch) => onUpdateSet(index, patch)}
+          onRemove={() => onRemoveSet(index)}
+          styles={styles}
+          palette={palette}
+        />
+      ))}
+
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => {
+          tap();
+          // The next set starts where the last one left off, which is what it
+          // usually is — and is in any case a better guess than empty.
+          const last = exercise.sets[exercise.sets.length - 1];
+          onAddSet({ reps: last?.reps ?? 8, weight: last?.weight, done: false });
+        }}
+        style={styles.addSet}
+      >
+        <Ionicons name="add" size={15} color={palette.mutedForeground} />
+        <Text style={styles.addSetLabel}>Add set</Text>
+      </Pressable>
+    </View>
   );
 }
 
-/** Adding to the plan, separate from adding to today: one changes every future
- *  push day, the other changes this afternoon. */
-function PlanEntry({
-  onAdd,
+/** One set. Reads as a line of a table until it is ticked, then as a record. */
+function SetRow({
+  index,
+  set,
+  onChange,
+  onRemove,
   styles,
   palette,
 }: {
-  onAdd: (name: string) => void;
+  index: number;
+  set: GymSet;
+  onChange: (patch: Partial<GymSet>) => void;
+  onRemove: () => void;
   styles: ReturnType<typeof makeStyles>;
   palette: Palette;
 }) {
-  const [draft, setDraft] = useState("");
+  const done = Boolean(set.done);
+
+  return (
+    <View style={[styles.row, done && { backgroundColor: `${palette.success}1a` }]}>
+      <Text style={[styles.cell, styles.colSet, done && { color: palette.success }]}>{index + 1}</Text>
+
+      <View style={styles.colPrev} />
+
+      <NumberCell
+        value={set.weight}
+        placeholder={undefined}
+        onChange={(weight) => onChange({ weight })}
+        label={`Weight for set ${index + 1}`}
+        styles={styles}
+        palette={palette}
+      />
+      <NumberCell
+        value={set.reps}
+        placeholder={undefined}
+        onChange={(reps) => onChange({ reps: reps ?? 0 })}
+        label={`Reps for set ${index + 1}`}
+        styles={styles}
+        palette={palette}
+      />
+
+      <Pressable
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: done }}
+        accessibilityLabel={`Set ${index + 1} done`}
+        onPress={() => {
+          tap();
+          onChange({ done: !done });
+        }}
+        onLongPress={onRemove}
+        delayLongPress={400}
+        style={[styles.tick, done && { backgroundColor: palette.success, borderColor: palette.success }]}
+      >
+        <Ionicons name="checkmark" size={16} color={done ? palette.background : palette.subtleForeground} />
+      </Pressable>
+    </View>
+  );
+}
+
+/** A number you type into a table cell. Empty rather than zero when unset: a
+ *  set with no weight yet is not a set of nothing. */
+function NumberCell({
+  value,
+  placeholder,
+  onChange,
+  label,
+  styles,
+  palette,
+}: {
+  value: number | undefined;
+  placeholder: number | undefined;
+  onChange: (value: number | undefined) => void;
+  label: string;
+  styles: ReturnType<typeof makeStyles>;
+  palette: Palette;
+}) {
   return (
     <TextInput
-      value={draft}
-      onChangeText={setDraft}
-      onSubmitEditing={() => {
-        const name = draft.trim();
-        if (!name) return;
-        onAdd(name);
-        setDraft("");
+      value={value === undefined ? "" : String(value)}
+      onChangeText={(text) => {
+        const cleaned = text.replace(/[^0-9.]/g, "");
+        onChange(cleaned === "" ? undefined : Number(cleaned));
       }}
-      placeholder="Add to this day's plan…"
+      placeholder={placeholder === undefined ? "–" : String(placeholder)}
       placeholderTextColor={palette.subtleForeground}
-      returnKeyType="done"
-      style={styles.input}
-      accessibilityLabel="Add to the plan"
+      keyboardType="decimal-pad"
+      selectTextOnFocus
+      style={[styles.cell, styles.colNum, styles.input]}
+      accessibilityLabel={label}
     />
   );
-}
-
-/**
- * Logging one set.
- *
- * Steppers rather than a keyboard: this is used standing up with one hand, and
- * the numbers move in known increments. It opens on whatever the last set of
- * this exercise was, because the overwhelmingly common case is "same again".
- */
-function SetEntry({
-  previous,
-  onLog,
-  styles,
-  palette,
-}: {
-  previous?: { reps: number; weight?: number };
-  onLog: (reps: number, weight: number) => void;
-  styles: ReturnType<typeof makeStyles>;
-  palette: Palette;
-}) {
-  const [reps, setReps] = useState(previous?.reps ?? 8);
-  const [weight, setWeight] = useState(previous?.weight ?? 0);
-
-  return (
-    <View style={styles.entry}>
-      <Stepper label="reps" value={reps} step={1} onChange={setReps} styles={styles} palette={palette} />
-      <Stepper label="kg" value={weight} step={2.5} onChange={setWeight} styles={styles} palette={palette} />
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`Log ${reps} reps${weight > 0 ? ` at ${weight} kilos` : ""}`}
-        onPress={() => onLog(reps, weight)}
-        style={styles.logButton}
-      >
-        <Text style={styles.logLabel}>Log set</Text>
-      </Pressable>
-    </View>
-  );
-}
-
-function Stepper({
-  label,
-  value,
-  step,
-  onChange,
-  styles,
-  palette,
-}: {
-  label: string;
-  value: number;
-  step: number;
-  onChange: (value: number) => void;
-  styles: ReturnType<typeof makeStyles>;
-  palette: Palette;
-}) {
-  return (
-    <View style={styles.stepper}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`One less ${label}`}
-        hitSlop={8}
-        onPress={() => {
-          tap();
-          onChange(Math.max(0, Number((value - step).toFixed(1))));
-        }}
-        style={styles.stepButton}
-      >
-        <Ionicons name="remove" size={16} color={palette.foreground} />
-      </Pressable>
-      <View style={styles.stepValue}>
-        <Text style={styles.stepNumber}>{value}</Text>
-        <Text style={styles.stepUnit}>{label}</Text>
-      </View>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`One more ${label}`}
-        hitSlop={8}
-        onPress={() => {
-          tap();
-          onChange(Number((value + step).toFixed(1)));
-        }}
-        style={styles.stepButton}
-      >
-        <Ionicons name="add" size={16} color={palette.foreground} />
-      </Pressable>
-    </View>
-  );
-}
-
-/** Kilograms until there are enough of them to be tonnes. Rounding straight to
- *  tonnes turned a hundred-kilo session into "0t", which is worse than no
- *  number at all. */
-function describeVolume(kg: number): string {
-  if (kg >= 1000) return `${(kg / 1000).toFixed(1)}t`;
-  return `${Math.round(kg)}kg`;
 }
 
 function makeStyles(palette: Palette) {
   return StyleSheet.create({
     screen: { flex: 1, backgroundColor: palette.background },
     content: { padding: SPACING.lg, gap: SPACING.md, paddingBottom: SPACING.xl },
-    headline: { flexDirection: "row", alignItems: "center", gap: SPACING.md },
-    headlineText: { flex: 1, gap: 2 },
-    focus: { color: palette.accent, fontSize: 24, fontWeight: "700" },
-    totals: { alignItems: "center", gap: 1 },
-    totalValue: { color: palette.foreground, fontSize: 19, fontWeight: "700" },
-    chips: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.xs },
-    chip: {
+    centered: { alignItems: "center", justifyContent: "center" },
+    stack: { gap: SPACING.md },
+    // Choosing a workout.
+    pick: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 4,
-      paddingHorizontal: SPACING.md,
-      paddingVertical: SPACING.sm,
-      borderRadius: RADIUS.control,
-      borderWidth: 1,
-      borderColor: palette.cardBorder,
-      backgroundColor: palette.surfaceMuted,
-    },
-    chipLabel: { color: palette.mutedForeground, fontSize: 13, fontWeight: "600" },
-    miniChip: {
-      paddingHorizontal: SPACING.sm,
-      paddingVertical: 6,
-      borderRadius: RADIUS.control,
-      borderWidth: 1,
-      borderColor: palette.cardBorder,
-      backgroundColor: palette.surfaceMuted,
-    },
-    miniLabel: { color: palette.mutedForeground, fontSize: 11, fontWeight: "600" },
-    card: {
-      gap: SPACING.sm,
-      padding: SPACING.lg,
+      gap: SPACING.md,
+      padding: SPACING.md,
       borderRadius: RADIUS.card,
       borderWidth: 1,
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
     },
-    cardHead: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
-    exerciseName: { flex: 1, color: palette.foreground, fontSize: 16, fontWeight: "700" },
-    lastTime: { color: palette.subtleForeground, fontSize: 12 },
-    setRow: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.xs },
-    setPill: {
+    pickIcon: { width: 34, height: 34, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+    pickText: { flex: 1, gap: 1 },
+    pickName: { ...TYPE.subhead, color: palette.foreground, fontWeight: "700" },
+    // Inside one.
+    bar: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
+    back: {
+      minWidth: 34,
       minHeight: 34,
+      alignItems: "center",
       justifyContent: "center",
-      paddingHorizontal: SPACING.md,
       borderRadius: RADIUS.control,
-      backgroundColor: palette.surfaceMuted,
       borderWidth: 1,
       borderColor: palette.cardBorder,
+      backgroundColor: palette.surfaceMuted,
     },
-    setLabel: { color: palette.foreground, fontSize: 13, fontWeight: "600" },
-    entry: { flexDirection: "row", alignItems: "center", gap: SPACING.sm, marginTop: SPACING.xs },
-    stepper: {
-      flex: 1,
+    workoutName: { ...TYPE.heading, flex: 1, color: palette.foreground, fontWeight: "700", padding: 0 },
+    card: {
+      borderRadius: RADIUS.card,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.card,
+      overflow: "hidden",
+    },
+    cardHead: {
       flexDirection: "row",
       alignItems: "center",
-      justifyContent: "space-between",
+      gap: SPACING.sm,
+      paddingHorizontal: SPACING.md,
+      paddingVertical: SPACING.sm,
+    },
+    name: { ...TYPE.subhead, flex: 1, color: palette.accent, fontWeight: "700", padding: 0 },
+    headRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: SPACING.xs,
+      paddingHorizontal: SPACING.md,
+      paddingBottom: SPACING.xs,
+    },
+    headCell: { ...TYPE.eyebrow, color: palette.subtleForeground, fontWeight: "700" },
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: SPACING.xs,
+      paddingHorizontal: SPACING.md,
+      paddingVertical: SPACING.xs,
+    },
+    cell: { ...TYPE.label, color: palette.foreground, fontWeight: "600" },
+    // The columns. Fixed rather than flexed, so every row in every exercise
+    // lines up with the header and with each other.
+    colSet: { width: 26 },
+    colPrev: { flex: 1 },
+    colNum: { width: 54, textAlign: "center" },
+    colTick: { width: 34 },
+    input: {
+      paddingVertical: 5,
+      borderRadius: RADIUS.control,
+      backgroundColor: palette.surfaceMuted,
+    },
+    tick: {
+      width: 34,
+      height: 30,
+      alignItems: "center",
+      justifyContent: "center",
       borderRadius: RADIUS.control,
       borderWidth: 1,
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    stepButton: { minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" },
-    stepValue: { alignItems: "center" },
-    stepNumber: { color: palette.foreground, fontSize: 16, fontWeight: "700" },
-    stepUnit: { color: palette.subtleForeground, fontSize: 10 },
-    logButton: {
-      minHeight: 44,
+    addSet: {
+      flexDirection: "row",
+      alignItems: "center",
       justifyContent: "center",
-      paddingHorizontal: SPACING.lg,
-      borderRadius: RADIUS.control,
-      backgroundColor: palette.accent,
+      gap: SPACING.xs,
+      paddingVertical: SPACING.sm,
+      borderTopWidth: 1,
+      borderTopColor: palette.cardBorder,
+      marginTop: SPACING.xs,
     },
-    logLabel: { color: "#04121c", fontSize: 14, fontWeight: "700" },
-    input: {
-      paddingHorizontal: SPACING.md,
+    addSetLabel: { ...TYPE.label, color: palette.mutedForeground, fontWeight: "600" },
+    addExercise: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: SPACING.xs,
       paddingVertical: SPACING.md,
-      borderRadius: RADIUS.control,
+      borderRadius: RADIUS.card,
       borderWidth: 1,
       borderStyle: "dashed",
       borderColor: palette.cardBorder,
-      color: palette.foreground,
-      fontSize: 15,
     },
-    splitHead: { flexDirection: "row", alignItems: "center", gap: SPACING.md, marginTop: SPACING.lg },
-    sectionTitle: {
-      flex: 1,
-      color: palette.subtleForeground,
-      fontSize: 11,
-      fontWeight: "700",
-      letterSpacing: 1.2,
-      textTransform: "uppercase",
-    },
-    splitRow: { gap: SPACING.xs, marginBottom: SPACING.sm },
-    splitDay: { color: palette.foreground, fontSize: 13, fontWeight: "700" },
-    planRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: SPACING.sm,
-      paddingVertical: SPACING.sm,
-      borderBottomWidth: 1,
-      borderBottomColor: palette.cardBorder,
-    },
-    planName: { flex: 1, color: palette.foreground, fontSize: 14 },
-    planNumbers: { color: palette.mutedForeground, fontSize: 12, fontWeight: "600" },
-    planNumberButton: {
-      minHeight: 36,
-      justifyContent: "center",
-      paddingHorizontal: SPACING.sm,
-      borderRadius: RADIUS.control,
-      borderWidth: 1,
-      borderColor: palette.cardBorder,
-    },
-    todoRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: SPACING.sm,
-      minHeight: 44,
-      paddingHorizontal: SPACING.xs,
-    },
-    todoName: { flex: 1, color: palette.foreground, fontSize: 15 },
-    todoNumbers: { color: palette.mutedForeground, fontSize: 13, fontWeight: "600" },
-    footnote: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16, marginTop: SPACING.sm },
-    muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
+    addExerciseLabel: { ...TYPE.label, color: palette.accent, fontWeight: "700" },
+    cancel: { alignItems: "center", paddingVertical: SPACING.md },
+    cancelLabel: { ...TYPE.label, color: palette.danger, fontWeight: "700" },
+    muted: { ...TYPE.body, color: palette.mutedForeground },
   });
 }

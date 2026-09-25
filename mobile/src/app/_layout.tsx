@@ -24,6 +24,7 @@ import { SyncProvider } from "../sync/SyncProvider";
 import { TimerProvider } from "../timer/TimerProvider";
 import { UndoProvider } from "../components/UndoBar";
 import { ThemeProvider, useTheme } from "../theme/ThemeProvider";
+import { TYPE } from "../theme";
 
 export default function RootLayout() {
   return (
@@ -65,7 +66,7 @@ function Screens() {
         screenOptions={{
           headerStyle: { backgroundColor: palette.background },
           headerTintColor: palette.foreground,
-          headerTitleStyle: { fontSize: 17, fontWeight: "600" },
+          headerTitleStyle: { ...TYPE.heading, fontWeight: "600" },
           contentStyle: { backgroundColor: palette.background },
         }}
       >
@@ -82,7 +83,7 @@ function Screens() {
         <Stack.Screen name="insights" options={{ title: "History" }} />
         <Stack.Screen name="timer" options={{ title: "Timer" }} />
         <Stack.Screen name="steps" options={{ title: "Steps" }} />
-        <Stack.Screen name="gym" options={{ title: "Gym" }} />
+        <Stack.Screen name="gym" options={{ title: "Workout" }} />
 
         <Stack.Screen name="tracks" options={{ title: "Your tracks", presentation: "modal" }} />
         <Stack.Screen name="settings" options={{ title: "Settings", presentation: "modal" }} />

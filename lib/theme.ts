@@ -10,15 +10,6 @@ export type ResolvedTheme = "light" | "dark";
 export const THEME_KEY = "horizon-theme";
 export const THEME_EVENT = "horizon-theme-change";
 
-export function getThemePreference(): ThemePreference {
-  try {
-    const stored = window.localStorage.getItem(THEME_KEY);
-    return stored === "light" || stored === "dark" ? stored : "system";
-  } catch {
-    return "system";
-  }
-}
-
 export function systemTheme(): ResolvedTheme {
   return window.matchMedia?.("(prefers-color-scheme: light)").matches ? "light" : "dark";
 }
