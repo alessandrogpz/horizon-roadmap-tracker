@@ -13,6 +13,7 @@
 import { useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Link } from "expo-router";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { phaseStats, progressStats, timelineStats } from "@shared/stats";
 import { addPhase, removePhase, setCurrentPhase } from "@shared/trackActions";
 import { formatDayMonthYear } from "@shared/dates";
@@ -34,6 +35,10 @@ export default function PhasesScreen() {
   const timeline = useMemo(() => (track ? timelineStats(track) : null), [track]);
   const current = useMemo(() => (track ? phaseStats(track, today) : null), [track, today]);
   const progress = useMemo(() => (track ? progressStats(track) : null), [track]);
+  /** Past its last day the plan is spent, and the screen stops measuring
+   *  the track against a total it has outlived. */
+  const overrun = (timeline?.overrunDays ?? 0) > 0;
+
   const currentIndex = useMemo(
     () => timeline?.windows.findIndex((w) => w.state === "current") ?? -1,
     [timeline]
@@ -56,17 +61,46 @@ export default function PhasesScreen() {
         hint="Add or remove a phase, or move the track to a different one."
       />
 
+      {/* A plan that has run out is the ordinary end of a plan, not a failure
+          of one. Past its last day the track stops being measured against a
+          total it no longer has — "Day 573 of 92" over a full bar described a
+          track that had gone wrong, when all that had happened is that the
+          estimate was short, which estimates are. It says how long it has been
+          running and offers the one thing worth doing about it. */}
       <View style={styles.summary}>
         <Text style={styles.headline}>
-          Day {timeline.daysPassed} of {timeline.totalDays}
+          Day {timeline.daysPassed}
+          {overrun ? "" : ` of ${timeline.totalDays}`}
         </Text>
-        <Text style={styles.muted}>
-          {timeline.daysRemaining > 0
-            ? `${timeline.daysRemaining} days left · ends ${formatDayMonthYear(timeline.endDate)}`
-            : `Ended ${formatDayMonthYear(timeline.endDate)}`}
-        </Text>
+
+        {overrun ? (
+          <View style={styles.overrunRow}>
+            <Text style={styles.muted}>
+              {timeline.overrunDays} day{timeline.overrunDays === 1 ? "" : "s"} past the plan
+            </Text>
+            <Link href="/tracks" asChild>
+              <Pressable accessibilityRole="link" accessibilityLabel="Extend the plan" style={styles.extend}>
+                <Text style={styles.extendLabel}>Extend</Text>
+                <Ionicons name="chevron-forward" size={12} color={palette.accent} />
+              </Pressable>
+            </Link>
+          </View>
+        ) : (
+          <Text style={styles.muted}>
+            {timeline.daysRemaining} days left · ends {formatDayMonthYear(timeline.endDate)}
+          </Text>
+        )}
+
         <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${Math.min(100, timeline.progressPct)}%` }]} />
+          {/* Full and grey once the plan is spent, rather than full and accent:
+              a bar at its end should not look like a bar at its goal. */}
+          <View
+            style={[
+              styles.progressFill,
+              { width: `${Math.min(100, timeline.progressPct)}%` },
+              overrun && { backgroundColor: palette.subtleForeground },
+            ]}
+          />
         </View>
       </View>
 
@@ -78,11 +112,16 @@ export default function PhasesScreen() {
           <Text style={styles.cardTitle}>
             {Math.round(progress.workPct)}% done · {Math.round(progress.timePct)}% of the time spent
           </Text>
-          <Text style={styles.muted}>
-            {progress.paceDelta >= 0
-              ? `${Math.round(progress.paceDelta)} points ahead of the calendar.`
-              : `${Math.abs(Math.round(progress.paceDelta))} points behind the calendar.`}
-          </Text>
+          {/* Pace compares work done against time spent. Past the end of the
+              plan there is no time left to be behind on, so the comparison
+              stops meaning anything and is not made. */}
+          {!overrun && (
+            <Text style={styles.muted}>
+              {progress.paceDelta >= 0
+                ? `${Math.round(progress.paceDelta)} points ahead of the calendar.`
+                : `${Math.abs(Math.round(progress.paceDelta))} points behind the calendar.`}
+            </Text>
+          )}
           {progress.breakdown
             .filter((part) => part.total > 0)
             .map((part) => (
@@ -99,7 +138,7 @@ export default function PhasesScreen() {
         </View>
       ) : null}
 
-      {current?.behindBy ? (
+      {current?.behindBy && !overrun ? (
         <Text style={styles.behind}>
           The schedule expects phase {current.recommendedPhase?.id ?? "?"} by now — {current.behindBy} phase
           {current.behindBy === 1 ? "" : "s"} ahead of where this track is. Worth a look, not a panic.
@@ -190,7 +229,10 @@ export default function PhasesScreen() {
                   ) : null}
 
                   <Text style={styles.dates}>
-                    {endDate ? `Ends ${formatDayMonthYear(endDate)}` : `Starts ${formatDayMonthYear(startDate)}`}
+                    {/* "Due", not "Ends": every one of these dates is in the
+                        past on a track that has run long, and a deadline that
+                        has been and gone still reads correctly as a due date. */}
+                    {endDate ? `Due ${formatDayMonthYear(endDate)}` : `From ${formatDayMonthYear(startDate)}`}
                     {endDay !== undefined ? ` · day ${endDay}` : ""}
                     {phase.tasks.length > 0
                       ? ` · ${phase.tasks.filter((t) => t.completed).length}/${phase.tasks.length} done`
@@ -292,6 +334,15 @@ function makeStyles(palette: Palette) {
     progressTrack: { height: 6, borderRadius: 3, backgroundColor: palette.surfaceMuted, overflow: "hidden" },
     progressFill: { height: 6, borderRadius: 3, backgroundColor: palette.accent },
     behind: { color: palette.foreground, fontSize: 13, lineHeight: 18 },
+    overrunRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: SPACING.sm },
+    extend: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 2,
+      paddingVertical: SPACING.xs,
+      paddingLeft: SPACING.sm,
+    },
+    extendLabel: { color: palette.accent, fontSize: 13, fontWeight: "600" },
     // Rows sit flush against each other so the line running through them is
     // continuous; each row supplies its own breathing room instead.
     timeline: { marginVertical: SPACING.xs },
