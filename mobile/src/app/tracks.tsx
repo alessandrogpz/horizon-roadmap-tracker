@@ -14,7 +14,7 @@ import { dateForDay, dayForDate, formatDateYMD, isDateStr, todayYMD } from "@sha
 import { currentStreakLength } from "@shared/streak";
 import type { TrackState } from "@shared/types";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { SwipeRow } from "../components/SwipeRow";
 import { ConfirmSheet, type Confirmation } from "../components/ConfirmSheet";
@@ -445,8 +445,8 @@ function makeStyles(palette: Palette) {
     },
     dot: { width: 10, height: 10, borderRadius: 5 },
     text: { flex: 1, gap: 2 },
-    name: { color: palette.foreground, fontSize: 16, fontWeight: "600" },
-    muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
+    name: { color: palette.foreground, ...TYPE.heading, fontWeight: "600" },
+    muted: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },
     panel: {
       gap: SPACING.sm,
       padding: SPACING.lg,
@@ -455,7 +455,7 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
     },
-    panelTitle: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
+    panelTitle: { color: palette.foreground, ...TYPE.subhead, fontWeight: "600" },
     panelRow: { flexDirection: "row", gap: SPACING.sm },
     panelButton: {
       flex: 1,
@@ -466,8 +466,8 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    panelLabel: { color: palette.foreground, fontSize: 14, fontWeight: "600" },
-    fieldLabel: { color: palette.subtleForeground, fontSize: 11, fontWeight: "700", letterSpacing: 1, textTransform: "uppercase", marginTop: SPACING.sm },
+    panelLabel: { color: palette.foreground, ...TYPE.body, fontWeight: "600" },
+    fieldLabel: { color: palette.subtleForeground, ...TYPE.eyebrow, fontWeight: "700", letterSpacing: 1, marginTop: SPACING.sm },
     dateField: {
       flexDirection: "row",
       alignItems: "center",
@@ -479,10 +479,10 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    dateValue: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
+    dateValue: { color: palette.foreground, ...TYPE.subhead, fontWeight: "600" },
     swatches: { flexDirection: "row", gap: SPACING.sm },
     swatch: { width: 26, height: 26, borderRadius: 13, borderWidth: 1, borderColor: "rgba(0,0,0,0.2)" },
-    footnote: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16 },
+    footnote: { color: palette.subtleForeground, ...TYPE.micro, lineHeight: 16 },
     input: {
       paddingHorizontal: SPACING.md,
       paddingVertical: SPACING.md,
@@ -491,7 +491,7 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
       color: palette.foreground,
-      fontSize: 15,
+      ...TYPE.subhead,
     },
     templateRow: {
       flexDirection: "row",

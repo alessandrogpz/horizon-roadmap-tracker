@@ -4,7 +4,7 @@
 
 import { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { SPACING, type Palette } from "../theme";
+import { SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 export function NoTrack({ message = "No track open." }: { message?: string }) {
@@ -26,6 +26,6 @@ function makeStyles(palette: Palette) {
       padding: SPACING.xl,
       backgroundColor: palette.background,
     },
-    muted: { color: palette.mutedForeground, fontSize: 13, textAlign: "center" },
+    muted: { color: palette.mutedForeground, ...TYPE.label, textAlign: "center" },
   });
 }

@@ -18,7 +18,7 @@ import { Pressable } from "react-native-gesture-handler";
 import { Link } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 export interface SubNavLink {
@@ -111,6 +111,6 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
     },
-    label: { color: palette.foreground, fontSize: 13, fontWeight: "600" },
+    label: { color: palette.foreground, ...TYPE.label, fontWeight: "600" },
   });
 }

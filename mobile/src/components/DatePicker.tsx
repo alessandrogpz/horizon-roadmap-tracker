@@ -20,7 +20,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-nati
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { formatDateYMD, isDateStr, parseYMD } from "@shared/dates";
 import { tap } from "../feedback/haptics";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 const MONTHS = [
@@ -230,8 +230,8 @@ function makeStyles(palette: Palette) {
       borderBottomColor: palette.cardBorder,
     },
     headText: { flex: 1, gap: 2 },
-    title: { color: palette.foreground, fontSize: 16, fontWeight: "700" },
-    crumb: { color: palette.mutedForeground, fontSize: 12 },
+    title: { color: palette.foreground, ...TYPE.heading, fontWeight: "700" },
+    crumb: { color: palette.mutedForeground, ...TYPE.caption},
     body: { maxHeight: 340 },
     bodyContent: { padding: SPACING.lg, paddingBottom: SPACING.xl },
     grid: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.sm },
@@ -259,6 +259,6 @@ function makeStyles(palette: Palette) {
     },
     invisible: { opacity: 0, borderWidth: 0 },
     disabled: { opacity: 0.3 },
-    cellLabel: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
+    cellLabel: { color: palette.foreground, ...TYPE.subhead, fontWeight: "600" },
   });
 }

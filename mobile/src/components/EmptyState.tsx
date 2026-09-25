@@ -9,7 +9,7 @@
 import { useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 export function EmptyState({
@@ -55,8 +55,8 @@ function makeStyles(palette: Palette) {
       backgroundColor: palette.card,
       marginTop: SPACING.sm,
     },
-    title: { color: palette.foreground, fontSize: 15, fontWeight: "700" },
-    hint: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
+    title: { color: palette.foreground, ...TYPE.subhead, fontWeight: "700" },
+    hint: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },
     button: {
       flexDirection: "row",
       alignItems: "center",
@@ -67,6 +67,6 @@ function makeStyles(palette: Palette) {
       backgroundColor: palette.accent,
       marginTop: SPACING.xs,
     },
-    label: { color: palette.background, fontSize: 14, fontWeight: "700" },
+    label: { color: palette.background, ...TYPE.body, fontWeight: "700" },
   });
 }

@@ -83,6 +83,27 @@ Rules of thumb: `lib/` stays free of React, components stay free of business
 rules. A new mutation belongs in `lib/trackActions.ts` as a pure
 `(track, args) => nextTrack` function with a test, not inline in a component.
 
+## Type on the phone
+
+`mobile/src/theme.ts` holds `TYPE`: nine sizes, one per role — `display`,
+`figure`, `title`, `heading`, `subhead`, `body`, `label`, `caption`, `micro`
+and `eyebrow`. Spread the role first in a style and set colour and weight
+after it:
+
+```ts
+title: { ...TYPE.subhead, color: palette.foreground, fontWeight: "600" },
+```
+
+There should be no `fontSize:` literal anywhere under `mobile/src` except in
+`theme.ts`; `grep -rn "fontSize:" mobile/src | grep -v theme.ts` should come
+back empty. If a role does not fit, the answer is usually that a role is
+missing, not that this one place is special.
+
+`TYPE` deliberately carries size only. An earlier version gave each role a
+weight as well, which turned every muted 13pt explanation semi-bold, because
+the role that matched its size was the one meant for control labels. Two texts
+can be the same size and mean differently, so weight stays with the style.
+
 ## Adding a dashboard module
 
 1. Append it to `MODULES` in `lib/modules.ts` (id, label, home column).

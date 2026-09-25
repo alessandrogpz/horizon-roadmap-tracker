@@ -14,7 +14,7 @@ import { categoriesFor, MATERIAL_STATUSES, MATERIAL_TYPES } from "@shared/materi
 import { addMaterial, removeMaterial, setMaterialArchived, setMaterialStatus, updateMaterial } from "@shared/trackActions";
 import { loadNotes, saveNote } from "../storage/db";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { SwipeRow } from "../components/SwipeRow";
 import { useUndo } from "../components/UndoBar";
@@ -500,17 +500,16 @@ function makeStyles(palette: Palette) {
     },
     cardHead: { flexDirection: "row", alignItems: "center", gap: SPACING.md },
     cardText: { flex: 1, gap: 2 },
-    title: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
-    muted: { color: palette.mutedForeground, fontSize: 13 },
+    title: { color: palette.foreground, ...TYPE.subhead, fontWeight: "600" },
+    muted: { color: palette.mutedForeground, ...TYPE.label},
     moreRow: { marginTop: SPACING.xl },
     moreTitle: {
       color: palette.subtleForeground,
-      fontSize: 11,
+      ...TYPE.eyebrow,
       fontWeight: "700",
       letterSpacing: 1.2,
-      textTransform: "uppercase",
     },
-    footnote: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16 },
+    footnote: { color: palette.subtleForeground, ...TYPE.micro, lineHeight: 16 },
     archivedRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: SPACING.md, paddingTop: SPACING.sm },
     statusDot: { width: 9, height: 9, borderRadius: 5 },
     progressTrack: { height: 4, borderRadius: 2, backgroundColor: palette.surfaceMuted, overflow: "hidden" },
@@ -532,7 +531,7 @@ function makeStyles(palette: Palette) {
       backgroundColor: palette.surfaceMuted,
     },
     evenly: { flex: 1 },
-    statusLabel: { color: palette.mutedForeground, fontSize: 12, fontWeight: "600" },
+    statusLabel: { color: palette.mutedForeground, ...TYPE.caption, fontWeight: "600" },
     pageRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
     pageInput: {
       minWidth: 72,
@@ -543,7 +542,7 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
       color: palette.foreground,
-      fontSize: 15,
+      ...TYPE.subhead,
       textAlign: "center",
     },
     note: {
@@ -554,7 +553,7 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
       color: palette.foreground,
-      fontSize: 14,
+      ...TYPE.body,
       lineHeight: 20,
     },
     linkButton: {
@@ -564,6 +563,6 @@ function makeStyles(palette: Palette) {
       borderWidth: 1,
       borderColor: palette.cardBorder,
     },
-    linkLabel: { color: palette.accent, fontSize: 14, fontWeight: "600" },
+    linkLabel: { color: palette.accent, ...TYPE.body, fontWeight: "600" },
   });
 }

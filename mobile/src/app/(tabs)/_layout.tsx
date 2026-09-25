@@ -32,6 +32,7 @@ import type { ColorValue } from "react-native";
 import { AppHeader } from "../../components/AppHeader";
 import { usePalette } from "../../theme/ThemeProvider";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { TYPE } from "../../theme";
 
 export default function TabsLayout() {
   const palette = usePalette();
@@ -57,7 +58,7 @@ export default function TabsLayout() {
           paddingTop: 10,
           paddingBottom: insets.bottom + 12,
         },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: "600", marginTop: 2 },
+        tabBarLabelStyle: { ...TYPE.micro, fontWeight: "600", marginTop: 2 },
         // The bar is a fixed height, so its labels cannot grow with the
         // OS font scale without clipping — which is the bug this screen
         // already had once, just triggered by my numbers instead of

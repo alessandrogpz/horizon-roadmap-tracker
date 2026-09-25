@@ -28,7 +28,7 @@ import { computeRotationItemsForDay, isRotationItem } from "@shared/rotation";
 import { DAYS_SHORT, formatDateYMD, getWeekNum, parseYMD, todayYMD } from "@shared/dates";
 import { getSettings } from "@shared/settings";
 import { tap } from "../feedback/haptics";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { Segmented } from "./Segmented";
 
@@ -409,7 +409,7 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    title: { flex: 1, textAlign: "center", color: palette.foreground, fontSize: 15, fontWeight: "700" },
+    title: { flex: 1, textAlign: "center", color: palette.foreground, ...TYPE.subhead, fontWeight: "700" },
     controls: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
     // Wide enough to read, not so wide it takes the row from the Today chip.
     scopes: { width: 150 },
@@ -422,7 +422,7 @@ function makeStyles(palette: Palette) {
       backgroundColor: palette.surfaceMuted,
     },
     todayButton: { marginLeft: "auto", borderColor: palette.accent },
-    scopeLabel: { color: palette.mutedForeground, fontSize: 12, fontWeight: "600" },
+    scopeLabel: { color: palette.mutedForeground, ...TYPE.caption, fontWeight: "600" },
     row: {
       paddingHorizontal: SPACING.md,
       paddingVertical: SPACING.sm,
@@ -433,20 +433,20 @@ function makeStyles(palette: Palette) {
     },
     rowHead: { flexDirection: "row", alignItems: "center", gap: SPACING.md },
     rowDate: { alignItems: "center", minWidth: 30 },
-    rowDay: { color: palette.subtleForeground, fontSize: 10, fontWeight: "700" },
-    rowNumber: { color: palette.foreground, fontSize: 16, fontWeight: "700" },
+    rowDay: { color: palette.subtleForeground, ...TYPE.micro, fontWeight: "700" },
+    rowNumber: { color: palette.foreground, ...TYPE.heading, fontWeight: "700" },
     dot: { width: 8, height: 8, borderRadius: 4 },
     rowText: { flex: 1, gap: 1 },
-    rowFocus: { color: palette.foreground, fontSize: 14, fontWeight: "600" },
-    rowSummary: { color: palette.mutedForeground, fontSize: 12, lineHeight: 17 },
+    rowFocus: { color: palette.foreground, ...TYPE.body, fontWeight: "600" },
+    rowSummary: { color: palette.mutedForeground, ...TYPE.caption, lineHeight: 17 },
     doneBadge: { flexDirection: "row", alignItems: "center", gap: 2 },
-    doneCount: { color: palette.success, fontSize: 12, fontWeight: "700" },
+    doneCount: { color: palette.success, ...TYPE.caption, fontWeight: "700" },
     monthHead: { flexDirection: "row", marginTop: SPACING.xs },
     monthHeadLabel: {
       flex: 1,
       textAlign: "center",
       color: palette.subtleForeground,
-      fontSize: 10,
+      ...TYPE.micro,
       fontWeight: "700",
     },
     monthGrid: { flexDirection: "row", flexWrap: "wrap" },
@@ -461,7 +461,7 @@ function makeStyles(palette: Palette) {
       borderRadius: RADIUS.control,
     },
     invisible: { opacity: 0 },
-    monthDay: { color: palette.foreground, fontSize: 13 },
+    monthDay: { color: palette.foreground, ...TYPE.label},
     monthDot: { width: 7, height: 7, borderRadius: 4 },
     monthDotIdle: { opacity: 0.3 },
     card: {
@@ -474,8 +474,8 @@ function makeStyles(palette: Palette) {
       backgroundColor: palette.card,
     },
     cardHead: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
-    cardTitle: { flex: 1, color: palette.foreground, fontSize: 13, fontWeight: "700" },
+    cardTitle: { flex: 1, color: palette.foreground, ...TYPE.label, fontWeight: "700" },
     cardList: { maxHeight: 160 },
-    cardItem: { color: palette.mutedForeground, fontSize: 13, lineHeight: 19 },
+    cardItem: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 19 },
   });
 }

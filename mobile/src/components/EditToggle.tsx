@@ -25,7 +25,7 @@
 import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 /**
@@ -103,8 +103,8 @@ function makeStyles(palette: Palette) {
   return StyleSheet.create({
     header: { flexDirection: "row", alignItems: "flex-start", gap: SPACING.md },
     headerText: { flex: 1, gap: 2 },
-    title: { color: palette.foreground, fontSize: 15, fontWeight: "700" },
-    hint: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16 },
+    title: { color: palette.foreground, ...TYPE.subhead, fontWeight: "700" },
+    hint: { color: palette.subtleForeground, ...TYPE.micro, lineHeight: 16 },
     button: {
       flexDirection: "row",
       alignItems: "center",
@@ -116,6 +116,6 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    label: { color: palette.mutedForeground, fontSize: 12, fontWeight: "600" },
+    label: { color: palette.mutedForeground, ...TYPE.caption, fontWeight: "600" },
   });
 }

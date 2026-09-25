@@ -27,7 +27,7 @@ import { usePedometer } from "../steps/usePedometer";
 import { useLiveSteps } from "../steps/useLiveSteps";
 import { focusOfDay, planComplete, plannedFor, sessionFor, setCountOf, volumeOf } from "@shared/gym";
 import { useGymLog } from "../gym/useGymLog";
-import { SPACING, type Palette } from "../theme";
+import { SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 export interface PanelProps {
@@ -171,8 +171,12 @@ function PhasePanel({ track, today }: PanelProps) {
           <Text style={styles.strong} numberOfLines={1}>
             {phase.phase?.title ?? "No phase"}
           </Text>
+          {/* Same rule as the Plan screen: past its last day a track stops
+              being counted against a total it has outlived. */}
           <Text style={styles.muted}>
-            Day {timeline.daysPassed} of {timeline.totalDays}
+            {timeline.overrunDays > 0
+              ? `Day ${timeline.daysPassed} · ${timeline.overrunDays} past plan`
+              : `Day ${timeline.daysPassed} of ${timeline.totalDays}`}
           </Text>
         </View>
       </View>
@@ -414,28 +418,28 @@ export { PanelCard };
 
 function makeStyles(palette: Palette) {
   return StyleSheet.create({
-    muted: { color: palette.mutedForeground, fontSize: 12, lineHeight: 17 },
-    strong: { color: palette.foreground, fontSize: 14, fontWeight: "600" },
-    big: { color: palette.accent, fontSize: 30, fontWeight: "700", lineHeight: 34 },
+    muted: { color: palette.mutedForeground, ...TYPE.caption, lineHeight: 17 },
+    strong: { color: palette.foreground, ...TYPE.body, fontWeight: "600" },
+    big: { color: palette.accent, ...TYPE.figure, fontWeight: "700", lineHeight: 34 },
     headlineRow: { flexDirection: "row", alignItems: "center", gap: SPACING.md },
     headlineText: { flex: 1, gap: 1 },
     week: { flexDirection: "row", justifyContent: "space-between" },
     weekDay: { alignItems: "center", gap: 4 },
     weekDot: { width: 16, height: 16, borderRadius: 8 },
-    weekName: { color: palette.subtleForeground, fontSize: 10 },
-    weekDate: { color: palette.subtleForeground, fontSize: 9 },
+    weekName: { color: palette.subtleForeground, ...TYPE.micro},
+    weekDate: { color: palette.subtleForeground, ...TYPE.micro},
     plannedBlock: { marginTop: SPACING.sm },
     exerciseRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm, paddingVertical: 3 },
     exerciseNumbers: { alignItems: "center", minWidth: 34 },
-    numberValue: { color: palette.foreground, fontSize: 13, fontWeight: "700" },
-    numberUnit: { color: palette.subtleForeground, fontSize: 9 },
+    numberValue: { color: palette.foreground, ...TYPE.label, fontWeight: "700" },
+    numberUnit: { color: palette.subtleForeground, ...TYPE.micro},
     dots: { flexDirection: "row", flexWrap: "wrap", gap: 3 },
     dot: { width: 12, height: 12, borderRadius: 3 },
     line: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
-    lineText: { flex: 1, color: palette.foreground, fontSize: 13 },
+    lineText: { flex: 1, color: palette.foreground, ...TYPE.label},
     struck: { color: palette.mutedForeground, textDecorationLine: "line-through" },
     statRow: { flexDirection: "row", gap: SPACING.sm },
     stat: { flex: 1, gap: 1 },
-    statValue: { color: palette.foreground, fontSize: 16, fontWeight: "700" },
+    statValue: { color: palette.foreground, ...TYPE.heading, fontWeight: "700" },
   });
 }

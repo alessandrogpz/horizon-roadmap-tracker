@@ -20,7 +20,7 @@ import { updatePhase } from "@shared/trackActions";
 import { PHASE_DETAIL_SECTIONS, phaseDetailItems, setPhaseDetail } from "@shared/phaseDetails";
 import { dateForDay, dayForDate, formatDateYMD, formatDayMonthYear, parseYMD } from "@shared/dates";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
-import { RADIUS, SPACING, type Palette } from "../../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../../theme";
 import { usePalette } from "../../theme/ThemeProvider";
 import { DatePicker } from "../../components/DatePicker";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -365,16 +365,15 @@ function makeStyles(palette: Palette) {
     content: { padding: SPACING.lg, gap: SPACING.sm, paddingBottom: SPACING.xl },
     centered: { alignItems: "center", justifyContent: "center" },
     titleRow: { flexDirection: "row", alignItems: "center", gap: SPACING.md },
-    titleInput: { color: palette.foreground, fontSize: 20, fontWeight: "700", paddingVertical: SPACING.xs },
-    reading: { color: palette.mutedForeground, fontSize: 14, lineHeight: 20 },
+    titleInput: { color: palette.foreground, ...TYPE.title, fontWeight: "700", paddingVertical: SPACING.xs },
+    reading: { color: palette.mutedForeground, ...TYPE.body, lineHeight: 20 },
     deadlineRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
     deadlineButton: { flex: 1, flexDirection: "row", alignItems: "center", gap: SPACING.sm, minHeight: 40 },
     sectionTitle: {
       color: palette.subtleForeground,
-      fontSize: 11,
+      ...TYPE.eyebrow,
       fontWeight: "700",
       letterSpacing: 1.2,
-      textTransform: "uppercase",
       marginTop: SPACING.lg,
     },
     section: { gap: SPACING.sm },
@@ -386,7 +385,7 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
       color: palette.foreground,
-      fontSize: 14,
+      ...TYPE.body,
     },
     paragraph: { minHeight: 76, lineHeight: 20 },
     editRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
@@ -400,12 +399,12 @@ function makeStyles(palette: Palette) {
       alignItems: "center",
       justifyContent: "center",
     },
-    tick: { color: "#fff", fontSize: 13, fontWeight: "800" },
-    taskTitle: { flex: 1, color: palette.foreground, fontSize: 15, paddingVertical: SPACING.xs },
+    tick: { color: "#fff", ...TYPE.label, fontWeight: "800" },
+    taskTitle: { flex: 1, color: palette.foreground, ...TYPE.subhead, paddingVertical: SPACING.xs },
     doneTask: { color: palette.mutedForeground, textDecorationLine: "line-through" },
     remove: {
       color: palette.subtleForeground,
-      fontSize: 20,
+      ...TYPE.title,
       // Android asks for 48dp; a bare glyph was nowhere near it, which is
       // most of why these felt fiddly to hit.
       minWidth: 44,
@@ -422,9 +421,9 @@ function makeStyles(palette: Palette) {
       backgroundColor: palette.card,
     },
     detailHead: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
-    detailItem: { flex: 1, color: palette.foreground, fontSize: 15, fontWeight: "600" },
-    detailDesc: { color: palette.mutedForeground, fontSize: 13, lineHeight: 19, paddingLeft: SPACING.sm },
-    muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
+    detailItem: { flex: 1, color: palette.foreground, ...TYPE.subhead, fontWeight: "600" },
+    detailDesc: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 19, paddingLeft: SPACING.sm },
+    muted: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },
     addSections: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.xs, marginTop: SPACING.md },
     addSectionChip: {
       paddingHorizontal: SPACING.md,
@@ -434,7 +433,7 @@ function makeStyles(palette: Palette) {
       borderStyle: "dashed",
       borderColor: palette.cardBorder,
     },
-    addSectionLabel: { color: palette.mutedForeground, fontSize: 12, fontWeight: "600" },
-    footnote: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16, marginTop: SPACING.sm },
+    addSectionLabel: { color: palette.mutedForeground, ...TYPE.caption, fontWeight: "600" },
+    footnote: { color: palette.subtleForeground, ...TYPE.micro, lineHeight: 16, marginTop: SPACING.sm },
   });
 }
