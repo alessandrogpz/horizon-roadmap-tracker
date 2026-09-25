@@ -7,6 +7,15 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.73.2] - 2026-09-25
+
+### Changed
+- **All three streak figures share one row, icons and all.** Side by side at this width a tile has
+  about fifty points left for its name once the icon and the padding have taken theirs, and a word
+  in small caps needs more — so `StatTile` gained a stacked arrangement that gives the name the
+  tile's whole width. It costs one line, which is cheaper than losing either the icon or the end of
+  the word, and the graph gets the other row back.
+
 ## [0.73.1] - 2026-09-25
 
 ### Changed
