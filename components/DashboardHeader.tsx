@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import type { TrackState, Workspace } from "@/lib/types";
 import { daysSince, todayYMD } from "@/lib/dates";
 import { currentStreakLength } from "@/lib/streak";
+import { phaseStats } from "@/lib/stats";
 import { visibleTracks } from "@/lib/selectors";
 import type { SyncStatus } from "@/components/workspace/WorkspaceProvider";
 import { Cloud, Flame } from "lucide-react";
@@ -167,8 +168,14 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
   // Which hero metric has its detail panel open, if any.
   const [openStat, setOpenStat] = useState<StatMetric | null>(null);
   const daysPassed = data.startDate && data.isSynced ? daysSince(data.startDate) : 0;
+  // Through `phaseStats`, not worked out here: a phase's day count is the time
+  // spent in it, including stretches before the track last moved away and came
+  // back, and that sum lives in one place. Counting from the current start
+  // date meant this tile reset to day one whenever a phase was revisited —
+  // and disagreed with the detail panel behind it, which already asked
+  // `phaseStats`.
   const daysInPhase: number | string = data.isSynced
-    ? daysSince(data.currentPhaseStartDate || data.startDate)
+    ? phaseStats(data, todayYMD()).dayInPhase
     : "--";
 
   // Track duration generalizes per template: the last phase with a

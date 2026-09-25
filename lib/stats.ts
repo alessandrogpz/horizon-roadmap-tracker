@@ -212,8 +212,11 @@ export function phaseStats(track: TrackState, todayStr: string): PhaseStats {
   const window = timeline.windows.find((w) => w.phase.id === track.currentPhase) || null;
   const phase = window?.phase || null;
 
+  // Time spent in this phase, not time since last entering it: whatever was
+  // banked when the phase was previously left, plus the stretch running now.
   const phaseStart = track.currentPhaseStartDate || track.startDate;
-  const dayInPhase = phaseStart ? Math.max(1, dayForDate(phaseStart, todayStr)) : 0;
+  const banked = track.phaseDaysSpent?.[String(track.currentPhase)] ?? 0;
+  const dayInPhase = phaseStart ? banked + Math.max(1, dayForDate(phaseStart, todayStr)) : banked;
 
   const tasks = phase?.tasks || [];
   const recommendedId = recommendedPhaseId(track, timeline.daysPassed);

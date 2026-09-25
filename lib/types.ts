@@ -92,7 +92,23 @@ export type DateStr = string; // "YYYY-MM-DD"
 export interface AppState {
   currentPhase: number;
   startDate: DateStr;
+  /** When the *current* stretch in the current phase began. Reset every time
+   *  the phase changes, which is why it cannot answer "how long have I spent
+   *  in this phase" on its own — see `phaseDaysSpent`. */
   currentPhaseStartDate?: DateStr;
+  /**
+   * Whole days already spent in each phase, by phase id, not counting the
+   * stretch running now.
+   *
+   * Moving between phases used to lose the time: the start date was simply
+   * overwritten, so fifty days in phase one became day one again the moment
+   * you looked at phase two and came back. A phase's day count is the time
+   * spent in it, which is not the same as the time since you last entered it.
+   *
+   * Banked on leaving, so a day belongs to whichever phase was open on it and
+   * is never counted twice.
+   */
+  phaseDaysSpent?: Record<string, number>;
   streakHistory: DateStr[];
   lastTasksResetDate: DateStr | "";
   dailyTasks: Record<DayKey, TaskItem[]>;

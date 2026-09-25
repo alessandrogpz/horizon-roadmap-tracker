@@ -106,6 +106,7 @@ export const TrackSchema = z.strictObject({
   currentPhase: z.number().int().min(0).max(10_000).optional(),
   startDate: text(30).optional(),
   currentPhaseStartDate: text(30).optional(),
+  phaseDaysSpent: maxKeys(z.record(fieldKey, z.number().int().min(0).max(100_000)), 500).optional(),
   streakHistory: z.array(dateKey).max(20_000).optional(),
   lastTasksResetDate: text(30).optional(),
   dailyTasks: z.partialRecord(day, z.array(TaskItem).max(500)).optional(),

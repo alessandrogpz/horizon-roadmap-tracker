@@ -7,6 +7,31 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.71.0] - 2026-09-25
+
+A phase's day count was the time since you last entered it, not the time spent in it. Looking at
+phase two and coming back turned fifty days in phase one into day one.
+
+### Added
+- **`phaseDaysSpent` on a track**: whole days already spent in each phase, banked when the phase is
+  left, so returning to one resumes rather than restarts. The day of a switch belongs to the phase
+  being *entered*, which is what keeps the sum honest — every calendar day counts for exactly one
+  phase, and leaving and returning on the same day cannot count it twice.
+- **The field is in the sync schema**, with a test that a track carrying it survives the round trip.
+  The schema is strict, so a field missing from it is a field the server quietly refuses — which is
+  how a real track once got locked out of syncing.
+
+### Fixed
+- **Removing the phase you are standing on no longer credits the next one with your time.** It
+  changed which phase was current and left the start date alone, so the phase you landed on
+  inherited however long you had spent in the one you deleted. It now starts a fresh stretch, and
+  the removed phase's banked days go with it.
+- **The website's Phase Day tile computed its own answer**, separately from the detail panel behind
+  it, which already asked `phaseStats`. Both now ask the same function, so they cannot disagree.
+
+Existing tracks carry no banked days, so nothing changes for them until the next time a phase is
+switched. No migration is needed.
+
 ## [0.70.3] - 2026-09-25
 
 ### Fixed
