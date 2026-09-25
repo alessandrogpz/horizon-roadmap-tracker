@@ -317,11 +317,11 @@ describe("named workouts", () => {
   };
 
   it("keeps each workout's exercises to itself", () => {
-    let { log, id: push } = pushDay();
-    const made = addWorkout(log, "Pull");
-    log = addWorkoutExercise(made.log, made.workout.id, "Row");
+    const push = pushDay();
+    const made = addWorkout(push.log, "Pull");
+    const log = addWorkoutExercise(made.log, made.workout.id, "Row");
 
-    expect(workoutById(log, push)?.exercises.map((e) => e.name)).toEqual(["Bench"]);
+    expect(workoutById(log, push.id)?.exercises.map((e) => e.name)).toEqual(["Bench"]);
     expect(workoutById(log, made.workout.id)?.exercises.map((e) => e.name)).toEqual(["Row"]);
   });
 
@@ -355,7 +355,7 @@ describe("named workouts", () => {
   });
 
   it("removing one leaves the others alone", () => {
-    let { log, id } = pushDay();
+    const { log, id } = pushDay();
     const made = addWorkout(log, "Pull");
     const next = removeWorkout(made.log, id);
     expect(workoutsOf(next).map((w) => w.name)).toEqual(["Pull"]);
