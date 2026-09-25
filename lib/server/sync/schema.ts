@@ -94,7 +94,23 @@ const PanelColumns = z.strictObject({
 /** Retired fields some older records still carry. Stored as they are. */
 const LegacyMap = maxKeys(z.record(fieldKey, z.union([text(2000), z.number()])), 200);
 
-export const TrackSchema = z.strictObject({
+/**
+ * A track as a device sends it.
+ *
+ * Unknown keys are dropped rather than refused, and that distinction is the
+ * difference between a feature landing and sync stopping. Phones update over
+ * the air in minutes; the server updates when the site is deployed. So a
+ * device is routinely newer than the server it talks to, and under a strict
+ * object one field it has not heard of rejects the entire payload — every
+ * track, every note, nothing saved. Dropping it loses that one field until the
+ * deploy catches up, and loses nothing else.
+ *
+ * Just as safe: stripped keys never reach the database, which is what the
+ * strictness was protecting. Two layers still stand behind this — the server
+ * writes only fields it names, and MongoDB's own validator refuses documents
+ * it does not recognise.
+ */
+export const TrackSchema = z.object({
   meta: z.strictObject({
     id,
     name: text(500),
@@ -141,7 +157,8 @@ export const TrackSchema = z.strictObject({
   hiddenPanels: z.array(text(100)).max(100).optional(),
 });
 
-export const WorkspaceSchema = z.strictObject({
+/** Same reasoning as `TrackSchema`: a newer device must not be refused. */
+export const WorkspaceSchema = z.object({
   activeTrackId: z.union([id, z.literal("")]),
   tracks: maxKeys(z.record(fieldKey, TrackSchema), 200),
   schemaVersion: whole.optional(),

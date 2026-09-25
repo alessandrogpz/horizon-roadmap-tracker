@@ -1,32 +1,38 @@
-// A workout, logged set by set while it happens.
+// Workouts: a push day, a pull day, whatever you have made — and inside one,
+// a table per exercise.
 //
-// The screen is a table per exercise: one row per set, carrying what was
-// lifted last time, the weight and reps for this one, and a tick. Rows exist
-// before they are done — that is the point. You arrive knowing roughly what
-// you are about to do, the rows are already there with last time's numbers in
-// them, and you tick each one off as you finish it. A screen that could only
-// record what had already happened would have nothing to show you between
-// sets, which is exactly when it is in your hand.
+// The exercises belong to the workout rather than to a date, because a workout
+// is a thing you come back to. You do not open this to see what the 12th of
+// March was; you open it to do pull day again, and to see what you lifted last
+// time you did it. So opening the screen asks which one, and opening one shows
+// it exactly as you left it — the same weights, ready to be beaten.
 //
-// Nothing here is joined to the calendar or the week yet. It logs today, and
-// today is whatever day it is.
+// Rows exist before they are done. You arrive knowing roughly what you are
+// about to do, the rows are already there with last time's numbers in them,
+// and you tick each off as you finish it. A screen that could only record what
+// had already happened would have nothing to show you between sets, which is
+// exactly when it is in your hand.
+//
+// Nothing here is joined to the calendar or the week yet.
 
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { formatDayMonthYear, parseYMD } from "@shared/dates";
+import Animated, { FadeIn } from "react-native-reanimated";
 import {
-  addExercise,
-  addSet,
-  clearSession,
-  doneCountOf,
-  lastTime,
-  removeExercise,
-  removeSet,
-  renameExercise,
-  sessionFor,
-  updateSet,
-  volumeOf,
+  addWorkout,
+  addWorkoutExercise,
+  addWorkoutSet,
+  removeWorkout,
+  removeWorkoutExercise,
+  removeWorkoutSet,
+  renameWorkout,
+  renameWorkoutExercise,
+  resetWorkout,
+  setsInWorkout,
+  updateWorkoutSet,
+  workoutById,
+  workoutsOf,
   type GymSet,
 } from "@shared/gym";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
@@ -34,26 +40,31 @@ import { useGymLog } from "../gym/useGymLog";
 import { Refreshable } from "../components/Refreshable";
 import { EmptyState } from "../components/EmptyState";
 import { ConfirmSheet, type Confirmation } from "../components/ConfirmSheet";
-import { StatTile } from "../components/StatTile";
 import { settle, tap } from "../feedback/haptics";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 export default function WorkoutScreen() {
-  const { track, today } = useWorkspace();
+  const { track } = useWorkspace();
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
   const { log, change } = useGymLog(track?.meta.id);
+  const [openId, setOpenId] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<Confirmation | null>(null);
 
-  const session = useMemo(() => sessionFor(log, today), [log, today]);
-  const done = doneCountOf(session);
-  const volume = volumeOf(session);
+  const workouts = workoutsOf(log);
+  const open = openId ? workoutById(log, openId) : undefined;
 
-  const onAddExercise = useCallback(() => {
+  const create = useCallback(() => {
     tap();
-    change((current) => addExercise(current, today, "New exercise"));
-  }, [change, today]);
+    change((current) => {
+      const { log: next, workout } = addWorkout(current, `Workout ${workoutsOf(current).length + 1}`);
+      // Straight into the new one: nobody makes a workout in order to look at
+      // it in a list.
+      setOpenId(workout.id);
+      return next;
+    });
+  }, [change]);
 
   if (!track) {
     return (
@@ -63,71 +74,166 @@ export default function WorkoutScreen() {
     );
   }
 
+  if (!open) {
+    return (
+      <Refreshable style={styles.screen} contentContainerStyle={styles.content}>
+        {workouts.length === 0 ? (
+          <EmptyState
+            title="No workouts yet"
+            hint="A workout is a day you repeat — push, pull, legs. Make one and fill it with exercises."
+            action="New workout"
+            onAct={create}
+          />
+        ) : (
+          <>
+            {workouts.map((workout) => (
+              <Pressable
+                key={workout.id}
+                accessibilityRole="button"
+                accessibilityLabel={`Open ${workout.name}`}
+                onPress={() => {
+                  tap();
+                  setOpenId(workout.id);
+                }}
+                style={styles.pick}
+              >
+                <View style={[styles.pickIcon, { backgroundColor: `${palette.accent}22` }]}>
+                  <Ionicons name="barbell-outline" size={17} color={palette.accent} />
+                </View>
+                <View style={styles.pickText}>
+                  <Text style={styles.pickName}>{workout.name}</Text>
+                  <Text style={styles.muted}>
+                    {workout.exercises.length === 0
+                      ? "Nothing in it yet"
+                      : `${workout.exercises.length} exercise${workout.exercises.length === 1 ? "" : "s"} · ${setsInWorkout(workout)} set${setsInWorkout(workout) === 1 ? "" : "s"}`}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={palette.subtleForeground} />
+              </Pressable>
+            ))}
+
+            <Pressable accessibilityRole="button" onPress={create} style={styles.addExercise}>
+              <Ionicons name="add" size={16} color={palette.accent} />
+              <Text style={styles.addExerciseLabel}>New workout</Text>
+            </Pressable>
+          </>
+        )}
+
+        <ConfirmSheet confirmation={confirming} onClose={() => setConfirming(null)} />
+      </Refreshable>
+    );
+  }
+
   return (
     <Refreshable style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-      <View style={styles.tiles}>
-        <StatTile compact label="Date" value={parseYMD(today).getDate()} unit={monthOf(today)} icon="calendar-outline" />
-        <StatTile compact label="Sets done" value={done} icon="checkmark-circle-outline" tint={palette.success} />
-        <StatTile compact label="Volume" value={volume} unit="kg" icon="barbell-outline" />
-      </View>
-
-      {session.exercises.map((exercise) => (
-        <Exercise
-          key={exercise.id}
-          exercise={exercise}
-          previous={lastTime(log, exercise.name, today)}
-          onRename={(name) => change((current) => renameExercise(current, today, exercise.id, name))}
-          onAddSet={(set) => change((current) => addSet(current, today, exercise.id, set))}
-          onUpdateSet={(index, patch) =>
-            change((current) => updateSet(current, today, exercise.id, index, patch))
-          }
-          onRemoveSet={(index) => change((current) => removeSet(current, today, exercise.id, index))}
-          onRemove={() =>
-            setConfirming({
-              title: `Remove ${exercise.name}?`,
-              body: "Its sets go with it. Nothing else in the workout changes.",
-              verb: "Remove",
-              onConfirm: () => change((current) => removeExercise(current, today, exercise.id)),
-            })
-          }
-          styles={styles}
-          palette={palette}
-        />
-      ))}
-
-      {session.exercises.length === 0 ? (
-        <EmptyState
-          title="Nothing logged today"
-          hint="Add the first exercise and its sets appear underneath, ready to tick off."
-          action="Add an exercise"
-          onAct={onAddExercise}
-        />
-      ) : (
-        <Pressable accessibilityRole="button" onPress={onAddExercise} style={styles.addExercise}>
-          <Ionicons name="add" size={16} color={palette.accent} />
-          <Text style={styles.addExerciseLabel}>Add exercise</Text>
-        </Pressable>
-      )}
-
-      {session.exercises.length > 0 && (
+      <View style={styles.bar}>
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel="Back to workouts"
+          onPress={() => setOpenId(null)}
+          hitSlop={8}
+          style={styles.back}
+        >
+          <Ionicons name="chevron-back" size={18} color={palette.foreground} />
+        </Pressable>
+
+        <TextInput
+          value={open.name}
+          onChangeText={(name) => change((current) => renameWorkout(current, open.id, name))}
+          placeholder="Workout"
+          placeholderTextColor={palette.subtleForeground}
+          style={styles.workoutName}
+          accessibilityLabel="Workout name"
+        />
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Start this workout again"
           onPress={() =>
             setConfirming({
-              title: "Cancel this workout?",
-              body: "Everything logged today goes. Other days are untouched.",
-              verb: "Cancel workout",
+              title: `Start ${open.name} again?`,
+              body: "Every set is unticked. The weights and reps stay where they are.",
+              verb: "Start again",
               onConfirm: () => {
-                change((current) => clearSession(current, today));
+                change((current) => resetWorkout(current, open.id));
                 settle();
               },
             })
           }
-          style={styles.cancel}
+          hitSlop={8}
+          style={styles.back}
         >
-          <Text style={styles.cancelLabel}>Cancel workout</Text>
+          <Ionicons name="refresh" size={17} color={palette.mutedForeground} />
         </Pressable>
-      )}
+      </View>
+
+      <Animated.View key={open.id} entering={FadeIn.duration(200)} style={styles.stack}>
+        {open.exercises.map((exercise) => (
+          <Exercise
+            key={exercise.id}
+            exercise={exercise}
+            onRename={(name) => change((current) => renameWorkoutExercise(current, open.id, exercise.id, name))}
+            onAddSet={(set) => change((current) => addWorkoutSet(current, open.id, exercise.id, set))}
+            onUpdateSet={(index, patch) =>
+              change((current) => updateWorkoutSet(current, open.id, exercise.id, index, patch))
+            }
+            onRemoveSet={(index) => change((current) => removeWorkoutSet(current, open.id, exercise.id, index))}
+            onRemove={() =>
+              setConfirming({
+                title: `Remove ${exercise.name}?`,
+                body: "Its sets go with it. Nothing else in the workout changes.",
+                verb: "Remove",
+                onConfirm: () => change((current) => removeWorkoutExercise(current, open.id, exercise.id)),
+              })
+            }
+            styles={styles}
+            palette={palette}
+          />
+        ))}
+
+        {open.exercises.length === 0 ? (
+          <EmptyState
+            title={`Nothing in ${open.name} yet`}
+            hint="Add an exercise and its sets appear underneath, ready to tick off."
+            action="Add an exercise"
+            onAct={() => {
+              tap();
+              change((current) => addWorkoutExercise(current, open.id, "New exercise"));
+            }}
+          />
+        ) : (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => {
+              tap();
+              change((current) => addWorkoutExercise(current, open.id, "New exercise"));
+            }}
+            style={styles.addExercise}
+          >
+            <Ionicons name="add" size={16} color={palette.accent} />
+            <Text style={styles.addExerciseLabel}>Add exercise</Text>
+          </Pressable>
+        )}
+      </Animated.View>
+
+      <Pressable
+        accessibilityRole="button"
+        onPress={() =>
+          setConfirming({
+            title: `Delete ${open.name}?`,
+            body: "The workout and everything in it goes. Other workouts are untouched.",
+            verb: "Delete",
+            onConfirm: () => {
+              change((current) => removeWorkout(current, open.id));
+              setOpenId(null);
+              settle();
+            },
+          })
+        }
+        style={styles.cancel}
+      >
+        <Text style={styles.cancelLabel}>Delete workout</Text>
+      </Pressable>
 
       <ConfirmSheet confirmation={confirming} onClose={() => setConfirming(null)} />
     </Refreshable>
@@ -137,7 +243,6 @@ export default function WorkoutScreen() {
 /** One exercise: its name, and a row per set. */
 function Exercise({
   exercise,
-  previous,
   onRename,
   onAddSet,
   onUpdateSet,
@@ -147,7 +252,6 @@ function Exercise({
   palette,
 }: {
   exercise: { id: string; name: string; sets: GymSet[] };
-  previous: { date: string; sets: GymSet[] } | null;
   onRename: (name: string) => void;
   onAddSet: (set: GymSet) => void;
   onUpdateSet: (index: number, patch: Partial<GymSet>) => void;
@@ -179,7 +283,10 @@ function Exercise({
 
       <View style={styles.headRow}>
         <Text style={[styles.headCell, styles.colSet]}>Set</Text>
-        <Text style={[styles.headCell, styles.colPrev]}>Previous</Text>
+        {/* No "last time" column: the weights live in the workout itself, so
+            what is in the Kg box already is what you left there. A column that
+            is empty on every row is a column that says nothing. */}
+        <View style={styles.colPrev} />
         <Text style={[styles.headCell, styles.colNum]}>Kg</Text>
         <Text style={[styles.headCell, styles.colNum]}>Reps</Text>
         <View style={styles.colTick} />
@@ -190,9 +297,6 @@ function Exercise({
           key={index}
           index={index}
           set={set}
-          // Last time's matching set, so a row opens on the question every set
-          // starts with: what did I do before?
-          previous={previous?.sets[index]}
           onChange={(patch) => onUpdateSet(index, patch)}
           onRemove={() => onRemoveSet(index)}
           styles={styles}
@@ -222,7 +326,6 @@ function Exercise({
 function SetRow({
   index,
   set,
-  previous,
   onChange,
   onRemove,
   styles,
@@ -230,7 +333,6 @@ function SetRow({
 }: {
   index: number;
   set: GymSet;
-  previous?: GymSet;
   onChange: (patch: Partial<GymSet>) => void;
   onRemove: () => void;
   styles: ReturnType<typeof makeStyles>;
@@ -242,13 +344,11 @@ function SetRow({
     <View style={[styles.row, done && { backgroundColor: `${palette.success}1a` }]}>
       <Text style={[styles.cell, styles.colSet, done && { color: palette.success }]}>{index + 1}</Text>
 
-      <Text style={[styles.cell, styles.colPrev, styles.prev]} numberOfLines={1}>
-        {previous ? `${previous.weight ?? 0} kg × ${previous.reps}` : "—"}
-      </Text>
+      <View style={styles.colPrev} />
 
       <NumberCell
         value={set.weight}
-        placeholder={previous?.weight}
+        placeholder={undefined}
         onChange={(weight) => onChange({ weight })}
         label={`Weight for set ${index + 1}`}
         styles={styles}
@@ -256,7 +356,7 @@ function SetRow({
       />
       <NumberCell
         value={set.reps}
-        placeholder={previous?.reps}
+        placeholder={undefined}
         onChange={(reps) => onChange({ reps: reps ?? 0 })}
         label={`Reps for set ${index + 1}`}
         styles={styles}
@@ -315,15 +415,39 @@ function NumberCell({
   );
 }
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const monthOf = (date: string) => MONTHS[parseYMD(date).getMonth()];
-
 function makeStyles(palette: Palette) {
   return StyleSheet.create({
     screen: { flex: 1, backgroundColor: palette.background },
     content: { padding: SPACING.lg, gap: SPACING.md, paddingBottom: SPACING.xl },
     centered: { alignItems: "center", justifyContent: "center" },
-    tiles: { flexDirection: "row", gap: SPACING.sm },
+    stack: { gap: SPACING.md },
+    // Choosing a workout.
+    pick: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: SPACING.md,
+      padding: SPACING.md,
+      borderRadius: RADIUS.card,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.card,
+    },
+    pickIcon: { width: 34, height: 34, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+    pickText: { flex: 1, gap: 1 },
+    pickName: { ...TYPE.subhead, color: palette.foreground, fontWeight: "700" },
+    // Inside one.
+    bar: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
+    back: {
+      minWidth: 34,
+      minHeight: 34,
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: RADIUS.control,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.surfaceMuted,
+    },
+    workoutName: { ...TYPE.heading, flex: 1, color: palette.foreground, fontWeight: "700", padding: 0 },
     card: {
       borderRadius: RADIUS.card,
       borderWidth: 1,
@@ -361,7 +485,6 @@ function makeStyles(palette: Palette) {
     colPrev: { flex: 1 },
     colNum: { width: 54, textAlign: "center" },
     colTick: { width: 34 },
-    prev: { color: palette.subtleForeground, fontWeight: "400" },
     input: {
       paddingVertical: 5,
       borderRadius: RADIUS.control,

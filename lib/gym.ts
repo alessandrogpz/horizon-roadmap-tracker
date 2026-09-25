@@ -64,13 +64,40 @@ export interface PlanItem {
   reps: number;
 }
 
+/**
+ * A named workout — a push day, a pull day — and the exercises in it.
+ *
+ * The exercises live here rather than under a date, because this is the thing
+ * you come back to: you do not open the app to see what the 12th of March was,
+ * you open it to do pull day again and to see what you lifted last time you
+ * did. Dates are for history; a workout is for doing.
+ */
+export interface Workout {
+  id: string;
+  name: string;
+  exercises: GymExercise[];
+}
+
 export interface GymLog {
   version: 1;
   /** Focus type key -> what that kind of day asks for. This is the *plan*;
    *  `sessions` is what actually happened. */
   plans: Record<string, PlanItem[]>;
+  /** The named workouts, in the order they were made. */
+  workouts?: Workout[];
   sessions: Record<DateStr, GymSession>;
 }
+
+/**
+ * An id nothing else will have.
+ *
+ * `Date.now()` alone is not enough: two taps inside the same millisecond —
+ * which is one tap on a fast phone and a re-render — produced the same id, and
+ * two workouts sharing one id are one workout as far as every lookup and every
+ * edit is concerned.
+ */
+const uid = (prefix: string): string =>
+  `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 
 export const emptyGymLog = (): GymLog => ({ version: 1, plans: {}, sessions: {} });
 
@@ -127,38 +154,55 @@ export function parseGymLog(content: string | undefined | null): GymLog {
   if (isRecord(raw.sessions)) {
     for (const [date, session] of Object.entries(raw.sessions)) {
       if (!isRecord(session)) continue;
-      const exercises: GymExercise[] = [];
-
-      if (Array.isArray(session.exercises)) {
-        for (const exercise of session.exercises) {
-          if (!isRecord(exercise) || typeof exercise.name !== "string") continue;
-          const sets: GymSet[] = [];
-          if (Array.isArray(exercise.sets)) {
-            for (const set of exercise.sets) {
-              if (!isRecord(set) || typeof set.reps !== "number") continue;
-              sets.push({
-                reps: Math.max(0, Math.round(set.reps)),
-                ...(typeof set.weight === "number" ? { weight: set.weight } : {}),
-                // Carried through rather than defaulted. A set written before
-                // ticking existed has no flag, and must not be read as "not
-                // done" — that would empty out every session ever recorded.
-                ...(typeof set.done === "boolean" ? { done: set.done } : {}),
-              });
-            }
-          }
-          exercises.push({
-            id: typeof exercise.id === "string" ? exercise.id : `ex_${exercises.length}`,
-            name: exercise.name,
-            sets,
-          });
-        }
-      }
-
-      sessions[date] = { exercises };
+      sessions[date] = { exercises: parseExercises(session.exercises) };
     }
   }
 
-  return { version: 1, plans, sessions };
+  const workouts: Workout[] = [];
+  if (Array.isArray(raw.workouts)) {
+    for (const workout of raw.workouts) {
+      if (!isRecord(workout) || typeof workout.name !== "string") continue;
+      workouts.push({
+        id: typeof workout.id === "string" ? workout.id : `wo_${workouts.length}`,
+        name: workout.name,
+        exercises: parseExercises(workout.exercises),
+      });
+    }
+  }
+
+  return { version: 1, plans, sessions, workouts };
+}
+
+/** Exercises and their sets, wherever they are read from — a dated session or
+ *  a named workout. Written once so the two cannot drift, which is how the
+ *  `done` flag came to be dropped on the way back in. */
+function parseExercises(raw: unknown): GymExercise[] {
+  const exercises: GymExercise[] = [];
+  if (!Array.isArray(raw)) return exercises;
+
+  for (const exercise of raw) {
+    if (!isRecord(exercise) || typeof exercise.name !== "string") continue;
+    const sets: GymSet[] = [];
+    if (Array.isArray(exercise.sets)) {
+      for (const set of exercise.sets) {
+        if (!isRecord(set) || typeof set.reps !== "number") continue;
+        sets.push({
+          reps: Math.max(0, Math.round(set.reps)),
+          ...(typeof set.weight === "number" ? { weight: set.weight } : {}),
+          // Carried rather than defaulted. A set written before ticking
+          // existed has no flag, and must not be read as "not done" — that
+          // would empty out every session ever recorded.
+          ...(typeof set.done === "boolean" ? { done: set.done } : {}),
+        });
+      }
+    }
+    exercises.push({
+      id: typeof exercise.id === "string" ? exercise.id : `ex_${exercises.length}`,
+      name: exercise.name,
+      sets,
+    });
+  }
+  return exercises;
 }
 
 export const serializeGymLog = (log: GymLog): string => JSON.stringify(log);
@@ -259,7 +303,7 @@ export function addExercise(log: GymLog, date: DateStr, name: string): GymLog {
   const session = sessionFor(log, date);
   return withSession(log, date, {
     ...session,
-    exercises: [...session.exercises, { id: `ex_${Date.now()}`, name: trimmed, sets: [] }],
+    exercises: [...session.exercises, { id: uid("ex"), name: trimmed, sets: [] }],
   });
 }
 
@@ -292,6 +336,104 @@ export function removeSet(log: GymLog, date: DateStr, exerciseId: string, index:
     ),
   });
 }
+
+export const workoutsOf = (log: GymLog): Workout[] => log.workouts ?? [];
+
+export const workoutById = (log: GymLog, id: string): Workout | undefined =>
+  workoutsOf(log).find((workout) => workout.id === id);
+
+export function addWorkout(log: GymLog, name: string): { log: GymLog; workout: Workout } {
+  const workout: Workout = { id: uid("wo"), name, exercises: [] };
+  return { log: { ...log, workouts: [...workoutsOf(log), workout] }, workout };
+}
+
+export const renameWorkout = (log: GymLog, id: string, name: string): GymLog => ({
+  ...log,
+  workouts: workoutsOf(log).map((workout) => (workout.id === id ? { ...workout, name } : workout)),
+});
+
+export const removeWorkout = (log: GymLog, id: string): GymLog => ({
+  ...log,
+  workouts: workoutsOf(log).filter((workout) => workout.id !== id),
+});
+
+/** Every change inside a workout goes through here, so there is one place that
+ *  knows how a workout is put back. */
+function withWorkout(log: GymLog, id: string, change: (workout: Workout) => Workout): GymLog {
+  return {
+    ...log,
+    workouts: workoutsOf(log).map((workout) => (workout.id === id ? change(workout) : workout)),
+  };
+}
+
+export function addWorkoutExercise(log: GymLog, id: string, name: string): GymLog {
+  return withWorkout(log, id, (workout) => ({
+    ...workout,
+    exercises: [...workout.exercises, { id: uid("ex"), name, sets: [] }],
+  }));
+}
+
+export const removeWorkoutExercise = (log: GymLog, id: string, exerciseId: string): GymLog =>
+  withWorkout(log, id, (workout) => ({
+    ...workout,
+    exercises: workout.exercises.filter((exercise) => exercise.id !== exerciseId),
+  }));
+
+export const renameWorkoutExercise = (log: GymLog, id: string, exerciseId: string, name: string): GymLog =>
+  withWorkout(log, id, (workout) => ({
+    ...workout,
+    exercises: workout.exercises.map((exercise) =>
+      exercise.id === exerciseId ? { ...exercise, name } : exercise
+    ),
+  }));
+
+export const addWorkoutSet = (log: GymLog, id: string, exerciseId: string, set: GymSet): GymLog =>
+  withWorkout(log, id, (workout) => ({
+    ...workout,
+    exercises: workout.exercises.map((exercise) =>
+      exercise.id === exerciseId ? { ...exercise, sets: [...exercise.sets, set] } : exercise
+    ),
+  }));
+
+export const removeWorkoutSet = (log: GymLog, id: string, exerciseId: string, index: number): GymLog =>
+  withWorkout(log, id, (workout) => ({
+    ...workout,
+    exercises: workout.exercises.map((exercise) =>
+      exercise.id === exerciseId
+        ? { ...exercise, sets: exercise.sets.filter((_, i) => i !== index) }
+        : exercise
+    ),
+  }));
+
+export const updateWorkoutSet = (
+  log: GymLog,
+  id: string,
+  exerciseId: string,
+  index: number,
+  change: Partial<GymSet>
+): GymLog =>
+  withWorkout(log, id, (workout) => ({
+    ...workout,
+    exercises: workout.exercises.map((exercise) =>
+      exercise.id === exerciseId
+        ? { ...exercise, sets: exercise.sets.map((set, i) => (i === index ? { ...set, ...change } : set)) }
+        : exercise
+    ),
+  }));
+
+/** Unticks every set, ready to be done again. What a workout is for is being
+ *  repeated, and the weights you left in it are the point of coming back. */
+export const resetWorkout = (log: GymLog, id: string): GymLog =>
+  withWorkout(log, id, (workout) => ({
+    ...workout,
+    exercises: workout.exercises.map((exercise) => ({
+      ...exercise,
+      sets: exercise.sets.map((set) => ({ ...set, done: false })),
+    })),
+  }));
+
+export const setsInWorkout = (workout: Workout): number =>
+  workout.exercises.reduce((total, exercise) => total + exercise.sets.length, 0);
 
 /** Changes one set in place — the weight typed into a row, the reps, or the
  *  tick against it. */
