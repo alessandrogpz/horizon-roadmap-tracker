@@ -58,6 +58,9 @@ const ROW = 56;
  *  the drag has to do arithmetic with it. */
 const GAP = SPACING.md;
 const SLOT = ROW + GAP;
+/** Stands in for a panel's open height until it has been measured: tall
+ *  enough to constrain nothing. */
+const UNMEASURED = 10000;
 
 export default function SpaceScreen() {
   const { track, today, editTrack } = useWorkspace();
@@ -472,10 +475,16 @@ function DraggablePanel({
     });
 
   const animated = useAnimatedStyle(() => {
-    const height = open ?? ROW;
+    // `maxHeight`, not `height`, so an unmeasured panel is simply
+    // unconstrained rather than wrong. That is what lets this render the same
+    // way whether or not the measurement has arrived: there used to be a
+    // second branch for the frame before it, and a panel whose layout event
+    // never came a second time stayed in that branch for good — rendered, but
+    // with no wrapper to fold.
+    const full = open ?? UNMEASURED;
     const mine = held.value === index;
     return {
-      height: height + (ROW - height) * collapse.value,
+      maxHeight: full + (ROW - full) * collapse.value,
       transform: [
         { translateY: mine ? dragY.value : shift.value },
         // Just enough lift to read as picked up rather than as a layout bug.
@@ -517,12 +526,6 @@ function DraggablePanel({
     if (open !== null && Math.abs(open - height) < 1) return;
     setOpen(height);
   };
-
-  // Before the first measurement there is nothing to animate to, so the panel
-  // is rendered plainly for the one frame it takes to find out how tall it is.
-  if (open === null) {
-    return <View onLayout={(event) => remember(event.nativeEvent.layout.height)}>{content}</View>;
-  }
 
   return (
     <GestureDetector gesture={drag}>
