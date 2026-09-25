@@ -86,11 +86,13 @@ export default function GymScreen() {
     <Refreshable style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <View style={styles.headline}>
         <View style={styles.headlineText}>
-          {/* "Gym plan", not the day's focus label. The label is whatever
-              the track calls that weekday — "Focus", "Maths" — which says
-              nothing about training and read as a bug. */}
-          <Text style={styles.focus}>Gym plan</Text>
-          <Text style={styles.muted}>{formatDayMonthYear(parseYMD(today))}</Text>
+          {/* The date, and not the words "Gym plan": the bar above the screen
+              already says those, and a heading repeating the one above it
+              spends the most valuable row on the screen telling you nothing.
+              Not the day's focus label either — that is whatever the track
+              calls the weekday, "Focus" or "Maths", which says nothing about
+              training and read as a bug. */}
+          <Text style={styles.focus}>{formatDayMonthYear(parseYMD(today))}</Text>
         </View>
         <View style={styles.totals}>
           <Text style={styles.totalValue}>{setCountOf(session)}</Text>

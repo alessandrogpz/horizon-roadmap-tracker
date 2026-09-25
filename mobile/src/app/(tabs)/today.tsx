@@ -19,6 +19,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { Refreshable } from "../../components/Refreshable";
 import { Link } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -34,6 +35,7 @@ import {
 import { currentStreakLength } from "@shared/streak";
 import { DAYS_SHORT, formatDateYMD, formatDayMonthYear, getWeekNum, parseYMD } from "@shared/dates";
 import { computeRotationItemsForDay, isRotationItem } from "@shared/rotation";
+import { focusOfDay } from "@shared/gym";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
 import { useUndo } from "../../components/UndoBar";
 import { tap } from "../../feedback/haptics";
@@ -175,6 +177,8 @@ export default function TodayScreen() {
     isItemCompleted(track, viewing, row.kind, row.id)
   ).length;
   const total = rows.focus.length + rows.revision.length;
+  /** What this weekday is for, per the track's rhythm. */
+  const kind = focusOfDay(track?.weekSchedule, dayKey);
   // How the day is going and how long the run is, in one line under the date —
   // two numbers do not need two cards.
   const summary =
@@ -204,11 +208,19 @@ export default function TodayScreen() {
           style={styles.dayLabelWrap}
         >
           <Text style={styles.dayLabel}>
-            {onToday ? `Today · ${dayKey}` : `${dayKey} · ${formatDayMonthYear(parseYMD(viewing))}`}
+            {onToday ? "Today" : `${dayKey} ${formatDayMonthYear(parseYMD(viewing))}`}
           </Text>
+          {/* The date is always here now. It used to say "Today · Fri", which
+              is the one day you do not need naming and the one line that could
+              have carried its date. The kind of day comes from the track's own
+              rhythm, so this screen and the week agree about what a Friday is
+              for without being told twice. */}
           <Text style={styles.dayHint}>
-            {onToday ? summary : "Tap to come back to today"}
+            {onToday
+              ? `${formatDayMonthYear(parseYMD(viewing))}${kind ? ` · ${kind.label}` : ""}`
+              : "Tap to come back to today"}
           </Text>
+          {onToday && <Text style={styles.dayHint}>{summary}</Text>}
         </Pressable>
 
         <Pressable
@@ -256,11 +268,24 @@ export default function TodayScreen() {
         }}
       />
 
-      {total === 0 && (
-        <Text style={styles.empty}>
-          Nothing is planned for {dayKey} on this track yet. Tap Edit to add something — it becomes
-          part of every {dayKey}.
-        </Text>
+      {/* An empty day says what to do about it and offers to start, rather
+          than describing the emptiness and leaving you to work out that Edit
+          is the way in. */}
+      {total === 0 && !editing && (
+        <View style={styles.emptyCard}>
+          <Text style={styles.emptyTitle}>Nothing planned for {dayKey}</Text>
+          <Text style={styles.muted}>
+            Whatever you add here becomes part of every {dayKey} on this track.
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setEditing(true)}
+            style={styles.primaryButton}
+          >
+            <Ionicons name="add" size={16} color={palette.background} />
+            <Text style={styles.primaryLabel}>Plan this day</Text>
+          </Pressable>
+        </View>
       )}
     </Refreshable>
   );
@@ -318,6 +343,10 @@ function Section({
     if (next && next !== row.title) onRename(row.id, next);
     setRenaming(null);
   };
+
+  // A heading with nothing under it is furniture. While the day is being
+  // edited it stays, because it is the thing you add into.
+  if (rows.length === 0 && !editing) return null;
 
   return (
     <View style={styles.section}>
@@ -462,6 +491,27 @@ function makeStyles(palette: Palette) {
       fontSize: 14,
     },
     section: { gap: SPACING.sm },
+    emptyCard: {
+      gap: SPACING.sm,
+      padding: SPACING.lg,
+      borderRadius: RADIUS.card,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.card,
+      marginTop: SPACING.sm,
+    },
+    emptyTitle: { color: palette.foreground, fontSize: 15, fontWeight: "700" },
+    primaryButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: SPACING.xs,
+      paddingVertical: SPACING.md,
+      borderRadius: RADIUS.control,
+      backgroundColor: palette.accent,
+      marginTop: SPACING.xs,
+    },
+    primaryLabel: { color: palette.background, fontSize: 14, fontWeight: "700" },
     sectionTitle: {
       color: palette.subtleForeground,
       fontSize: 11,
