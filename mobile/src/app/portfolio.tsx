@@ -23,6 +23,7 @@ import { RADIUS, SPACING, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { SwipeRow } from "../components/SwipeRow";
 import { EditHeader, useEditMode } from "../components/EditToggle";
+import { EmptyState } from "../components/EmptyState";
 import { Refreshable } from "../components/Refreshable";
 
 export default function PortfolioScreen() {
@@ -58,7 +59,7 @@ export default function PortfolioScreen() {
   return (
     <Refreshable style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <EditHeader
-        title="Deliverables"
+        title={projects.length === 1 ? "1 deliverable" : `${projects.length} deliverables`}
         editing={editing}
         onChange={setEditing}
         hint="Rename one, add its repository, or take it off the list. Ticking one off works either way."
@@ -142,7 +143,14 @@ export default function PortfolioScreen() {
         </SwipeRow>
       ))}
 
-      {projects.length === 0 && <Text style={styles.muted}>Nothing to deliver on this track yet.</Text>}
+      {projects.length === 0 && !editing && (
+        <EmptyState
+          title="Nothing to deliver yet"
+          hint="The things this track is meant to produce, each with somewhere to point at the work."
+          action="Add a deliverable"
+          onAct={() => setEditing(true)}
+        />
+      )}
 
       {editing && (
       <TextInput
