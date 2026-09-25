@@ -27,7 +27,7 @@ import {
 } from "@shared/quickNotes";
 import { loadNotes, saveNote } from "../storage/db";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { Refreshable } from "../components/Refreshable";
 
@@ -186,10 +186,9 @@ function makeStyles(palette: Palette) {
     centered: { alignItems: "center", justifyContent: "center" },
     sectionTitle: {
       color: palette.subtleForeground,
-      fontSize: 11,
+      ...TYPE.eyebrow,
       fontWeight: "700",
       letterSpacing: 1.2,
-      textTransform: "uppercase",
     },
     addRow: { flexDirection: "row", gap: SPACING.sm },
     input: {
@@ -201,7 +200,7 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
       color: palette.foreground,
-      fontSize: 15,
+      ...TYPE.subhead,
     },
     todoRow: {
       flexDirection: "row",
@@ -224,10 +223,10 @@ function makeStyles(palette: Palette) {
       alignItems: "center",
       justifyContent: "center",
     },
-    tick: { color: "#fff", fontSize: 12, fontWeight: "800" },
-    todoText: { flex: 1, color: palette.foreground, fontSize: 15 },
+    tick: { color: "#fff", ...TYPE.caption, fontWeight: "800" },
+    todoText: { flex: 1, color: palette.foreground, ...TYPE.subhead},
     todoDone: { color: palette.mutedForeground, textDecorationLine: "line-through" },
-    remove: { color: palette.subtleForeground, fontSize: 22, paddingHorizontal: SPACING.sm },
+    remove: { color: palette.subtleForeground, ...TYPE.figure, paddingHorizontal: SPACING.sm },
     notepad: {
       minHeight: 200,
       padding: SPACING.md,
@@ -236,12 +235,12 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
       color: palette.foreground,
-      fontSize: 15,
+      ...TYPE.subhead,
       lineHeight: 21,
     },
-    muted: { color: palette.mutedForeground, fontSize: 13 },
+    muted: { color: palette.mutedForeground, ...TYPE.label},
     clearButton: { alignSelf: "flex-start", paddingVertical: SPACING.sm },
-    clearLabel: { color: palette.mutedForeground, fontSize: 13, fontWeight: "600" },
-    footnote: { color: palette.subtleForeground, fontSize: 11 },
+    clearLabel: { color: palette.mutedForeground, ...TYPE.label, fontWeight: "600" },
+    footnote: { color: palette.subtleForeground, ...TYPE.micro},
   });
 }

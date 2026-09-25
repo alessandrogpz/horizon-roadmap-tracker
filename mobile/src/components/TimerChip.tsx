@@ -13,7 +13,7 @@ import { Pressable, StyleSheet, Text } from "react-native";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { formatRemaining, useTimer } from "../timer/TimerProvider";
-import { HEADER_CONTROL, type Palette } from "../theme";
+import { HEADER_CONTROL, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 export function TimerChip() {
@@ -59,6 +59,6 @@ function makeStyles(palette: Palette) {
       borderWidth: 1,
       backgroundColor: palette.surfaceMuted,
     },
-    label: { fontSize: 11, fontWeight: "700", fontVariant: ["tabular-nums"] },
+    label: { ...TYPE.micro, fontWeight: "700", fontVariant: ["tabular-nums"] },
   });
 }

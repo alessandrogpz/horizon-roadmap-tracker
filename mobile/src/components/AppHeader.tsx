@@ -17,7 +17,7 @@ import { AppMenu } from "./AppMenu";
 import { SyncChip } from "./SyncChip";
 import { TimerChip } from "./TimerChip";
 import { ThemeButton } from "./ThemeButton";
-import { HEADER_CONTROL, SPACING, type Palette } from "../theme";
+import { HEADER_CONTROL, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 export function AppHeader({ title }: { title?: string }) {
@@ -97,7 +97,7 @@ function makeStyles(palette: Palette) {
       borderBottomColor: palette.cardBorder,
     },
     titleButton: { flex: 1, flexDirection: "row", alignItems: "center", gap: 4, minHeight: HEADER_CONTROL.height },
-    title: { flexShrink: 1, color: palette.foreground, fontSize: 18, fontWeight: "700" },
+    title: { flexShrink: 1, color: palette.foreground, ...TYPE.heading, fontWeight: "700" },
     back: { paddingRight: 2, marginLeft: -SPACING.xs },
     menuButton: {
       alignItems: "center",

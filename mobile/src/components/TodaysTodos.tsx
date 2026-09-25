@@ -16,7 +16,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { addTodo, parseTodos, serializeTodos, todoNoteId, toggleTodo, type TodoItem } from "@shared/quickNotes";
 import { loadNotes, saveNote } from "../storage/db";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 export function TodaysTodos({
@@ -125,10 +125,9 @@ function makeStyles(palette: Palette) {
     title: {
       flex: 1,
       color: palette.subtleForeground,
-      fontSize: 11,
+      ...TYPE.eyebrow,
       fontWeight: "700",
       letterSpacing: 1.2,
-      textTransform: "uppercase",
     },
     row: { flexDirection: "row", alignItems: "center", gap: SPACING.md, paddingVertical: SPACING.xs },
     box: {
@@ -140,8 +139,8 @@ function makeStyles(palette: Palette) {
       alignItems: "center",
       justifyContent: "center",
     },
-    tick: { color: "#fff", fontSize: 12, fontWeight: "800" },
-    text: { flex: 1, color: palette.foreground, fontSize: 14 },
+    tick: { color: "#fff", ...TYPE.caption, fontWeight: "800" },
+    text: { flex: 1, color: palette.foreground, ...TYPE.body},
     done: { color: palette.mutedForeground, textDecorationLine: "line-through" },
     input: {
       marginTop: SPACING.xs,
@@ -152,8 +151,8 @@ function makeStyles(palette: Palette) {
       borderStyle: "dashed",
       borderColor: palette.cardBorder,
       color: palette.foreground,
-      fontSize: 14,
+      ...TYPE.body,
     },
-    muted: { color: palette.mutedForeground, fontSize: 13 },
+    muted: { color: palette.mutedForeground, ...TYPE.label},
   });
 }

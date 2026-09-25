@@ -14,7 +14,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { Stats } from "@shared/apiTypes";
 import { authorized } from "../auth/session";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { Refreshable } from "../components/Refreshable";
 
@@ -158,13 +158,12 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
     },
-    totalValue: { color: palette.accent, fontSize: 22, fontWeight: "700" },
+    totalValue: { color: palette.accent, ...TYPE.figure, fontWeight: "700" },
     sectionTitle: {
       color: palette.subtleForeground,
-      fontSize: 11,
+      ...TYPE.eyebrow,
       fontWeight: "700",
       letterSpacing: 1.2,
-      textTransform: "uppercase",
       marginTop: SPACING.sm,
     },
     card: {
@@ -176,12 +175,12 @@ function makeStyles(palette: Palette) {
       backgroundColor: palette.card,
     },
     barRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
-    barLabel: { color: palette.mutedForeground, fontSize: 12, width: 58 },
+    barLabel: { color: palette.mutedForeground, ...TYPE.caption, width: 58 },
     barTrack: { flex: 1, height: 8, borderRadius: 4, backgroundColor: palette.surfaceMuted, overflow: "hidden" },
     barFill: { height: 8, borderRadius: 4, backgroundColor: palette.accent },
-    barValue: { color: palette.mutedForeground, fontSize: 12, width: 40, textAlign: "right" },
-    trackName: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
-    muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
-    footnote: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16 },
+    barValue: { color: palette.mutedForeground, ...TYPE.caption, width: 40, textAlign: "right" },
+    trackName: { color: palette.foreground, ...TYPE.subhead, fontWeight: "600" },
+    muted: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },
+    footnote: { color: palette.subtleForeground, ...TYPE.micro, lineHeight: 16 },
   });
 }

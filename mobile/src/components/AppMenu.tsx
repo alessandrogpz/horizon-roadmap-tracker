@@ -16,7 +16,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { describeLastSync, useSync } from "../sync/SyncProvider";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { shareTrack } from "../share/shareTrack";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
@@ -183,10 +183,9 @@ function makeStyles(palette: Palette) {
     syncText: { flex: 1, gap: 1 },
     sectionTitle: {
       color: palette.subtleForeground,
-      fontSize: 11,
+      ...TYPE.eyebrow,
       fontWeight: "700",
       letterSpacing: 1.2,
-      textTransform: "uppercase",
       marginTop: SPACING.md,
     },
     grid: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.sm },
@@ -201,7 +200,7 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    gridLabel: { color: palette.foreground, fontSize: 12, fontWeight: "600" },
+    gridLabel: { color: palette.foreground, ...TYPE.caption, fontWeight: "600" },
     row: {
       flexDirection: "row",
       alignItems: "center",
@@ -212,9 +211,9 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    tileLabel: { flex: 1, color: palette.foreground, fontSize: 15, fontWeight: "600" },
-    hint: { color: palette.mutedForeground, fontSize: 12, lineHeight: 16 },
+    tileLabel: { flex: 1, color: palette.foreground, ...TYPE.subhead, fontWeight: "600" },
+    hint: { color: palette.mutedForeground, ...TYPE.caption, lineHeight: 16 },
     close: { alignItems: "center", paddingVertical: SPACING.md, marginTop: SPACING.sm },
-    closeLabel: { color: palette.mutedForeground, fontSize: 14, fontWeight: "600" },
+    closeLabel: { color: palette.mutedForeground, ...TYPE.body, fontWeight: "600" },
   });
 }
