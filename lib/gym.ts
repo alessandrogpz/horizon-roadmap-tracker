@@ -33,6 +33,16 @@ export interface GymSet {
   /** Kilograms. Optional: bodyweight work has none, and a set with no weight
    *  is a real set rather than a set weighing zero. */
   weight?: number;
+  /**
+   * Whether the set has actually been done.
+   *
+   * A session is written before it is performed: the rows are there, carrying
+   * last time's numbers, and you tick them off as you go. Without this a row
+   * could only mean "done", so there was nowhere to put the three sets you are
+   * about to do — and the difference between planned and done is the whole of
+   * what a workout screen is for while you are standing in front of the bar.
+   */
+  done?: boolean;
 }
 
 export interface GymExercise {
@@ -129,6 +139,10 @@ export function parseGymLog(content: string | undefined | null): GymLog {
               sets.push({
                 reps: Math.max(0, Math.round(set.reps)),
                 ...(typeof set.weight === "number" ? { weight: set.weight } : {}),
+                // Carried through rather than defaulted. A set written before
+                // ticking existed has no flag, and must not be read as "not
+                // done" — that would empty out every session ever recorded.
+                ...(typeof set.done === "boolean" ? { done: set.done } : {}),
               });
             }
           }
@@ -279,12 +293,74 @@ export function removeSet(log: GymLog, date: DateStr, exerciseId: string, index:
   });
 }
 
+/** Changes one set in place — the weight typed into a row, the reps, or the
+ *  tick against it. */
+export function updateSet(
+  log: GymLog,
+  date: DateStr,
+  exerciseId: string,
+  index: number,
+  change: Partial<GymSet>
+): GymLog {
+  const session = sessionFor(log, date);
+  return withSession(log, date, {
+    ...session,
+    exercises: session.exercises.map((exercise) =>
+      exercise.id === exerciseId
+        ? {
+            ...exercise,
+            sets: exercise.sets.map((set, i) => (i === index ? { ...set, ...change } : set)),
+          }
+        : exercise
+    ),
+  });
+}
+
+/** Renames an exercise, leaving its sets alone. */
+export function renameExercise(
+  log: GymLog,
+  date: DateStr,
+  exerciseId: string,
+  name: string
+): GymLog {
+  const session = sessionFor(log, date);
+  return withSession(log, date, {
+    ...session,
+    exercises: session.exercises.map((exercise) =>
+      exercise.id === exerciseId ? { ...exercise, name } : exercise
+    ),
+  });
+}
+
+/** Throws the day's session away. Only the day: the plan and every other
+ *  session are untouched, because abandoning today is not abandoning the
+ *  training. */
+export function clearSession(log: GymLog, date: DateStr): GymLog {
+  const sessions = { ...log.sessions };
+  delete sessions[date];
+  return { ...log, sessions };
+}
+
+/** Sets actually done, as against sets merely written down. */
+export const doneCountOf = (session: GymSession): number =>
+  session.exercises.reduce(
+    (total, exercise) => total + exercise.sets.filter((set) => set.done).length,
+    0
+  );
+
 /** Total kilograms moved in a session: the one number that says whether today
  *  was heavier than last time, across different exercises and rep ranges. */
 export function volumeOf(session: GymSession): number {
   return session.exercises.reduce(
     (total, exercise) =>
-      total + exercise.sets.reduce((sum, set) => sum + set.reps * (set.weight ?? 0), 0),
+      total +
+      exercise.sets.reduce(
+        // Sets written down but not yet ticked have not been lifted, so they
+        // weigh nothing towards the day's total. Older sessions, recorded
+        // before a set could be ticked, carry no flag and all count.
+        (sum, set) => sum + (set.done === false ? 0 : set.reps * (set.weight ?? 0)),
+        0
+      ),
     0
   );
 }
