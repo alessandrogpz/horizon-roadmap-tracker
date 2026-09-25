@@ -7,6 +7,22 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.70.3] - 2026-09-25
+
+### Fixed
+- **The step counter sometimes opened on a black screen and stayed there.** Every Health Connect
+  call was already wrapped in a `try`, which covers one that fails and does nothing at all for one
+  that never answers — and that is the one that happened. Health Connect is a separate app replying
+  over a binder; while it is updating, or before its process is up, `initialize()` can sit there
+  indefinitely. The screen waited for it before drawing anything, so the result was a spinner with
+  no end, and unpredictable because it depended on what the provider happened to be doing. Going
+  back and in again started a fresh call, which is why a second try often worked.
+
+  Not answering within four seconds is now itself an answer, for every entry point, and the
+  fallback that already exists for when Health Connect says no covers the case. The screen also
+  stops treating those numbers as a condition of appearing at all: it draws from the app's own step
+  table whatever the provider does, and arrives even if nothing can be read.
+
 ## [0.70.2] - 2026-09-25
 
 ### Fixed

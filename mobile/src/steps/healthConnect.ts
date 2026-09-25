@@ -43,17 +43,57 @@ function healthConnect() {
   }
 }
 
+/** How long any one Health Connect call gets before it is treated as absent. */
+const PATIENCE = 4000;
+
+/**
+ * A promise that cannot hang.
+ *
+ * Every call below is already wrapped in a `try`, which covers a native call
+ * that fails and does nothing at all for one that simply never answers — and
+ * that is the one that happened. Health Connect is a separate app talking over
+ * a binder; while it is updating, or before its process is up, `initialize()`
+ * can sit there indefinitely. The screens here wait for these answers before
+ * they draw anything, so a call that never returns is a screen that never
+ * arrives: a black page with a spinner, unpredictable because it depends on
+ * what the provider happens to be doing at the time.
+ *
+ * Not answering within a few seconds is itself an answer, and the fallback —
+ * the app's own step table — is already there for when Health Connect says no.
+ */
+function within<T>(work: Promise<T>, fallback: T): Promise<T> {
+  return new Promise<T>((resolve) => {
+    let settled = false;
+    const finish = (value: T) => {
+      if (settled) return;
+      settled = true;
+      resolve(value);
+    };
+    const timer = setTimeout(() => finish(fallback), PATIENCE);
+    work.then(
+      (value) => {
+        clearTimeout(timer);
+        finish(value);
+      },
+      () => {
+        clearTimeout(timer);
+        finish(fallback);
+      }
+    );
+  });
+}
+
 export async function healthStatus(): Promise<HealthStatus> {
   const hc = healthConnect();
   if (!hc) return "unsupported";
 
   try {
     // 3 is SDK_AVAILABLE; anything else means it is absent or needs an update.
-    const status = await hc.getSdkStatus();
+    const status = await within(hc.getSdkStatus(), -1);
     if (status !== 3) return "not-installed";
-    if (!(await hc.initialize())) return "not-installed";
+    if (!(await within(hc.initialize(), false))) return "not-installed";
 
-    const granted = await hc.getGrantedPermissions();
+    const granted = await within(hc.getGrantedPermissions(), []);
     const canRead = granted.some(
       (permission) =>
         "recordType" in permission &&
@@ -97,19 +137,22 @@ export async function dailySteps(from: string, to: string): Promise<Record<strin
   if (!hc) return {};
 
   try {
-    await hc.initialize();
+    if (!(await within(hc.initialize(), false))) return {};
     const start = new Date(`${from}T00:00:00`);
     const end = new Date(`${to}T23:59:59`);
 
-    const groups = await hc.aggregateGroupByPeriod({
-      recordType: "Steps",
-      timeRangeFilter: {
-        operator: "between",
-        startTime: start.toISOString(),
-        endTime: end.toISOString(),
-      },
-      timeRangeSlicer: { period: "DAYS", length: 1 },
-    });
+    const groups = await within(
+      hc.aggregateGroupByPeriod({
+        recordType: "Steps",
+        timeRangeFilter: {
+          operator: "between",
+          startTime: start.toISOString(),
+          endTime: end.toISOString(),
+        },
+        timeRangeSlicer: { period: "DAYS", length: 1 },
+      }),
+      []
+    );
 
     const out: Record<string, number> = {};
     for (const group of groups) {
