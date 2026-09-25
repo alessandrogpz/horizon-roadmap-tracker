@@ -1,26 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  addExercise,
-  addSet,
-  addToPlan,
-  DEFAULT_REPS,
-  DEFAULT_SETS,
-  planComplete,
-  updatePlanItem,
-  emptyGymLog,
-  focusOfDay,
-  gymNoteId,
-  lastTime,
-  parseGymLog,
-  plannedFor,
-  removeFromPlan,
-  removeSet,
-  serializeGymLog,
-  setCountOf,
-  sessionFor,
-  volumeOf,
-  type GymLog,
-} from "../gym";
+import { DEFAULT_REPS, DEFAULT_SETS, addExercise, addSet, addToPlan, clearSession, doneCountOf, emptyGymLog, focusOfDay, gymNoteId, lastTime, parseGymLog, planComplete, plannedFor, removeFromPlan, removeSet, renameExercise, serializeGymLog, sessionFor, setCountOf, type GymLog, updatePlanItem, updateSet, volumeOf } from "../gym";
 
 const log = (): GymLog => {
   let l = emptyGymLog();
@@ -207,5 +186,92 @@ describe("planComplete", () => {
     l = addSet(l, "2026-09-21", id, { reps: 10 });
     l = addExercise(l, "2026-09-21", "Something unplanned");
     expect(planComplete(l, "push", "2026-09-21")).toBe(true);
+  });
+});
+
+describe("a session survives being written and read back", () => {
+  it("keeps which sets were ticked", () => {
+    let log = addExercise(emptyGymLog(), "2026-09-25", "Squat");
+    const id = sessionFor(log, "2026-09-25").exercises[0].id;
+    log = addSet(log, "2026-09-25", id, { reps: 5, weight: 40, done: true });
+    log = addSet(log, "2026-09-25", id, { reps: 5, weight: 60, done: false });
+
+    // The whole round trip: this is how the log reaches the next launch.
+    const reloaded = parseGymLog(serializeGymLog(log));
+    expect(sessionFor(reloaded, "2026-09-25").exercises[0].sets).toEqual([
+      { reps: 5, weight: 40, done: true },
+      { reps: 5, weight: 60, done: false },
+    ]);
+    expect(doneCountOf(sessionFor(reloaded, "2026-09-25"))).toBe(1);
+  });
+
+  it("leaves a set recorded before ticking existed unflagged", () => {
+    const older = JSON.stringify({
+      version: 1,
+      plans: {},
+      sessions: { "2026-09-01": { exercises: [{ id: "e1", name: "Bench", sets: [{ reps: 5, weight: 60 }] }] } },
+    });
+    const set = sessionFor(parseGymLog(older), "2026-09-01").exercises[0].sets[0];
+    expect(set.done).toBeUndefined();
+    // And so it still counts, rather than vanishing from the history.
+    expect(volumeOf(sessionFor(parseGymLog(older), "2026-09-01"))).toBe(300);
+  });
+});
+
+describe("logging a session set by set", () => {
+  const day = "2026-09-25";
+
+  const withSquat = () => {
+    let log = addExercise(emptyGymLog(), day, "Squat");
+    const id = sessionFor(log, day).exercises[0].id;
+    log = addSet(log, day, id, { reps: 5, weight: 40, done: false });
+    log = addSet(log, day, id, { reps: 5, weight: 50, done: false });
+    return { log, id };
+  };
+
+  it("edits one set without touching its neighbours", () => {
+    const { log, id } = withSquat();
+    const next = updateSet(log, day, id, 1, { weight: 55 });
+    expect(sessionFor(next, day).exercises[0].sets).toEqual([
+      { reps: 5, weight: 40, done: false },
+      { reps: 5, weight: 55, done: false },
+    ]);
+  });
+
+  it("counts only the sets that were actually done", () => {
+    const { log, id } = withSquat();
+    expect(doneCountOf(sessionFor(log, day))).toBe(0);
+    const next = updateSet(log, day, id, 0, { done: true });
+    expect(doneCountOf(sessionFor(next, day))).toBe(1);
+  });
+
+  it("leaves unticked sets out of the day's volume", () => {
+    const { log, id } = withSquat();
+    // Written down but not lifted: nothing has been moved yet.
+    expect(volumeOf(sessionFor(log, day))).toBe(0);
+    const next = updateSet(log, day, id, 0, { done: true });
+    expect(volumeOf(sessionFor(next, day))).toBe(200);
+  });
+
+  it("still counts sessions recorded before a set could be ticked", () => {
+    let log = addExercise(emptyGymLog(), day, "Squat");
+    const id = sessionFor(log, day).exercises[0].id;
+    log = addSet(log, day, id, { reps: 5, weight: 40 });
+    expect(volumeOf(sessionFor(log, day))).toBe(200);
+  });
+
+  it("renames an exercise and keeps its sets", () => {
+    const { log, id } = withSquat();
+    const next = renameExercise(log, day, id, "Squat (Barbell)");
+    expect(sessionFor(next, day).exercises[0].name).toBe("Squat (Barbell)");
+    expect(sessionFor(next, day).exercises[0].sets).toHaveLength(2);
+  });
+
+  it("clears only the day it is given", () => {
+    const { log } = withSquat();
+    const other = addExercise(log, "2026-09-24", "Bench");
+    const next = clearSession(other, day);
+    expect(sessionFor(next, day).exercises).toHaveLength(0);
+    expect(sessionFor(next, "2026-09-24").exercises).toHaveLength(1);
   });
 });

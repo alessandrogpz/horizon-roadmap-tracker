@@ -7,6 +7,28 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.75.0] - 2026-09-25
+
+### Added
+- **A workout you log set by set.** Each exercise is a table: a row per set carrying what was lifted
+  last time, the weight and reps for this one, and a tick. Rows exist before they are done, which is
+  the point — you arrive knowing roughly what you are about to do, the rows are there with last
+  time's numbers in them, and you tick each one off as you finish it. Add a set, add an exercise,
+  or cancel the day. Nothing is joined to the calendar or the week yet; it logs today.
+- **`done` on a set**, with the helpers to edit one in place, rename an exercise and clear a day.
+  The day's volume counts only what was actually ticked: sets written down but not lifted have not
+  moved anything.
+
+### Changed
+- **"Gym plan" is "Workout"**, on both the phone and the website.
+
+### Fixed
+- **A set's tick would not have survived a reload.** `parseGymLog` rebuilds every set it reads, and
+  rebuilt them without the new flag — so the log wrote `done` and read it back as nothing, and a
+  session would have come back untouched after every launch. Caught by comparing what was on the
+  screen with what was in storage. Sets recorded before the flag existed still carry no flag, and
+  still count, rather than being read as "not done" and emptying the history.
+
 ## [0.74.2] - 2026-09-25
 
 ### Fixed
