@@ -7,6 +7,26 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.64.0] - 2026-09-25
+
+### Changed
+- **A tap anywhere on a panel opens it**, not just on its heading. A panel reads as one thing — a
+  title and the figures under it — so having only the top strip respond meant aiming at a target
+  you cannot see, and the rest of the card reading as inert when it is the part you were looking
+  at. Holding anywhere still picks the panel up: the drag only activates once the finger has been
+  still a moment, so a tap never reaches it and a hold never becomes a tap.
+- **The step counter's permission prompt is a Gesture Handler button**, so it still wins against
+  the card around it now that the whole card is tappable. It is the only control that lives inside
+  a panel's body.
+
+### Fixed
+- **A panel could be left permanently unable to fold.** Each one rendered plainly until its height
+  had been measured and only then gained the wrapper that folds it — so a panel whose layout event
+  did not arrive a second time stayed in that first branch for good: visible, correct, and inert
+  under a hold. The wrapper is now always there, constraining with `maxHeight` rather than `height`,
+  which leaves an unmeasured panel simply unconstrained instead of wrong. One render path, nothing
+  to get stuck in.
+
 ## [0.63.5] - 2026-09-25
 
 ### Fixed
