@@ -7,6 +7,14 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.76.1] - 2026-09-26
+
+### Fixed
+- **Lint, and so CI, failed on the workout tests.** Three bindings declared with `let` were never
+  reassigned. Local checks had covered types, tests and the build but not `npm run lint`, which is
+  one of the four jobs the pipeline runs — so the merge to `main` went red on something a single
+  command would have caught.
+
 ## [0.76.0] - 2026-09-25
 
 ### Fixed
