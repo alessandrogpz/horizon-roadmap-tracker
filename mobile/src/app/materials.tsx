@@ -19,6 +19,7 @@ import { usePalette } from "../theme/ThemeProvider";
 import { SwipeRow } from "../components/SwipeRow";
 import { useUndo } from "../components/UndoBar";
 import { EditHeader, useEditMode } from "../components/EditToggle";
+import { EmptyState } from "../components/EmptyState";
 import { Refreshable } from "../components/Refreshable";
 import { SubNav } from "../components/SubNav";
 
@@ -89,7 +90,10 @@ export default function MaterialsScreen() {
   return (
     <Refreshable style={styles.screen} contentContainerStyle={styles.content}>
       <EditHeader
-        title="Materials"
+        // The bar above already says "Materials". This says how many —
+        // a heading that repeats the one above it costs a row and tells
+        // you nothing you did not know a moment ago.
+        title={materials.length === 1 ? "1 material" : `${materials.length} materials`}
         editing={editing}
         onChange={setEditing}
         hint="Add something, archive what is finished, or correct a page count. Marking progress works either way."
@@ -131,7 +135,14 @@ export default function MaterialsScreen() {
         </SwipeRow>
       ))}
 
-      {materials.length === 0 && <Text style={styles.muted}>No materials on this track yet.</Text>}
+      {materials.length === 0 && !editing && (
+        <EmptyState
+          title="Nothing on the list yet"
+          hint="Books, courses, papers — whatever this track is built out of."
+          action="Add a material"
+          onAct={() => setEditing(true)}
+        />
+      )}
 
       {archived.length > 0 && (
         <View style={styles.card}>

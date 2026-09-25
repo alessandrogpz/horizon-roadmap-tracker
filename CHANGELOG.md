@@ -7,6 +7,26 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.69.0] - 2026-09-25
+
+### Changed
+- **Today leads with the date and what kind of day it is.** It used to read "Today · Fri" — naming
+  the one day that needs no naming, on the one line that could have carried its date. It now says
+  the date and the day's kind, taken from the track's own rhythm, so this screen and the week agree
+  about what a Friday is for without being told twice.
+- **A heading with nothing under it is not drawn.** Today rendered FOCUS and REVISION over empty
+  space on any day with nothing planned. They stay while the day is being edited, because then they
+  are the thing you are adding into.
+- **Empty screens offer the way in instead of describing the emptiness.** "No materials on this
+  track yet" beside an Edit button is a dead end: the screen states a fact and leaves you to work
+  out that the toolbar holds the remedy. Today, Materials and Deliverables now name what is missing
+  and offer the button that fixes it, through one shared `EmptyState`.
+- **Screens stop announcing themselves twice.** Materials and Deliverables repeated their own name
+  under the bar that already said it; they now say how many there are. The gym screen's heading is
+  the date rather than a second "Gym plan".
+- **Settings rows that go somewhere look like it.** Account, Privacy and Security carry a chevron;
+  This device and Backup, which only state something, do not. They were indistinguishable.
+
 ## [0.68.0] - 2026-09-25
 
 A plan running past its estimate is the ordinary end of a plan, not a failure of one — and the app
