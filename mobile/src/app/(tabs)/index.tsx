@@ -626,7 +626,33 @@ function ArrangeRow({
   const lifted = useSharedValue(0);
   /** This row's step aside, animated so the list parts rather than snaps. */
   const shift = useSharedValue(0);
+  /** Set by onEnd so onFinalize can tell a finished drag from a cancelled one. */
+  const ended = useSharedValue(false);
   const definition = panelDefinition(id);
+
+  /**
+   * Lands the drag: the new order and the release of every value that was
+   * holding the list apart, in one JS tick.
+   *
+   * Together matters. React batches the reorder and the shared-value writes
+   * into the same frame, so the row's layout moves to its new slot at the same
+   * moment its offset returns to zero, and its neighbours' indices change as
+   * their shifts do. Split across frames, each of those pairs is visible on
+   * its own.
+   */
+  const finish = useCallback(
+    (landing: number) => {
+      if (landing !== index && landing >= 0) {
+        onMove(index, landing);
+        settle();
+      }
+      held.value = -1;
+      target.value = -1;
+      offset.value = 0;
+      lifted.value = 0;
+    },
+    [held, index, lifted, offset, onMove, target]
+  );
 
   useAnimatedReaction(
     () => ({ h: held.value, t: target.value }),
@@ -658,25 +684,27 @@ function ArrangeRow({
       }
     })
     .onEnd(() => {
+      ended.value = true;
       const landing = target.value;
-      offset.value = 0;
-      lifted.value = 0;
-      held.value = -1;
-      target.value = -1;
-      if (landing !== index && landing >= 0) {
-        runOnJS(onMove)(index, landing);
-        runOnJS(settle)();
+      // Settle into the destination before the order changes, then change it
+      // and let go of everything at once. Releasing first was the flicker:
+      // the shifts snapped back to nothing a frame or two before the reorder
+      // arrived, so the list returned to how it had been and then swapped —
+      // names appearing to trade places twice for one drag.
+      const settleTo = (landing - index) * ROW;
+      if (Math.abs(settleTo - offset.value) < 1) {
+        runOnJS(finish)(landing);
+        return;
       }
+      offset.value = withTiming(settleTo, { duration: 150 }, (done) => {
+        if (done) runOnJS(finish)(landing);
+      });
     })
     .onFinalize(() => {
-      // A cancelled drag must not leave the list parted around a row that is
-      // no longer being held.
-      if (held.value === index) {
-        held.value = -1;
-        target.value = -1;
-        offset.value = 0;
-        lifted.value = 0;
-      }
+      // A cancelled drag must not leave the list parted around a row nobody
+      // is holding any more.
+      if (held.value === index && !ended.value) runOnJS(finish)(index);
+      ended.value = false;
     });
 
   const animated = useAnimatedStyle(() => ({
