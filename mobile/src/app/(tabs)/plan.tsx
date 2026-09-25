@@ -24,6 +24,7 @@ import { usePalette } from "../../theme/ThemeProvider";
 import { EditHeader, useEditMode } from "../../components/EditToggle";
 import { Refreshable } from "../../components/Refreshable";
 import { Ring } from "../../components/Ring";
+import { StatTile } from "../../components/StatTile";
 import { SubNav } from "../../components/SubNav";
 
 export default function PhasesScreen() {
@@ -66,38 +67,30 @@ export default function PhasesScreen() {
           ring is the same idea as the website's: a proportion is a shape
           before it is a number, and the number beside it says of what. */}
       <View style={styles.tiles}>
-        <View style={[styles.tile, styles.timelineTile]}>
-          <Ring pct={timeline.progressPct} tint={overrun ? palette.subtleForeground : palette.accent}>
-            <Text style={styles.ringPct} allowFontScaling={false}>
-              {Math.round(timeline.progressPct)}%
-            </Text>
-          </Ring>
-          <View style={styles.tileText}>
-            <Text style={styles.tileLabel}>Timeline</Text>
-            <View style={styles.figureRow}>
-              <Text style={styles.figure}>{timeline.daysPassed}</Text>
-              {/* Past the plan there is no total left to be a fraction of,
-                  and the line under the tiles already says by how much. */}
-              <Text style={styles.tileUnit} numberOfLines={1}>
-                {overrun ? "days" : `/ ${timeline.totalDays} days`}
+        <StatTile
+          wide
+          label="Timeline"
+          value={timeline.daysPassed}
+          // Past the plan there is no total left to be a fraction of, and the
+          // line under the tiles says by how much.
+          unit={overrun ? "days" : `/ ${timeline.totalDays} days`}
+          leading={
+            <Ring pct={timeline.progressPct} tint={overrun ? palette.subtleForeground : palette.accent}>
+              <Text style={styles.ringPct} allowFontScaling={false}>
+                {Math.round(timeline.progressPct)}%
               </Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.tile}>
-          <View style={styles.tileText}>
-            <Text style={styles.tileLabel}>Phase day</Text>
-            <View style={styles.figureRow}>
-              {/* Days spent in this phase, counting the time from before the
-                  track last moved away and came back to it. */}
-              <Text style={styles.figure}>{current?.dayInPhase ?? 0}</Text>
-              <Text style={styles.tileUnit} numberOfLines={1}>
-                in {current?.phase?.id !== undefined ? `phase ${current.phase?.id}` : "no phase"}
-              </Text>
-            </View>
-          </View>
-        </View>
+            </Ring>
+          }
+        />
+        <StatTile
+          label="Phase day"
+          // Days spent in this phase, including time from before the track
+          // last moved away and came back to it.
+          value={current?.dayInPhase ?? 0}
+          // Short enough to survive the narrower of the two tiles.
+          unit={current?.phase?.id !== undefined ? `phase ${current.phase.id}` : undefined}
+          icon="flag-outline"
+        />
       </View>
 
       {overrun && (
@@ -118,10 +111,21 @@ export default function PhasesScreen() {
         <View style={styles.card}>
           {/* Time spent against work done. The pace is the interesting number:
               a track can be 70% through its calendar with 30% of the work
-              finished, and neither figure says that on its own. */}
+              finished, and neither figure says that on its own — so both bars
+              are drawn on the same track, one over the other, and the gap
+              between them is the thing to look at. */}
+          <View style={styles.cardHead}>
+            <Ionicons name="trending-up-outline" size={16} color={palette.accent} />
+            <Text style={styles.tileLabel}>Progress</Text>
+          </View>
           <Text style={styles.cardTitle}>
             {Math.round(progress.workPct)}% done · {Math.round(progress.timePct)}% of the time spent
           </Text>
+
+          <View style={styles.compareTrack}>
+            <View style={[styles.compareTime, { width: `${Math.min(100, progress.timePct)}%` }]} />
+            <View style={[styles.compareWork, { width: `${Math.min(100, progress.workPct)}%` }]} />
+          </View>
           {/* Pace compares work done against time spent. Past the end of the
               plan there is no time left to be behind on, so the comparison
               stops meaning anything and is not made. */}
@@ -344,28 +348,28 @@ function makeStyles(palette: Palette) {
     progressFill: { height: 6, borderRadius: 3, backgroundColor: palette.accent },
     behind: { color: palette.foreground, ...TYPE.label, lineHeight: 18 },
     tiles: { flexDirection: "row", gap: SPACING.sm, marginBottom: SPACING.sm },
-    tile: {
-      flex: 1,
-      flexDirection: "row",
-      alignItems: "center",
-      gap: SPACING.md,
-      padding: SPACING.md,
-      borderRadius: RADIUS.card,
-      borderWidth: 1,
-      borderColor: palette.cardBorder,
-      backgroundColor: palette.card,
+    // Time spent behind, work done in front: the same track, so the distance
+    // between the two ends is the pace without having to be told.
+    compareTrack: {
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: palette.surfaceMuted,
+      overflow: "hidden",
+      marginTop: SPACING.xs,
     },
-    // The one with a ring in it needs the room the ring takes.
-    timelineTile: { flex: 1.5 },
-    tileText: { flex: 1, gap: 2 },
+    compareTime: {
+      position: "absolute",
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: palette.cardBorder,
+    },
+    compareWork: { height: 8, borderRadius: 4, backgroundColor: palette.accent },
+    cardHead: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
     tileLabel: {
       ...TYPE.eyebrow,
       color: palette.subtleForeground,
       fontWeight: "700",
     },
-    figureRow: { flexDirection: "row", alignItems: "baseline", gap: 4 },
-    figure: { ...TYPE.figure, color: palette.foreground, fontWeight: "700" },
-    tileUnit: { ...TYPE.micro, color: palette.mutedForeground },
     ringPct: { ...TYPE.micro, color: palette.mutedForeground, fontWeight: "700" },
     overrunRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: SPACING.sm },
     extend: {
