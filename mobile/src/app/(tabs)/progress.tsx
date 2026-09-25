@@ -214,27 +214,26 @@ export default function ProgressScreen() {
       {/* The run you are on, given the room it deserves — it is the number
           this screen exists to move — with the two that put it in context
           beside it. */}
-      {/* Three tiles of the same shape. Not three across: at this width the
-          small-caps label runs out of room long before the figure does, so the
-          run you are on takes the first line on its own and the two that put
-          it in context share the second. */}
+      {/* Three to a row, stacked: the run you are on, the best one so far,
+          and how much of the last month had anything in it. */}
       <View style={styles.stats}>
         <StatTile
-          label="Current streak"
+          compact
+          label="Streak"
           value={streak}
           unit={streak === 1 ? "day" : "days"}
           icon="flame"
           tint="#f59e0b"
         />
-      </View>
-      <View style={styles.stats}>
         <StatTile
+          compact
           label="Longest"
           value={stats?.longest ?? 0}
           unit={stats?.longest === 1 ? "day" : "days"}
           icon="trophy-outline"
         />
         <StatTile
+          compact
           label="Last 30"
           value={stats?.activeLast30 ?? 0}
           unit="active"
