@@ -41,7 +41,7 @@ import { Refreshable } from "../components/Refreshable";
 import { EditButton, useEditMode } from "../components/EditToggle";
 import { NoTrack } from "../components/NoTrack";
 import { tap, warn } from "../feedback/haptics";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 export default function GymScreen() {
@@ -448,9 +448,9 @@ function makeStyles(palette: Palette) {
     content: { padding: SPACING.lg, gap: SPACING.md, paddingBottom: SPACING.xl },
     headline: { flexDirection: "row", alignItems: "center", gap: SPACING.md },
     headlineText: { flex: 1, gap: 2 },
-    focus: { color: palette.accent, fontSize: 24, fontWeight: "700" },
+    focus: { color: palette.accent, ...TYPE.figure, fontWeight: "700" },
     totals: { alignItems: "center", gap: 1 },
-    totalValue: { color: palette.foreground, fontSize: 19, fontWeight: "700" },
+    totalValue: { color: palette.foreground, ...TYPE.heading, fontWeight: "700" },
     chips: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.xs },
     chip: {
       flexDirection: "row",
@@ -463,7 +463,7 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    chipLabel: { color: palette.mutedForeground, fontSize: 13, fontWeight: "600" },
+    chipLabel: { color: palette.mutedForeground, ...TYPE.label, fontWeight: "600" },
     miniChip: {
       paddingHorizontal: SPACING.sm,
       paddingVertical: 6,
@@ -472,7 +472,7 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    miniLabel: { color: palette.mutedForeground, fontSize: 11, fontWeight: "600" },
+    miniLabel: { color: palette.mutedForeground, ...TYPE.micro, fontWeight: "600" },
     card: {
       gap: SPACING.sm,
       padding: SPACING.lg,
@@ -482,8 +482,8 @@ function makeStyles(palette: Palette) {
       backgroundColor: palette.card,
     },
     cardHead: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
-    exerciseName: { flex: 1, color: palette.foreground, fontSize: 16, fontWeight: "700" },
-    lastTime: { color: palette.subtleForeground, fontSize: 12 },
+    exerciseName: { flex: 1, color: palette.foreground, ...TYPE.heading, fontWeight: "700" },
+    lastTime: { color: palette.subtleForeground, ...TYPE.caption},
     setRow: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.xs },
     setPill: {
       minHeight: 34,
@@ -494,7 +494,7 @@ function makeStyles(palette: Palette) {
       borderWidth: 1,
       borderColor: palette.cardBorder,
     },
-    setLabel: { color: palette.foreground, fontSize: 13, fontWeight: "600" },
+    setLabel: { color: palette.foreground, ...TYPE.label, fontWeight: "600" },
     entry: { flexDirection: "row", alignItems: "center", gap: SPACING.sm, marginTop: SPACING.xs },
     stepper: {
       flex: 1,
@@ -508,8 +508,8 @@ function makeStyles(palette: Palette) {
     },
     stepButton: { minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" },
     stepValue: { alignItems: "center" },
-    stepNumber: { color: palette.foreground, fontSize: 16, fontWeight: "700" },
-    stepUnit: { color: palette.subtleForeground, fontSize: 10 },
+    stepNumber: { color: palette.foreground, ...TYPE.heading, fontWeight: "700" },
+    stepUnit: { color: palette.subtleForeground, ...TYPE.micro},
     logButton: {
       minHeight: 44,
       justifyContent: "center",
@@ -517,7 +517,7 @@ function makeStyles(palette: Palette) {
       borderRadius: RADIUS.control,
       backgroundColor: palette.accent,
     },
-    logLabel: { color: "#04121c", fontSize: 14, fontWeight: "700" },
+    logLabel: { color: "#04121c", ...TYPE.body, fontWeight: "700" },
     input: {
       paddingHorizontal: SPACING.md,
       paddingVertical: SPACING.md,
@@ -526,19 +526,18 @@ function makeStyles(palette: Palette) {
       borderStyle: "dashed",
       borderColor: palette.cardBorder,
       color: palette.foreground,
-      fontSize: 15,
+      ...TYPE.subhead,
     },
     splitHead: { flexDirection: "row", alignItems: "center", gap: SPACING.md, marginTop: SPACING.lg },
     sectionTitle: {
       flex: 1,
       color: palette.subtleForeground,
-      fontSize: 11,
+      ...TYPE.eyebrow,
       fontWeight: "700",
       letterSpacing: 1.2,
-      textTransform: "uppercase",
     },
     splitRow: { gap: SPACING.xs, marginBottom: SPACING.sm },
-    splitDay: { color: palette.foreground, fontSize: 13, fontWeight: "700" },
+    splitDay: { color: palette.foreground, ...TYPE.label, fontWeight: "700" },
     planRow: {
       flexDirection: "row",
       alignItems: "center",
@@ -547,8 +546,8 @@ function makeStyles(palette: Palette) {
       borderBottomWidth: 1,
       borderBottomColor: palette.cardBorder,
     },
-    planName: { flex: 1, color: palette.foreground, fontSize: 14 },
-    planNumbers: { color: palette.mutedForeground, fontSize: 12, fontWeight: "600" },
+    planName: { flex: 1, color: palette.foreground, ...TYPE.body},
+    planNumbers: { color: palette.mutedForeground, ...TYPE.caption, fontWeight: "600" },
     planNumberButton: {
       minHeight: 36,
       justifyContent: "center",
@@ -564,9 +563,9 @@ function makeStyles(palette: Palette) {
       minHeight: 44,
       paddingHorizontal: SPACING.xs,
     },
-    todoName: { flex: 1, color: palette.foreground, fontSize: 15 },
-    todoNumbers: { color: palette.mutedForeground, fontSize: 13, fontWeight: "600" },
-    footnote: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16, marginTop: SPACING.sm },
-    muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
+    todoName: { flex: 1, color: palette.foreground, ...TYPE.subhead},
+    todoNumbers: { color: palette.mutedForeground, ...TYPE.label, fontWeight: "600" },
+    footnote: { color: palette.subtleForeground, ...TYPE.micro, lineHeight: 16, marginTop: SPACING.sm },
+    muted: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },
   });
 }

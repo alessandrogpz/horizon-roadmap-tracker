@@ -26,7 +26,7 @@ import Animated, {
 } from "react-native-reanimated";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { warn } from "../feedback/haptics";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 /** How far the row has to travel before letting go commits it. About a
@@ -140,6 +140,6 @@ function makeStyles(palette: Palette) {
     },
     actionLeft: { left: 0 },
     actionRight: { right: 0 },
-    actionLabel: { color: "#fff", fontSize: 13, fontWeight: "700" },
+    actionLabel: { color: "#fff", ...TYPE.label, fontWeight: "700" },
   });
 }

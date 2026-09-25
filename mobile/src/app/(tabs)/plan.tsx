@@ -19,7 +19,7 @@ import { addPhase, removePhase, setCurrentPhase } from "@shared/trackActions";
 import { formatDayMonthYear } from "@shared/dates";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
 import { useUndo } from "../../components/UndoBar";
-import { RADIUS, SPACING, type Palette } from "../../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../../theme";
 import { usePalette } from "../../theme/ThemeProvider";
 import { EditHeader, useEditMode } from "../../components/EditToggle";
 import { Refreshable } from "../../components/Refreshable";
@@ -307,15 +307,14 @@ function makeStyles(palette: Palette) {
     content: { padding: SPACING.lg, gap: SPACING.md },
     centered: { alignItems: "center", justifyContent: "center" },
     summary: { gap: SPACING.sm },
-    headline: { color: palette.foreground, fontSize: 20, fontWeight: "700" },
-    muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
+    headline: { color: palette.foreground, ...TYPE.title, fontWeight: "700" },
+    muted: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },
     moreRow: { marginTop: SPACING.xl },
     moreTitle: {
       color: palette.subtleForeground,
-      fontSize: 11,
+      ...TYPE.eyebrow,
       fontWeight: "700",
       letterSpacing: 1.2,
-      textTransform: "uppercase",
     },
     card: {
       gap: SPACING.sm,
@@ -325,15 +324,15 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
     },
-    cardTitle: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
+    cardTitle: { color: palette.foreground, ...TYPE.subhead, fontWeight: "600" },
     barRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
-    barLabel: { color: palette.mutedForeground, fontSize: 12, width: 84 },
+    barLabel: { color: palette.mutedForeground, ...TYPE.caption, width: 84 },
     barTrack: { flex: 1, height: 8, borderRadius: 4, backgroundColor: palette.surfaceMuted, overflow: "hidden" },
     barFill: { height: 8, borderRadius: 4, backgroundColor: palette.accent },
-    barValue: { color: palette.mutedForeground, fontSize: 12, width: 44, textAlign: "right" },
+    barValue: { color: palette.mutedForeground, ...TYPE.caption, width: 44, textAlign: "right" },
     progressTrack: { height: 6, borderRadius: 3, backgroundColor: palette.surfaceMuted, overflow: "hidden" },
     progressFill: { height: 6, borderRadius: 3, backgroundColor: palette.accent },
-    behind: { color: palette.foreground, fontSize: 13, lineHeight: 18 },
+    behind: { color: palette.foreground, ...TYPE.label, lineHeight: 18 },
     overrunRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: SPACING.sm },
     extend: {
       flexDirection: "row",
@@ -342,7 +341,7 @@ function makeStyles(palette: Palette) {
       paddingVertical: SPACING.xs,
       paddingLeft: SPACING.sm,
     },
-    extendLabel: { color: palette.accent, fontSize: 13, fontWeight: "600" },
+    extendLabel: { color: palette.accent, ...TYPE.label, fontWeight: "600" },
     // Rows sit flush against each other so the line running through them is
     // continuous; each row supplies its own breathing room instead.
     timeline: { marginVertical: SPACING.xs },
@@ -373,9 +372,9 @@ function makeStyles(palette: Palette) {
     },
     rowBody: { gap: 3 },
     rowHead: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
-    phaseLabel: { color: palette.mutedForeground, fontSize: 10, fontWeight: "700", letterSpacing: 1.1 },
-    dates: { color: palette.subtleForeground, fontSize: 11, marginTop: 1 },
-    phaseTitle: { flex: 1, color: palette.foreground, fontSize: 15, fontWeight: "600" },
+    phaseLabel: { color: palette.mutedForeground, ...TYPE.micro, fontWeight: "700", letterSpacing: 1.1 },
+    dates: { color: palette.subtleForeground, ...TYPE.micro, marginTop: 1 },
+    phaseTitle: { flex: 1, color: palette.foreground, ...TYPE.subhead, fontWeight: "600" },
     actions: { flexDirection: "row", gap: SPACING.sm, marginTop: SPACING.sm },
     editRow: { flexDirection: "row", gap: SPACING.sm, alignItems: "center" },
     input: {
@@ -387,7 +386,7 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
       color: palette.foreground,
-      fontSize: 15,
+      ...TYPE.subhead,
     },
     smallButton: {
       paddingHorizontal: SPACING.md,
@@ -397,7 +396,7 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    smallLabel: { color: palette.mutedForeground, fontSize: 12, fontWeight: "600" },
+    smallLabel: { color: palette.mutedForeground, ...TYPE.caption, fontWeight: "600" },
     addButton: {
       alignItems: "center",
       paddingVertical: SPACING.md,

@@ -19,7 +19,7 @@ import {
 } from "@shared/trackActions";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { useUndo } from "../components/UndoBar";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { SwipeRow } from "../components/SwipeRow";
 import { EditHeader, useEditMode } from "../components/EditToggle";
@@ -196,11 +196,11 @@ function makeStyles(palette: Palette) {
       alignItems: "center",
       justifyContent: "center",
     },
-    tick: { color: "#fff", fontSize: 13, fontWeight: "800" },
-    title: { flex: 1, color: palette.foreground, fontSize: 15, paddingVertical: 2 },
+    tick: { color: "#fff", ...TYPE.label, fontWeight: "800" },
+    title: { flex: 1, color: palette.foreground, ...TYPE.subhead, paddingVertical: 2 },
     repoInput: {
       color: palette.mutedForeground,
-      fontSize: 12,
+      ...TYPE.caption,
       paddingVertical: SPACING.xs,
       paddingHorizontal: SPACING.sm,
       borderRadius: RADIUS.control,
@@ -217,7 +217,7 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    smallLabel: { color: palette.mutedForeground, fontSize: 12, fontWeight: "600" },
+    smallLabel: { color: palette.mutedForeground, ...TYPE.caption, fontWeight: "600" },
     input: {
       paddingHorizontal: SPACING.md,
       paddingVertical: SPACING.md,
@@ -226,9 +226,9 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
       color: palette.foreground,
-      fontSize: 15,
+      ...TYPE.subhead,
     },
-    muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
-    footnote: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16 },
+    muted: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },
+    footnote: { color: palette.subtleForeground, ...TYPE.micro, lineHeight: 16 },
   });
 }

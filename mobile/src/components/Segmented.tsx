@@ -23,7 +23,7 @@ import Animated, {
   type SharedValue,
 } from "react-native-reanimated";
 import { tap } from "../feedback/haptics";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 /** The track's inset, and therefore the thumb's margin on every side. */
@@ -114,7 +114,7 @@ function Label({
 }
 
 const labelStyles = StyleSheet.create({
-  label: { fontSize: 12, fontWeight: "600", textAlign: "center" },
+  label: { ...TYPE.caption, fontWeight: "600", textAlign: "center" },
 });
 
 function makeStyles(palette: Palette) {

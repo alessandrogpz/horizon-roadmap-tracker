@@ -18,7 +18,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import Markdown from "react-native-markdown-display";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { Refreshable } from "./Refreshable";
 
@@ -117,17 +117,17 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    buttonLabel: { color: palette.foreground, fontSize: 13, fontWeight: "600" },
+    buttonLabel: { color: palette.foreground, ...TYPE.label, fontWeight: "600" },
     content: { padding: SPACING.lg },
-    reading: { color: palette.foreground, fontSize: 14, lineHeight: 22 },
+    reading: { color: palette.foreground, ...TYPE.body, lineHeight: 22 },
     editor: {
       flex: 1,
       padding: SPACING.lg,
       color: palette.foreground,
-      fontSize: 14,
+      ...TYPE.body,
       lineHeight: 21,
     },
-    muted: { color: palette.mutedForeground, fontSize: 13 },
+    muted: { color: palette.mutedForeground, ...TYPE.label},
   });
 }
 
@@ -135,10 +135,10 @@ function makeStyles(palette: Palette) {
  *  reads like the rest of the app rather than like a web page from 2005. */
 function markdownStyles(palette: Palette) {
   return {
-    body: { color: palette.foreground, fontSize: 15, lineHeight: 23 },
-    heading1: { color: palette.foreground, fontSize: 24, fontWeight: "700" as const, marginTop: SPACING.lg, marginBottom: SPACING.sm },
-    heading2: { color: palette.foreground, fontSize: 19, fontWeight: "700" as const, marginTop: SPACING.lg, marginBottom: SPACING.xs },
-    heading3: { color: palette.foreground, fontSize: 16, fontWeight: "600" as const, marginTop: SPACING.md },
+    body: { color: palette.foreground, ...TYPE.subhead, lineHeight: 23 },
+    heading1: { color: palette.foreground, ...TYPE.figure, fontWeight: "700" as const, marginTop: SPACING.lg, marginBottom: SPACING.sm },
+    heading2: { color: palette.foreground, ...TYPE.heading, fontWeight: "700" as const, marginTop: SPACING.lg, marginBottom: SPACING.xs },
+    heading3: { color: palette.foreground, ...TYPE.heading, fontWeight: "600" as const, marginTop: SPACING.md },
     paragraph: { marginTop: 0, marginBottom: SPACING.md },
     strong: { fontWeight: "700" as const },
     em: { fontStyle: "italic" as const },
@@ -152,7 +152,7 @@ function markdownStyles(palette: Palette) {
       borderWidth: 0,
       paddingHorizontal: 4,
       borderRadius: 4,
-      fontSize: 13,
+      ...TYPE.label,
     },
     fence: {
       color: palette.foreground,
@@ -160,7 +160,7 @@ function markdownStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       borderRadius: RADIUS.control,
       padding: SPACING.md,
-      fontSize: 13,
+      ...TYPE.label,
     },
     code_block: {
       color: palette.foreground,
@@ -168,7 +168,7 @@ function markdownStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       borderRadius: RADIUS.control,
       padding: SPACING.md,
-      fontSize: 13,
+      ...TYPE.label,
     },
     blockquote: {
       backgroundColor: palette.surfaceMuted,

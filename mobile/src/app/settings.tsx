@@ -29,7 +29,7 @@ import {
 } from "../backup/backupFile";
 import { SERVER_URL } from "../config";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { useTheme } from "../theme/ThemeProvider";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { describeHour, HourWheel } from "../components/HourWheel";
@@ -290,7 +290,7 @@ function makeStyles(palette: Palette) {
     // Rows that only state something keep their lines stacked; rows that
     // go somewhere put the text beside the mark that says so.
     rowStack: { flexDirection: "column", alignItems: "stretch", gap: 2 },
-    rowTitle: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
+    rowTitle: { color: palette.foreground, ...TYPE.subhead, fontWeight: "600" },
     choices: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.sm, marginTop: SPACING.sm },
     choice: {
       paddingHorizontal: SPACING.md,
@@ -300,13 +300,12 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    choiceLabel: { color: palette.mutedForeground, fontSize: 13, fontWeight: "600" },
+    choiceLabel: { color: palette.mutedForeground, ...TYPE.label, fontWeight: "600" },
     fieldLabel: {
       color: palette.subtleForeground,
-      fontSize: 11,
+      ...TYPE.eyebrow,
       fontWeight: "700",
       letterSpacing: 1,
-      textTransform: "uppercase",
       marginTop: SPACING.md,
     },
     picker: {
@@ -321,10 +320,10 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    pickerValue: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
-    muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
-    good: { color: palette.success, fontSize: 13, lineHeight: 18, marginTop: SPACING.sm },
-    bad: { color: palette.danger, fontSize: 13, lineHeight: 18, marginTop: SPACING.sm },
+    pickerValue: { color: palette.foreground, ...TYPE.subhead, fontWeight: "600" },
+    muted: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },
+    good: { color: palette.success, ...TYPE.label, lineHeight: 18, marginTop: SPACING.sm },
+    bad: { color: palette.danger, ...TYPE.label, lineHeight: 18, marginTop: SPACING.sm },
     confirm: {
       gap: SPACING.sm,
       marginTop: SPACING.sm,
@@ -340,7 +339,7 @@ function makeStyles(palette: Palette) {
       borderColor: "rgba(248, 113, 113, 0.3)",
       backgroundColor: "rgba(248, 113, 113, 0.05)",
     },
-    dangerTitle: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
+    dangerTitle: { color: palette.foreground, ...TYPE.subhead, fontWeight: "600" },
     dangerButton: {
       alignItems: "center",
       paddingVertical: SPACING.md,
@@ -348,7 +347,7 @@ function makeStyles(palette: Palette) {
       borderWidth: 1,
       borderColor: palette.cardBorder,
     },
-    dangerLabel: { color: palette.mutedForeground, fontSize: 14, fontWeight: "600" },
+    dangerLabel: { color: palette.mutedForeground, ...TYPE.body, fontWeight: "600" },
   });
 }
 

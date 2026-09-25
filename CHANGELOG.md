@@ -7,6 +7,23 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.70.0] - 2026-09-25
+
+### Changed
+- **One type scale, across the whole phone app.** There were sixteen distinct font sizes — 9, 10,
+  11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 24, 30, 72 — each chosen where it was written. Seven
+  of them were heading-ish numbers doing what turned out to be three jobs, and three adjacent sizes
+  carried most of the body text between them. Sizes picked one at a time cannot help but disagree,
+  and text that disagrees with itself by a point here and there reads as approximate however
+  carefully each screen was made. All 235 declarations now name a role from `TYPE` in
+  `mobile/src/theme.ts`, and there is no `fontSize:` literal left outside it.
+- **The consistency grid's smallest labels went from 9pt to 11pt**, which is the smallest size in
+  the scale, and still fits the columns they sit under.
+
+### Fixed
+- **The Phases panel said "Day 573 of 92" too.** 0.68.0 fixed the Plan screen and left the panel
+  showing the same fact the old way.
+
 ## [0.69.0] - 2026-09-25
 
 ### Changed

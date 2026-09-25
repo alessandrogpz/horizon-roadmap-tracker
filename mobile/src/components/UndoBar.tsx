@@ -20,7 +20,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { warn } from "../feedback/haptics";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 const SHOWN_FOR_MS = 6000;
@@ -126,8 +126,8 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
     },
-    label: { flex: 1, color: palette.foreground, fontSize: 13, fontWeight: "600" },
+    label: { flex: 1, color: palette.foreground, ...TYPE.label, fontWeight: "600" },
     action: { minHeight: 44, justifyContent: "center", paddingHorizontal: SPACING.md },
-    actionLabel: { color: palette.accent, fontSize: 14, fontWeight: "700" },
+    actionLabel: { color: palette.accent, ...TYPE.body, fontWeight: "700" },
   });
 }

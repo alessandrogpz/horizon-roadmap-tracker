@@ -24,7 +24,7 @@ import { getSettings } from "@shared/settings";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
 import { Refreshable } from "../../components/Refreshable";
 import { Segmented } from "../../components/Segmented";
-import { RADIUS, SPACING, type Palette } from "../../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../../theme";
 import { usePalette } from "../../theme/ThemeProvider";
 
 const CELL = 26;
@@ -590,7 +590,7 @@ function makeStyles(palette: Palette) {
       gap: SPACING.lg,
       marginBottom: SPACING.md,
     },
-    year: { color: palette.foreground, fontSize: 15, fontWeight: "700", minWidth: 56, textAlign: "center" },
+    year: { color: palette.foreground, ...TYPE.subhead, fontWeight: "700", minWidth: 56, textAlign: "center" },
     yearStep: {
       minWidth: 36,
       minHeight: 36,
@@ -614,8 +614,8 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
     },
-    statValue: { color: palette.foreground, fontSize: 24, fontWeight: "700" },
-    statLabel: { color: palette.mutedForeground, fontSize: 11 },
+    statValue: { color: palette.foreground, ...TYPE.figure, fontWeight: "700" },
+    statLabel: { color: palette.mutedForeground, ...TYPE.micro},
     // Fixed rather than stretched to the width. Stretching gave cells big
     // enough to hold a number and left only a handful of weeks on screen,
     // which is the opposite of what a consistency grid is for: the point is
@@ -630,7 +630,7 @@ function makeStyles(palette: Palette) {
       width: CELL,
       textAlign: "center",
       color: palette.subtleForeground,
-      fontSize: 9,
+      ...TYPE.micro,
       fontWeight: "700",
     },
     // The whole chart, centred as one block. Its children keep their own
@@ -646,7 +646,7 @@ function makeStyles(palette: Palette) {
     month: { marginBottom: SPACING.lg },
     monthLabel: {
       color: palette.mutedForeground,
-      fontSize: 12,
+      ...TYPE.caption,
       fontWeight: "700",
       marginBottom: SPACING.xs,
     },
@@ -663,7 +663,7 @@ function makeStyles(palette: Palette) {
       width: GUTTER,
       textAlign: "right",
       color: palette.subtleForeground,
-      fontSize: 9,
+      ...TYPE.micro,
       fontWeight: "700",
     },
     week: {
@@ -704,11 +704,11 @@ function makeStyles(palette: Palette) {
       shadowOffset: { width: 0, height: 4 },
     },
     detailHead: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
-    detailTitle: { flex: 1, color: palette.foreground, fontSize: 14, fontWeight: "700" },
+    detailTitle: { flex: 1, color: palette.foreground, ...TYPE.body, fontWeight: "700" },
     detailLine: { flexDirection: "row", alignItems: "flex-start", gap: SPACING.sm },
     detailTextWrap: { flex: 1, gap: 1 },
-    detailText: { color: palette.foreground, fontSize: 13, lineHeight: 18 },
-    detailSub: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16 },
+    detailText: { color: palette.foreground, ...TYPE.label, lineHeight: 18 },
+    detailSub: { color: palette.subtleForeground, ...TYPE.micro, lineHeight: 16 },
     // Sits hard against the bottom of the screen, above the tab bar.
     footRow: {
       flexDirection: "row",
@@ -731,7 +731,7 @@ function makeStyles(palette: Palette) {
     },
     legendCell: { width: 12, height: 12, borderRadius: 3 },
     legendGap: { width: SPACING.md },
-    legendLabel: { color: palette.subtleForeground, fontSize: 11, marginHorizontal: SPACING.xs },
-    muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
+    legendLabel: { color: palette.subtleForeground, ...TYPE.micro, marginHorizontal: SPACING.xs },
+    muted: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },
   });
 }

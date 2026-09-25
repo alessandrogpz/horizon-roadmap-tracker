@@ -49,7 +49,7 @@ import { settle, tap } from "../../feedback/haptics";
 import { PanelBody, PANEL_HREF, PANEL_ICON, tintFor } from "../../panels/registry";
 import { availablePanels, panelDefinition, setPanelHidden, visiblePanels } from "../../panels/layout";
 import { panelOrder, setPanelOrder } from "../../storage/deviceSettings";
-import { RADIUS, SPACING, type Palette } from "../../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../../theme";
 import { usePalette } from "../../theme/ThemeProvider";
 
 /** A folded panel: tall enough for its header and nothing else. */
@@ -647,7 +647,7 @@ function makeStyles(palette: Palette) {
       borderWidth: 2,
     },
     bar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-    barTitle: { color: palette.foreground, fontSize: 15, fontWeight: "700" },
+    barTitle: { color: palette.foreground, ...TYPE.subhead, fontWeight: "700" },
     barButton: {
       flexDirection: "row",
       alignItems: "center",
@@ -659,7 +659,7 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    barLabel: { color: palette.mutedForeground, fontSize: 12, fontWeight: "600" },
+    barLabel: { color: palette.mutedForeground, ...TYPE.caption, fontWeight: "600" },
     arrangeRow: {
       position: "absolute",
       left: 0,
@@ -677,10 +677,9 @@ function makeStyles(palette: Palette) {
     grip: { paddingVertical: SPACING.sm, paddingRight: SPACING.xs },
     sectionTitle: {
       color: palette.subtleForeground,
-      fontSize: 11,
+      ...TYPE.eyebrow,
       fontWeight: "700",
       letterSpacing: 1.2,
-      textTransform: "uppercase",
       marginTop: SPACING.md,
     },
     addRow: {
@@ -695,8 +694,8 @@ function makeStyles(palette: Palette) {
     },
     addIcon: { width: 26, height: 26, borderRadius: 8, alignItems: "center", justifyContent: "center" },
     addText: { flex: 1, gap: 1 },
-    addLabel: { flex: 1, color: palette.foreground, fontSize: 14, fontWeight: "600" },
-    muted: { color: palette.mutedForeground, fontSize: 12, lineHeight: 17 },
-    footnote: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16, marginTop: SPACING.md },
+    addLabel: { flex: 1, color: palette.foreground, ...TYPE.body, fontWeight: "600" },
+    muted: { color: palette.mutedForeground, ...TYPE.caption, lineHeight: 17 },
+    footnote: { color: palette.subtleForeground, ...TYPE.micro, lineHeight: 16, marginTop: SPACING.md },
   });
 }

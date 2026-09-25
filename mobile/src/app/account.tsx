@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { currentAccount, deleteAccount, signIn, signOut, storedToken, type Account } from "../auth/session";
 import { describeLastSync, useSync } from "../sync/SyncProvider";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { Refreshable } from "../components/Refreshable";
 
@@ -179,8 +179,8 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
     },
-    title: { color: palette.foreground, fontSize: 17, fontWeight: "600" },
-    muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
+    title: { color: palette.foreground, ...TYPE.heading, fontWeight: "600" },
+    muted: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },
     button: {
       alignItems: "center",
       paddingVertical: SPACING.md + 2,
@@ -191,9 +191,9 @@ function makeStyles(palette: Palette) {
     },
     buttonPrimary: { backgroundColor: palette.accent, borderColor: palette.accent },
     buttonBusy: { opacity: 0.6 },
-    buttonLabel: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
+    buttonLabel: { color: palette.foreground, ...TYPE.subhead, fontWeight: "600" },
     buttonLabelPrimary: { color: "#04121c" },
-    message: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18, paddingHorizontal: SPACING.xs },
+    message: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18, paddingHorizontal: SPACING.xs },
     danger: {
       gap: SPACING.sm,
       marginTop: SPACING.lg,

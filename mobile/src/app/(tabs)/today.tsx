@@ -39,7 +39,7 @@ import { focusOfDay } from "@shared/gym";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
 import { useUndo } from "../../components/UndoBar";
 import { tap } from "../../feedback/haptics";
-import { RADIUS, SPACING, type Palette } from "../../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../../theme";
 import { usePalette } from "../../theme/ThemeProvider";
 import { EditButton, useEditMode } from "../../components/EditToggle";
 import { TodaysTodos } from "../../components/TodaysTodos";
@@ -445,7 +445,7 @@ function makeStyles(palette: Palette) {
     screen: { flex: 1, backgroundColor: palette.background },
     content: { padding: SPACING.lg, gap: SPACING.lg },
     centered: { alignItems: "center", justifyContent: "center" },
-    muted: { color: palette.mutedForeground, fontSize: 13 },
+    muted: { color: palette.mutedForeground, ...TYPE.label},
     footerActions: { flexDirection: "row", gap: SPACING.sm, marginTop: SPACING.md },
     footerAction: {
       flex: 1,
@@ -455,7 +455,7 @@ function makeStyles(palette: Palette) {
       borderWidth: 1,
       borderColor: palette.cardBorder,
     },
-    footerLabel: { color: palette.mutedForeground, fontSize: 12, fontWeight: "600" },
+    footerLabel: { color: palette.mutedForeground, ...TYPE.caption, fontWeight: "600" },
     dayBar: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
     dayStep: {
       width: 40,
@@ -466,19 +466,19 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    dayStepLabel: { color: palette.foreground, fontSize: 20, lineHeight: 24 },
+    dayStepLabel: { color: palette.foreground, ...TYPE.title, lineHeight: 24 },
     dayLabelWrap: { flex: 1, alignItems: "center" },
-    dayLabel: { color: palette.foreground, fontSize: 14, fontWeight: "600" },
-    dayHint: { color: palette.subtleForeground, fontSize: 11 },
+    dayLabel: { color: palette.foreground, ...TYPE.body, fontWeight: "600" },
+    dayHint: { color: palette.subtleForeground, ...TYPE.micro},
     editRow: { flexDirection: "row", justifyContent: "flex-end" },
     editInput: {
       flex: 1,
       color: palette.foreground,
-      fontSize: 15,
+      ...TYPE.subhead,
       paddingVertical: SPACING.xs,
     },
     rowAction: { paddingHorizontal: SPACING.sm, paddingVertical: SPACING.xs },
-    rowActionLabel: { color: palette.mutedForeground, fontSize: 13, fontWeight: "600" },
+    rowActionLabel: { color: palette.mutedForeground, ...TYPE.label, fontWeight: "600" },
     addInput: {
       marginTop: SPACING.xs,
       paddingHorizontal: SPACING.md,
@@ -488,7 +488,7 @@ function makeStyles(palette: Palette) {
       borderStyle: "dashed",
       borderColor: palette.cardBorder,
       color: palette.foreground,
-      fontSize: 14,
+      ...TYPE.body,
     },
     section: { gap: SPACING.sm },
     emptyCard: {
@@ -500,7 +500,7 @@ function makeStyles(palette: Palette) {
       backgroundColor: palette.card,
       marginTop: SPACING.sm,
     },
-    emptyTitle: { color: palette.foreground, fontSize: 15, fontWeight: "700" },
+    emptyTitle: { color: palette.foreground, ...TYPE.subhead, fontWeight: "700" },
     primaryButton: {
       flexDirection: "row",
       alignItems: "center",
@@ -511,13 +511,12 @@ function makeStyles(palette: Palette) {
       backgroundColor: palette.accent,
       marginTop: SPACING.xs,
     },
-    primaryLabel: { color: palette.background, fontSize: 14, fontWeight: "700" },
+    primaryLabel: { color: palette.background, ...TYPE.body, fontWeight: "700" },
     sectionTitle: {
       color: palette.subtleForeground,
-      fontSize: 11,
+      ...TYPE.eyebrow,
       fontWeight: "700",
       letterSpacing: 1.2,
-      textTransform: "uppercase",
     },
     row: {
       flexDirection: "row",
@@ -539,11 +538,11 @@ function makeStyles(palette: Palette) {
       justifyContent: "center",
       marginTop: 1,
     },
-    tick: { color: "#fff", fontSize: 13, fontWeight: "800" },
+    tick: { color: "#fff", ...TYPE.label, fontWeight: "800" },
     rowText: { flex: 1, gap: 3 },
-    rowTitle: { color: palette.foreground, fontSize: 15, lineHeight: 20 },
+    rowTitle: { color: palette.foreground, ...TYPE.subhead, lineHeight: 20 },
     rowTitleDone: { color: palette.mutedForeground, textDecorationLine: "line-through" },
-    rowDescription: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
-    empty: { color: palette.mutedForeground, fontSize: 14, lineHeight: 20 },
+    rowDescription: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },
+    empty: { color: palette.mutedForeground, ...TYPE.body, lineHeight: 20 },
   });
 }

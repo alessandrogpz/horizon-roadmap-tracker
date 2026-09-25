@@ -15,7 +15,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { Pressable } from "react-native-gesture-handler";
 import { Link } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 export function PanelCard({
@@ -89,7 +89,7 @@ function makeStyles(palette: Palette) {
       paddingVertical: SPACING.md,
     },
     iconWrap: { width: 26, height: 26, borderRadius: 8, alignItems: "center", justifyContent: "center" },
-    title: { flex: 1, color: palette.foreground, fontSize: 14, fontWeight: "700" },
+    title: { flex: 1, color: palette.foreground, ...TYPE.body, fontWeight: "700" },
     body: { paddingHorizontal: SPACING.lg, paddingBottom: SPACING.lg, gap: SPACING.sm },
   });
 }
@@ -123,8 +123,8 @@ export function Meter({ label, value, total, tint }: { label: string; value: num
 // measure.
 const meterStyles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
-  label: { width: 88, fontSize: 12, fontWeight: "600" },
+  label: { width: 88, ...TYPE.caption, fontWeight: "600" },
   track: { flex: 1, height: 7, borderRadius: 4, overflow: "hidden" },
   fill: { height: 7, borderRadius: 4 },
-  value: { width: 46, fontSize: 11, textAlign: "right" },
+  value: { width: 46, ...TYPE.micro, textAlign: "right" },
 });

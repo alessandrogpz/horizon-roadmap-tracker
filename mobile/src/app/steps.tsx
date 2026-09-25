@@ -20,7 +20,7 @@ import { loadStepCount } from "../storage/db";
 import { dailySteps, describeHealth, healthStatus, requestHealthPermission, type HealthStatus } from "../steps/healthConnect";
 import { Refreshable } from "../components/Refreshable";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 const DAYS_BACK = 365;
@@ -184,13 +184,12 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
     },
-    totalValue: { color: palette.foreground, fontSize: 22, fontWeight: "700" },
+    totalValue: { color: palette.foreground, ...TYPE.figure, fontWeight: "700" },
     sectionTitle: {
       color: palette.subtleForeground,
-      fontSize: 11,
+      ...TYPE.eyebrow,
       fontWeight: "700",
       letterSpacing: 1.2,
-      textTransform: "uppercase",
       marginTop: SPACING.md,
     },
     card: {
@@ -202,12 +201,12 @@ function makeStyles(palette: Palette) {
       backgroundColor: palette.card,
     },
     barRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
-    barLabel: { color: palette.mutedForeground, fontSize: 11, width: 42 },
+    barLabel: { color: palette.mutedForeground, ...TYPE.micro, width: 42 },
     barTrack: { flex: 1, height: 8, borderRadius: 4, backgroundColor: palette.surfaceMuted, overflow: "hidden" },
     barFill: { height: 8, borderRadius: 4, backgroundColor: palette.success },
-    barValue: { color: palette.mutedForeground, fontSize: 11, width: 52, textAlign: "right" },
-    muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
-    footnote: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16, marginTop: SPACING.md },
+    barValue: { color: palette.mutedForeground, ...TYPE.micro, width: 52, textAlign: "right" },
+    muted: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },
+    footnote: { color: palette.subtleForeground, ...TYPE.micro, lineHeight: 16, marginTop: SPACING.md },
     permission: {
       gap: SPACING.xs,
       padding: SPACING.lg,
@@ -217,6 +216,6 @@ function makeStyles(palette: Palette) {
       borderColor: palette.accent,
       backgroundColor: palette.card,
     },
-    permissionLabel: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
+    permissionLabel: { color: palette.foreground, ...TYPE.subhead, fontWeight: "600" },
   });
 }
