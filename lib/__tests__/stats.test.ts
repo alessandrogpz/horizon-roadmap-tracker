@@ -6,6 +6,7 @@ import {
   streakStats,
   timelineStats,
 } from "../stats";
+import { setCurrentPhase } from "../trackActions";
 import type { Phase, TaskItem, TrackState } from "../types";
 
 const phase = (id: number, recommendedByDay?: number, tasks: TaskItem[] = []): Phase => ({
@@ -90,6 +91,46 @@ describe("streakStats", () => {
     );
     expect(stats.activeDays).toBe(2);
     expect(stats.current).toBe(2);
+  });
+});
+
+describe("time spent in a phase", () => {
+  const base = () => ({
+    ...track(),
+    startDate: "2026-01-01",
+    currentPhase: 1,
+    currentPhaseStartDate: "2026-01-01",
+    phases: [phase(1, 50), phase(2, 100)],
+  });
+
+  it("counts from the day the phase was entered", () => {
+    expect(phaseStats(base(), "2026-02-19").dayInPhase).toBe(50);
+  });
+
+  it("keeps what was spent in a phase when the track moves on and back", () => {
+    // Fifty days in phase 1, then away to phase 2.
+    vi.setSystemTime(new Date("2026-02-19T12:00:00"));
+    const moved = setCurrentPhase(base(), 2);
+    expect(moved.phaseDaysSpent?.["1"]).toBe(49);
+    // Ten days there: the switch day counts for the phase entered, so the
+    // tenth day is the 19th of February plus nine.
+    expect(phaseStats(moved, "2026-02-28").dayInPhase).toBe(10);
+
+    // Back to phase 1, which picks up where it left off rather than at one.
+    vi.setSystemTime(new Date("2026-02-28T12:00:00"));
+    const returned = setCurrentPhase(moved, 1);
+    expect(phaseStats(returned, "2026-02-28").dayInPhase).toBe(50);
+    expect(phaseStats(returned, "2026-03-01").dayInPhase).toBe(51);
+
+    // And phase 2 has kept its own ten days for when the track goes back.
+    expect(returned.phaseDaysSpent?.["2"]).toBe(9);
+    vi.setSystemTime(new Date("2026-03-01T12:00:00"));
+    expect(phaseStats(setCurrentPhase(returned, 2), "2026-03-01").dayInPhase).toBe(10);
+  });
+
+  it("does nothing when asked to move to the phase already open", () => {
+    const t = base();
+    expect(setCurrentPhase(t, 1)).toBe(t);
   });
 });
 
