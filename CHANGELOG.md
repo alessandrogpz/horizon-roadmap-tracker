@@ -7,6 +7,15 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.73.1] - 2026-09-25
+
+### Changed
+- **The longest run and the last thirty days are tiles again**, alongside the current streak and
+  drawn the same way. 0.73.0 folded them into a line under the streak to save the graph a row, which
+  was a trade nobody asked for. Not three across, though: at this width the small-caps label runs
+  out of room long before the figure does, so the run you are on takes the first line and the two
+  that put it in context share the second.
+
 ## [0.73.0] - 2026-09-25
 
 ### Added
