@@ -7,6 +7,35 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.65.0] - 2026-09-25
+
+Two different jobs were being drawn the same way. Switching which view you are looking at, and going
+to another screen, were both a row of identical outlined pills — so a set of links read as a set of
+options where one ought to be on, and a view switch read as two buttons rather than one setting.
+
+### Added
+- **A segmented control**, for "which of these am I looking at": one track with a filled thumb that
+  slides between positions. The selected option used to be told apart by a border colour, which is
+  the weakest signal available and reads as decoration rather than state. The thumb is sprung rather
+  than timed — a spring overshoots slightly and settles, which is what makes a small movement read
+  as a physical one — and the labels hand their colour over as it passes under them, so the
+  selection looks carried rather than reassigned. It is in Progress (by month / continuous) and in
+  the week calendar (week / month).
+
+### Changed
+- **The consistency grid is centred.** It is a fixed width on purpose — cells stretched to fill a
+  phone are big enough to hold a number and leave a handful of weeks on screen, which is the
+  opposite of what the grid is for — but a fixed width left at `flex-start` is a grid pushed into
+  the left third of the screen with nothing beside it. The month labels down the side now hang into
+  the margin instead of taking a column of their own, because a gutter counted into the width
+  pushes the columns off-centre by half of itself, and in the month layout nothing is written in it.
+- **Changing view fades the new one in** rather than swapping it between frames. Only the container
+  animates: the grid below it is a couple of hundred cells, and fading each of them would cost far
+  more than the effect is worth.
+- **The links to a tab's siblings carry the icon of where they go and a chevron saying they go
+  anywhere at all**, and give slightly under the thumb before springing back. They are places, not
+  options, and they no longer look like the thing that switches views.
+
 ## [0.64.0] - 2026-09-25
 
 ### Changed
