@@ -40,7 +40,7 @@ export const MODULES = [
   { id: "materialsTracker", label: "Materials", homeColumn: "right" },
   { id: "notepad", label: "Notepad", homeColumn: "right" },
   { id: "todoList", label: "To-do List", homeColumn: "right" },
-  { id: "gym", label: "Gym plan", homeColumn: "right", optIn: true },
+  { id: "gym", label: "Workout", homeColumn: "right", optIn: true },
 ] as const satisfies readonly ModuleDefinition[];
 
 export type ModuleId = (typeof MODULES)[number]["id"];

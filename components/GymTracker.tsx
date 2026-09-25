@@ -193,14 +193,14 @@ export default function GymTracker() {
   );
 }
 
-/** The panel's own title bar, matching every other panel's. "Gym plan" rather
+/** The panel's own title bar, matching every other panel's. "Workout" rather
  *  than the day's focus label: the label is whatever the track calls that
  *  weekday — "Focus", "Maths" — which said nothing about training and read as
  *  a bug. */
 function Header({ sets, volume }: { sets: number; volume: number }) {
   return (
     <div className="flex items-center justify-between border-b border-card-border pb-3">
-      <span className="text-[0.95rem] font-semibold text-foreground">Gym plan</span>
+      <span className="text-[0.95rem] font-semibold text-foreground">Workout</span>
       <span className="text-[0.8rem] text-muted-foreground">
         {sets} set{sets === 1 ? "" : "s"}
         {volume > 0 ? ` · ${Math.round(volume).toLocaleString()} kg` : ""}
