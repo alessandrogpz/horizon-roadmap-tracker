@@ -7,6 +7,15 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.74.1] - 2026-09-25
+
+### Fixed
+- **Dropping a row in Arrange made the names flicker.** The shifts holding the list apart were
+  released a frame or two before the reorder arrived, so the list returned to the arrangement it had
+  started in and then swapped — names appearing to trade places twice for one drag. The row now
+  settles into its destination first, and the new order and the release of every value happen in one
+  tick, the way the folded column already did it.
+
 ## [0.74.0] - 2026-09-25
 
 ### Fixed
