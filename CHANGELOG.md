@@ -7,6 +7,26 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.76.2] - 2026-09-26
+
+### Fixed
+- **The two failing Dependabot jobs**, which were the only two high-severity advisories in the phone
+  app: `linkify-it` and `markdown-it`, both reached through `react-native-markdown-display`. It pins
+  `markdown-it@^10` — six years old, current is 15 — and is itself the latest release, so there was
+  no update for Dependabot to make and the jobs failed rather than opening a pull request.
+
+  `overrides` in `mobile/package.json` pull both to patched versions, five majors up. That is a
+  jump worth checking rather than assuming, so the renderer was put through headings, emphasis,
+  inline code, autolinks, nested and ordered lists, a blockquote exercising the smartquotes rule
+  named in one of the advisories, a fenced code block, a table and a rule: all correct, nothing in
+  the console. Sixteen moderate advisories remain, all inside Expo's own tree and none with a fix
+  available.
+
+  Worth its own sentence: both advisories are quadratic-complexity denial of service on
+  attacker-supplied text, and this parser only ever sees the user's own roadmap on the user's own
+  phone. The practical exposure was close to nil; the failing jobs and a 2019 parser were the real
+  reasons to move.
+
 ## [0.76.1] - 2026-09-26
 
 ### Fixed
