@@ -138,6 +138,16 @@ export interface TimelineStats {
   totalDays: number;
   progressPct: number;
   daysRemaining: number;
+  /**
+   * Days past the planned total, or 0 while the track is still inside it.
+   *
+   * A track outliving its estimate is the ordinary case, not a failure: plans
+   * are guesses and the guess is usually short. Without this the only thing a
+   * display could say was "Day 573 of 92" over a bar pinned at full, which
+   * reads as a track that has gone wrong rather than one that is simply still
+   * going.
+   */
+  overrunDays: number;
   startDate: Date;
   endDate: Date;
   windows: PhaseWindow[];
@@ -172,6 +182,7 @@ export function timelineStats(track: TrackState): TimelineStats {
     totalDays,
     progressPct: totalDays > 0 ? Math.min(100, (daysPassed / totalDays) * 100) : 0,
     daysRemaining: Math.max(0, totalDays - daysPassed),
+    overrunDays: Math.max(0, daysPassed - totalDays),
     startDate: dateForDay(track.startDate, 1),
     endDate: dateForDay(track.startDate, totalDays),
     windows,
@@ -201,8 +212,11 @@ export function phaseStats(track: TrackState, todayStr: string): PhaseStats {
   const window = timeline.windows.find((w) => w.phase.id === track.currentPhase) || null;
   const phase = window?.phase || null;
 
+  // Time spent in this phase, not time since last entering it: whatever was
+  // banked when the phase was previously left, plus the stretch running now.
   const phaseStart = track.currentPhaseStartDate || track.startDate;
-  const dayInPhase = phaseStart ? Math.max(1, dayForDate(phaseStart, todayStr)) : 0;
+  const banked = track.phaseDaysSpent?.[String(track.currentPhase)] ?? 0;
+  const dayInPhase = phaseStart ? banked + Math.max(1, dayForDate(phaseStart, todayStr)) : banked;
 
   const tasks = phase?.tasks || [];
   const recommendedId = recommendedPhaseId(track, timeline.daysPassed);

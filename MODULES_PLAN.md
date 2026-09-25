@@ -65,7 +65,7 @@ Don't re-litigate these without new information.
 | Not Postgres | Relational, so graded under the wrong module. Kept as the comparison point (Appendix A). |
 | Not Firestore / CouchDB | Firestore manages replication and sharding invisibly, leaving nothing to demonstrate. CouchDB/PouchDB would replace Dexie and `lib/merge.ts` rather than sit behind them. |
 | Offline mode unchanged | IndexedDB via Dexie, no account, data never leaves the device. |
-| Signed-in users sync to MongoDB instead of Google Drive | The module needs the app's data layer to use the database. Drive sync stays for users who aren't signed in (§7 Q3). |
+| Signed-in users sync to MongoDB instead of Google Drive | The module needs the app's data layer to use the database. Drive sync stayed for signed-out users at first, and was removed entirely in 0.32.0 (§7 Q3). |
 | Server-side merge reusing `lib/merge.ts` | It imports only `./types` and `./streak`, no browser APIs, so it runs in an API route unchanged. |
 | Threat model before the server is built | Security by design, and "I did the threat model first" is a strong exam answer. |
 
@@ -1022,6 +1022,11 @@ repo is private; submit through the Learning Platform form.
    in, unchanged. Signed-in users sync to MongoDB. Don't run both two-way syncs
    on one device; settle the exact UI in Step 4f. The .zip export and backup
    file keep working either way.
+   *Superseded in 0.32.0: Drive sync was removed outright. Once the phone
+   arrived there were two ways to be offline — local-only, or an account — and
+   a third sync that only some devices could run was a liability rather than a
+   fallback. It also carried the only sensitive OAuth scope in the project,
+   which the Play Console review would have had to justify.*
 4. ~~Auth~~ **Hand-rolled OIDC verification with Mongo sessions** (the default).
 5. ~~Rate limiting~~ **A fixed-window counter in MongoDB**: a `rateLimits`
    collection with an atomic `$inc` upsert per key and window, and a TTL index

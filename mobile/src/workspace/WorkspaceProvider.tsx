@@ -65,6 +65,24 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const current = useRef<Workspace | null>(null);
   current.current = workspace;
 
+  /**
+   * The single way a new workspace is adopted: ref first, then state, then
+   * disk.
+   *
+   * Updating the ref *synchronously* is the part that matters. React only
+   * reassigns it on the next render, so two provider calls in the same tick
+   * used to see the same stale copy — and the second would write it back,
+   * silently undoing the first. Deleting the track you were standing on did
+   * exactly that: it was archived, then `switchTrack` rebuilt the workspace
+   * from the pre-archive snapshot and saved it, so the track came back and
+   * only a second attempt stuck.
+   */
+  const commit = useCallback((next: Workspace) => {
+    current.current = next;
+    setWorkspace(next);
+    void saveWorkspace(next);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -119,10 +137,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
    */
   const apply = useCallback((previous: Workspace, next: Workspace, trackId: string) => {
     const { track: bookkept } = applyTrackBookkeeping(previous.tracks[trackId], next.tracks[trackId], false);
-    const stamped: Workspace = { ...next, tracks: { ...next.tracks, [trackId]: bookkept } };
-    setWorkspace(stamped);
-    void saveWorkspace(stamped);
-  }, []);
+    commit({ ...next, tracks: { ...next.tracks, [trackId]: bookkept } });
+  }, [commit]);
 
   const track = workspace ? activeTrack(workspace) : null;
 
@@ -169,10 +185,9 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       };
       // A new track has no previous version to compare against, so bookkeeping
       // has nothing to stamp; it is written as it is.
-      setWorkspace(next);
-      void saveWorkspace(next);
+      commit(next);
     },
-    []
+    [commit]
   );
 
   const switchTrack = useCallback(
@@ -180,19 +195,20 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       const workspaceNow = current.current;
       if (!workspaceNow || !workspaceNow.tracks[trackId]) return;
       // Switching tracks changes no track's contents, so it needs no stamping.
-      const next = { ...workspaceNow, activeTrackId: trackId };
-      setWorkspace(next);
-      void saveWorkspace(next);
+      commit({ ...workspaceNow, activeTrackId: trackId });
     },
-    [apply]
+    [commit]
   );
 
-  const replaceWorkspace = useCallback((next: Workspace) => setWorkspace(next), []);
-
-  const restoreWorkspace = useCallback((previous: Workspace) => {
-    setWorkspace(previous);
-    void saveWorkspace(previous);
+  // Sync has already written to disk by the time this is called, so this does
+  // not write again — but it still moves the ref, or an edit in the same tick
+  // would be built on the pre-sync copy.
+  const replaceWorkspace = useCallback((next: Workspace) => {
+    current.current = next;
+    setWorkspace(next);
   }, []);
+
+  const restoreWorkspace = useCallback((previous: Workspace) => commit(previous), [commit]);
 
   const resetLocal = useCallback(async () => {
     await clearAll();

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { X } from "lucide-react";
+import { dateForDay, dayForDate, formatDateYMD } from "@/lib/dates";
 
 interface TrackSettingsFields {
   name: string;
@@ -87,18 +88,26 @@ export default function TrackSettingsModal({ name, color, startDate, totalDays, 
             />
           </div>
           <div className="flex-1 flex flex-col gap-1.5">
-            <label className="text-[0.8rem] text-muted-foreground">Total days</label>
+            {/* An end date, not a day count. Nobody knows their track is 92
+                days long; they know it should be done by Christmas. The count
+                is still what gets stored — it is what lets a track be re-dated
+                wholesale — so this converts on the way in and out. */}
+            <label className="text-[0.8rem] text-muted-foreground">Ends on</label>
             <input
-              type="number"
-              min={1}
-              value={draftTotalDays}
-              onChange={(e) => setDraftTotalDays(Math.max(1, Number(e.target.value) || 1))}
+              type="date"
+              min={draftStartDate}
+              value={formatDateYMD(dateForDay(draftStartDate, draftTotalDays))}
+              onChange={(e) => {
+                const days = dayForDate(draftStartDate, e.target.value);
+                if (Number.isFinite(days) && days >= 1) setDraftTotalDays(days);
+              }}
               className="bg-input-bg border border-card-border rounded-md text-foreground text-[0.9rem] outline-none px-3 py-2 font-[inherit] w-full"
             />
           </div>
         </div>
         <p className="text-[0.75rem] text-muted-foreground -mt-3">
-          Changing total days rescales your phase timeline proportionally.
+          {draftTotalDays} day{draftTotalDays === 1 ? "" : "s"}.{" "}
+          Moving the end date rescales your phase timeline proportionally.
         </p>
 
         <div className="border-t border-card-border pt-4 flex justify-between items-center">

@@ -8,7 +8,7 @@
 
 import type { FocusType, Material, Phase, PortfolioProject, TrackState, WeekDay } from "./types";
 import { addCompletion, removeCompletion } from "./streak";
-import { todayYMD } from "./dates";
+import { dayForDate, todayYMD } from "./dates";
 
 /** The track's horizon in days: the last phase carrying a `recommendedByDay`
  *  threshold defines it. Tracks whose template sets none fall back to a year.
@@ -116,11 +116,32 @@ export const removePortfolioProject = (track: TrackState, projectId: string): Tr
 
 // --- Phases ------------------------------------------------------------
 
-export const setCurrentPhase = (track: TrackState, phaseId: number): TrackState => ({
-  ...track,
-  currentPhase: phaseId,
-  currentPhaseStartDate: todayYMD(),
-});
+/**
+ * Moves the track to another phase, banking the time spent in the one being
+ * left so that coming back to it resumes rather than restarts.
+ *
+ * The day of the switch goes to the phase being *entered*, which is what makes
+ * the sum honest: every calendar day counts for exactly one phase, and no day
+ * is counted twice by leaving and returning on it.
+ */
+export const setCurrentPhase = (track: TrackState, phaseId: number): TrackState => {
+  const today = todayYMD();
+  if (phaseId === track.currentPhase) return track;
+
+  const openedOn = track.currentPhaseStartDate || track.startDate;
+  const spent = track.phaseDaysSpent ?? {};
+  const leaving = String(track.currentPhase);
+  // `dayForDate` is 1 on the opening day, so subtracting one leaves the days
+  // this stretch actually completed before today.
+  const completed = openedOn ? Math.max(0, dayForDate(openedOn, today) - 1) : 0;
+
+  return {
+    ...track,
+    currentPhase: phaseId,
+    currentPhaseStartDate: today,
+    phaseDaysSpent: { ...spent, [leaving]: (spent[leaving] ?? 0) + completed },
+  };
+};
 
 export const updatePhase = (track: TrackState, phase: Phase): TrackState => ({
   ...track,
@@ -131,10 +152,21 @@ export const updatePhase = (track: TrackState, phase: Phase): TrackState => ({
 export const removePhase = (track: TrackState, phaseId: number): TrackState => {
   if (track.phases.length <= 1) return track;
   const phases = track.phases.filter((p) => p.id !== phaseId);
+  const displaced = track.currentPhase === phaseId;
+
+  // A removed phase takes its banked days with it — there is nothing left to
+  // have spent them in. If the track was standing on it, the phase it lands on
+  // starts a fresh stretch today rather than inheriting the departed one's
+  // start date, which would have credited it with time spent elsewhere.
+  const spent = { ...(track.phaseDaysSpent ?? {}) };
+  delete spent[String(phaseId)];
+
   return {
     ...track,
     phases,
-    currentPhase: track.currentPhase === phaseId ? phases[0].id : track.currentPhase,
+    currentPhase: displaced ? phases[0].id : track.currentPhase,
+    currentPhaseStartDate: displaced ? todayYMD() : track.currentPhaseStartDate,
+    phaseDaysSpent: spent,
   };
 };
 

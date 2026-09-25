@@ -75,8 +75,8 @@ const MODULES = [
   },
   {
     icon: Dumbbell,
-    title: "Gym",
-    body: "A plan per kind of day — push, pull, legs — with the sets and reps it asks for, and a tick against each as you work through it. The week says which days those are.",
+    title: "Gym plan",
+    body: "The exercises a training day asks for, with the sets and reps against each and a tick as you work through them. Which days it applies to comes from the week.",
   },
 ];
 

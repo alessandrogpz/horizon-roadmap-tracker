@@ -201,9 +201,28 @@ describe("the sync request schema", () => {
     expect(roundTrip(workspace).tracks[trackId].lastUpdatedDates).toEqual(lastUpdatedDates);
   });
 
-  it("refuses a field it doesn't know, such as a smuggled userId (T2)", () => {
-    expect(request(withTrack((t) => ({ ...t, userId: "someone-else" }))).success).toBe(false);
-    expect(request({ ...blankWorkspace(), userId: "someone-else" }).success).toBe(false);
+  // A track or workspace strips what it does not know; the request around them
+  // still refuses it. The difference is who is expected to grow: tracks gain
+  // fields with every feature, and phones update over the air minutes after a
+  // release while the server waits for a deploy — so a device is routinely
+  // ahead of the server, and refusing one unknown field there means refusing
+  // every track and note in the payload. The request envelope gains nothing
+  // over time, so anything unexpected in it is a reason to stop.
+  //
+  // Either way the smuggled key never reaches server code, which is the
+  // property T2 is about.
+  it("drops a field it doesn't know, such as a smuggled userId (T2)", () => {
+    const track = request(withTrack((t) => ({ ...t, userId: "someone-else" })));
+    expect(track.success).toBe(true);
+    if (track.success) {
+      const [trackId] = Object.keys(track.data.workspace.tracks);
+      expect("userId" in track.data.workspace.tracks[trackId]).toBe(false);
+    }
+
+    const workspace = request({ ...blankWorkspace(), userId: "someone-else" });
+    expect(workspace.success).toBe(true);
+    if (workspace.success) expect("userId" in workspace.data.workspace).toBe(false);
+
     expect(SyncRequestSchema.safeParse({ workspace: blankWorkspace(), notes: [], userId: "x" }).success).toBe(false);
   });
 

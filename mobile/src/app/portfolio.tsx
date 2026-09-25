@@ -19,10 +19,11 @@ import {
 } from "@shared/trackActions";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { useUndo } from "../components/UndoBar";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { SwipeRow } from "../components/SwipeRow";
 import { EditHeader, useEditMode } from "../components/EditToggle";
+import { EmptyState } from "../components/EmptyState";
 import { Refreshable } from "../components/Refreshable";
 
 export default function PortfolioScreen() {
@@ -58,7 +59,7 @@ export default function PortfolioScreen() {
   return (
     <Refreshable style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <EditHeader
-        title="Deliverables"
+        title={projects.length === 1 ? "1 deliverable" : `${projects.length} deliverables`}
         editing={editing}
         onChange={setEditing}
         hint="Rename one, add its repository, or take it off the list. Ticking one off works either way."
@@ -142,7 +143,14 @@ export default function PortfolioScreen() {
         </SwipeRow>
       ))}
 
-      {projects.length === 0 && <Text style={styles.muted}>Nothing to deliver on this track yet.</Text>}
+      {projects.length === 0 && !editing && (
+        <EmptyState
+          title="Nothing to deliver yet"
+          hint="The things this track is meant to produce, each with somewhere to point at the work."
+          action="Add a deliverable"
+          onAct={() => setEditing(true)}
+        />
+      )}
 
       {editing && (
       <TextInput
@@ -188,11 +196,11 @@ function makeStyles(palette: Palette) {
       alignItems: "center",
       justifyContent: "center",
     },
-    tick: { color: "#fff", fontSize: 13, fontWeight: "800" },
-    title: { flex: 1, color: palette.foreground, fontSize: 15, paddingVertical: 2 },
+    tick: { color: "#fff", ...TYPE.label, fontWeight: "800" },
+    title: { flex: 1, color: palette.foreground, ...TYPE.subhead, paddingVertical: 2 },
     repoInput: {
       color: palette.mutedForeground,
-      fontSize: 12,
+      ...TYPE.caption,
       paddingVertical: SPACING.xs,
       paddingHorizontal: SPACING.sm,
       borderRadius: RADIUS.control,
@@ -209,7 +217,7 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    smallLabel: { color: palette.mutedForeground, fontSize: 12, fontWeight: "600" },
+    smallLabel: { color: palette.mutedForeground, ...TYPE.caption, fontWeight: "600" },
     input: {
       paddingHorizontal: SPACING.md,
       paddingVertical: SPACING.md,
@@ -218,9 +226,9 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
       color: palette.foreground,
-      fontSize: 15,
+      ...TYPE.subhead,
     },
-    muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
-    footnote: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16 },
+    muted: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },
+    footnote: { color: palette.subtleForeground, ...TYPE.micro, lineHeight: 16 },
   });
 }

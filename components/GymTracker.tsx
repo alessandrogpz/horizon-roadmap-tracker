@@ -56,29 +56,30 @@ export default function GymTracker() {
   const planned = plannedFor(log, focus?.key);
   const session = sessionFor(log, today);
 
+  // Every panel brings its own card; SortablePanel is transparent chrome that
+  // only adds the hover controls. Without this the gym floated on the column
+  // with no bounding box while its neighbours had one.
+  const shell = "glass-panel p-6 flex flex-col gap-3";
+
   if (!focus) {
     return (
-      <p className="text-[0.85rem] text-muted-foreground">
-        This track&apos;s week doesn&apos;t say what today is for yet. Set it in the weekly rhythm and
-        the plan for each kind of day appears here.
-      </p>
+      <div className={shell}>
+        <Header sets={0} volume={0} />
+        <p className="text-[0.85rem] text-muted-foreground">
+          This track&apos;s week doesn&apos;t say what today is for yet. Set it in the weekly rhythm
+          and the plan appears here.
+        </p>
+      </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-baseline gap-2">
-        <span className="text-[0.95rem] font-semibold text-foreground">{focus.label}</span>
-        <span className="text-[0.8rem] text-muted-foreground">
-          {setCountOf(session)} set{setCountOf(session) === 1 ? "" : "s"}
-          {volumeOf(session) > 0 ? ` · ${Math.round(volumeOf(session)).toLocaleString()} kg` : ""}
-        </span>
-      </div>
+    <div className={shell}>
+      <Header sets={setCountOf(session)} volume={volumeOf(session)} />
 
       {planned.length === 0 && (
         <p className="text-[0.85rem] text-muted-foreground">
-          Nothing planned for {focus.label.toLowerCase()} days yet. Add exercises below and they wait
-          on every {focus.label.toLowerCase()} day.
+          Nothing planned yet. Add exercises below and they wait on every day of this kind.
         </p>
       )}
 
@@ -121,7 +122,7 @@ export default function GymTracker() {
               <button
                 onClick={() => change((l) => removeFromPlan(l, focus.key, item.name))}
                 className="text-subtle-foreground hover:text-red-500"
-                aria-label={`Remove ${item.name} from the ${focus.label} plan`}
+                aria-label={`Remove ${item.name} from the plan`}
                 title="Remove from the plan"
               >
                 <X size={14} />
@@ -184,10 +185,26 @@ export default function GymTracker() {
             change((l) => addToPlan(l, focus.key, name));
             setDraft("");
           }}
-          placeholder={`Add to the ${focus.label.toLowerCase()} plan…`}
+          placeholder="Add to the plan…"
           className="flex-1 border-none bg-transparent text-[0.85rem] text-foreground outline-none placeholder:text-subtle-foreground"
         />
       </div>
+    </div>
+  );
+}
+
+/** The panel's own title bar, matching every other panel's. "Workout" rather
+ *  than the day's focus label: the label is whatever the track calls that
+ *  weekday — "Focus", "Maths" — which said nothing about training and read as
+ *  a bug. */
+function Header({ sets, volume }: { sets: number; volume: number }) {
+  return (
+    <div className="flex items-center justify-between border-b border-card-border pb-3">
+      <span className="text-[0.95rem] font-semibold text-foreground">Workout</span>
+      <span className="text-[0.8rem] text-muted-foreground">
+        {sets} set{sets === 1 ? "" : "s"}
+        {volume > 0 ? ` · ${Math.round(volume).toLocaleString()} kg` : ""}
+      </span>
     </div>
   );
 }

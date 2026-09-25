@@ -40,6 +40,15 @@ export function activeNow(): Date {
   return parseYMD(todayYMD());
 }
 
+/** Whether a string is shaped like a date this app stores.
+ *
+ *  Shape only — it does not ask whether 31 February exists, because nothing
+ *  that produces these strings can invent one: they come from a picker or from
+ *  `formatDateYMD`. What it guards against is the *other* kind of input, where
+ *  a half-written or pasted value would otherwise reach arithmetic. */
+export const isDateStr = (value: string | undefined | null): boolean =>
+  typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
+
 /** Parse a "YYYY-MM-DD" string as a local-midnight Date. */
 export function parseYMD(dateStr: string): Date {
   const parts = dateStr.split("-");

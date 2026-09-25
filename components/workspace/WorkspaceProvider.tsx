@@ -47,7 +47,7 @@ export interface WorkspaceActions {
   switchTrack: (trackId: string) => Promise<void>;
   /** Adds a new track and makes it active. */
   addTrack: (track: TrackState) => Promise<void>;
-  /** Runs a full Drive sync and reloads the merged result. */
+  /** Syncs with the account and reloads the merged result. */
   /** The same through the signed-in Horizon account (MongoDB on the server). */
   syncAccount: () => Promise<void>;
   /** Re-reads the workspace from storage. For changes made underneath the

@@ -10,21 +10,24 @@
 // eight stacked panels is the wall of words this replaced.
 
 import { useEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+// Gesture Handler's, so that this — the one button living inside a panel's
+// body — wins against the card around it, which is now tappable in full.
+import { Pressable } from "react-native-gesture-handler";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import type { TrackState } from "@shared/types";
 import { isItemCompleted } from "@shared/completions";
 import { computeRotationItemsForDay, isRotationItem } from "@shared/rotation";
-import { DAYS_SHORT, getWeekNum, parseYMD } from "@shared/dates";
+import { DAYS_SHORT, getMondayOfDateWeek, getWeekNum, parseYMD } from "@shared/dates";
 import { currentStreakLength } from "@shared/streak";
 import { phaseStats, progressStats, streakCalendar, timelineStats } from "@shared/stats";
 import { PanelCard, Meter } from "./PanelCard";
 import { FITNESS_PANEL, STEPS_PANEL } from "./layout";
 import { usePedometer } from "../steps/usePedometer";
-import { dailySteps, healthStatus } from "./../steps/healthConnect";
+import { useLiveSteps } from "../steps/useLiveSteps";
 import { focusOfDay, planComplete, plannedFor, sessionFor, setCountOf, volumeOf } from "@shared/gym";
 import { useGymLog } from "../gym/useGymLog";
-import { SPACING, type Palette } from "../theme";
+import { SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 export interface PanelProps {
@@ -92,6 +95,9 @@ function WeekPanel({ track, today }: PanelProps) {
   const styles = useMemo(() => makeStyles(palette), [palette]);
   const week = DAYS_SHORT.slice(1).concat(DAYS_SHORT[0]);
   const todayKey = DAYS_SHORT[parseYMD(today).getDay()];
+  // Dated, so the strip reads as *this* week rather than a week in general —
+  // and so it agrees with the calendar it opens into.
+  const monday = getMondayOfDateWeek(parseYMD(today));
   const { log } = useGymLog(track.meta.id);
 
   const focus = focusOfDay(track.weekSchedule, todayKey);
@@ -102,10 +108,12 @@ function WeekPanel({ track, today }: PanelProps) {
   return (
     <>
       <View style={styles.week}>
-        {week.map((name) => {
+        {week.map((name, index) => {
           const day = (track.weekSchedule ?? []).find((d) => d.name === name);
           const colour = day ? track.focusTypes?.[day.type]?.color : undefined;
           const isToday = name === todayKey;
+          const date = new Date(monday);
+          date.setDate(monday.getDate() + index);
           return (
             <View key={name} style={styles.weekDay}>
               <View
@@ -117,6 +125,9 @@ function WeekPanel({ track, today }: PanelProps) {
               />
               <Text style={[styles.weekName, isToday && { color: palette.foreground, fontWeight: "700" }]}>
                 {name}
+              </Text>
+              <Text style={[styles.weekDate, isToday && { color: palette.foreground }]} allowFontScaling={false}>
+                {date.getDate()}
               </Text>
             </View>
           );
@@ -160,8 +171,12 @@ function PhasePanel({ track, today }: PanelProps) {
           <Text style={styles.strong} numberOfLines={1}>
             {phase.phase?.title ?? "No phase"}
           </Text>
+          {/* Same rule as the Plan screen: past its last day a track stops
+              being counted against a total it has outlived. */}
           <Text style={styles.muted}>
-            Day {timeline.daysPassed} of {timeline.totalDays}
+            {timeline.overrunDays > 0
+              ? `Day ${timeline.daysPassed} · ${timeline.overrunDays} past plan`
+              : `Day ${timeline.daysPassed} of ${timeline.totalDays}`}
           </Text>
         </View>
       </View>
@@ -268,25 +283,7 @@ function TimerPanel() {
 function StepsPanel({ today }: { today: string }) {
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
-  const steps = usePedometer(today, true);
-
-  // Health Connect knows the whole day; the sensor knows the part spent in the
-  // app. Whichever is larger is the better answer, and on a phone without
-  // Health Connect the sensor is the only one.
-  const [wholeDay, setWholeDay] = useState<number | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      if ((await healthStatus()) !== "ready") return;
-      const days = await dailySteps(today, today);
-      if (!cancelled) setWholeDay(days[today] ?? 0);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [today]);
-
-  const count = Math.max(wholeDay ?? 0, steps.today);
+  const steps = useLiveSteps(today);
 
   if (steps.status === "denied") {
     return (
@@ -297,15 +294,15 @@ function StepsPanel({ today }: { today: string }) {
       </Pressable>
     );
   }
-  if (steps.status === "unavailable" && wholeDay === null) {
+  if (steps.status === "unavailable" && !steps.wholeDay) {
     return <Text style={styles.muted}>No step counter, and no Health Connect history.</Text>;
   }
 
   return (
     <View style={styles.headlineRow}>
-      <Text style={[styles.big, { color: TINTS[STEPS_PANEL] }]}>{count.toLocaleString()}</Text>
+      <Text style={[styles.big, { color: TINTS[STEPS_PANEL] }]}>{steps.count.toLocaleString()}</Text>
       <Text style={styles.muted}>
-        steps today{wholeDay === null ? " · while Horizon is open" : ""}
+        steps today{steps.wholeDay ? "" : " · while Horizon is open"}
       </Text>
     </View>
   );
@@ -336,7 +333,7 @@ function GymPanel({ track, today }: PanelProps) {
     return (
       <Text style={styles.muted}>
         {focus
-          ? `Nothing planned for ${focus.label.toLowerCase()} days yet. Tap to build the plan.`
+          ? "Nothing planned yet. Tap to build the plan."
           : "This track's week doesn't say what today is for. Tap to set it up."}
       </Text>
     );
@@ -345,7 +342,7 @@ function GymPanel({ track, today }: PanelProps) {
   return (
     <>
       <Text style={styles.muted}>
-        {focus?.label} · {setCountOf(session)} set{setCountOf(session) === 1 ? "" : "s"} logged
+        {setCountOf(session)} set{setCountOf(session) === 1 ? "" : "s"} logged
         {volumeOf(session) > 0 ? ` · ${Math.round(volumeOf(session)).toLocaleString()} kg` : ""}
       </Text>
 
@@ -381,7 +378,6 @@ function GymPanel({ track, today }: PanelProps) {
     </>
   );
 }
-
 
 /** For panels whose whole content is an action: a timer, a notepad. Drawing a
  *  fake preview of a text editor would be decoration pretending to be data. */
@@ -422,27 +418,28 @@ export { PanelCard };
 
 function makeStyles(palette: Palette) {
   return StyleSheet.create({
-    muted: { color: palette.mutedForeground, fontSize: 12, lineHeight: 17 },
-    strong: { color: palette.foreground, fontSize: 14, fontWeight: "600" },
-    big: { color: palette.accent, fontSize: 30, fontWeight: "700", lineHeight: 34 },
+    muted: { color: palette.mutedForeground, ...TYPE.caption, lineHeight: 17 },
+    strong: { color: palette.foreground, ...TYPE.body, fontWeight: "600" },
+    big: { color: palette.accent, ...TYPE.figure, fontWeight: "700", lineHeight: 34 },
     headlineRow: { flexDirection: "row", alignItems: "center", gap: SPACING.md },
     headlineText: { flex: 1, gap: 1 },
     week: { flexDirection: "row", justifyContent: "space-between" },
     weekDay: { alignItems: "center", gap: 4 },
     weekDot: { width: 16, height: 16, borderRadius: 8 },
-    weekName: { color: palette.subtleForeground, fontSize: 10 },
+    weekName: { color: palette.subtleForeground, ...TYPE.micro},
+    weekDate: { color: palette.subtleForeground, ...TYPE.micro},
     plannedBlock: { marginTop: SPACING.sm },
     exerciseRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm, paddingVertical: 3 },
     exerciseNumbers: { alignItems: "center", minWidth: 34 },
-    numberValue: { color: palette.foreground, fontSize: 13, fontWeight: "700" },
-    numberUnit: { color: palette.subtleForeground, fontSize: 9 },
+    numberValue: { color: palette.foreground, ...TYPE.label, fontWeight: "700" },
+    numberUnit: { color: palette.subtleForeground, ...TYPE.micro},
     dots: { flexDirection: "row", flexWrap: "wrap", gap: 3 },
     dot: { width: 12, height: 12, borderRadius: 3 },
     line: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
-    lineText: { flex: 1, color: palette.foreground, fontSize: 13 },
+    lineText: { flex: 1, color: palette.foreground, ...TYPE.label},
     struck: { color: palette.mutedForeground, textDecorationLine: "line-through" },
     statRow: { flexDirection: "row", gap: SPACING.sm },
     stat: { flex: 1, gap: 1 },
-    statValue: { color: palette.foreground, fontSize: 16, fontWeight: "700" },
+    statValue: { color: palette.foreground, ...TYPE.heading, fontWeight: "700" },
   });
 }
