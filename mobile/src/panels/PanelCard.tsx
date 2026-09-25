@@ -47,19 +47,28 @@ export function PanelCard({
     </View>
   );
 
-  return (
-    <View style={styles.card}>
-      {href ? (
-        <Link href={href as never} asChild>
-          <Pressable accessibilityRole="button" accessibilityLabel={`Open ${title}`}>
-            {header}
-          </Pressable>
-        </Link>
-      ) : (
-        header
-      )}
+  const inside = (
+    <>
+      {header}
       <View style={styles.body}>{children}</View>
-    </View>
+    </>
+  );
+
+  // The whole card opens the screen behind it, not just its heading. A panel
+  // is one thing to the eye — a title and the figures under it — so having
+  // only the top strip respond meant aiming at a target you cannot see, and
+  // the rest of the card reading as inert when it is the part you were
+  // looking at. Holding still picks the panel up: the drag above this only
+  // activates after the finger has been still a moment, so a tap never
+  // reaches it and a hold never becomes a tap.
+  return href ? (
+    <Link href={href as never} asChild>
+      <Pressable accessibilityRole="button" accessibilityLabel={`Open ${title}`} style={styles.card}>
+        {inside}
+      </Pressable>
+    </Link>
+  ) : (
+    <View style={styles.card}>{inside}</View>
   );
 }
 

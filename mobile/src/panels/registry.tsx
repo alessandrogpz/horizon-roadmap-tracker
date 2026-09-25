@@ -10,7 +10,10 @@
 // eight stacked panels is the wall of words this replaced.
 
 import { useEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+// Gesture Handler's, so that this — the one button living inside a panel's
+// body — wins against the card around it, which is now tappable in full.
+import { Pressable } from "react-native-gesture-handler";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import type { TrackState } from "@shared/types";
 import { isItemCompleted } from "@shared/completions";
