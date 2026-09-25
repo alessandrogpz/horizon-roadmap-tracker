@@ -23,6 +23,7 @@ import { RADIUS, SPACING, TYPE, type Palette } from "../../theme";
 import { usePalette } from "../../theme/ThemeProvider";
 import { EditHeader, useEditMode } from "../../components/EditToggle";
 import { Refreshable } from "../../components/Refreshable";
+import { Ring } from "../../components/Ring";
 import { SubNav } from "../../components/SubNav";
 
 export default function PhasesScreen() {
@@ -61,48 +62,57 @@ export default function PhasesScreen() {
         hint="Add or remove a phase, or move the track to a different one."
       />
 
-      {/* A plan that has run out is the ordinary end of a plan, not a failure
-          of one. Past its last day the track stops being measured against a
-          total it no longer has — "Day 573 of 92" over a full bar described a
-          track that had gone wrong, when all that had happened is that the
-          estimate was short, which estimates are. It says how long it has been
-          running and offers the one thing worth doing about it. */}
-      <View style={styles.summary}>
-        <Text style={styles.headline}>
-          Day {timeline.daysPassed}
-          {overrun ? "" : ` of ${timeline.totalDays}`}
-        </Text>
-
-        {overrun ? (
-          <View style={styles.overrunRow}>
-            <Text style={styles.muted}>
-              {timeline.overrunDays} day{timeline.overrunDays === 1 ? "" : "s"} past the plan
+      {/* Where the track stands, as two figures rather than a sentence. The
+          ring is the same idea as the website's: a proportion is a shape
+          before it is a number, and the number beside it says of what. */}
+      <View style={styles.tiles}>
+        <View style={[styles.tile, styles.timelineTile]}>
+          <Ring pct={timeline.progressPct} tint={overrun ? palette.subtleForeground : palette.accent}>
+            <Text style={styles.ringPct} allowFontScaling={false}>
+              {Math.round(timeline.progressPct)}%
             </Text>
-            <Link href="/tracks" asChild>
-              <Pressable accessibilityRole="link" accessibilityLabel="Extend the plan" style={styles.extend}>
-                <Text style={styles.extendLabel}>Extend</Text>
-                <Ionicons name="chevron-forward" size={12} color={palette.accent} />
-              </Pressable>
-            </Link>
+          </Ring>
+          <View style={styles.tileText}>
+            <Text style={styles.tileLabel}>Timeline</Text>
+            <View style={styles.figureRow}>
+              <Text style={styles.figure}>{timeline.daysPassed}</Text>
+              {/* Past the plan there is no total left to be a fraction of,
+                  and the line under the tiles already says by how much. */}
+              <Text style={styles.tileUnit} numberOfLines={1}>
+                {overrun ? "days" : `/ ${timeline.totalDays} days`}
+              </Text>
+            </View>
           </View>
-        ) : (
-          <Text style={styles.muted}>
-            {timeline.daysRemaining} days left · ends {formatDayMonthYear(timeline.endDate)}
-          </Text>
-        )}
+        </View>
 
-        <View style={styles.progressTrack}>
-          {/* Full and grey once the plan is spent, rather than full and accent:
-              a bar at its end should not look like a bar at its goal. */}
-          <View
-            style={[
-              styles.progressFill,
-              { width: `${Math.min(100, timeline.progressPct)}%` },
-              overrun && { backgroundColor: palette.subtleForeground },
-            ]}
-          />
+        <View style={styles.tile}>
+          <View style={styles.tileText}>
+            <Text style={styles.tileLabel}>Phase day</Text>
+            <View style={styles.figureRow}>
+              {/* Days spent in this phase, counting the time from before the
+                  track last moved away and came back to it. */}
+              <Text style={styles.figure}>{current?.dayInPhase ?? 0}</Text>
+              <Text style={styles.tileUnit} numberOfLines={1}>
+                in {current?.phase?.id !== undefined ? `phase ${current.phase?.id}` : "no phase"}
+              </Text>
+            </View>
+          </View>
         </View>
       </View>
+
+      {overrun && (
+        <View style={styles.overrunRow}>
+          <Text style={styles.muted}>
+            The plan ran out {timeline.overrunDays} day{timeline.overrunDays === 1 ? "" : "s"} ago
+          </Text>
+          <Link href="/tracks" asChild>
+            <Pressable accessibilityRole="link" accessibilityLabel="Extend the plan" style={styles.extend}>
+              <Text style={styles.extendLabel}>Extend</Text>
+              <Ionicons name="chevron-forward" size={12} color={palette.accent} />
+            </Pressable>
+          </Link>
+        </View>
+      )}
 
       {progress ? (
         <View style={styles.card}>
@@ -333,6 +343,30 @@ function makeStyles(palette: Palette) {
     progressTrack: { height: 6, borderRadius: 3, backgroundColor: palette.surfaceMuted, overflow: "hidden" },
     progressFill: { height: 6, borderRadius: 3, backgroundColor: palette.accent },
     behind: { color: palette.foreground, ...TYPE.label, lineHeight: 18 },
+    tiles: { flexDirection: "row", gap: SPACING.sm, marginBottom: SPACING.sm },
+    tile: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: SPACING.md,
+      padding: SPACING.md,
+      borderRadius: RADIUS.card,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.card,
+    },
+    // The one with a ring in it needs the room the ring takes.
+    timelineTile: { flex: 1.5 },
+    tileText: { flex: 1, gap: 2 },
+    tileLabel: {
+      ...TYPE.eyebrow,
+      color: palette.subtleForeground,
+      fontWeight: "700",
+    },
+    figureRow: { flexDirection: "row", alignItems: "baseline", gap: 4 },
+    figure: { ...TYPE.figure, color: palette.foreground, fontWeight: "700" },
+    tileUnit: { ...TYPE.micro, color: palette.mutedForeground },
+    ringPct: { ...TYPE.micro, color: palette.mutedForeground, fontWeight: "700" },
     overrunRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: SPACING.sm },
     extend: {
       flexDirection: "row",

@@ -7,6 +7,22 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.72.0] - 2026-09-25
+
+### Added
+- **Two tiles at the top of Plan**, in place of the sentence that used to be there: the timeline as
+  a ring with the figure beside it, and the days spent in the current phase — the count 0.71.0
+  started keeping, which the phone had nowhere to show.
+- **A progress ring drawn without SVG.** `react-native-svg` is not in this build and adding it
+  would cost every phone a reinstall rather than an update that arrives on its own, which is a
+  steep price for a circle. It is two half-rings instead, each clipped to its own side of the box
+  and rotated, with the left one parked inside the right one's window until the sweep reaches it.
+
+### Changed
+- **The timeline stops being stated twice.** The headline, the subtitle and the bar under them all
+  described the same proportion the ring now draws; past the end of a plan the tile says the days
+  and the line beneath it says by how much the plan was overrun.
+
 ## [0.71.0] - 2026-09-25
 
 A phase's day count was the time since you last entered it, not the time spent in it. Looking at
