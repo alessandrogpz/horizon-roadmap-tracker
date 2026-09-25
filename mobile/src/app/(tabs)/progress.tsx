@@ -10,10 +10,11 @@
 // size a thumb can actually land on, which is what makes each day tappable —
 // and a day worth tapping, because it can then say what was done on it.
 
-import { useCallback, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { Link } from "expo-router";
 import type { StreakDay } from "@shared/stats";
 import type { CompletedItem } from "@shared/types";
 import { streakStats } from "@shared/stats";
@@ -22,7 +23,6 @@ import { formatDateYMD, formatDayMonthYear, parseYMD } from "@shared/dates";
 import { getSettings } from "@shared/settings";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
 import { Refreshable } from "../../components/Refreshable";
-import { SubNav } from "../../components/SubNav";
 import { Segmented } from "../../components/Segmented";
 import { RADIUS, SPACING, type Palette } from "../../theme";
 import { usePalette } from "../../theme/ThemeProvider";
@@ -54,6 +54,9 @@ export default function ProgressScreen() {
 
   const weekStartsOn = getSettings().weekStartsOn;
   const [year, setYear] = useState(() => parseYMD(today).getFullYear());
+  const gridRef = useRef<ScrollView>(null);
+  /** Which year-and-shape the graph has already been dropped at the end of. */
+  const landedOn = useRef<string | null>(null);
 
   /** The years worth offering: from whenever this track first has anything to
    *  show, to the one we are in. A track cannot have a 2019 and the arrows
@@ -123,12 +126,12 @@ export default function ProgressScreen() {
       rows.push({ days: slice, month, label: null });
     }
 
-    // Newest first, because the recent weeks are the ones anyone looks at —
-    // and the labels are worked out *after* reversing, so each month's name
-    // sits at the top of its band where the eye meets it on the way down.
-    // Labelling before reversing put every name at the bottom of its own
-    // block, reading as though it belonged to the month above.
-    rows.reverse();
+    // Oldest at the top, so that going down the screen is going forward in
+    // time — the same direction the days already run inside a row. Reversed,
+    // the two disagreed: a row read left to right into the future while the
+    // row under it jumped a week into the past, so the day after the last one
+    // in a band was nowhere near it. The graph opens at the bottom instead,
+    // which is where the recent end now lives.
     let seen = -1;
     for (const row of rows) {
       if (row.month !== seen) {
@@ -177,9 +180,10 @@ export default function ProgressScreen() {
       blocks.push({ key: `${year}-${month}`, label: `${MONTHS[month]} ${year}`, cells });
       cursor.setMonth(cursor.getMonth() + 1);
     }
-    // Newest first, so the current year opens on the month you are in
-    // rather than on January.
-    return blocks.reverse();
+    // Chronological, for the same reason the weeks are: the days inside a
+    // month already run downward, so the months have to as well or the last
+    // day of one block is followed by the first day of an *earlier* one.
+    return blocks;
   }, [today, track, weekStartsOn, year]);
 
   const titlesFor = useCallback(
@@ -196,6 +200,7 @@ export default function ProgressScreen() {
   }
 
   const labels = weekStartsOn === "mon" ? WEEKDAYS_MON : WEEKDAYS_SUN;
+  const shapeKey = `${byMonth ? "months" : "continuous"}-${year}`;
 
   return (
     // The page itself does not scroll. Everything written — the three numbers,
@@ -277,7 +282,15 @@ export default function ProgressScreen() {
           part-way down, at whatever offset the last one happened to be left
           at — which for a different year means nowhere in particular. */}
       <Refreshable
-        key={`${byMonth ? "months" : "continuous"}-${year}`}
+        key={shapeKey}
+        scrollRef={gridRef}
+        // Jumped, not animated, and only once per year or shape: this is where
+        // the graph *starts*, not somewhere it travels to while you watch.
+        onContentSizeChange={() => {
+          if (landedOn.current === shapeKey) return;
+          landedOn.current = shapeKey;
+          gridRef.current?.scrollToEnd({ animated: false });
+        }}
         style={styles.grid}
         contentContainerStyle={styles.gridContent}
       >
@@ -286,7 +299,7 @@ export default function ProgressScreen() {
             rather than one you find has happened. Only this one view animates:
             the grid below it is several hundred cells, and fading each of them
             would cost far more than the effect is worth. */}
-        <Animated.View key={`${byMonth ? "months" : "continuous"}-${year}`} entering={FadeIn.duration(240)}>
+        <Animated.View key={shapeKey} entering={FadeIn.duration(240)}>
       {byMonth
         ? months.map((month) => (
             // Raised above its neighbours only while it holds the open day, so
@@ -370,26 +383,34 @@ export default function ProgressScreen() {
         {weeks.length === 0 && <Text style={styles.muted}>Nothing recorded on this track yet.</Text>}
       </Refreshable>
 
-      <View style={styles.legend}>
-        <Text style={styles.legendLabel}>Less</Text>
-        {[0, 1, 2, 3, 4].map((count) => (
-          <View key={count} style={[styles.legendCell, { backgroundColor: shade(count, palette) }]} />
-        ))}
-        <Text style={styles.legendLabel}>More</Text>
+      {/* The key, and the way through to the long view, on one line at the
+          foot of the screen. They used to be three stacked rows — a key, a
+          heading, and a chip repeating the word under it — which put more
+          furniture below the graph than the graph had room to spare. */}
+      <View style={styles.footRow}>
+        <View style={styles.legend}>
+          <Text style={styles.legendLabel}>Less</Text>
+          {[0, 1, 2, 3, 4].map((count) => (
+            <View key={count} style={[styles.legendCell, { backgroundColor: shade(count, palette) }]} />
+          ))}
+          <Text style={styles.legendLabel}>More</Text>
 
-        {track.startDate && (
-          <>
-            <View style={styles.legendGap} />
-            <View style={[styles.legendCell, { backgroundColor: palette.accent }]} />
-            <Text style={styles.legendLabel}>started</Text>
-          </>
-        )}
+          {track.startDate && (
+            <>
+              <View style={styles.legendGap} />
+              <View style={[styles.legendCell, { backgroundColor: palette.accent }]} />
+              <Text style={styles.legendLabel}>started</Text>
+            </>
+          )}
+        </View>
+
+        <Link href="/insights" asChild>
+          <Pressable accessibilityRole="link" accessibilityLabel="History" style={styles.historyButton}>
+            <Ionicons name="stats-chart-outline" size={16} color={palette.foreground} />
+          </Pressable>
+        </Link>
       </View>
 
-      <View style={styles.moreRow}>
-        <Text style={styles.moreTitle}>More on this track</Text>
-      </View>
-      <SubNav links={[{ href: "/insights", label: "History", icon: "stats-chart-outline" }]} />
     </View>
   );
 }
@@ -688,18 +709,29 @@ function makeStyles(palette: Palette) {
     detailTextWrap: { flex: 1, gap: 1 },
     detailText: { color: palette.foreground, fontSize: 13, lineHeight: 18 },
     detailSub: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16 },
-    legend: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: SPACING.lg },
+    // Sits hard against the bottom of the screen, above the tab bar.
+    footRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: SPACING.md,
+      paddingTop: SPACING.md,
+      paddingBottom: SPACING.sm,
+    },
+    legend: { flexDirection: "row", alignItems: "center", gap: 4, flexShrink: 1 },
+    historyButton: {
+      minWidth: 36,
+      minHeight: 36,
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: RADIUS.control,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.surfaceMuted,
+    },
     legendCell: { width: 12, height: 12, borderRadius: 3 },
     legendGap: { width: SPACING.md },
     legendLabel: { color: palette.subtleForeground, fontSize: 11, marginHorizontal: SPACING.xs },
     muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
-    moreRow: { marginTop: SPACING.xl },
-    moreTitle: {
-      color: palette.subtleForeground,
-      fontSize: 11,
-      fontWeight: "700",
-      letterSpacing: 1.2,
-      textTransform: "uppercase",
-    },
   });
 }

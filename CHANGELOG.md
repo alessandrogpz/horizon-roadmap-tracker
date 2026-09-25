@@ -7,6 +7,20 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.67.0] - 2026-09-25
+
+### Fixed
+- **The graph ran two directions at once.** Days inside a row went forward in time, while the rows
+  themselves went backward — so the day after the last one in a month was not the day under it, it
+  was thirty days above it in the block below. Both shapes now run oldest at the top, and the graph
+  opens scrolled to its recent end, which is where the month you are in now lives.
+
+### Changed
+- **The key and the way through to History share one line at the foot of the screen.** They were
+  three stacked rows — a key, a heading reading "More on this track", and a chip repeating the word
+  under it — which put more furniture below the graph than the graph had room to spare. History is
+  now an icon at the end of the key's own row, and the key is the last thing before the tab bar.
+
 ## [0.66.1] - 2026-09-25
 
 ### Added
