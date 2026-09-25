@@ -44,13 +44,21 @@ export default function StepsScreen() {
       dates.push(formatYMD(cursor));
       cursor.setDate(cursor.getDate() - 1);
     }
-    const status = await healthStatus();
-    setHealth(status);
-
     // Health Connect first, and in one call for the whole year rather than a
-    // query per day.
-    const fromHealth =
-      status === "ready" ? await dailySteps(dates[dates.length - 1], dates[0]) : {};
+    // query per day — but never as a condition of the screen appearing. It is
+    // a separate app answering over a binder, and this screen used to wait for
+    // it before drawing anything, so a provider that was slow or busy left a
+    // spinner on a dark screen and nothing else. Whatever it says or fails to
+    // say, the app's own table is still an answer.
+    let status: HealthStatus = "unsupported";
+    let fromHealth: Record<string, number> = {};
+    try {
+      status = await healthStatus();
+      if (status === "ready") fromHealth = await dailySteps(dates[dates.length - 1], dates[0]);
+    } catch {
+      status = "unsupported";
+    }
+    setHealth(status);
 
     const rows = await Promise.all(
       dates.map(async (date) => ({
@@ -66,7 +74,10 @@ export default function StepsScreen() {
   }, [today]);
 
   useEffect(() => {
-    void load();
+    // The screen has to arrive even if the numbers do not. `counts` staying
+    // null is what a stuck load looked like from the outside: a spinner with
+    // no end and no way to tell that anything had gone wrong.
+    load().catch(() => setCounts([]));
   }, [load]);
 
   if (!counts) {
