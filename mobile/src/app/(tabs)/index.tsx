@@ -24,7 +24,7 @@
 // variable-height cards would need measuring every one of them and would
 // still jump under the thumb.
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -39,6 +39,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import { router } from "expo-router";
 import type { TrackState } from "@shared/types";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
 import { Refreshable } from "../../components/Refreshable";
@@ -108,6 +109,26 @@ export default function SpaceScreen() {
    *  than reconstruct it from arithmetic. */
   const stackRef = useAnimatedRef<View>();
   const [dragging, setDragging] = useState(false);
+  /**
+   * Whether the column is moving, and when it last stopped.
+   *
+   * A finger put down on a coasting list is there to stop it, not to press
+   * what happens to be under it — but it arrives as a press and leaves as
+   * one, and nothing in the touch itself says otherwise. Since the whole
+   * card became the way into a panel the target is the size of the screen,
+   * so a scroll that ended over the consistency panel opened Progress and
+   * looked for all the world like the app changing tabs by itself.
+   */
+  const moving = useRef(false);
+  const stoppedAt = useRef(0);
+
+  const openPanel = useCallback((id: string) => {
+    const href = PANEL_HREF[id];
+    // The tail matters as much as the flag: the last frame of a scroll and
+    // the first of a tap are the same frame.
+    if (!href || moving.current || Date.now() - stoppedAt.current < 160) return;
+    router.push(href as never);
+  }, []);
 
   // The column gets shorter as it folds, which would drag the scroll position
   // up from under the drag. This makes up the difference, so the content is
@@ -299,6 +320,7 @@ export default function SpaceScreen() {
               onBegin={beginDrag}
               onEndDrag={endDrag}
               onHide={hide}
+              onOpen={openPanel}
               track={track}
               today={today}
               styles={styles}
@@ -365,6 +387,7 @@ function DraggablePanel({
   onBegin,
   onEndDrag,
   onHide,
+  onOpen,
   track,
   today,
   styles,
@@ -384,6 +407,7 @@ function DraggablePanel({
   onBegin: () => void;
   onEndDrag: (from: number, to: number) => void;
   onHide: (id: string) => void;
+  onOpen: (id: string) => void;
   track: TrackState;
   today: string;
   styles: ReturnType<typeof makeStyles>;
@@ -512,7 +536,7 @@ function DraggablePanel({
           title={definition.label}
           icon={PANEL_ICON[id] ?? "square-outline"}
           accent={tintFor(id)}
-          href={PANEL_HREF[id]}
+          onOpen={PANEL_HREF[id] ? () => onOpen(id) : undefined}
         >
           <Animated.View style={body}>
             <PanelBody id={id} track={track} today={today} />

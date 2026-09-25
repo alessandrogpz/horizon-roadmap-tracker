@@ -7,6 +7,20 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.70.1] - 2026-09-25
+
+### Fixed
+- **Scrolling My Space quickly could land you on Progress.** A finger put down on a coasting list is
+  there to stop it, not to press what happens to be under it — but it arrives as a press and leaves
+  as one, and nothing in the touch itself says otherwise. Since 0.64.0 made the whole card the way
+  into a panel, the target went from a 50pt header to the size of the screen, so a scroll stopped
+  over the consistency panel opened the screen behind it. That screen is Progress, which is a tab,
+  so it read as the app changing tabs by itself.
+
+  A panel now opens through a callback rather than a `Link`, so the screen can decline it: it
+  ignores the press while the column is moving, and for a moment after it stops, because the last
+  frame of a scroll and the first of a tap are the same frame.
+
 ## [0.70.0] - 2026-09-25
 
 ### Changed
