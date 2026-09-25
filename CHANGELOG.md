@@ -7,6 +7,37 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.76.0] - 2026-09-25
+
+### Fixed
+- **Sync was refusing every payload.** `TrackSchema` was a strict object, and a strict object does
+  not ignore a key it has not heard of — it rejects the whole request. `phaseDaysSpent` reached
+  phones over the air within minutes of 0.71.0; the server only changes when the site is deployed,
+  and `main` sat at 0.57.0. So the field appeared the first time a phase was switched, and from
+  then on nothing synced at all: not that track, not any track, not one note.
+
+  Tracks and workspaces now drop fields they do not know instead of refusing them. The field is
+  lost until the deploy catches up and nothing else is, and a stripped key never reaches the
+  database, which is what the strictness was protecting. The envelope around them stays strict: it
+  gains nothing as features are added, so anything unexpected in it is still a reason to stop. The
+  rule, and why phones are routinely ahead of the server, is written down in `DEVELOPMENT.md`.
+
+### Added
+- **Workouts are named and kept**: a push day, a pull day, each with its own exercises and their
+  sets. Opening the screen asks which one; opening one shows it as you left it, weights and all,
+  because a workout is a thing you come back to. A refresh button unticks every set and leaves the
+  numbers, ready to be done again and beaten.
+
+### Changed
+- **The date, sets-done and volume tiles are gone.** They described a session on a day, and what
+  this screen is now about is a workout you repeat.
+- **One parser for exercises**, shared by dated sessions and named workouts, so the two cannot
+  drift — which is exactly how a set's tick came to be dropped on the way back in last version.
+
+### Fixed
+- **Two workouts made in the same millisecond shared an id**, and two workouts sharing an id are
+  one workout to every lookup and every edit. Ids now carry a random tail as well as the clock.
+
 ## [0.75.0] - 2026-09-25
 
 ### Added
