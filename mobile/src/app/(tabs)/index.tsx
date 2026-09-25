@@ -24,7 +24,7 @@
 // variable-height cards would need measuring every one of them and would
 // still jump under the thumb.
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -111,6 +111,21 @@ export default function SpaceScreen() {
    *  where it was going until it was already there. */
   const rowHeld = useSharedValue(-1);
   const rowTarget = useSharedValue(-1);
+  /**
+   * Which slot each row sits in, by id.
+   *
+   * Position used to come from React — `top: index * ROW` — while the
+   * stepping-aside came from a shared value, and the two are applied by
+   * different threads. Dropping a row changed the order and cleared the
+   * shifts in the same breath, but React's commit could paint first, so
+   * for one frame every row had its new index and its old shift and two
+   * of them landed on the same line — one name drawn over another.
+   *
+   * Both halves are shared values now, written in the same tick and
+   * applied on the same frame. React's index no longer decides where
+   * anything is.
+   */
+  const slots = useSharedValue<Record<string, number>>({});
   /** The column itself, so the drag can measure where it really is rather
    *  than reconstruct it from arithmetic. */
   const stackRef = useAnimatedRef<View>();
@@ -172,11 +187,17 @@ export default function SpaceScreen() {
       const [moved] = next.splice(from, 1);
       if (!moved) return;
       next.splice(Math.max(0, Math.min(next.length, to)), 0, moved);
+      // The slots move with the order, not after it.
+      slots.value = Object.fromEntries(next.map((id, i) => [id, i]));
       setPanelOrder(track.meta.id, next);
       setOrder(next);
     },
-    [shown, track]
+    [shown, slots, track]
   );
+
+  useEffect(() => {
+    slots.value = Object.fromEntries(shown.map((id, i) => [id, i]));
+  }, [shown, slots]);
 
   const beginDrag = useCallback(() => {
     setDragging(true);
@@ -262,6 +283,7 @@ export default function SpaceScreen() {
                 onRemove={() => hide(id)}
                 held={rowHeld}
                 target={rowTarget}
+                slots={slots}
                 styles={styles}
                 palette={palette}
               />
@@ -607,6 +629,7 @@ function ArrangeRow({
   onRemove,
   held,
   target,
+  slots,
   styles,
   palette,
 }: {
@@ -619,6 +642,9 @@ function ArrangeRow({
    *  has to know about its neighbours to get out of their way. */
   held: SharedValue<number>;
   target: SharedValue<number>;
+  /** Where every row sits, by id. The source of position, so that moving a
+   *  row and clearing the shifts are one change rather than two. */
+  slots: SharedValue<Record<string, number>>;
   styles: ReturnType<typeof makeStyles>;
   palette: Palette;
 }) {
@@ -707,20 +733,22 @@ function ArrangeRow({
       ended.value = false;
     });
 
-  const animated = useAnimatedStyle(() => ({
-    // The held row follows the thumb; every other row carries its step aside.
-    transform: [
-      { translateY: lifted.value ? offset.value : shift.value },
-      { scale: lifted.value ? 1.03 : 1 },
-    ],
-    zIndex: lifted.value ? 10 : 1,
-    opacity: lifted.value ? 0.95 : 1,
-  }));
+  const animated = useAnimatedStyle(() => {
+    // Where the row belongs, plus what it is doing: following the thumb if it
+    // is the one being held, stepping aside if it is not.
+    const slot = slots.value[id] ?? index;
+    const moving = lifted.value ? offset.value : shift.value;
+    return {
+      transform: [{ translateY: slot * ROW + moving }, { scale: lifted.value ? 1.03 : 1 }],
+      zIndex: lifted.value ? 10 : 1,
+      opacity: lifted.value ? 0.95 : 1,
+    };
+  }, [id, index]);
 
   if (!definition) return null;
 
   return (
-    <Animated.View style={[styles.arrangeRow, { top: index * ROW }, animated]}>
+    <Animated.View style={[styles.arrangeRow, animated]}>
       <GestureDetector gesture={drag}>
         <View style={styles.grip}>
           <Ionicons name="reorder-three" size={22} color={palette.subtleForeground} />
@@ -793,6 +821,7 @@ function makeStyles(palette: Palette) {
     barLabel: { color: palette.mutedForeground, ...TYPE.caption, fontWeight: "600" },
     arrangeRow: {
       position: "absolute",
+      top: 0,
       left: 0,
       right: 0,
       height: ROW - 8,

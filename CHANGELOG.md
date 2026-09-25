@@ -7,6 +7,21 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.74.2] - 2026-09-25
+
+### Fixed
+- **A dropped row could draw one name over another for a frame.** Position came from React —
+  `top: index * ROW` — while the stepping-aside came from a shared value, and the two are applied by
+  different threads. Dropping changed the order and cleared the shifts in one breath, but React's
+  commit could paint first, so for a single frame every row carried its new index and its old shift
+  and two of them landed on the same line. Caught it in a screen recording: one frame in twenty-four
+  showed "Phases" twice.
+
+  Where a row sits is now a shared value too, written in the same tick as the order and applied on
+  the same frame. React's index no longer decides where anything is, so there is no longer a pair of
+  halves that can arrive separately — which is what 0.74.1 tried to fix by sequencing them, and
+  sequencing across two threads is not something you can be sure of.
+
 ## [0.74.1] - 2026-09-25
 
 ### Fixed
