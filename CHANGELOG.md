@@ -7,6 +7,15 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.73.3] - 2026-09-25
+
+### Changed
+- **Plan ends on the full roadmap, and nothing beside it.** The week and the deliverables have their
+  own places to be reached from; a row of somewhere-elses under a heading reading "More on this
+  track" was a menu appended to a screen that had already finished saying what it came to say. The
+  roadmap earns the spot, because the timeline above it is a summary of it — and it opens exactly as
+  it did before.
+
 ## [0.73.2] - 2026-09-25
 
 ### Changed

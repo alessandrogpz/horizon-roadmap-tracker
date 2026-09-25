@@ -25,7 +25,6 @@ import { EditHeader, useEditMode } from "../../components/EditToggle";
 import { Refreshable } from "../../components/Refreshable";
 import { Ring } from "../../components/Ring";
 import { StatTile } from "../../components/StatTile";
-import { SubNav } from "../../components/SubNav";
 
 export default function PhasesScreen() {
   const { workspace, track, today, editTrack, restoreWorkspace } = useWorkspace();
@@ -300,16 +299,18 @@ export default function PhasesScreen() {
       {timeline.windows.length === 0 && (
         <Text style={styles.muted}>This track has no phases yet.</Text>
       )}
-      <View style={styles.moreRow}>
-        <Text style={styles.moreTitle}>More on this track</Text>
-      </View>
-      <SubNav
-        links={[
-          { href: "/roadmap", label: "Roadmap", icon: "map-outline" },
-          { href: "/rhythm", label: "Week & rotations", icon: "calendar-outline" },
-          { href: "/portfolio", label: "Deliverables", icon: "cube-outline" },
-        ]}
-      />
+      {/* The roadmap, and nothing beside it. The week and the deliverables have
+          their own places to be reached from; a row of somewhere-elses under a
+          heading saying "more on this track" was a menu appended to a screen
+          that had already finished saying what it came to say. This one earns
+          the spot: the timeline above is a summary of it. */}
+      <Link href="/roadmap" asChild>
+        <Pressable accessibilityRole="link" style={styles.roadmapRow}>
+          <Ionicons name="map-outline" size={16} color={palette.accent} />
+          <Text style={styles.roadmapLabel}>Full roadmap</Text>
+          <Ionicons name="chevron-forward" size={15} color={palette.subtleForeground} />
+        </Pressable>
+      </Link>
 
     </Refreshable>
   );
@@ -323,13 +324,19 @@ function makeStyles(palette: Palette) {
     summary: { gap: SPACING.sm },
     headline: { color: palette.foreground, ...TYPE.title, fontWeight: "700" },
     muted: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },
-    moreRow: { marginTop: SPACING.xl },
-    moreTitle: {
-      color: palette.subtleForeground,
-      ...TYPE.eyebrow,
-      fontWeight: "700",
-      letterSpacing: 1.2,
+    roadmapRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: SPACING.md,
+      marginTop: SPACING.lg,
+      paddingHorizontal: SPACING.lg,
+      paddingVertical: SPACING.md,
+      borderRadius: RADIUS.card,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.card,
     },
+    roadmapLabel: { ...TYPE.subhead, flex: 1, color: palette.foreground, fontWeight: "600" },
     card: {
       gap: SPACING.sm,
       padding: SPACING.lg,
