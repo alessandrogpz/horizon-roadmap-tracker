@@ -303,6 +303,7 @@ export default function ProgressScreen() {
                       key={index}
                       day={day}
                       today={today}
+                      start={track.startDate}
                       open={openDay === day.date}
                       onPress={() => setOpenDay(openDay === day.date ? null : day.date)}
                       styles={styles}
@@ -342,6 +343,7 @@ export default function ProgressScreen() {
                     key={cell}
                     day={day}
                     today={today}
+                    start={track.startDate}
                     open={openDay === day.date}
                     onPress={() => setOpenDay(openDay === day.date ? null : day.date)}
                     styles={styles}
@@ -374,12 +376,16 @@ export default function ProgressScreen() {
           <View key={count} style={[styles.legendCell, { backgroundColor: shade(count, palette) }]} />
         ))}
         <Text style={styles.legendLabel}>More</Text>
+
+        {track.startDate && (
+          <>
+            <View style={styles.legendGap} />
+            <View style={[styles.legendCell, { backgroundColor: palette.accent }]} />
+            <Text style={styles.legendLabel}>started</Text>
+          </>
+        )}
       </View>
 
-      <Text style={styles.footnote}>
-        A day counts when something was logged against it — a task ticked, a material finished. The same
-        rule the website uses, because it is the same code. Tap any day to see what.
-      </Text>
       <View style={styles.moreRow}>
         <Text style={styles.moreTitle}>More on this track</Text>
       </View>
@@ -427,6 +433,7 @@ function YearStep({
 function Cell({
   day,
   today,
+  start,
   open,
   onPress,
   styles,
@@ -434,19 +441,31 @@ function Cell({
 }: {
   day: StreakDay;
   today: string;
+  /** The track's first day, which gets a colour of its own. */
+  start?: string;
   open: boolean;
   onPress: () => void;
   styles: ReturnType<typeof makeStyles>;
   palette: Palette;
 }) {
+  // The day the track began is drawn in the accent rather than on the green
+  // scale. The scale answers "how much", and the first day is not a quantity —
+  // it is the edge of the data, and worth being able to find. Everything
+  // before it stays blank in both shapes, because the track did not exist to
+  // be missed.
+  const began = Boolean(start) && day.date === start;
+
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${formatDayMonthYear(parseYMD(day.date))}, ${day.count} logged`}
+      accessibilityLabel={
+        `${formatDayMonthYear(parseYMD(day.date))}, ${day.count} logged` +
+        (began ? ", the day this track started" : "")
+      }
       onPress={onPress}
       style={[
         styles.cell,
-        { backgroundColor: shade(day.count, palette) },
+        { backgroundColor: began ? palette.accent : shade(day.count, palette) },
         day.date === today && { borderWidth: 2, borderColor: palette.foreground },
         open && { borderWidth: 2, borderColor: palette.accent },
       ]}
@@ -671,6 +690,7 @@ function makeStyles(palette: Palette) {
     detailSub: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16 },
     legend: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: SPACING.lg },
     legendCell: { width: 12, height: 12, borderRadius: 3 },
+    legendGap: { width: SPACING.md },
     legendLabel: { color: palette.subtleForeground, fontSize: 11, marginHorizontal: SPACING.xs },
     muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
     moreRow: { marginTop: SPACING.xl },
@@ -681,6 +701,5 @@ function makeStyles(palette: Palette) {
       letterSpacing: 1.2,
       textTransform: "uppercase",
     },
-    footnote: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16, marginTop: SPACING.sm },
   });
 }

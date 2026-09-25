@@ -7,6 +7,19 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.66.1] - 2026-09-25
+
+### Added
+- **The day a track started has a colour of its own**, in both shapes, with a "started" swatch in
+  the key. The green scale answers "how much", and the first day is not a quantity — it is the edge
+  of the data, and worth being able to find. Everything before it was already left blank in both
+  shapes, because the track did not exist to be missed; now the boundary is marked rather than
+  merely implied.
+
+### Removed
+- **The note under the consistency key.** Three lines explaining what counts as a day, on a screen
+  whose whole subject is which days counted. The graph gets the height back.
+
 ## [0.66.0] - 2026-09-25
 
 ### Changed
