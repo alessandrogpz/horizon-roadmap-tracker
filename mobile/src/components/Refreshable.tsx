@@ -40,7 +40,15 @@ const RESTING = 56;
 /** Beyond this the page stops following the thumb at all. */
 const MAX = 120;
 
-export function Refreshable({ children, ...props }: ComponentProps<typeof ScrollView>) {
+export function Refreshable({
+  children,
+  scrollRef,
+  ...props
+}: ComponentProps<typeof ScrollView> & {
+  /** For screens that need to drive the scroll themselves — the consistency
+   *  graph opens at its most recent end rather than its oldest. */
+  scrollRef?: React.Ref<ScrollView>;
+}) {
   const palette = usePalette();
   const { sync } = useSync();
   const [pulling, setPulling] = useState(false);
@@ -132,7 +140,7 @@ export function Refreshable({ children, ...props }: ComponentProps<typeof Scroll
 
       <Animated.View style={[styles.fill, content]}>
         <GestureDetector gesture={Gesture.Simultaneous(pan, native)}>
-          <AnimatedScrollView {...props} onScroll={onScroll} scrollEventThrottle={16}>
+          <AnimatedScrollView ref={scrollRef} {...props} onScroll={onScroll} scrollEventThrottle={16}>
             {children}
           </AnimatedScrollView>
         </GestureDetector>
