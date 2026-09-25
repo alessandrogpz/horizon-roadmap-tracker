@@ -24,7 +24,7 @@
 // variable-height cards would need measuring every one of them and would
 // still jump under the thumb.
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -93,18 +93,18 @@ export default function SpaceScreen() {
    *  Moving the column rather than the panel is what keeps the two agreeing:
    *  the panel stays put, and the gap opens around it. */
   const columnShift = useSharedValue(0);
-  /** Each panel's open height, by id rather than by index so that reordering
-   *  does not hand a panel someone else's measurement. */
-  const heights = useSharedValue<Record<string, number>>({});
-  const ids = useSharedValue<string[]>([]);
+  /** The column's open height, taken at pick-up. While a panel is held the
+   *  column is pinned to it, so the page keeps the length it had. Letting it
+   *  shrink is what made this break once the page was scrolled: a ScrollView
+   *  whose content gets shorter pulls its offset back to the new bottom, and
+   *  the whole column slides up out from under the finger. At the top of the
+   *  page there is no offset to pull back, which is why it only showed up
+   *  after scrolling. */
+  const lockedHeight = useSharedValue(0);
   /** The column itself, so the drag can measure where it really is rather
    *  than reconstruct it from arithmetic. */
   const stackRef = useAnimatedRef<View>();
   const [dragging, setDragging] = useState(false);
-
-  useEffect(() => {
-    ids.value = shown;
-  }, [ids, shown]);
 
   // The column gets shorter as it folds, which would drag the scroll position
   // up from under the drag. This makes up the difference, so the content is
@@ -114,6 +114,9 @@ export default function SpaceScreen() {
   // wherever the column ended up, which can be most of a screen away from
   // the thumb that is supposed to be pointing at it.
   const column = useAnimatedStyle(() => ({
+    // Held at its open height for the whole gesture, and released only once
+    // the panels have finished growing back into it.
+    minHeight: collapse.value > 0 ? lockedHeight.value : 0,
     transform: [{ translateY: columnShift.value * collapse.value }],
   }));
 
@@ -122,11 +125,6 @@ export default function SpaceScreen() {
   // sitting in the middle of it is just something to read by accident.
   const chrome = useAnimatedStyle(() => ({ opacity: 1 - collapse.value }));
 
-  const slack = useAnimatedStyle(() => {
-    let sum = 0;
-    for (const id of ids.value) sum += heights.value[id] ?? ROW;
-    return { height: Math.max(0, sum - ids.value.length * ROW) * collapse.value };
-  });
 
   const startArranging = useCallback(() => {
     if (!track) return;
@@ -293,8 +291,7 @@ export default function SpaceScreen() {
               target={target}
               dragY={dragY}
               columnShift={columnShift}
-              heights={heights}
-              ids={ids}
+              lockedHeight={lockedHeight}
               stackRef={stackRef}
               onBegin={beginDrag}
               onEndDrag={endDrag}
@@ -306,10 +303,6 @@ export default function SpaceScreen() {
             />
           ))}
 
-          {/* Makes up the height the column loses as it folds, so the page
-              does not get shorter under a drag and pull the scroll position
-              with it. */}
-          <Animated.View style={slack} pointerEvents="none" />
         </Animated.View>
       )}
 
@@ -364,8 +357,7 @@ function DraggablePanel({
   target,
   dragY,
   columnShift,
-  heights,
-  ids,
+  lockedHeight,
   stackRef,
   onBegin,
   onEndDrag,
@@ -384,8 +376,7 @@ function DraggablePanel({
   target: SharedValue<number>;
   dragY: SharedValue<number>;
   columnShift: SharedValue<number>;
-  heights: SharedValue<Record<string, number>>;
-  ids: SharedValue<string[]>;
+  lockedHeight: SharedValue<number>;
   stackRef: AnimatedRef<View>;
   onBegin: () => void;
   onEndDrag: (from: number, to: number) => void;
@@ -437,6 +428,7 @@ function DraggablePanel({
       // the column has to move so the two coincide.
       const box = measure(stackRef);
       columnShift.value = box ? event.absoluteY - ROW / 2 - (box.pageY + index * SLOT) : 0;
+      lockedHeight.value = box ? box.height : 0;
 
       collapse.value = withTiming(1, { duration: 240 });
       runOnJS(onBegin)();
@@ -523,7 +515,6 @@ function DraggablePanel({
 
   const remember = (height: number) => {
     if (open !== null && Math.abs(open - height) < 1) return;
-    heights.value = { ...heights.value, [id]: height };
     setOpen(height);
   };
 

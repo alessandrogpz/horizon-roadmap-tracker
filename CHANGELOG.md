@@ -7,6 +7,25 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.63.5] - 2026-09-25
+
+### Fixed
+- **Picking up a panel after scrolling put it back out of reach of the finger.** The column gets
+  shorter as it folds, and a ScrollView whose content shrinks pulls its offset back to the new
+  bottom — dragging the whole column up out from under the thumb. At the top of the page there is no
+  offset to pull back, which is exactly why this only showed up once the page had been scrolled.
+
+  The column is now pinned to the height it had when the panel was picked up, measured at that
+  moment, so the page keeps its length for the whole gesture and the scroll position has no reason
+  to move. Tested pinned to the very bottom of the page: the scroll offset does not shift, the held
+  panel moves 3px, and its neighbours sit at exactly one slot's distance.
+
+### Removed
+- **The spacer that used to make up the lost height**, along with the two shared values that fed it.
+  It added up every panel's stored height to work out what the fold would cost — the same
+  reconstruct-the-layout-in-arithmetic approach, and the same fragility, that 0.63.1 removed from
+  the drag offset. One measurement replaces all of it.
+
 ## [0.63.4] - 2026-09-25
 
 ### Fixed
