@@ -7,6 +7,31 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.66.0] - 2026-09-25
+
+### Changed
+- **Progress shows a year at a time, and only the graph scrolls.** The numbers, the shape switch,
+  the year, the key and the note all hold their place; the graph is the one thing that moves. The
+  whole page used to scroll, so the three numbers you were comparing a month against slid off the
+  top the moment you went looking for the month.
+- **The grid is a calendar year rather than the track's whole life.** It used to run from the start
+  date to today, growing as the track did, which left nothing fixed to navigate. A year is a shape
+  you can hold in your head — and the current year stops at today, because reading newest-first an
+  uncapped year opens on three months of blank December.
+- **The weekday header sits outside the scroller**, so which column a cell is under stays readable
+  wherever the graph has been scrolled to.
+
+### Added
+- **A year to step through**, either side of the year itself. The arrows stop at the ends rather
+  than disappearing — a track cannot have a 2019 and the control should not pretend otherwise — and
+  changing the year, or the shape, starts at the top of it rather than at whatever offset the last
+  one was left at.
+
+### Fixed
+- **`SubNav` was claiming a couple of hundred points of height.** It is a sideways scroll view, and
+  a scroll view takes all the room it is offered — so on a screen that does not scroll itself, one
+  row of chips was starving the graph beside it of more than half its space.
+
 ## [0.65.0] - 2026-09-25
 
 Two different jobs were being drawn the same way. Switching which view you are looking at, and going

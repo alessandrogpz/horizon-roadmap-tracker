@@ -16,9 +16,9 @@ import Animated, { FadeIn } from "react-native-reanimated";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import type { StreakDay } from "@shared/stats";
 import type { CompletedItem } from "@shared/types";
-import { streakCalendar, streakStats } from "@shared/stats";
+import { streakStats } from "@shared/stats";
 import { completedItemTitle, currentStreakLength } from "@shared/streak";
-import { formatDayMonthYear, parseYMD } from "@shared/dates";
+import { formatDateYMD, formatDayMonthYear, parseYMD } from "@shared/dates";
 import { getSettings } from "@shared/settings";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
 import { Refreshable } from "../../components/Refreshable";
@@ -53,10 +53,54 @@ export default function ProgressScreen() {
   const [byMonth, setByMonth] = useState(true);
 
   const weekStartsOn = getSettings().weekStartsOn;
-  const days = useMemo(
-    () => (track ? streakCalendar(track, today, weekStartsOn) : []),
-    [track, today, weekStartsOn]
-  );
+  const [year, setYear] = useState(() => parseYMD(today).getFullYear());
+
+  /** The years worth offering: from whenever this track first has anything to
+   *  show, to the one we are in. A track cannot have a 2019 and the arrows
+   *  should not pretend otherwise. */
+  const years = useMemo(() => {
+    const now = parseYMD(today).getFullYear();
+    const dates = Object.keys(track?.completedItemsHistory ?? {});
+    if (track?.startDate) dates.push(track.startDate);
+    const earliest = dates.reduce((low, date) => Math.min(low, Number(date.slice(0, 4))), now);
+    return { first: earliest, last: now };
+  }, [today, track]);
+
+  /** A whole calendar year of cells, always — Jan 1 to Dec 31, padded out to
+   *  whole weeks at both ends. The grid used to run from the track's start to
+   *  today, so it grew as the track did and there was no fixed thing to
+   *  navigate; a year is a shape you can hold in your head and step through.
+   *
+   *  Days outside the track's own life are left blank rather than drawn as
+   *  zeroes, which is the same rule as before: the track did not exist to be
+   *  missed, and neither does tomorrow. */
+  const days = useMemo(() => {
+    if (!track?.startDate) return [];
+    const counts: Record<string, number> = {};
+    Object.entries(track.completedItemsHistory ?? {}).forEach(([date, items]) => {
+      counts[date] = items?.length ?? 0;
+    });
+
+    const cursor = new Date(year, 0, 1);
+    const offset = weekStartsOn === "mon" ? (cursor.getDay() + 6) % 7 : cursor.getDay();
+    cursor.setDate(cursor.getDate() - offset);
+    // The year, but never past today. Reading newest-first, an uncapped year
+    // opens the current one on three months of blank December and makes you
+    // scroll down to reach the month you are in.
+    const lastDay = new Date(year, 11, 31);
+    const now = parseYMD(today);
+    const end = lastDay < now ? lastDay : now;
+
+    const out: StreakDay[] = [];
+    while (cursor <= end) {
+      const date = formatDateYMD(cursor);
+      const lived = date >= track.startDate && date <= today;
+      out.push({ date: lived ? date : "", count: lived ? counts[date] ?? 0 : 0 });
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    while (out.length % 7 !== 0) out.push({ date: "", count: 0 });
+    return out;
+  }, [today, track, weekStartsOn, year]);
   const stats = useMemo(() => (track ? streakStats(track, today) : null), [track, today]);
   const streak = currentStreakLength(track?.streakHistory ?? [], today);
 
@@ -107,13 +151,14 @@ export default function ProgressScreen() {
       counts[date] = items?.length ?? 0;
     });
 
-    const first = parseYMD(track.startDate);
-    const last = parseYMD(today);
     const blocks: { key: string; label: string; cells: (StreakDay | null)[] }[] = [];
 
-    const cursor = new Date(first.getFullYear(), first.getMonth(), 1);
-    while (cursor <= last) {
-      const year = cursor.getFullYear();
+    const cursor = new Date(year, 0, 1);
+    const now = parseYMD(today);
+    // Same rule as the continuous shape: months that have not happened yet are
+    // not months of this track's year.
+    const stop = year === now.getFullYear() ? now.getMonth() : 11;
+    while (cursor.getFullYear() === year && cursor.getMonth() <= stop) {
       const month = cursor.getMonth();
       const daysInMonth = new Date(year, month + 1, 0).getDate();
 
@@ -132,8 +177,10 @@ export default function ProgressScreen() {
       blocks.push({ key: `${year}-${month}`, label: `${MONTHS[month]} ${year}`, cells });
       cursor.setMonth(cursor.getMonth() + 1);
     }
+    // Newest first, so the current year opens on the month you are in
+    // rather than on January.
     return blocks.reverse();
-  }, [today, track, weekStartsOn]);
+  }, [today, track, weekStartsOn, year]);
 
   const titlesFor = useCallback(
     (date: string) => track?.completedItemsHistory?.[date] ?? [],
@@ -151,7 +198,12 @@ export default function ProgressScreen() {
   const labels = weekStartsOn === "mon" ? WEEKDAYS_MON : WEEKDAYS_SUN;
 
   return (
-    <Refreshable style={styles.screen} contentContainerStyle={styles.content}>
+    // The page itself does not scroll. Everything written — the three numbers,
+    // the shape, the year, the key, the note — stays put, and the graph is the
+    // only thing that moves. Scrolling the whole page meant the numbers you
+    // were comparing a month against slid off the top the moment you went
+    // looking for the month.
+    <View style={styles.screen}>
       {/* Three numbers across the top, not a paragraph. */}
       <View style={styles.stats}>
         <Stat value={streak} label="in a row" tint={palette.accent} styles={styles} />
@@ -167,9 +219,29 @@ export default function ProgressScreen() {
         />
       </View>
 
+      <View style={styles.yearRow}>
+        <YearStep
+          direction={-1}
+          disabled={year <= years.first}
+          onPress={() => setYear(year - 1)}
+          styles={styles}
+          palette={palette}
+        />
+        <Text style={styles.year}>{year}</Text>
+        <YearStep
+          direction={1}
+          disabled={year >= years.last}
+          onPress={() => setYear(year + 1)}
+          styles={styles}
+          palette={palette}
+        />
+      </View>
+
       {/* The weekday header belongs to the screen, not to each block: every
           month lines up with the same seven columns, which is what keeps a
-          Tuesday under "T" wherever it falls. */}
+          Tuesday under "T" wherever it falls. And it stays out of the scroller,
+          so the column a cell is under is readable wherever the graph has been
+          scrolled to. */}
       {openDay && (
         // Any tap that is not on the popover closes it. It covers the grid
         // rather than the screen so the tab bar and the header keep working —
@@ -188,7 +260,7 @@ export default function ProgressScreen() {
           of what a consistency grid is for — and a fixed width left to sit at
           `flex-start` is a grid pushed into the left third of the screen with
           nothing beside it. */}
-      <View style={styles.chart}>
+      <View style={[styles.chart, styles.weekdayHead]}>
         <View style={styles.weekdayRow}>
           {labels.map((label, index) => (
             <Text key={index} style={styles.weekdayLabel} allowFontScaling={false}>
@@ -196,12 +268,25 @@ export default function ProgressScreen() {
             </Text>
           ))}
         </View>
+      </View>
 
-        {/* Keyed by shape, so changing it is a change you watch rather than
-            one you find has happened. Only this one view animates: the grid
-            below it is a couple of hundred cells, and fading each of them
+      {/* The graph, and the only thing on this screen that scrolls. Pulling it
+          down past the top still syncs, the same as every other screen. */}
+      {/* Keyed, so changing the year or the shape starts at the top of it.
+          Without this the scroll position carries over and a year opens
+          part-way down, at whatever offset the last one happened to be left
+          at — which for a different year means nowhere in particular. */}
+      <Refreshable
+        key={`${byMonth ? "months" : "continuous"}-${year}`}
+        style={styles.grid}
+        contentContainerStyle={styles.gridContent}
+      >
+        <View style={styles.chart}>
+        {/* Keyed by shape and year, so changing either is a change you watch
+            rather than one you find has happened. Only this one view animates:
+            the grid below it is several hundred cells, and fading each of them
             would cost far more than the effect is worth. */}
-        <Animated.View key={byMonth ? "months" : "continuous"} entering={FadeIn.duration(240)}>
+        <Animated.View key={`${byMonth ? "months" : "continuous"}-${year}`} entering={FadeIn.duration(240)}>
       {byMonth
         ? months.map((month) => (
             // Raised above its neighbours only while it holds the open day, so
@@ -278,9 +363,10 @@ export default function ProgressScreen() {
             </View>
           ))}
         </Animated.View>
-      </View>
+        </View>
 
-      {weeks.length === 0 && <Text style={styles.muted}>Nothing recorded on this track yet.</Text>}
+        {weeks.length === 0 && <Text style={styles.muted}>Nothing recorded on this track yet.</Text>}
+      </Refreshable>
 
       <View style={styles.legend}>
         <Text style={styles.legendLabel}>Less</Text>
@@ -298,8 +384,41 @@ export default function ProgressScreen() {
         <Text style={styles.moreTitle}>More on this track</Text>
       </View>
       <SubNav links={[{ href: "/insights", label: "History", icon: "stats-chart-outline" }]} />
+    </View>
+  );
+}
 
-    </Refreshable>
+/** One step through the years. Disabled rather than hidden at the ends, so the
+ *  control keeps its shape and the year stays where the eye left it. */
+function YearStep({
+  direction,
+  disabled,
+  onPress,
+  styles,
+  palette,
+}: {
+  direction: 1 | -1;
+  disabled: boolean;
+  onPress: () => void;
+  styles: ReturnType<typeof makeStyles>;
+  palette: Palette;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={direction < 0 ? "The year before" : "The year after"}
+      accessibilityState={{ disabled }}
+      disabled={disabled}
+      onPress={onPress}
+      hitSlop={8}
+      style={[styles.yearStep, disabled && styles.yearStepOff]}
+    >
+      <Ionicons
+        name={direction < 0 ? "chevron-back" : "chevron-forward"}
+        size={16}
+        color={disabled ? palette.subtleForeground : palette.foreground}
+      />
+    </Pressable>
   );
 }
 
@@ -418,8 +537,31 @@ function shade(count: number, palette: Palette): string {
 
 function makeStyles(palette: Palette) {
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: palette.background },
-    content: { padding: SPACING.lg, gap: SPACING.xs, paddingBottom: SPACING.xl },
+    // The page is a fixed frame now, so it pads itself and the graph inside
+    // it stretches to whatever height is left over.
+    screen: { flex: 1, backgroundColor: palette.background, paddingHorizontal: SPACING.lg, paddingTop: SPACING.lg },
+    grid: { flex: 1 },
+    gridContent: { paddingBottom: SPACING.lg },
+    weekdayHead: { paddingBottom: 2 },
+    yearRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: SPACING.lg,
+      marginBottom: SPACING.md,
+    },
+    year: { color: palette.foreground, fontSize: 15, fontWeight: "700", minWidth: 56, textAlign: "center" },
+    yearStep: {
+      minWidth: 36,
+      minHeight: 36,
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: RADIUS.control,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.surfaceMuted,
+    },
+    yearStepOff: { opacity: 0.4 },
     centered: { alignItems: "center", justifyContent: "center" },
     stats: { flexDirection: "row", gap: SPACING.sm, marginBottom: SPACING.md },
     stat: {
