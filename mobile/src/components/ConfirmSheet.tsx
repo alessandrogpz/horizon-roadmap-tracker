@@ -12,7 +12,7 @@
 import { useMemo } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 export interface Confirmation {
@@ -98,8 +98,8 @@ function makeStyles(palette: Palette) {
       justifyContent: "center",
       backgroundColor: "rgba(248, 113, 113, 0.12)",
     },
-    title: { flex: 1, color: palette.foreground, fontSize: 17, fontWeight: "700" },
-    body: { color: palette.mutedForeground, fontSize: 14, lineHeight: 20 },
+    title: { flex: 1, color: palette.foreground, ...TYPE.heading, fontWeight: "700" },
+    body: { color: palette.mutedForeground, ...TYPE.body, lineHeight: 20 },
     actions: { flexDirection: "row", gap: SPACING.sm },
     button: {
       flex: 1,
@@ -111,8 +111,8 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    buttonLabel: { color: palette.mutedForeground, fontSize: 15, fontWeight: "600" },
+    buttonLabel: { color: palette.mutedForeground, ...TYPE.subhead, fontWeight: "600" },
     danger: { backgroundColor: palette.danger, borderColor: palette.danger },
-    dangerLabel: { color: "#fff", fontSize: 15, fontWeight: "700" },
+    dangerLabel: { color: "#fff", ...TYPE.subhead, fontWeight: "700" },
   });
 }

@@ -16,7 +16,7 @@ import { authorized } from "../auth/session";
 import { searchLocally, type LocalHit } from "../search/localSearch";
 import { loadNotes } from "../storage/db";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { Refreshable } from "../components/Refreshable";
 
@@ -145,7 +145,7 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
       color: palette.foreground,
-      fontSize: 15,
+      ...TYPE.subhead,
     },
     button: {
       justifyContent: "center",
@@ -153,7 +153,7 @@ function makeStyles(palette: Palette) {
       borderRadius: RADIUS.control,
       backgroundColor: palette.accent,
     },
-    buttonLabel: { color: "#04121c", fontSize: 15, fontWeight: "700" },
+    buttonLabel: { color: "#04121c", ...TYPE.subhead, fontWeight: "700" },
     card: {
       gap: 3,
       padding: SPACING.lg,
@@ -162,9 +162,9 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
     },
-    cardTitle: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
-    kind: { color: palette.subtleForeground, fontSize: 11, textTransform: "uppercase", letterSpacing: 0.8 },
-    line: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
-    muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
+    cardTitle: { color: palette.foreground, ...TYPE.subhead, fontWeight: "600" },
+    kind: { color: palette.subtleForeground, ...TYPE.eyebrow, letterSpacing: 0.8 },
+    line: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },
+    muted: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },
   });
 }

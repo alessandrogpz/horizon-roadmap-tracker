@@ -13,7 +13,7 @@
 import { useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { formatRemaining, TIMER_MINUTES, useTimer, type TimerMode } from "../timer/TimerProvider";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 export default function TimerScreen() {
@@ -92,8 +92,8 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    modeLabel: { color: palette.mutedForeground, fontSize: 13, fontWeight: "600" },
-    clock: { color: palette.foreground, fontSize: 72, fontWeight: "200", fontVariant: ["tabular-nums"] },
+    modeLabel: { color: palette.mutedForeground, ...TYPE.label, fontWeight: "600" },
+    clock: { color: palette.foreground, ...TYPE.display, fontWeight: "200", fontVariant: ["tabular-nums"] },
     controls: { flexDirection: "row", gap: SPACING.md },
     button: {
       paddingHorizontal: SPACING.xl,
@@ -104,8 +104,8 @@ function makeStyles(palette: Palette) {
       backgroundColor: palette.card,
     },
     primary: { backgroundColor: palette.accent, borderColor: palette.accent },
-    buttonLabel: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
-    primaryLabel: { color: "#04121c", fontSize: 15, fontWeight: "700" },
-    footnote: { color: palette.subtleForeground, fontSize: 12, lineHeight: 17, textAlign: "center" },
+    buttonLabel: { color: palette.foreground, ...TYPE.subhead, fontWeight: "600" },
+    primaryLabel: { color: "#04121c", ...TYPE.subhead, fontWeight: "700" },
+    footnote: { color: palette.subtleForeground, ...TYPE.caption, lineHeight: 17, textAlign: "center" },
   });
 }

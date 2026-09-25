@@ -30,12 +30,13 @@ import {
 import { DAYS_SHORT } from "@shared/dates";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { useUndo } from "../components/UndoBar";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { plannedFor } from "@shared/gym";
 import { useGymLog } from "../gym/useGymLog";
 import { EditHeader, useEditMode } from "../components/EditToggle";
 import { Refreshable } from "../components/Refreshable";
+import { RhythmCalendar } from "../components/RhythmCalendar";
 
 const WEEK = DAYS_SHORT.slice(1).concat(DAYS_SHORT[0]); // Mon..Sun
 
@@ -118,37 +119,43 @@ export default function RhythmScreen() {
         onChange={setEditing}
         hint="Tap a day to cycle what it is for. Rotations and the kinds of day can be changed too."
       />
-      {!editing && (
-        <Text style={styles.muted}>What each day of this track is for, and the topics that rotate through it.</Text>
-      )}
 
-      <View style={styles.week}>
-        {WEEK.map((name) => {
-          const day = schedule.find((d) => d.name === name);
-          const colour = day ? track.focusTypes?.[day.type]?.color : undefined;
-          return (
-            <Pressable
-              key={name}
-              accessibilityRole="button"
-              disabled={!editing}
-              onPress={() => cycleDay(name)}
-              style={styles.day}
-            >
-              <Text style={styles.dayName}>{name}</Text>
-              <View style={[styles.dayDot, { backgroundColor: colour || palette.surfaceMuted }]} />
-              <Text style={styles.dayLabel} numberOfLines={1}>
-                {day?.label ?? "—"}
-              </Text>
-              {/* If this kind of day has a gym plan, say how much of one — the
-                  rhythm names the day and the plan fills it, and seeing both
-                  here is the point of them being one idea. */}
-              {day && plannedFor(gymLog, day.type).length > 0 && (
-                <Text style={styles.dayCount}>{plannedFor(gymLog, day.type).length} ex</Text>
-              )}
-            </Pressable>
-          );
-        })}
-      </View>
+      {/* Two views of one thing. Reading, you want dates: which week is
+          this, what is on Thursday, what did the week after look like.
+          Editing, you want the pattern: what a *Thursday* is for is not a
+          property of any single Thursday, so setting it on a dated row
+          would be quietly lying about what the tap changes. */}
+      {editing ? (
+        <View style={styles.week}>
+          {WEEK.map((name) => {
+            const day = schedule.find((d) => d.name === name);
+            const colour = day ? track.focusTypes?.[day.type]?.color : undefined;
+            return (
+              <Pressable
+                key={name}
+                accessibilityRole="button"
+                disabled={!editing}
+                onPress={() => cycleDay(name)}
+                style={styles.day}
+              >
+                <Text style={styles.dayName}>{name}</Text>
+                <View style={[styles.dayDot, { backgroundColor: colour || palette.surfaceMuted }]} />
+                <Text style={styles.dayLabel} numberOfLines={1}>
+                  {day?.label ?? "—"}
+                </Text>
+                {/* If this kind of day has a gym plan, say how much of one — the
+                    rhythm names the day and the plan fills it, and seeing both
+                    here is the point of them being one idea. */}
+                {day && plannedFor(gymLog, day.type).length > 0 && (
+                  <Text style={styles.dayCount}>{plannedFor(gymLog, day.type).length} ex</Text>
+                )}
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : (
+        <RhythmCalendar track={track} gym={gymLog} />
+      )}
 
       {editing && <Text style={styles.sectionTitle}>What a day can be for</Text>}
       {editing && (
@@ -410,10 +417,9 @@ function makeStyles(palette: Palette) {
     centered: { alignItems: "center", justifyContent: "center" },
     sectionTitle: {
       color: palette.subtleForeground,
-      fontSize: 11,
+      ...TYPE.eyebrow,
       fontWeight: "700",
       letterSpacing: 1.2,
-      textTransform: "uppercase",
       marginTop: SPACING.sm,
     },
     week: { flexDirection: "row", gap: SPACING.xs, marginVertical: SPACING.sm },
@@ -427,10 +433,10 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
     },
-    dayName: { color: palette.foreground, fontSize: 11, fontWeight: "700" },
+    dayName: { color: palette.foreground, ...TYPE.micro, fontWeight: "700" },
     dayDot: { width: 8, height: 8, borderRadius: 4 },
-    dayLabel: { color: palette.subtleForeground, fontSize: 9 },
-    dayCount: { color: palette.accent, fontSize: 9, fontWeight: "700" },
+    dayLabel: { color: palette.subtleForeground, ...TYPE.micro},
+    dayCount: { color: palette.accent, ...TYPE.micro, fontWeight: "700" },
     card: {
       gap: SPACING.sm,
       padding: SPACING.lg,
@@ -439,8 +445,8 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
     },
-    cardTitle: { color: palette.foreground, fontSize: 14, fontWeight: "600" },
-    fieldLabel: { color: palette.subtleForeground, fontSize: 10, fontWeight: "700", letterSpacing: 1, textTransform: "uppercase", marginTop: SPACING.sm },
+    cardTitle: { color: palette.foreground, ...TYPE.body, fontWeight: "600" },
+    fieldLabel: { color: palette.subtleForeground, ...TYPE.eyebrow, fontWeight: "700", letterSpacing: 1, marginTop: SPACING.sm },
     choices: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.xs },
     choice: {
       paddingHorizontal: SPACING.md,
@@ -450,7 +456,7 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    choiceLabel: { color: palette.mutedForeground, fontSize: 12, fontWeight: "600" },
+    choiceLabel: { color: palette.mutedForeground, ...TYPE.caption, fontWeight: "600" },
     addButton: {
       alignItems: "center",
       paddingVertical: SPACING.md,
@@ -460,7 +466,7 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       marginTop: SPACING.sm,
     },
-    addLabel: { color: palette.foreground, fontSize: 14, fontWeight: "600" },
+    addLabel: { color: palette.foreground, ...TYPE.body, fontWeight: "600" },
     planButton: {
       alignItems: "center",
       paddingVertical: SPACING.sm,
@@ -470,12 +476,12 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    planLabel: { color: palette.foreground, fontSize: 13, fontWeight: "600" },
+    planLabel: { color: palette.foreground, ...TYPE.label, fontWeight: "600" },
     itemRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
-    item: { flex: 1, color: palette.mutedForeground, fontSize: 14 },
+    item: { flex: 1, color: palette.mutedForeground, ...TYPE.body},
     remove: {
       color: palette.subtleForeground,
-      fontSize: 20,
+      ...TYPE.title,
       // Android asks for 48dp; a bare glyph was nowhere near it, which is
       // most of why these felt fiddly to hit.
       minWidth: 44,
@@ -493,8 +499,8 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
       color: palette.foreground,
-      fontSize: 14,
+      ...TYPE.body,
     },
-    muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
+    muted: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },
   });
 }

@@ -26,7 +26,7 @@ import Animated, {
 } from "react-native-reanimated";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { warn } from "../feedback/haptics";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 /** How far the row has to travel before letting go commits it. About a
@@ -67,10 +67,14 @@ export function SwipeRow({
   );
 
   const pan = Gesture.Pan()
-    // Only a decidedly horizontal drag. Without this the row fights the
-    // vertical scroll it lives in and both feel broken.
-    .activeOffsetX([-18, 18])
-    .failOffsetY([-12, 12])
+    // Only a decidedly horizontal drag, and it gives up on the first hint of a
+    // vertical one. These numbers are why scrolling felt sticky: every row and
+    // every panel is wrapped in one of these, so a 12-point vertical dead zone
+    // at the start of a drag was a 12-point dead zone at the start of *every
+    // scroll*. Four points is past a resting thumb's wobble and under anything
+    // deliberate.
+    .activeOffsetX([-14, 14])
+    .failOffsetY([-4, 4])
     .onUpdate((event) => {
       const wanted = event.translationX;
       // Nothing to reveal on a side with no action, so the row does not move
@@ -136,6 +140,6 @@ function makeStyles(palette: Palette) {
     },
     actionLeft: { left: 0 },
     actionRight: { right: 0 },
-    actionLabel: { color: "#fff", fontSize: 13, fontWeight: "700" },
+    actionLabel: { color: "#fff", ...TYPE.label, fontWeight: "700" },
   });
 }

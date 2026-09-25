@@ -48,7 +48,7 @@ export default function WeeklyPlan({
           <div className="flex items-center gap-4">
             <h3 className="text-[1.1rem] font-semibold text-foreground m-0 whitespace-nowrap inline-flex items-center gap-2">
               <CalendarDays size={16} strokeWidth={2.5} className="text-muted-foreground" />
-              Weekly Study Plan
+              Weekly Overview
             </h3>
 
             {/* Week Navigation Pill */}

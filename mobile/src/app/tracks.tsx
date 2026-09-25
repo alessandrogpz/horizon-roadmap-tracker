@@ -4,19 +4,21 @@
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { router } from "expo-router";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { visibleTracks } from "@shared/selectors";
 import { seedTrackFromTemplate, TEMPLATE_LIST } from "@shared/templates";
 import { hiddenPanelsFor, trackKind, type TrackKind } from "@shared/trackKinds";
 import { PANELS } from "../panels/layout";
 import { trackTotalDays, updateTrackIdentity } from "@shared/trackActions";
-import { todayYMD } from "@shared/dates";
+import { dateForDay, dayForDate, formatDateYMD, isDateStr, todayYMD } from "@shared/dates";
 import { currentStreakLength } from "@shared/streak";
 import type { TrackState } from "@shared/types";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { SwipeRow } from "../components/SwipeRow";
 import { ConfirmSheet, type Confirmation } from "../components/ConfirmSheet";
+import { DatePicker, describeDate } from "../components/DatePicker";
 import { Refreshable } from "../components/Refreshable";
 
 /** The colours a track can be. A fixed set rather than a picker: the picker
@@ -30,9 +32,14 @@ export default function TracksScreen() {
 
   const tracks = workspace ? visibleTracks(workspace) : [];
   const [creating, setCreating] = useState(false);
+  const [newStart, setNewStart] = useState(todayYMD);
+  const [newEnd, setNewEnd] = useState("");
   const [name, setName] = useState("");
   const [settingsFor, setSettingsFor] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<Confirmation | null>(null);
+  // Which date field is being chosen, if any. One picker serves them all
+  // rather than a modal per field.
+  const [picking, setPicking] = useState<"new-start" | "new-end" | null>(null);
 
   /**
    * Deleting a track.
@@ -67,11 +74,17 @@ export default function TracksScreen() {
       // The template answers the questions the website asks in its wizard:
       // a phone is the wrong place for a five-step form, and the defaults are
       // what most people accept there anyway. Everything is editable after.
+      // A blank or unreadable end date means "however long the template runs",
+      // which is what happened before this field existed.
+      const start = isDateStr(newStart) ? newStart : todayYMD();
+      const asked = isDateStr(newEnd) ? dayForDate(start, newEnd) : 0;
+      const days = asked > 0 ? asked : template.defaultDurationDays;
+
       const seeded = seedTrackFromTemplate(template, {
         name: name.trim() || template.label,
         color: template.defaultColor,
-        startDate: todayYMD(),
-        phases: template.buildPhases(template.defaultDurationDays),
+        startDate: start,
+        phases: template.buildPhases(days),
         weekSchedule: template.defaultWeekSchedule,
         focusTypes: template.defaultFocusTypes,
       });
@@ -88,10 +101,12 @@ export default function TracksScreen() {
         ),
       });
       setName("");
+      setNewStart(todayYMD());
+      setNewEnd("");
       setCreating(false);
       router.back();
     },
-    [addTrack, name]
+    [addTrack, name, newEnd, newStart]
   );
 
   return (
@@ -110,12 +125,13 @@ export default function TracksScreen() {
                     icon: "trash-outline",
                     colour: "#ef4444",
                     // A swipe is a flick, not a considered tap, and a track
-                    // carries everything on it — so this one asks first even
-                    // though the undo bar catches it afterwards.
+                    // carries everything on it — so this one asks first, and
+                    // deliberately offers no undo afterwards. One decision per
+                    // intent: asking and then offering to take it back is two.
                     onAct: () =>
                       setConfirming({
                         title: `Delete ${track.meta.name}?`,
-                        body: "Its phases, materials, notes and history go with it. You can undo this for a few seconds afterwards.",
+                        body: "Its phases, materials, notes and history go with it, on this phone and in your account.",
                         verb: "Delete",
                         onConfirm: () => remove(track.meta.id),
                       }),
@@ -164,7 +180,7 @@ export default function TracksScreen() {
           onArchive={() =>
             setConfirming({
               title: `Delete ${workspace?.tracks[settingsFor]?.meta.name ?? "this track"}?`,
-              body: "Its phases, materials, notes and history go with it. You can undo this for a few seconds afterwards.",
+              body: "Its phases, materials, notes and history go with it, on this phone and in your account.",
               verb: "Delete",
               onConfirm: () => remove(settingsFor),
             })
@@ -188,6 +204,25 @@ export default function TracksScreen() {
             autoFocus
             accessibilityLabel="Track name"
           />
+          <Text style={styles.fieldLabel}>Starts</Text>
+          <DateField
+            value={newStart}
+            onPress={() => setPicking("new-start")}
+            styles={styles}
+            palette={palette}
+          />
+
+          <Text style={styles.fieldLabel}>Should be done by</Text>
+          {/* The template used to decide this silently, so a track arrived with
+              a horizon nobody had chosen and a phase timeline scaled to it. */}
+          <DateField
+            value={newEnd}
+            empty="However long the template runs"
+            onPress={() => setPicking("new-end")}
+            styles={styles}
+            palette={palette}
+          />
+
           <Text style={styles.fieldLabel}>What it is about</Text>
           <Text style={styles.muted}>
             This only decides which panels the track opens with. Every panel stays available to every
@@ -211,6 +246,15 @@ export default function TracksScreen() {
           <Text style={styles.panelLabel}>New track…</Text>
         </Pressable>
       )}
+      <DatePicker
+        open={picking !== null}
+        title={picking === "new-end" ? "Should be done by" : "Starts on"}
+        value={picking === "new-end" ? newEnd : newStart}
+        earliest={picking === "new-end" ? newStart : undefined}
+        onPick={(date) => (picking === "new-end" ? setNewEnd(date) : setNewStart(date))}
+        onClose={() => setPicking(null)}
+      />
+
       <ConfirmSheet confirmation={confirming} onClose={() => setConfirming(null)} />
     </Refreshable>
   );
@@ -246,13 +290,19 @@ function TrackSettings({
   const [name, setName] = useState(track?.meta.name ?? "");
   const [color, setColor] = useState(track?.meta.color || TRACK_COLOURS[0]);
   const [startDate, setStartDate] = useState(track?.startDate ?? todayYMD());
-  const [totalDays, setTotalDays] = useState(String(track ? trackTotalDays(track) : 90));
+  const [picking, setPicking] = useState<"start" | "end" | null>(null);
+  const [endDate, setEndDate] = useState(() =>
+    track ? formatDateYMD(dateForDay(track.startDate ?? todayYMD(), trackTotalDays(track))) : todayYMD()
+  );
 
   if (!track) return null;
 
-  const days = Number(totalDays);
-  const validDate = /^\d{4}-\d{2}-\d{2}$/.test(startDate);
-  const canSave = name.trim().length > 0 && validDate && Number.isFinite(days) && days > 0;
+  const validStart = isDateStr(startDate);
+  const validEnd = isDateStr(endDate);
+  // The stored length is a count of days from the start, which is what lets a
+  // whole track be re-dated without rewriting every phase.
+  const days = validStart && validEnd ? dayForDate(startDate, endDate) : 0;
+  const canSave = name.trim().length > 0 && validStart && validEnd && days > 0;
 
   return (
     <View style={styles.panel}>
@@ -287,28 +337,32 @@ function TrackSettings({
       </View>
 
       <Text style={styles.fieldLabel}>Started on</Text>
-      <TextInput
-        value={startDate}
-        onChangeText={setStartDate}
-        placeholder={todayYMD()}
-        placeholderTextColor={palette.subtleForeground}
-        keyboardType="numbers-and-punctuation"
-        style={styles.input}
-        accessibilityLabel="Start date, as year-month-day"
-      />
+      <DateField value={startDate} onPress={() => setPicking("start")} styles={styles} palette={palette} />
 
-      <Text style={styles.fieldLabel}>Runs for</Text>
-      <TextInput
-        value={totalDays}
-        onChangeText={setTotalDays}
-        keyboardType="number-pad"
-        style={styles.input}
-        accessibilityLabel="Length in days"
+      <Text style={styles.fieldLabel}>Ends on</Text>
+      {/* A date, not a day count. Nobody knows their track is 92 days long;
+          they know it should be done by Christmas. The count is still what
+          gets stored — it is what lets a track be re-dated wholesale — so this
+          converts on the way in and out. */}
+      <DateField
+        value={endDate}
+        onPress={() => setPicking("end")}
+        styles={styles}
+        palette={palette}
       />
       <Text style={styles.footnote}>
-        Days. Changing it moves every phase deadline in proportion, so the shape of the roadmap
-        survives being made longer or shorter.
+        {days > 0 ? `${days} day${days === 1 ? "" : "s"}. ` : ""}Moving it shifts every phase deadline
+        in proportion, so the shape of the roadmap survives being made longer or shorter.
       </Text>
+
+      <DatePicker
+        open={picking !== null}
+        title={picking === "end" ? "Ends on" : "Started on"}
+        value={picking === "end" ? endDate : startDate}
+        earliest={picking === "end" ? startDate : undefined}
+        onPick={(date) => (picking === "end" ? setEndDate(date) : setStartDate(date))}
+        onClose={() => setPicking(null)}
+      />
 
       <View style={styles.panelRow}>
         <Pressable
@@ -316,7 +370,7 @@ function TrackSettings({
           style={styles.panelButton}
           disabled={!canSave}
           onPress={() =>
-            onSave({ name: name.trim(), color, startDate, totalDays: Math.round(days) })
+            onSave({ name: name.trim(), color, startDate, totalDays: days })
           }
         >
           <Text style={[styles.panelLabel, !canSave && { color: palette.subtleForeground }]}>Save</Text>
@@ -342,6 +396,39 @@ function TrackSettings({
   );
 }
 
+/** A date, shown as a date and opened as a picker. Never a text box: every
+ *  date here feeds arithmetic — a phase deadline is a day count from the start
+ *  — so an unparseable one is not a cosmetic problem, and the only thing the
+ *  code could do with a half-typed one was ignore it. */
+function DateField({
+  value,
+  empty,
+  onPress,
+  styles,
+  palette,
+}: {
+  value: string;
+  empty?: string;
+  onPress: () => void;
+  styles: ReturnType<typeof makeStyles>;
+  palette: Palette;
+}) {
+  const set = isDateStr(value);
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${describeDate(value, empty ?? "Not set")}. Tap to change.`}
+      onPress={onPress}
+      style={styles.dateField}
+    >
+      <Text style={[styles.dateValue, !set && { color: palette.subtleForeground }]}>
+        {describeDate(value, empty ?? "Choose a date")}
+      </Text>
+      <Ionicons name="calendar-outline" size={16} color={palette.subtleForeground} />
+    </Pressable>
+  );
+}
+
 function makeStyles(palette: Palette) {
   return StyleSheet.create({
     screen: { flex: 1, backgroundColor: palette.background },
@@ -358,8 +445,8 @@ function makeStyles(palette: Palette) {
     },
     dot: { width: 10, height: 10, borderRadius: 5 },
     text: { flex: 1, gap: 2 },
-    name: { color: palette.foreground, fontSize: 16, fontWeight: "600" },
-    muted: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
+    name: { color: palette.foreground, ...TYPE.heading, fontWeight: "600" },
+    muted: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },
     panel: {
       gap: SPACING.sm,
       padding: SPACING.lg,
@@ -368,7 +455,7 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
     },
-    panelTitle: { color: palette.foreground, fontSize: 15, fontWeight: "600" },
+    panelTitle: { color: palette.foreground, ...TYPE.subhead, fontWeight: "600" },
     panelRow: { flexDirection: "row", gap: SPACING.sm },
     panelButton: {
       flex: 1,
@@ -379,11 +466,23 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    panelLabel: { color: palette.foreground, fontSize: 14, fontWeight: "600" },
-    fieldLabel: { color: palette.subtleForeground, fontSize: 11, fontWeight: "700", letterSpacing: 1, textTransform: "uppercase", marginTop: SPACING.sm },
+    panelLabel: { color: palette.foreground, ...TYPE.body, fontWeight: "600" },
+    fieldLabel: { color: palette.subtleForeground, ...TYPE.eyebrow, fontWeight: "700", letterSpacing: 1, marginTop: SPACING.sm },
+    dateField: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      minHeight: 48,
+      paddingHorizontal: SPACING.md,
+      borderRadius: RADIUS.control,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.surfaceMuted,
+    },
+    dateValue: { color: palette.foreground, ...TYPE.subhead, fontWeight: "600" },
     swatches: { flexDirection: "row", gap: SPACING.sm },
     swatch: { width: 26, height: 26, borderRadius: 13, borderWidth: 1, borderColor: "rgba(0,0,0,0.2)" },
-    footnote: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16 },
+    footnote: { color: palette.subtleForeground, ...TYPE.micro, lineHeight: 16 },
     input: {
       paddingHorizontal: SPACING.md,
       paddingVertical: SPACING.md,
@@ -392,7 +491,7 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
       color: palette.foreground,
-      fontSize: 15,
+      ...TYPE.subhead,
     },
     templateRow: {
       flexDirection: "row",

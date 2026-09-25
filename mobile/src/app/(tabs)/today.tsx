@@ -19,6 +19,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { Refreshable } from "../../components/Refreshable";
 import { Link } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -34,10 +35,11 @@ import {
 import { currentStreakLength } from "@shared/streak";
 import { DAYS_SHORT, formatDateYMD, formatDayMonthYear, getWeekNum, parseYMD } from "@shared/dates";
 import { computeRotationItemsForDay, isRotationItem } from "@shared/rotation";
+import { focusOfDay } from "@shared/gym";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
 import { useUndo } from "../../components/UndoBar";
 import { tap } from "../../feedback/haptics";
-import { RADIUS, SPACING, type Palette } from "../../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../../theme";
 import { usePalette } from "../../theme/ThemeProvider";
 import { EditButton, useEditMode } from "../../components/EditToggle";
 import { TodaysTodos } from "../../components/TodaysTodos";
@@ -175,6 +177,8 @@ export default function TodayScreen() {
     isItemCompleted(track, viewing, row.kind, row.id)
   ).length;
   const total = rows.focus.length + rows.revision.length;
+  /** What this weekday is for, per the track's rhythm. */
+  const kind = focusOfDay(track?.weekSchedule, dayKey);
   // How the day is going and how long the run is, in one line under the date —
   // two numbers do not need two cards.
   const summary =
@@ -204,11 +208,19 @@ export default function TodayScreen() {
           style={styles.dayLabelWrap}
         >
           <Text style={styles.dayLabel}>
-            {onToday ? `Today · ${dayKey}` : `${dayKey} · ${formatDayMonthYear(parseYMD(viewing))}`}
+            {onToday ? "Today" : `${dayKey} ${formatDayMonthYear(parseYMD(viewing))}`}
           </Text>
+          {/* The date is always here now. It used to say "Today · Fri", which
+              is the one day you do not need naming and the one line that could
+              have carried its date. The kind of day comes from the track's own
+              rhythm, so this screen and the week agree about what a Friday is
+              for without being told twice. */}
           <Text style={styles.dayHint}>
-            {onToday ? summary : "Tap to come back to today"}
+            {onToday
+              ? `${formatDayMonthYear(parseYMD(viewing))}${kind ? ` · ${kind.label}` : ""}`
+              : "Tap to come back to today"}
           </Text>
+          {onToday && <Text style={styles.dayHint}>{summary}</Text>}
         </Pressable>
 
         <Pressable
@@ -256,11 +268,24 @@ export default function TodayScreen() {
         }}
       />
 
-      {total === 0 && (
-        <Text style={styles.empty}>
-          Nothing is planned for {dayKey} on this track yet. Tap Edit to add something — it becomes
-          part of every {dayKey}.
-        </Text>
+      {/* An empty day says what to do about it and offers to start, rather
+          than describing the emptiness and leaving you to work out that Edit
+          is the way in. */}
+      {total === 0 && !editing && (
+        <View style={styles.emptyCard}>
+          <Text style={styles.emptyTitle}>Nothing planned for {dayKey}</Text>
+          <Text style={styles.muted}>
+            Whatever you add here becomes part of every {dayKey} on this track.
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setEditing(true)}
+            style={styles.primaryButton}
+          >
+            <Ionicons name="add" size={16} color={palette.background} />
+            <Text style={styles.primaryLabel}>Plan this day</Text>
+          </Pressable>
+        </View>
       )}
     </Refreshable>
   );
@@ -318,6 +343,10 @@ function Section({
     if (next && next !== row.title) onRename(row.id, next);
     setRenaming(null);
   };
+
+  // A heading with nothing under it is furniture. While the day is being
+  // edited it stays, because it is the thing you add into.
+  if (rows.length === 0 && !editing) return null;
 
   return (
     <View style={styles.section}>
@@ -416,7 +445,7 @@ function makeStyles(palette: Palette) {
     screen: { flex: 1, backgroundColor: palette.background },
     content: { padding: SPACING.lg, gap: SPACING.lg },
     centered: { alignItems: "center", justifyContent: "center" },
-    muted: { color: palette.mutedForeground, fontSize: 13 },
+    muted: { color: palette.mutedForeground, ...TYPE.label},
     footerActions: { flexDirection: "row", gap: SPACING.sm, marginTop: SPACING.md },
     footerAction: {
       flex: 1,
@@ -426,7 +455,7 @@ function makeStyles(palette: Palette) {
       borderWidth: 1,
       borderColor: palette.cardBorder,
     },
-    footerLabel: { color: palette.mutedForeground, fontSize: 12, fontWeight: "600" },
+    footerLabel: { color: palette.mutedForeground, ...TYPE.caption, fontWeight: "600" },
     dayBar: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
     dayStep: {
       width: 40,
@@ -437,19 +466,19 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    dayStepLabel: { color: palette.foreground, fontSize: 20, lineHeight: 24 },
+    dayStepLabel: { color: palette.foreground, ...TYPE.title, lineHeight: 24 },
     dayLabelWrap: { flex: 1, alignItems: "center" },
-    dayLabel: { color: palette.foreground, fontSize: 14, fontWeight: "600" },
-    dayHint: { color: palette.subtleForeground, fontSize: 11 },
+    dayLabel: { color: palette.foreground, ...TYPE.body, fontWeight: "600" },
+    dayHint: { color: palette.subtleForeground, ...TYPE.micro},
     editRow: { flexDirection: "row", justifyContent: "flex-end" },
     editInput: {
       flex: 1,
       color: palette.foreground,
-      fontSize: 15,
+      ...TYPE.subhead,
       paddingVertical: SPACING.xs,
     },
     rowAction: { paddingHorizontal: SPACING.sm, paddingVertical: SPACING.xs },
-    rowActionLabel: { color: palette.mutedForeground, fontSize: 13, fontWeight: "600" },
+    rowActionLabel: { color: palette.mutedForeground, ...TYPE.label, fontWeight: "600" },
     addInput: {
       marginTop: SPACING.xs,
       paddingHorizontal: SPACING.md,
@@ -459,15 +488,35 @@ function makeStyles(palette: Palette) {
       borderStyle: "dashed",
       borderColor: palette.cardBorder,
       color: palette.foreground,
-      fontSize: 14,
+      ...TYPE.body,
     },
     section: { gap: SPACING.sm },
+    emptyCard: {
+      gap: SPACING.sm,
+      padding: SPACING.lg,
+      borderRadius: RADIUS.card,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.card,
+      marginTop: SPACING.sm,
+    },
+    emptyTitle: { color: palette.foreground, ...TYPE.subhead, fontWeight: "700" },
+    primaryButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: SPACING.xs,
+      paddingVertical: SPACING.md,
+      borderRadius: RADIUS.control,
+      backgroundColor: palette.accent,
+      marginTop: SPACING.xs,
+    },
+    primaryLabel: { color: palette.background, ...TYPE.body, fontWeight: "700" },
     sectionTitle: {
       color: palette.subtleForeground,
-      fontSize: 11,
+      ...TYPE.eyebrow,
       fontWeight: "700",
       letterSpacing: 1.2,
-      textTransform: "uppercase",
     },
     row: {
       flexDirection: "row",
@@ -489,11 +538,11 @@ function makeStyles(palette: Palette) {
       justifyContent: "center",
       marginTop: 1,
     },
-    tick: { color: "#fff", fontSize: 13, fontWeight: "800" },
+    tick: { color: "#fff", ...TYPE.label, fontWeight: "800" },
     rowText: { flex: 1, gap: 3 },
-    rowTitle: { color: palette.foreground, fontSize: 15, lineHeight: 20 },
+    rowTitle: { color: palette.foreground, ...TYPE.subhead, lineHeight: 20 },
     rowTitleDone: { color: palette.mutedForeground, textDecorationLine: "line-through" },
-    rowDescription: { color: palette.mutedForeground, fontSize: 13, lineHeight: 18 },
-    empty: { color: palette.mutedForeground, fontSize: 14, lineHeight: 20 },
+    rowDescription: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },
+    empty: { color: palette.mutedForeground, ...TYPE.body, lineHeight: 20 },
   });
 }

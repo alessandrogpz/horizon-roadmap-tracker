@@ -13,23 +13,20 @@
 // rather than per field, because "am I editing?" is a mode a person holds in
 // their head, not a property of a text box.
 //
+// The flag is passed down as a prop rather than through a context. A context
+// was written first and never used: every screen that needs the flag already
+// renders the components that read it, so threading it was one line and a
+// provider was a layer to look through.
+//
 // The exceptions are deliberate and both are *doing* rather than *planning*:
 // ticking something off on Today, and the timer. Those are the actions the app
 // exists for and putting them behind a mode would be absurd.
 
-import { createContext, useContext, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { RADIUS, SPACING, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
-
-const EditContext = createContext(false);
-
-/** Whether the surrounding screen is in edit mode. Components deep in a tree
- *  read this instead of having the flag threaded through every prop. */
-export const useEditing = () => useContext(EditContext);
-
-export const EditProvider = EditContext.Provider;
 
 /**
  * The switch itself, plus the state behind it.
@@ -106,8 +103,8 @@ function makeStyles(palette: Palette) {
   return StyleSheet.create({
     header: { flexDirection: "row", alignItems: "flex-start", gap: SPACING.md },
     headerText: { flex: 1, gap: 2 },
-    title: { color: palette.foreground, fontSize: 15, fontWeight: "700" },
-    hint: { color: palette.subtleForeground, fontSize: 11, lineHeight: 16 },
+    title: { color: palette.foreground, ...TYPE.subhead, fontWeight: "700" },
+    hint: { color: palette.subtleForeground, ...TYPE.micro, lineHeight: 16 },
     button: {
       flexDirection: "row",
       alignItems: "center",
@@ -119,6 +116,6 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    label: { color: palette.mutedForeground, fontSize: 12, fontWeight: "600" },
+    label: { color: palette.mutedForeground, ...TYPE.caption, fontWeight: "600" },
   });
 }

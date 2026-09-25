@@ -7,6 +7,655 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.76.0] - 2026-09-25
+
+### Fixed
+- **Sync was refusing every payload.** `TrackSchema` was a strict object, and a strict object does
+  not ignore a key it has not heard of — it rejects the whole request. `phaseDaysSpent` reached
+  phones over the air within minutes of 0.71.0; the server only changes when the site is deployed,
+  and `main` sat at 0.57.0. So the field appeared the first time a phase was switched, and from
+  then on nothing synced at all: not that track, not any track, not one note.
+
+  Tracks and workspaces now drop fields they do not know instead of refusing them. The field is
+  lost until the deploy catches up and nothing else is, and a stripped key never reaches the
+  database, which is what the strictness was protecting. The envelope around them stays strict: it
+  gains nothing as features are added, so anything unexpected in it is still a reason to stop. The
+  rule, and why phones are routinely ahead of the server, is written down in `DEVELOPMENT.md`.
+
+### Added
+- **Workouts are named and kept**: a push day, a pull day, each with its own exercises and their
+  sets. Opening the screen asks which one; opening one shows it as you left it, weights and all,
+  because a workout is a thing you come back to. A refresh button unticks every set and leaves the
+  numbers, ready to be done again and beaten.
+
+### Changed
+- **The date, sets-done and volume tiles are gone.** They described a session on a day, and what
+  this screen is now about is a workout you repeat.
+- **One parser for exercises**, shared by dated sessions and named workouts, so the two cannot
+  drift — which is exactly how a set's tick came to be dropped on the way back in last version.
+
+### Fixed
+- **Two workouts made in the same millisecond shared an id**, and two workouts sharing an id are
+  one workout to every lookup and every edit. Ids now carry a random tail as well as the clock.
+
+## [0.75.0] - 2026-09-25
+
+### Added
+- **A workout you log set by set.** Each exercise is a table: a row per set carrying what was lifted
+  last time, the weight and reps for this one, and a tick. Rows exist before they are done, which is
+  the point — you arrive knowing roughly what you are about to do, the rows are there with last
+  time's numbers in them, and you tick each one off as you finish it. Add a set, add an exercise,
+  or cancel the day. Nothing is joined to the calendar or the week yet; it logs today.
+- **`done` on a set**, with the helpers to edit one in place, rename an exercise and clear a day.
+  The day's volume counts only what was actually ticked: sets written down but not lifted have not
+  moved anything.
+
+### Changed
+- **"Gym plan" is "Workout"**, on both the phone and the website.
+
+### Fixed
+- **A set's tick would not have survived a reload.** `parseGymLog` rebuilds every set it reads, and
+  rebuilt them without the new flag — so the log wrote `done` and read it back as nothing, and a
+  session would have come back untouched after every launch. Caught by comparing what was on the
+  screen with what was in storage. Sets recorded before the flag existed still carry no flag, and
+  still count, rather than being read as "not done" and emptying the history.
+
+## [0.74.2] - 2026-09-25
+
+### Fixed
+- **A dropped row could draw one name over another for a frame.** Position came from React —
+  `top: index * ROW` — while the stepping-aside came from a shared value, and the two are applied by
+  different threads. Dropping changed the order and cleared the shifts in one breath, but React's
+  commit could paint first, so for a single frame every row carried its new index and its old shift
+  and two of them landed on the same line. Caught it in a screen recording: one frame in twenty-four
+  showed "Phases" twice.
+
+  Where a row sits is now a shared value too, written in the same tick as the order and applied on
+  the same frame. React's index no longer decides where anything is, so there is no longer a pair of
+  halves that can arrive separately — which is what 0.74.1 tried to fix by sequencing them, and
+  sequencing across two threads is not something you can be sure of.
+
+## [0.74.1] - 2026-09-25
+
+### Fixed
+- **Dropping a row in Arrange made the names flicker.** The shifts holding the list apart were
+  released a frame or two before the reorder arrived, so the list returned to the arrangement it had
+  started in and then swapped — names appearing to trade places twice for one drag. The row now
+  settles into its destination first, and the new order and the release of every value happen in one
+  tick, the way the folded column already did it.
+
+## [0.74.0] - 2026-09-25
+
+### Fixed
+- **Dragging a row in Arrange left the others where they were.** Holding a panel in the ordinary
+  view parts the column around it; the rows behind the Arrange button did not, so there was nothing
+  to say where a row was going until it was already there. They now share the same pair of values
+  the folded column uses — which row is in the hand, and where it would land — and step aside the
+  same way.
+
+### Changed
+- **The way into arranging is at the foot of the screen**, under everything it arranges, and says
+  what it does: "Arrange & add panels". It was a small button in the bar at the top, which is the
+  first thing you reach and the last thing you want. It disappears while a panel is being dragged,
+  because arranging is what you are already doing.
+
+### Removed
+- **The paragraph at the bottom of My Space**, explaining how to hold a panel and where the order is
+  kept. Three lines of instructions under a screen whose gestures people had already found.
+
+## [0.73.3] - 2026-09-25
+
+### Changed
+- **Plan ends on the full roadmap, and nothing beside it.** The week and the deliverables have their
+  own places to be reached from; a row of somewhere-elses under a heading reading "More on this
+  track" was a menu appended to a screen that had already finished saying what it came to say. The
+  roadmap earns the spot, because the timeline above it is a summary of it — and it opens exactly as
+  it did before.
+
+## [0.73.2] - 2026-09-25
+
+### Changed
+- **All three streak figures share one row, icons and all.** Side by side at this width a tile has
+  about fifty points left for its name once the icon and the padding have taken theirs, and a word
+  in small caps needs more — so `StatTile` gained a stacked arrangement that gives the name the
+  tile's whole width. It costs one line, which is cheaper than losing either the icon or the end of
+  the word, and the graph gets the other row back.
+
+## [0.73.1] - 2026-09-25
+
+### Changed
+- **The longest run and the last thirty days are tiles again**, alongside the current streak and
+  drawn the same way. 0.73.0 folded them into a line under the streak to save the graph a row, which
+  was a trade nobody asked for. Not three across, though: at this width the small-caps label runs
+  out of room long before the figure does, so the run you are on takes the first line and the two
+  that put it in context share the second.
+
+## [0.73.0] - 2026-09-25
+
+### Added
+- **`StatTile`**, one shape for every figure that leads a screen: a mark on the left — an icon, or a
+  ring when the number is a proportion — then the name in small caps, then the figure with its unit
+  beside it. These were being rebuilt per screen, and numbers meaning the same kind of thing should
+  not be laid out three different ways.
+- **Progress opens on the streak**, as the website does: a flame, the run you are on, and the days.
+  The longest run and the last thirty days sit under it as context rather than as two tiles of their
+  own — the run is the number the screen exists to move, and the other two only say whether it is a
+  good one. That also gives the graph back the row they were taking.
+- **Time spent and work done share one bar** on Plan, one drawn over the other, so the gap between
+  their two ends is the pace without having to be read. The card is now headed like the tiles above
+  it rather than opening on a sentence.
+
+## [0.72.0] - 2026-09-25
+
+### Added
+- **Two tiles at the top of Plan**, in place of the sentence that used to be there: the timeline as
+  a ring with the figure beside it, and the days spent in the current phase — the count 0.71.0
+  started keeping, which the phone had nowhere to show.
+- **A progress ring drawn without SVG.** `react-native-svg` is not in this build and adding it
+  would cost every phone a reinstall rather than an update that arrives on its own, which is a
+  steep price for a circle. It is two half-rings instead, each clipped to its own side of the box
+  and rotated, with the left one parked inside the right one's window until the sweep reaches it.
+
+### Changed
+- **The timeline stops being stated twice.** The headline, the subtitle and the bar under them all
+  described the same proportion the ring now draws; past the end of a plan the tile says the days
+  and the line beneath it says by how much the plan was overrun.
+
+## [0.71.0] - 2026-09-25
+
+A phase's day count was the time since you last entered it, not the time spent in it. Looking at
+phase two and coming back turned fifty days in phase one into day one.
+
+### Added
+- **`phaseDaysSpent` on a track**: whole days already spent in each phase, banked when the phase is
+  left, so returning to one resumes rather than restarts. The day of a switch belongs to the phase
+  being *entered*, which is what keeps the sum honest — every calendar day counts for exactly one
+  phase, and leaving and returning on the same day cannot count it twice.
+- **The field is in the sync schema**, with a test that a track carrying it survives the round trip.
+  The schema is strict, so a field missing from it is a field the server quietly refuses — which is
+  how a real track once got locked out of syncing.
+
+### Fixed
+- **Removing the phase you are standing on no longer credits the next one with your time.** It
+  changed which phase was current and left the start date alone, so the phase you landed on
+  inherited however long you had spent in the one you deleted. It now starts a fresh stretch, and
+  the removed phase's banked days go with it.
+- **The website's Phase Day tile computed its own answer**, separately from the detail panel behind
+  it, which already asked `phaseStats`. Both now ask the same function, so they cannot disagree.
+
+Existing tracks carry no banked days, so nothing changes for them until the next time a phase is
+switched. No migration is needed.
+
+## [0.70.3] - 2026-09-25
+
+### Fixed
+- **The step counter sometimes opened on a black screen and stayed there.** Every Health Connect
+  call was already wrapped in a `try`, which covers one that fails and does nothing at all for one
+  that never answers — and that is the one that happened. Health Connect is a separate app replying
+  over a binder; while it is updating, or before its process is up, `initialize()` can sit there
+  indefinitely. The screen waited for it before drawing anything, so the result was a spinner with
+  no end, and unpredictable because it depended on what the provider happened to be doing. Going
+  back and in again started a fresh call, which is why a second try often worked.
+
+  Not answering within four seconds is now itself an answer, for every entry point, and the
+  fallback that already exists for when Health Connect says no covers the case. The screen also
+  stops treating those numbers as a condition of appearing at all: it draws from the app's own step
+  table whatever the provider does, and arrives even if nothing can be read.
+
+## [0.70.2] - 2026-09-25
+
+### Fixed
+- **Scrolling My Space to the bottom still landed on Progress.** 0.70.1 assumed the stray press was
+  a finger stopping a coasting list, and guarded it with the scroll view's own start and end
+  callbacks. The real case was simpler and earlier: a finger dragging the column, reaching the end
+  of it, and lifting. The list had stopped moving because there was nowhere left to go, and a press
+  that goes down and comes up on a card is a press as far as anything counting touches can tell.
+
+  A panel is no longer a button at all. Opening one is a `Gesture.Tap` with a distance limit,
+  composed with the drag that picks it up, so a touch has to prove it stayed still to count as a
+  press — a finger that travelled the length of the screen is not pressing what it happens to end
+  on. Screen readers keep their way in through `onAccessibilityTap`, which is not a touch and so
+  has nothing to be confused with. The scroll-state guard stays as well: it still covers the case
+  0.70.1 was aimed at.
+
+## [0.70.1] - 2026-09-25
+
+### Fixed
+- **Scrolling My Space quickly could land you on Progress.** A finger put down on a coasting list is
+  there to stop it, not to press what happens to be under it — but it arrives as a press and leaves
+  as one, and nothing in the touch itself says otherwise. Since 0.64.0 made the whole card the way
+  into a panel, the target went from a 50pt header to the size of the screen, so a scroll stopped
+  over the consistency panel opened the screen behind it. That screen is Progress, which is a tab,
+  so it read as the app changing tabs by itself.
+
+  A panel now opens through a callback rather than a `Link`, so the screen can decline it: it
+  ignores the press while the column is moving, and for a moment after it stops, because the last
+  frame of a scroll and the first of a tap are the same frame.
+
+## [0.70.0] - 2026-09-25
+
+### Changed
+- **One type scale, across the whole phone app.** There were sixteen distinct font sizes — 9, 10,
+  11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 24, 30, 72 — each chosen where it was written. Seven
+  of them were heading-ish numbers doing what turned out to be three jobs, and three adjacent sizes
+  carried most of the body text between them. Sizes picked one at a time cannot help but disagree,
+  and text that disagrees with itself by a point here and there reads as approximate however
+  carefully each screen was made. All 235 declarations now name a role from `TYPE` in
+  `mobile/src/theme.ts`, and there is no `fontSize:` literal left outside it.
+- **The consistency grid's smallest labels went from 9pt to 11pt**, which is the smallest size in
+  the scale, and still fits the columns they sit under.
+
+### Fixed
+- **The Phases panel said "Day 573 of 92" too.** 0.68.0 fixed the Plan screen and left the panel
+  showing the same fact the old way.
+
+## [0.69.0] - 2026-09-25
+
+### Changed
+- **Today leads with the date and what kind of day it is.** It used to read "Today · Fri" — naming
+  the one day that needs no naming, on the one line that could have carried its date. It now says
+  the date and the day's kind, taken from the track's own rhythm, so this screen and the week agree
+  about what a Friday is for without being told twice.
+- **A heading with nothing under it is not drawn.** Today rendered FOCUS and REVISION over empty
+  space on any day with nothing planned. They stay while the day is being edited, because then they
+  are the thing you are adding into.
+- **Empty screens offer the way in instead of describing the emptiness.** "No materials on this
+  track yet" beside an Edit button is a dead end: the screen states a fact and leaves you to work
+  out that the toolbar holds the remedy. Today, Materials and Deliverables now name what is missing
+  and offer the button that fixes it, through one shared `EmptyState`.
+- **Screens stop announcing themselves twice.** Materials and Deliverables repeated their own name
+  under the bar that already said it; they now say how many there are. The gym screen's heading is
+  the date rather than a second "Gym plan".
+- **Settings rows that go somewhere look like it.** Account, Privacy and Security carry a chevron;
+  This device and Backup, which only state something, do not. They were indistinguishable.
+
+## [0.68.0] - 2026-09-25
+
+A plan running past its estimate is the ordinary end of a plan, not a failure of one — and the app
+treated it as a failure. A 92-day plan a year and a half old read "Day 573 of 92" over a bar pinned
+at full, "100 points behind the calendar", and four phases each "Ending" on a date long gone. The
+screen meant to tell you where you are said only that you were late.
+
+### Added
+- **`overrunDays` on `timelineStats`**, with tests: how far past the planned total a track is, or
+  zero while it is still inside it. One number, computed once, so both platforms say the same thing
+  about the same track.
+- **A way out.** Past the end of its plan the summary offers Extend, which opens the track's own
+  settings where the end date is set.
+
+### Changed
+- **Past its last day a track is no longer measured against a total it has outlived.** It reads
+  "Day 573" and "481 days past the plan" instead of "Day 573 of 92"; the bar fills but turns grey,
+  because a bar at its end should not look like a bar at its goal.
+- **Two comparisons stop being made once there is nothing left to compare against**: the pace line
+  ("N points behind the calendar") and the phase-behind banner. Both measure work against remaining
+  time, and there is none.
+- **Phase deadlines read "Due" rather than "Ends"**, which is correct whether the date is ahead or
+  behind.
+- **The website no longer prints "573 / 92 days"** in its day counter either. Its bars were already
+  clamped; the number beside them was not.
+
+## [0.67.0] - 2026-09-25
+
+### Fixed
+- **The graph ran two directions at once.** Days inside a row went forward in time, while the rows
+  themselves went backward — so the day after the last one in a month was not the day under it, it
+  was thirty days above it in the block below. Both shapes now run oldest at the top, and the graph
+  opens scrolled to its recent end, which is where the month you are in now lives.
+
+### Changed
+- **The key and the way through to History share one line at the foot of the screen.** They were
+  three stacked rows — a key, a heading reading "More on this track", and a chip repeating the word
+  under it — which put more furniture below the graph than the graph had room to spare. History is
+  now an icon at the end of the key's own row, and the key is the last thing before the tab bar.
+
+## [0.66.1] - 2026-09-25
+
+### Added
+- **The day a track started has a colour of its own**, in both shapes, with a "started" swatch in
+  the key. The green scale answers "how much", and the first day is not a quantity — it is the edge
+  of the data, and worth being able to find. Everything before it was already left blank in both
+  shapes, because the track did not exist to be missed; now the boundary is marked rather than
+  merely implied.
+
+### Removed
+- **The note under the consistency key.** Three lines explaining what counts as a day, on a screen
+  whose whole subject is which days counted. The graph gets the height back.
+
+## [0.66.0] - 2026-09-25
+
+### Changed
+- **Progress shows a year at a time, and only the graph scrolls.** The numbers, the shape switch,
+  the year, the key and the note all hold their place; the graph is the one thing that moves. The
+  whole page used to scroll, so the three numbers you were comparing a month against slid off the
+  top the moment you went looking for the month.
+- **The grid is a calendar year rather than the track's whole life.** It used to run from the start
+  date to today, growing as the track did, which left nothing fixed to navigate. A year is a shape
+  you can hold in your head — and the current year stops at today, because reading newest-first an
+  uncapped year opens on three months of blank December.
+- **The weekday header sits outside the scroller**, so which column a cell is under stays readable
+  wherever the graph has been scrolled to.
+
+### Added
+- **A year to step through**, either side of the year itself. The arrows stop at the ends rather
+  than disappearing — a track cannot have a 2019 and the control should not pretend otherwise — and
+  changing the year, or the shape, starts at the top of it rather than at whatever offset the last
+  one was left at.
+
+### Fixed
+- **`SubNav` was claiming a couple of hundred points of height.** It is a sideways scroll view, and
+  a scroll view takes all the room it is offered — so on a screen that does not scroll itself, one
+  row of chips was starving the graph beside it of more than half its space.
+
+## [0.65.0] - 2026-09-25
+
+Two different jobs were being drawn the same way. Switching which view you are looking at, and going
+to another screen, were both a row of identical outlined pills — so a set of links read as a set of
+options where one ought to be on, and a view switch read as two buttons rather than one setting.
+
+### Added
+- **A segmented control**, for "which of these am I looking at": one track with a filled thumb that
+  slides between positions. The selected option used to be told apart by a border colour, which is
+  the weakest signal available and reads as decoration rather than state. The thumb is sprung rather
+  than timed — a spring overshoots slightly and settles, which is what makes a small movement read
+  as a physical one — and the labels hand their colour over as it passes under them, so the
+  selection looks carried rather than reassigned. It is in Progress (by month / continuous) and in
+  the week calendar (week / month).
+
+### Changed
+- **The consistency grid is centred.** It is a fixed width on purpose — cells stretched to fill a
+  phone are big enough to hold a number and leave a handful of weeks on screen, which is the
+  opposite of what the grid is for — but a fixed width left at `flex-start` is a grid pushed into
+  the left third of the screen with nothing beside it. The month labels down the side now hang into
+  the margin instead of taking a column of their own, because a gutter counted into the width
+  pushes the columns off-centre by half of itself, and in the month layout nothing is written in it.
+- **Changing view fades the new one in** rather than swapping it between frames. Only the container
+  animates: the grid below it is a couple of hundred cells, and fading each of them would cost far
+  more than the effect is worth.
+- **The links to a tab's siblings carry the icon of where they go and a chevron saying they go
+  anywhere at all**, and give slightly under the thumb before springing back. They are places, not
+  options, and they no longer look like the thing that switches views.
+
+## [0.64.0] - 2026-09-25
+
+### Changed
+- **A tap anywhere on a panel opens it**, not just on its heading. A panel reads as one thing — a
+  title and the figures under it — so having only the top strip respond meant aiming at a target
+  you cannot see, and the rest of the card reading as inert when it is the part you were looking
+  at. Holding anywhere still picks the panel up: the drag only activates once the finger has been
+  still a moment, so a tap never reaches it and a hold never becomes a tap.
+- **The step counter's permission prompt is a Gesture Handler button**, so it still wins against
+  the card around it now that the whole card is tappable. It is the only control that lives inside
+  a panel's body.
+
+### Fixed
+- **A panel could be left permanently unable to fold.** Each one rendered plainly until its height
+  had been measured and only then gained the wrapper that folds it — so a panel whose layout event
+  did not arrive a second time stayed in that first branch for good: visible, correct, and inert
+  under a hold. The wrapper is now always there, constraining with `maxHeight` rather than `height`,
+  which leaves an unmeasured panel simply unconstrained instead of wrong. One render path, nothing
+  to get stuck in.
+
+## [0.63.5] - 2026-09-25
+
+### Fixed
+- **Picking up a panel after scrolling put it back out of reach of the finger.** The column gets
+  shorter as it folds, and a ScrollView whose content shrinks pulls its offset back to the new
+  bottom — dragging the whole column up out from under the thumb. At the top of the page there is no
+  offset to pull back, which is exactly why this only showed up once the page had been scrolled.
+
+  The column is now pinned to the height it had when the panel was picked up, measured at that
+  moment, so the page keeps its length for the whole gesture and the scroll position has no reason
+  to move. Tested pinned to the very bottom of the page: the scroll offset does not shift, the held
+  panel moves 3px, and its neighbours sit at exactly one slot's distance.
+
+### Removed
+- **The spacer that used to make up the lost height**, along with the two shared values that fed it.
+  It added up every panel's stored height to work out what the fold would cost — the same
+  reconstruct-the-layout-in-arithmetic approach, and the same fragility, that 0.63.1 removed from
+  the drag offset. One measurement replaces all of it.
+
+## [0.63.4] - 2026-09-25
+
+### Fixed
+- **Releasing a panel sent the whole column to the top of the page before it opened back up.** The
+  column's offset while folded is `columnShift x collapse`, and the release was zeroing the shift
+  outright while animating only the collapse. Zeroing it moves the column back to the top of the
+  page in a single frame, so what played was: everything jumps up there, then grows downwards. The
+  fold as a cut rather than in reverse.
+
+  The shift is now left where it is and `collapse` falls to zero on its own, which unwinds the
+  offset along the path it came in on: the panel just dropped holds its place and the others open
+  outward from it, the mirror of them closing in. Nothing needs resetting, because at rest the
+  collapse is zero and the offset is zero whatever the shift holds — and the next pick-up recomputes
+  it from scratch.
+- **A panel dropped exactly where it was picked up waited on an animation with nowhere to go.** The
+  release settles the panel into its slot first, and when that slot is the one it is already in, it
+  was handing `withTiming` a value it already held and waiting for the callback. It now finishes
+  straight away.
+
+## [0.63.3] - 2026-09-25
+
+### Changed
+- **The footnote fades out while a panel is held.** The column now folds around the thumb, which
+  means it can fold straight over the paragraph explaining how to hold a panel — advice that is of
+  no use to someone already doing it. Only panels are in the way now, and it comes back on release.
+
+## [0.63.2] - 2026-09-25
+
+### Fixed
+- **The column folded up at the top of the page while the held panel stayed at the thumb**, so the
+  gap the panel would drop into opened somewhere else entirely — most of a screen above where you
+  were pointing. 0.63.1 fixed where the held panel *looked*, and in doing so separated it from the
+  column it belongs to.
+
+  The fold now happens around the held panel instead of at the top of the page: the whole column
+  moves so that the held panel's folded slot lands exactly where that panel already is, and the
+  others stack up and down from there. Measured while holding the seventh of eight panels: it moves
+  3px, every neighbour sits at exactly one slot's distance, and the column arranges itself around it
+  rather than collapsing away from it.
+
+## [0.63.1] - 2026-09-25
+
+### Fixed
+- **A picked-up panel jumped upward as the others folded**, instead of staying under the finger. It
+  could still be dragged and dropped from there, but the panel you were holding was no longer the
+  one you were touching — which is the one thing the fold exists to preserve.
+
+  The offset that keeps the held panel under the finger was worked out by adding up the heights of
+  every panel above it and subtracting where its folded slot would be. That reproduces Yoga's layout
+  in arithmetic, and it has to be exactly right: every gap, every bit of padding, and every height
+  arriving from a shared value that the UI thread may not have received yet. It now asks the column
+  where it actually is, with Reanimated's `measure`, and works from the finger's real screen
+  position. Measured over the whole column: a panel seventh in the list now moves 3px as everything
+  around it folds, where the arithmetic put it several hundred pixels away.
+
+## [0.63.0] - 2026-09-24
+
+Holding a panel now picks it up, rather than switching the screen into a mode that happens to allow
+dragging. The whole reorder is one gesture: hold, move, let go.
+
+### Added
+- **Pick up a panel by holding it anywhere.** Every panel folds down to its own header, the held one
+  comes to the thumb and stays under it, and the rest step aside as it passes. Letting go drops it
+  where it is and the column opens back up. The folding is animated in both directions on purpose:
+  it is the only thing telling you which panel you are still holding once they all look alike.
+
+### Fixed
+- **Holding a panel's title opened it instead of picking it up**, so the gesture only worked in the
+  dead space in the middle of a card. `PanelCard` used React Native's `Pressable`, which is not
+  built on a gesture and so takes no part in the arbitration around it — the drag above it had no
+  way to claim the touch. It now uses Gesture Handler's, which does. A tap still opens the panel.
+- **The drop target is counted in slots travelled**, not in where the panel has ended up. Because
+  the panel sits under the finger it starts off the grid by however far down it was grabbed, so
+  measuring its position made "up one panel" a different distance depending on where you grabbed it.
+- **Scrolling is disabled while a panel is held**, and the column keeps its full height as it folds.
+  Otherwise the page would scroll under a drag that is itself vertical, and the content shrinking
+  would pull the scroll position out from under the gesture.
+
+### Changed
+- **Arrange is now only for adding and removing panels.** Reordering by holding covers the rest, and
+  a mode you have to enter and leave was a poor fit for something this small.
+
+## [0.62.0] - 2026-09-24
+
+### Changed
+- **The phone's phase list is a timeline**, the one the website has always had, rather than four
+  bordered cards stacked on top of each other. A single line runs down the left with a dot per
+  phase: green behind you, a ringed accent dot at the phase you are in, then dimming with distance
+  ahead. The borders were doing a job the line does better — separating phases — while also
+  insisting each one was equally important, which is the opposite of what a roadmap is for.
+- **What sat in a card's header now sits in a line of its own**: `PHASE 03`, the title beside it,
+  the description, then the deadline and task count in one faint row. The phase number is in the
+  label, so `Phase 3: ` is stripped from the title rather than printed twice.
+- **Phases ahead of the current one fade with distance.** Nothing past the phase you are in has
+  been decided in any detail, and showing phase 8 as vividly as phase 4 said otherwise.
+
+### Fixed
+- **The glow on the current phase is a circle behind the dot, not a shadow.** Coloured shadows do
+  not survive the trip to Android, so the website's `box-shadow` could not simply be copied.
+
+## [0.61.0] - 2026-09-24
+
+The week screen was showing a *pattern*, not a calendar: seven chips reading Mon..Sun, with no way to
+ask what the week after next holds. That question has a real answer here — a rotation's topic is
+computed from the week number and never stored — so the app knew, and simply had no way to say it.
+
+### Added
+- **A dated week you can walk through**, in place of the seven undated chips. Each day is a row: its
+  date, what kind of day it is, and what is actually on it — the rotation topics computed for *that*
+  week, the day's own checklist, and the gym plan for that kind of day, with a count of what was
+  recorded. Stepping forward a week changes the rotation topics, which is the whole point.
+- **A month view**, at the scope toggle beside it, for finding the week you want. One dot per day:
+  its colour is what kind of day it is, and it is dimmed when nothing is on it. Tapping a day opens
+  its contents below the grid. Deliberately less detail than the week — three signals is the most a
+  45px cell carries before it becomes a bad week view.
+- **A "Today" button**, shown only when it would do something: it appears once you navigate away from
+  the current week or month, and disappears when you are back on it.
+
+### Changed
+- **The week screen's two halves now split by mode**, following the app-wide read-by-default rule
+  from 0.55.0. Reading gives you the calendar, because you want dates. Editing gives you the seven
+  chips, because what a *Thursday* is for is not a property of any single Thursday — setting it on a
+  dated row would misdescribe what the tap changes.
+- **The Weekly Overview panel's day strip carries dates**, so it reads as this week rather than a
+  week in general, and agrees with the calendar it opens into.
+
+## [0.60.0] - 2026-09-24
+
+A cleanup pass, found by asking the code rather than reading it: which files nothing imports, which
+exports nothing references, which dependencies nothing uses, which comments describe things that no
+longer exist.
+
+### Removed
+- **Seven files of `create-expo-app` template theming** — `themed-text`, `themed-view`,
+  `ui/collapsible`, `constants/theme`, `hooks/use-theme`, `hooks/use-color-scheme` and its web
+  variant. They formed a closed island importing only each other, superseded by `src/theme.ts` and
+  the theme provider the app actually uses.
+- **Five unused dependencies**: `@expo/ui`, `expo-device`, `expo-glass-effect`, `expo-image`,
+  `expo-symbols` — all template leftovers, none referenced in source or config.
+- **Dead exports.** `getThemePreference` died when the website's Settings lost its theme row.
+  `stepsEnabled` / `setStepsEnabled` died when the step panel became opt-in through `hiddenPanels`
+  and Today lost its toggle. The edit-mode React context was written, never threaded, and the flag
+  passed as a prop instead.
+
+### Fixed
+- **Five headings on the website still used the old panel names** — "Weekly Study Plan", "Roadmap
+  Timeline", "Portfolio Deliverables", "Consistency Streak". The labels in `lib/modules.ts` were
+  renamed in 0.54.0 but these components hardcode their own titles, so the dashboard disagreed with
+  its own modules menu.
+- **Comments describing Google Drive sync**, removed in 0.32.0, in the server's sync handlers, the
+  web workspace provider, `useQuickNote` and a test. The one in `lib/import.ts` stays: it is
+  genuinely about clearing the tokens a device that once used Drive still has.
+
+### Changed
+- **`isDateStr` in `lib/dates.ts`** replaces six copies of the same `YYYY-MM-DD` regex, with tests.
+  It guards the boundary where a pasted or half-written value could otherwise reach date arithmetic.
+- **The README documents the Android app**, which it had never mentioned despite being half the
+  project — what it shares with the website, what only a phone can do, and where the build workflow
+  is written down. Its feature list uses the current names.
+- **`MODULES_PLAN.md` records that Drive sync was removed**, rather than leaving a decision that
+  reads as current. The plan is a record of what was decided; a superseded decision is worth keeping
+  alongside why it was superseded.
+
+## [0.59.1] - 2026-09-24
+
+### Fixed
+- **Deleting the track you were standing on took two attempts.** Two provider calls in the same tick
+  both read a ref that React only reassigns on the next render, so the second was built on a
+  pre-first-call copy and wrote it back: the track was archived, then `switchTrack` rebuilt the
+  workspace from the snapshot *without* the archive and saved that. Every write now goes through one
+  `commit` that moves the ref before the state, so calls in a tick compose. This was a latent bug in
+  any pair of consecutive edits, not only this one.
+
+- **Scrolling felt sticky.** Two causes, both mine. Every row and every panel is wrapped in a swipe
+  gesture that waited 12 points of vertical movement before giving up — a dead zone at the start of
+  every scroll — now 4. And pull-to-refresh was pointing `simultaneousWithExternalGesture` at a
+  plain component ref, which does not register, so the pull and the scroll arbitrated instead of
+  running together; it composes with the scroll view's own gesture now.
+
+- **The step count stopped moving while the app was open.** It showed
+  `max(healthConnectTotal, sensorSinceSubscription)`, and Health Connect's whole-day total dwarfs a
+  freshly-subscribed sensor, so the number pinned itself to a snapshot taken on open and never
+  climbed. The snapshot is a *baseline* now: the sensor's reading is paired with it, and every step
+  since is added. Whole-day accurate and live, and re-read on resume, which is when the snapshot is
+  most stale.
+
+### Changed
+- **A day's accomplishments open under the day you tapped**, overlapping the weeks below rather than
+  pushing them down — the grid is the thing being read, and having it jump loses your place. Any tap
+  outside closes it. The backdrop covers the grid only, so the tabs and header keep working.
+
+## [0.59.0] - 2026-09-24
+
+### Changed
+- **Dates are picked, never typed.** Every date field on the phone — a track's start and end, a
+  phase's deadline — now opens a picker that narrows year, then month, then day. A text box asked
+  the person to know the format, type it correctly on a touch keyboard, and get the month right, and
+  then quietly did nothing when they did not, because the only thing the code could do with a
+  half-typed date was ignore it.
+
+  Every date here feeds arithmetic — a phase's deadline is stored as a day count from the track's
+  start — so an unparseable one was never merely cosmetic. Offering choices removes the invalid
+  state rather than handling it: every path through the picker produces a real date.
+
+  It also means a range can be *enforced by omission*. A phase cannot end before its track begins
+  and a track cannot end before it starts, so those years, months and days are not offered at all
+  rather than refused after the fact.
+
+  Built out of three lists rather than the platform's date picker, which is a native module and
+  therefore a new build in everyone's hands.
+
+## [0.58.1] - 2026-09-24
+
+### Fixed
+- **The gym panel had no card around it on the website.** `SortablePanel` is transparent chrome that
+  only adds the hover controls — every panel brings its own `glass-panel` shell, and this one did
+  not, so it floated on the column while its neighbours were boxed.
+- **The gym panel was titled with the day's focus label.** Whatever the track calls that weekday —
+  "Focus", "Maths" — was being used as the panel's heading, which said nothing about training and
+  read as a bug. It says "Gym plan" on both platforms now, and the copy underneath no longer bends
+  itself around the label either.
+
+## [0.58.0] - 2026-09-24
+
+### Fixed
+- **Deleting a track still promised an undo it no longer offers.** The undo was removed in 0.57.0
+  but the confirmation's own text still said "You can undo this for a few seconds afterwards" — so
+  the dialog was describing behaviour that had gone. It now says what actually happens.
+- **A new track on the phone never asked when it starts or when it should be done.** The template
+  decided both silently, so a track arrived with a horizon nobody had chosen and a phase timeline
+  scaled to it. Both are asked for now; leaving the end blank keeps the template's own length.
+
+### Changed
+- **"Total days" is an end date**, on both platforms. Nobody knows their track is 92 days long; they
+  know it should be done by Christmas. The day count is still what gets stored — it is what lets a
+  whole track be re-dated without rewriting every phase — so the field converts on the way in and
+  out, and the line underneath says how many days that came to.
+- **"My day starts at" and "Weeks start on" are one row on the website**, as they already were on
+  the phone. When a week begins and when a day rolls over are the same kind of decision, and
+  splitting them made one of them easy to miss.
+
 ## [0.57.0] - 2026-09-24
 
 ### Fixed
