@@ -437,6 +437,23 @@ function DraggablePanel({
     [index]
   );
 
+  /**
+   * Opening the panel, as a gesture rather than a button.
+   *
+   * A tap has to prove it is one: `maxDistance` is the whole point, because a
+   * finger that travelled the length of the screen scrolling and then lifted
+   * over a panel is not pressing it, however much the up-and-down of it looks
+   * like a press to something that only counts touches. Dragging the column to
+   * its end and letting go was doing exactly that, and the panel it landed on
+   * was usually the tall one, whose screen is Progress.
+   */
+  const openTap = Gesture.Tap()
+    .maxDistance(10)
+    .maxDuration(400)
+    .onEnd((_event, success) => {
+      if (success) runOnJS(onOpen)(id);
+    });
+
   const drag = Gesture.Pan()
     .activateAfterLongPress(300)
     .onStart((event) => {
@@ -536,6 +553,8 @@ function DraggablePanel({
           title={definition.label}
           icon={PANEL_ICON[id] ?? "square-outline"}
           accent={tintFor(id)}
+          // Only for the chevron and the screen-reader action; the tap
+          // itself is handled by the gesture above.
           onOpen={PANEL_HREF[id] ? () => onOpen(id) : undefined}
         >
           <Animated.View style={body}>
@@ -552,7 +571,9 @@ function DraggablePanel({
   };
 
   return (
-    <GestureDetector gesture={drag}>
+    // Holding wins over tapping: once the drag has claimed the touch, letting
+    // go of it is a drop, not a press.
+    <GestureDetector gesture={Gesture.Exclusive(drag, openTap)}>
       <Animated.View style={[styles.slot, animated]}>
         {/* Inside the clipped wrapper but unconstrained by it, so it keeps
             reporting what the panel *would* be if it were open. */}
