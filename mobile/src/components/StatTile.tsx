@@ -23,6 +23,7 @@ export function StatTile({
   tint,
   leading,
   wide,
+  compact,
   children,
 }: {
   label: string;
@@ -35,11 +36,47 @@ export function StatTile({
   leading?: ReactNode;
   /** Gives the tile more of the row than its neighbours, for a longer unit. */
   wide?: boolean;
+  /**
+   * Three tiles to a row rather than one or two.
+   *
+   * Side by side, a tile this narrow has about fifty points left for its
+   * name once the icon and the padding have taken theirs, and a word in
+   * small caps needs more than that. Stacking gives the name the tile's
+   * whole width and costs one line, which is cheaper than losing either
+   * the icon or the end of the word.
+   */
+  compact?: boolean;
   /** Anything that belongs under the figure — a bar, a second line. */
   children?: ReactNode;
 }) {
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
+
+  const figures = (
+    <View style={styles.figureRow}>
+      <Text style={styles.figure}>{value}</Text>
+      {unit ? (
+        <Text style={styles.unit} numberOfLines={1}>
+          {unit}
+        </Text>
+      ) : null}
+    </View>
+  );
+
+  if (compact) {
+    return (
+      <View style={[styles.tile, styles.compact]}>
+        <View style={styles.compactHead}>
+          {icon ? <Ionicons name={icon} size={15} color={tint ?? palette.accent} /> : null}
+          <Text style={[styles.label, styles.compactLabel]} numberOfLines={1}>
+            {label}
+          </Text>
+        </View>
+        {figures}
+        {children}
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.tile, wide && styles.wide]}>
@@ -49,14 +86,7 @@ export function StatTile({
         <Text style={styles.label} numberOfLines={1}>
           {label}
         </Text>
-        <View style={styles.figureRow}>
-          <Text style={styles.figure}>{value}</Text>
-          {unit ? (
-            <Text style={styles.unit} numberOfLines={1}>
-              {unit}
-            </Text>
-          ) : null}
-        </View>
+        {figures}
         {children}
       </View>
     </View>
@@ -77,6 +107,11 @@ function makeStyles(palette: Palette) {
       backgroundColor: palette.card,
     },
     wide: { flex: 1.5 },
+    compact: { flexDirection: "column", alignItems: "stretch", gap: 3, paddingHorizontal: SPACING.sm },
+    compactHead: { flexDirection: "row", alignItems: "center", gap: 5 },
+    // Small caps are set loose to be read at a glance; in a tile this
+    // narrow the tracking is what pushes the word off the end.
+    compactLabel: { flexShrink: 1, letterSpacing: 0.4 },
     text: { flex: 1, gap: 2 },
     label: { ...TYPE.eyebrow, color: palette.subtleForeground, fontWeight: "700" },
     figureRow: { flexDirection: "row", alignItems: "baseline", gap: 4 },
