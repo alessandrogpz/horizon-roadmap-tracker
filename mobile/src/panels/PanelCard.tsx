@@ -13,7 +13,6 @@ import { StyleSheet, Text, View } from "react-native";
 // header used to open the panel instead of picking it up — the drag above it
 // had no way to say "this touch is mine now".
 import { Pressable } from "react-native-gesture-handler";
-import { Link } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
@@ -22,15 +21,18 @@ export function PanelCard({
   title,
   icon,
   accent,
-  href,
+  onOpen,
   children,
 }: {
   title: string;
   icon: React.ComponentProps<typeof Ionicons>["name"];
   /** Tints the icon; panels are told apart by colour before they are read. */
   accent?: string;
-  /** The full screen this panel is a summary of, if it has one. */
-  href?: string;
+  /** Opens the full screen this panel summarises, if it has one. Given as a
+   *  callback rather than a `Link` so the caller can decline it — a touch
+   *  that lands to stop a moving list is not a tap, and a list that
+   *  navigates when you stop it is unusable at speed. */
+  onOpen?: () => void;
   children: ReactNode;
 }) {
   const palette = usePalette();
@@ -43,7 +45,7 @@ export function PanelCard({
         <Ionicons name={icon} size={15} color={tint} />
       </View>
       <Text style={styles.title}>{title}</Text>
-      {href ? <Ionicons name="chevron-forward" size={16} color={palette.subtleForeground} /> : null}
+      {onOpen ? <Ionicons name="chevron-forward" size={16} color={palette.subtleForeground} /> : null}
     </View>
   );
 
@@ -61,12 +63,15 @@ export function PanelCard({
   // looking at. Holding still picks the panel up: the drag above this only
   // activates after the finger has been still a moment, so a tap never
   // reaches it and a hold never becomes a tap.
-  return href ? (
-    <Link href={href as never} asChild>
-      <Pressable accessibilityRole="button" accessibilityLabel={`Open ${title}`} style={styles.card}>
-        {inside}
-      </Pressable>
-    </Link>
+  return onOpen ? (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Open ${title}`}
+      onPress={onOpen}
+      style={styles.card}
+    >
+      {inside}
+    </Pressable>
   ) : (
     <View style={styles.card}>{inside}</View>
   );
