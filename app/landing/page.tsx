@@ -24,7 +24,8 @@ import {
 } from "lucide-react";
 import HorizonMark from "@/components/HorizonMark";
 import ThemeToggle from "@/components/ThemeToggle";
-import DashboardPreview from "@/components/landing/DashboardPreview";
+import AppPreview from "@/components/landing/AppPreview";
+import Reveal from "@/components/landing/Reveal";
 import WeeklyPlanPreview from "@/components/landing/WeeklyPlanPreview";
 import PhoneFrame from "@/components/landing/PhoneFrame";
 import TrackStackPreview from "@/components/landing/TrackStackPreview";
@@ -278,7 +279,7 @@ export default function LandingPage() {
 
       <main className="relative z-1">
         {/* ── Hero ──────────────────────────────────────────────────────── */}
-        <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 pt-14 pb-16 sm:px-6 sm:pt-20 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-14 lg:pt-24 lg:pb-24">
+        <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 pt-14 pb-16 sm:px-6 sm:pt-20 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-14 lg:pt-24 lg:pb-24">
           <div className="flex flex-col items-start gap-6">
             <span className="inline-flex items-center gap-2 rounded-full border border-card-border bg-surface-muted px-3 py-1 text-[0.7rem] text-muted-foreground">
               <span className="h-1.5 w-1.5 rounded-full bg-success" />
@@ -291,10 +292,9 @@ export default function LandingPage() {
             </h1>
 
             <p className="max-w-xl text-[1rem] leading-relaxed text-muted-foreground sm:text-[1.08rem]">
-              Horizon is a roadmap companion tracker — not a to-do list. Give each goal its
-              own <strong className="font-semibold text-foreground">track</strong>: a start
-              date, a real deadline, the phases in between, the rhythm you&apos;ll keep, and
-              the materials and deliverables it takes. Then open it every morning and see
+              Not a to-do list. Give each goal its own{" "}
+              <strong className="font-semibold text-foreground">track</strong> — a real deadline, the
+              phases in between, the rhythm you&apos;ll keep — then open it every morning and see
               exactly where you are.
             </p>
 
@@ -311,33 +311,29 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* The dashboard, with the phone leaning on it — because the two
-              are one product sharing one core, and the hero should say so
-              before the copy has to. */}
-          <div className="relative lg:pl-4">
-            <DashboardPreview />
-            <div className="pointer-events-none absolute -bottom-14 -right-2 hidden w-[190px] origin-bottom-right scale-[0.78] xl:block">
-              <PhoneFrame tab="progress" accent={TRACK_COLORS[0]}>
-                <ProgressScreen />
-              </PhoneFrame>
-            </div>
+          {/* The app itself, working, rather than a drawing of it. The phone
+              used to lean on this corner; once the dashboard became a real
+              miniature the phone was covering half of it, and it has a
+              section of its own further down. */}
+          <div className="landing-stage relative">
+            <AppPreview />
           </div>
         </section>
 
         {/* ── A colour per track ────────────────────────────────────────── */}
         <section className="border-t border-card-border">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
-            <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-              <div className="flex flex-col gap-3">
+          <Reveal className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
+            <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+              <div className="flex min-w-0 flex-col gap-3">
                 <SectionLabel>One colour each</SectionLabel>
                 <h2 className="text-[1.6rem] font-semibold leading-tight tracking-tight sm:text-[2.1rem]">
                   Three tracks, three colours, one year.
                 </h2>
                 <p className="text-[0.95rem] leading-relaxed text-muted-foreground">
-                  Pick a track&apos;s colour when you make it and the whole app wears it while
-                  that track is open — buttons, rings, links, and its own run of days. Which
-                  means a year of them stacked together is readable at a glance: whose row is
-                  whose, who is on a streak, and which weeks nobody turned up for.
+                  Pick a track&apos;s colour when you make it and the whole app wears it while that
+                  track is open — buttons, rings, links, and its own run of days. Stack a year of
+                  them and it reads at a glance: whose row is whose, who is on a streak, and which
+                  weeks nobody turned up for.
                 </p>
                 <div className="mt-2 flex items-center gap-2">
                   {TRACK_COLORS.map((color) => (
@@ -353,23 +349,25 @@ export default function LandingPage() {
                   that mark stays findable whatever colour the track is wearing.
                 </p>
               </div>
-              <TrackStackPreview />
+              <div className="min-w-0">
+                <TrackStackPreview />
+              </div>
             </div>
-          </div>
+          </Reveal>
         </section>
 
         {/* ── Not a to-do list ──────────────────────────────────────────── */}
         <section className="border-t border-card-border">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
+          <Reveal className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
             <div className="flex flex-col gap-3 max-w-2xl">
               <SectionLabel>The difference</SectionLabel>
               <h2 className="text-[1.6rem] font-semibold leading-tight tracking-tight sm:text-[2.1rem]">
                 A to-do list tells you what&apos;s left. A roadmap tells you where you are.
               </h2>
               <p className="text-[0.95rem] leading-relaxed text-muted-foreground">
-                Long goals don&apos;t fail because you forgot a task. They fail because the
-                distance is invisible — nothing tells you that month three was supposed to
-                look different from month one. Horizon makes that distance the whole point.
+                Long goals don&apos;t fail because you forgot a task. They fail because the distance
+                is invisible — nothing tells you that month three was meant to look different from
+                month one.
               </p>
             </div>
 
@@ -406,22 +404,21 @@ export default function LandingPage() {
                 </ul>
               </div>
             </div>
-          </div>
+          </Reveal>
         </section>
 
         {/* ── Tracks ────────────────────────────────────────────────────── */}
         <section className="border-t border-card-border">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
+          <Reveal className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
             <div className="flex flex-col gap-3 max-w-2xl">
               <SectionLabel>Tracks</SectionLabel>
               <h2 className="text-[1.6rem] font-semibold leading-tight tracking-tight sm:text-[2.1rem]">
                 Split your ambitions into as many tracks as you need.
               </h2>
               <p className="text-[0.95rem] leading-relaxed text-muted-foreground">
-                A track is one goal with everything it needs around it — its own horizon,
-                phases, weekly rhythm, materials, deliverables, streak and dashboard layout.
-                Nothing bleeds between them. Switch tracks from the header; each one remembers
-                exactly how you left it.
+                One goal with everything it needs around it — its own horizon, phases, rhythm,
+                materials, deliverables and streak. Nothing bleeds between them, and each one
+                remembers exactly how you left it.
               </p>
             </div>
 
@@ -448,15 +445,15 @@ export default function LandingPage() {
             </div>
 
             <p className="mt-6 text-[0.85rem] text-subtle-foreground">
-              Every new track starts as the same blank skeleton — four phases and a weekly
-              rhythm — and becomes whatever you rewrite it into.
+              Every new track starts as the same blank skeleton and becomes whatever you rewrite it
+              into.
             </p>
-          </div>
+          </Reveal>
         </section>
 
         {/* ── A real week ───────────────────────────────────────────────── */}
         <section className="border-t border-card-border">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
+          <Reveal className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
             <div className="flex max-w-2xl flex-col gap-3">
               <SectionLabel>A real week</SectionLabel>
               <h2 className="text-[1.6rem] font-semibold leading-tight tracking-tight sm:text-[2.1rem]">
@@ -464,9 +461,8 @@ export default function LandingPage() {
               </h2>
               <p className="text-[0.95rem] leading-relaxed text-muted-foreground">
                 Below is week 12 of the engine track this app was built for — the real plan, not a
-                mock-up. Each day carries the focus type it was assigned, the rotation item due on
-                it, and the work that belongs there. Tick things off as you go; the past stays on
-                the record, tomorrow waits its turn.
+                mock-up. Each day carries the focus type it was assigned, the rotation due on it and
+                the work that belongs there.
               </p>
             </div>
 
@@ -478,12 +474,12 @@ export default function LandingPage() {
               Days, focus types, colours, rotations and tasks are all yours to define — this is one
               track&apos;s answer, not a fixed format.
             </p>
-          </div>
+          </Reveal>
         </section>
 
         {/* ── Modules ───────────────────────────────────────────────────── */}
         <section id="features" className="scroll-mt-16 border-t border-card-border">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
+          <Reveal className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
             <div className="flex flex-col gap-3 max-w-2xl">
               <SectionLabel>The dashboard</SectionLabel>
               <h2 className="text-[1.6rem] font-semibold leading-tight tracking-tight sm:text-[2.1rem]">
@@ -537,23 +533,21 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
-          </div>
+          </Reveal>
         </section>
 
         {/* ── On the phone ──────────────────────────────────────────────── */}
         <section id="phone" className="scroll-mt-16 border-t border-card-border">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
+          <Reveal className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
             <div className="flex max-w-2xl flex-col gap-3">
               <SectionLabel>In your hand</SectionLabel>
               <h2 className="text-[1.6rem] font-semibold leading-tight tracking-tight sm:text-[2.1rem]">
                 The same tracks, rebuilt for a thumb.
               </h2>
               <p className="text-[0.95rem] leading-relaxed text-muted-foreground">
-                Not the website squeezed into a phone. The same data and the same rules — one
-                shared core, unchanged — laid out again for one hand: the grid turns ninety
-                degrees so a day is big enough to press, the dashboard becomes one column you
-                drag into the order you want, and the gym gets a table you can actually type
-                into between sets.
+                Not the website squeezed into a phone. The same data and the same rules, one shared
+                core, laid out again for one hand: the grid turns ninety degrees so a day is big
+                enough to press, and the gym gets a table you can type into between sets.
               </p>
             </div>
 
@@ -608,12 +602,12 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
-          </div>
+          </Reveal>
         </section>
 
         {/* ── How it works ──────────────────────────────────────────────── */}
         <section id="how" className="scroll-mt-16 border-t border-card-border">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
+          <Reveal className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
             <div className="flex flex-col gap-3 max-w-2xl">
               <SectionLabel>How it works</SectionLabel>
               <h2 className="text-[1.6rem] font-semibold leading-tight tracking-tight sm:text-[2.1rem]">
@@ -640,12 +634,12 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </Reveal>
         </section>
 
         {/* ── Accounts ──────────────────────────────────────────────────── */}
         <section id="accounts" className="border-t border-card-border">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
+          <Reveal className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
             <div className="flex flex-col gap-3 max-w-2xl">
               <SectionLabel>Accounts</SectionLabel>
               <h2 className="text-[1.6rem] font-semibold leading-tight tracking-tight sm:text-[2.1rem]">
@@ -675,12 +669,12 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </Reveal>
         </section>
 
         {/* ── Your data ─────────────────────────────────────────────────── */}
         <section className="border-t border-card-border">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
+          <Reveal className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
             <div className="flex flex-col gap-3 max-w-2xl">
               <SectionLabel>Your data</SectionLabel>
               <h2 className="text-[1.6rem] font-semibold leading-tight tracking-tight sm:text-[2.1rem]">
@@ -701,12 +695,12 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </Reveal>
         </section>
 
         {/* ── Questions ─────────────────────────────────────────────────── */}
         <section id="questions" className="border-t border-card-border">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
+          <Reveal className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
             <div className="flex flex-col gap-3 max-w-2xl">
               <SectionLabel>Before you start</SectionLabel>
               <h2 className="text-[1.6rem] font-semibold leading-tight tracking-tight sm:text-[2.1rem]">
@@ -722,12 +716,12 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </Reveal>
         </section>
 
         {/* ── Final CTA ─────────────────────────────────────────────────── */}
         <section className="border-t border-card-border">
-          <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-28">
+          <Reveal className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-28">
             <div className="glass-panel landing-cta flex flex-col items-center gap-6 text-center">
               <HorizonMark className="h-6 w-auto text-accent" />
               <h2 className="max-w-2xl text-[1.6rem] font-semibold leading-tight tracking-tight sm:text-[2.2rem]">
@@ -745,7 +739,7 @@ export default function LandingPage() {
                 <ArrowRight size={17} strokeWidth={2.2} />
               </Link>
             </div>
-          </div>
+          </Reveal>
         </section>
       </main>
 

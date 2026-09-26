@@ -53,6 +53,25 @@ const RECIPES: Recipe[] = [
   { name: "test3", color: TRACK_COLORS[4], days: 520, plannedOver: 1.6, density: 0.33, clumping: 0.8, seed: 0x5eed03 },
 ];
 
+/**
+ * What a day's work is called.
+ *
+ * Deliberately vague about the subject: these three tracks stand in for a
+ * course, a training plan and a job hunt, and anything specific would be
+ * wrong for two of them. "test1 item 1" was worse — it is the sort of thing
+ * that is fine in a fixture and embarrassing the moment a day is opened.
+ */
+const THINGS_DONE = [
+  "Worked through a chapter",
+  "Logged a session",
+  "Practised for an hour",
+  "Shipped a small piece",
+  "Reviewed yesterday's work",
+  "Read for thirty minutes",
+  "Closed off a loose end",
+  "Wrote up what I learned",
+];
+
 /** mulberry32: eight lines, good enough for dummy data, and identical on every
  *  platform — which `Math.random` seeded by nothing is not. */
 function randomFrom(seed: number): () => number {
@@ -111,8 +130,11 @@ function historyFor(recipe: Recipe, startDate: string, todayStr: string): Record
       // One to four things, weighted low: four is the top of the shade scale
       // and should be a good day, not an average one.
       const count = 1 + Math.floor(random() ** 2 * 4);
+      const first = Math.floor(random() * THINGS_DONE.length);
       history[formatDateYMD(cursor)] = Array.from({ length: count }, (_, index) => ({
-        title: `${recipe.name} item ${index + 1}`,
+        // Walked rather than re-rolled, so a day never lists the same thing
+        // twice — which reads as a bug rather than as a busy day.
+        title: THINGS_DONE[(first + index) % THINGS_DONE.length],
         description: "Sample data",
       }));
     }
@@ -125,7 +147,7 @@ function historyFor(recipe: Recipe, startDate: string, todayStr: string): Record
   for (let back = 0; back < 3 + Math.floor(random() * 6); back += 1) {
     const date = formatDateYMD(tail);
     if (date < startDate) break;
-    if (!history[date]) history[date] = [{ title: `${recipe.name} item 1`, description: "Sample data" }];
+    if (!history[date]) history[date] = [{ title: THINGS_DONE[0], description: "Sample data" }];
     tail.setDate(tail.getDate() - 1);
   }
 
