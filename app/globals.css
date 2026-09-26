@@ -740,29 +740,21 @@ select option:disabled {
   }
 }
 
-/* The panels inside a preview. The real dashboard's cards, one size down:
-   the same surface and the same lift under the cursor, because the point of
-   showing the app on a marketing page is that it behaves like the app. */
+/* The panels inside a preview: the real dashboard's cards, one size down.
+   They do not answer the pointer, and that is deliberate — a preview is a
+   picture of the app, and a picture whose cards light up under the cursor is
+   offering something it cannot give. */
 .landing-mini-panel {
   border: 1px solid var(--card-border);
   border-radius: 10px;
   background: color-mix(in srgb, var(--card-bg) 70%, transparent);
   padding: 0.55rem 0.65rem;
-  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.landing-mini-panel:hover {
-  border-color: var(--accent-muted);
-  background: color-mix(in srgb, var(--card-bg) 92%, transparent);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-panel);
 }
 
 /* A preview sitting on a shelf rather than floating on the page: a soft pool
-   of the track's own colour under it, and a lift when the pointer arrives. */
+   of the track's own colour under it. Still — see above. */
 .landing-stage {
   position: relative;
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .landing-stage::before {
@@ -772,18 +764,9 @@ select option:disabled {
   border-radius: 999px;
   background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 26%, transparent), transparent 75%);
   filter: blur(46px);
-  opacity: 0.55;
-  transition: opacity 0.35s ease;
+  opacity: 0.6;
   pointer-events: none;
   z-index: -1;
-}
-
-.landing-stage:hover {
-  transform: translateY(-3px);
-}
-
-.landing-stage:hover::before {
-  opacity: 0.85;
 }
 
 /* Sections arrive as you reach them. One page of scroll needs something to
@@ -803,13 +786,6 @@ select option:disabled {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .landing-stage,
-  .landing-stage:hover,
-  .landing-mini-panel,
-  .landing-mini-panel:hover {
-    transform: none;
-  }
-
   .reveal {
     opacity: 1;
     transform: none;
@@ -817,23 +793,8 @@ select option:disabled {
   }
 }
 
-/* Every card on the marketing pages answers the pointer.
-   `.glass-panel:hover` already brightens the border and deepens the shadow,
-   which reads on a dashboard where the cards are the furniture and on a
-   landing page not at all. A point of movement is what says the thing is
-   alive; the dashboard's own panels stay still, because there the cards get
-   picked up and dragged and a hover lift would fight the drag. */
-.landing-lift {
-  will-change: transform;
-}
-
-.landing-lift:hover {
-  transform: translateY(-3px);
-  border-color: var(--accent-muted);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .landing-lift:hover {
-    transform: none;
-  }
-}
+/* Nothing on the marketing pages lifts under the pointer.
+   The cards briefly did, along with the previews and the panels inside them.
+   A hover state is a claim that something will happen on a click, and on a
+   page whose job is to describe an app rather than be one, that claim is
+   false everywhere except the links and the buttons — which have their own. */
