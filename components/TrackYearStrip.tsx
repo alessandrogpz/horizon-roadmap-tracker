@@ -26,6 +26,7 @@ export default function TrackYearStrip({
   start,
   today,
   pad = true,
+  onDayClick,
   className,
 }: {
   /** Week-major, padded to sevens — what `yearCalendar` and `streakCalendar`
@@ -41,6 +42,9 @@ export default function TrackYearStrip({
   /** Pad the front out to a whole year, so that every track in a list draws a
    *  day at the same size whatever age it is. */
   pad?: boolean;
+  /** Makes the days pressable. Left off, the strip stays what it was: markup
+   *  with no handlers, which a server component can render. */
+  onDayClick?: (date: string) => void;
   className?: string;
 }) {
   // Always the full year, with the empty weeks padded in at the front. Sized
@@ -61,11 +65,16 @@ export default function TrackYearStrip({
         <div key={index} style={{ display: "flex", flexDirection: "column", gap }}>
           {week.map((day, dayIndex) => {
             const began = Boolean(start) && day.date === start;
+            const pressable = Boolean(onDayClick) && Boolean(day.date);
             return (
               <div
                 key={dayIndex}
+                role={pressable ? "button" : undefined}
+                tabIndex={pressable ? -1 : undefined}
+                onClick={pressable ? () => onDayClick?.(day.date) : undefined}
                 title={day.date ? `${day.date}: ${day.count} update${day.count === 1 ? "" : "s"}` : undefined}
                 style={{
+                  cursor: pressable ? "pointer" : undefined,
                   width: cell,
                   height: cell,
                   borderRadius: Math.max(1, cell * 0.25),
