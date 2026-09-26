@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react";
 import HorizonMark from "@/components/HorizonMark";
 import ThemeToggle from "@/components/ThemeToggle";
 import Reveal from "@/components/landing/Reveal";
+import SmoothAnchors from "@/components/landing/SmoothAnchors";
 
 /**
  * The shell the privacy and security pages share: the bar, the glow, a title
@@ -41,6 +42,8 @@ export function DocShell({
   return (
     <div className="relative min-h-screen overflow-x-hidden">
       <div className="app-glow" />
+      {/* Every in-page link rolls to where it points rather than snapping. */}
+      <SmoothAnchors />
 
       <header className="sticky top-0 z-50 border-b border-card-border bg-background/80 backdrop-blur-md">
         <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
