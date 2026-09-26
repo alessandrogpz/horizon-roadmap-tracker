@@ -7,6 +7,59 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.82.0] - 2026-09-26
+
+### Added
+- **The landing page's dashboard is the dashboard now, and it works.** The hero used to hold a
+  sketch — a card with a progress bar, three phase dots and a grid of green squares — that matched
+  nothing in the app. It is the real thing at one third scale: the app's own `StreakGrid`, the app's
+  own colour maths, the same three demo tracks Settings will put in your workspace. Open the track
+  menu and pick another and the whole card takes that track's colour and that track's data, exactly
+  as the app does, because both write the same handful of CSS variables — here scoped to the card so
+  the page around it is untouched. Days open to show what was done on them; deliverables tick.
+- **The phone screens have the app's chrome.** They were close and not quite: no title bar, no
+  segmented control, no year stepper, no key under the grid. All four are there, which is most of
+  what made them read as drawings rather than screenshots.
+- **Sections arrive as you reach them.** One page of scroll needs something to reward the scrolling.
+  An `IntersectionObserver` and two CSS rules — no library, and nothing at all for anyone who has
+  asked their machine to stop moving things.
+- **A shelf under the hero, and a lift under every panel.** The preview sits in a soft pool of the
+  open track's colour and rises a little as the pointer arrives; the panels inside it do the same,
+  the way the real ones do.
+
+### Changed
+- **Privacy and Security were two columns of small print with the same chrome written out twice.**
+  They now share one shell: a title band with an eyebrow and a lede, a contents column that follows
+  you down on a wide screen, and section headings on an accent rule. Security's six measures move
+  above the prose, where they are the answer most people came for. Not a word of either page
+  changed — the content was always the strongest thing about them.
+- The landing copy is shorter in six places. The hero's paragraph in particular said in five lines
+  what it says now in three.
+- The demo tracks' days are called things like "Worked through a chapter" rather than "test1 item
+  1", which was fine in a fixture and embarrassing the moment a day was opened.
+
+### Fixed
+- The colour section pushed its own headline off the right edge of a phone. A grid with no base
+  column template has one `auto` column, sized to its widest child — and its widest child is half a
+  year of days.
+
+## [0.81.1] - 2026-09-26
+
+### Fixed
+- **The consistency grid is one row now, in both shapes, and it opens with today at the right.**
+  0.81.0 got the month shape half right and the continuous one wrong. Months wrapped onto a second
+  and third line, which puts the current month in the middle of the panel and the oldest one in the
+  corner the eye starts at; the continuous shape opened on January, so a track that began in June
+  opened on five months of empty squares with its history off the right edge. Both are a single row
+  in one scroller, pinned to the recent end, scrolled back by hand for the rest of the year.
+- The continuous shape also drops the weeks before the track existed, the same way months with
+  nothing in them were already dropped — otherwise they are width you have to scroll past to reach
+  a day.
+- The pin survives the panel changing width — a phone turning, the dashboard's two columns
+  collapsing into one — which the first version could not see, because nothing about the content
+  changes and it was left sitting on January at the old width's offset. Only on a width change:
+  scrolling back through the year is never yanked forward.
+
 ## [0.81.0] - 2026-09-26
 
 ### Added
