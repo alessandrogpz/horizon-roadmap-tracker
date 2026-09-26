@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Activity, Check, ChevronLeft, ChevronRight, Flame, Layers, X } from "lucide-react";
 import type { CompletedItem, TrackState } from "@/lib/types";
 import { parseYMD, todayYMD } from "@/lib/dates";
@@ -146,7 +146,56 @@ export default function StreakGraph({
 
   // `yearCalendar` returns week-major order, which is exactly how StreakGrid
   // flows: column-first over seven rows, one week per column.
-  const cells: StreakCell[] = days.map((day, index) => cellFor(day.date ? day : null, `pad-${index}`));
+  //
+  // The weeks before the track existed are dropped, the same way months with
+  // nothing in them are: a track that began in June otherwise opens on five
+  // months of transparent squares, and every one of them is width you have to
+  // scroll past to reach a day.
+  const cells: StreakCell[] = useMemo(() => {
+    let from = 0;
+    while (from + 7 <= days.length && days.slice(from, from + 7).every((day) => !day.date)) from += 7;
+    return days.slice(from).map((day, index) => cellFor(day.date ? day : null, `pad-${index}`));
+    // `cellFor` closes over the history and the dates, which are the deps that
+    // matter; it is redefined every render and would defeat the memo.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [completedItemsHistory, days, startDate, today]);
+
+  /**
+   * Both shapes open at the recent end, with today at the right.
+   *
+   * A year runs left to right and the question anyone opens this for is about
+   * now, so the far end is where it should start — the beginning of the year
+   * is the part you scroll back to, not the part you land on. Jumped rather
+   * than animated: this is where the graph starts, not somewhere it travels
+   * to while you watch.
+   */
+  const scroller = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const node = scroller.current;
+    if (node) node.scrollLeft = node.scrollWidth;
+  }, [byMonth, combined, cells.length, months.length, year]);
+
+  /**
+   * And again whenever the panel changes width, which the effect above cannot
+   * see: a phone turning, the dashboard's two columns collapsing into one.
+   * The content is the same, so nothing in the dependencies moves, and the
+   * graph is left sitting on January at whatever offset the old width had.
+   *
+   * Only on a width change — a scroll does not resize anything, so scrolling
+   * back through the year is never yanked forward.
+   */
+  const lastWidth = useRef(0);
+  useEffect(() => {
+    const node = scroller.current;
+    if (!node || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      if (node.clientWidth === lastWidth.current) return;
+      lastWidth.current = node.clientWidth;
+      node.scrollLeft = node.scrollWidth;
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [byMonth, combined]);
 
   return (
     <div className="glass-panel">
@@ -222,17 +271,27 @@ export default function StreakGraph({
         )}
       </div>
 
-      <div className="py-3">
-        {combined ? (
+      {/* One row, always, whichever shape — the recent end at the right, and
+          as much of the past as you care to scroll back to. Months used to
+          wrap onto a second and third line, which puts the current month in
+          the middle of the panel and the oldest one in the corner your eye
+          starts at. */}
+      {combined ? (
+        // Not inside the scroller below: the stacked view keeps its own, with
+        // the track names pinned outside it. Nested, the names would slide
+        // away with the years and the rows would stop saying whose they are.
+        <div className="py-3">
           <AllTracksYear tracks={tracks} year={year} today={today} weekStartsOn={settings.weekStartsOn} />
-        ) : byMonth ? (
-          // Months wrap across the panel rather than running off the side of
-          // it. Each block starts on the weekday its 1st fell on, which is
-          // what makes a month recognisable as that month.
-          <div className="flex flex-wrap gap-x-5 gap-y-4">
+        </div>
+      ) : (
+      <div ref={scroller} className="-mx-1 overflow-x-auto px-1 py-3">
+        {byMonth ? (
+          <div className="flex w-max gap-5">
             {months.map((month) => (
               <div key={month.key} className="flex flex-col gap-1.5">
                 <span className="text-[0.68rem] font-semibold text-muted-foreground">{month.label}</span>
+                {/* Each block starts on the weekday its 1st fell on, which is
+                    what makes a month recognisable as that month. */}
                 <StreakGrid
                   cells={month.cells.map((day, index) => cellFor(day, `${month.key}-pad-${index}`))}
                   onCellClick={setSelectedDateDetails}
@@ -244,13 +303,10 @@ export default function StreakGraph({
             )}
           </div>
         ) : (
-          // A whole year at a readable cell size is wider than a half-width
-          // panel, so it scrolls sideways rather than shrinking its days.
-          <div className="-mx-1 overflow-x-auto px-1 pb-1">
-            <StreakGrid cells={cells} onCellClick={setSelectedDateDetails} />
-          </div>
+          <StreakGrid cells={cells} onCellClick={setSelectedDateDetails} />
         )}
       </div>
+      )}
 
       {/* The key. Four strengths of the track's own colour, and the day it
           began in the page's opposite — which is why the colours a track can
