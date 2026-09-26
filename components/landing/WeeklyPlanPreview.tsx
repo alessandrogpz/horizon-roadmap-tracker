@@ -1,16 +1,19 @@
 import { CalendarDays, Check } from "lucide-react";
 
 /**
- * A static replica of the Weekly Study Plan panel, showing a real week from the
- * engine track this app was originally built for. It's an illustration on the
- * landing page, so it's markup rather than the live component: no workspace, no
- * IndexedDB, no client JS. The day cards deliberately mirror
- * `components/WeeklyPlan.tsx`'s DayCard — focus tag, revision list, focus list,
- * today's highlight, dimmed future days — so what a visitor sees here is what
- * they get.
+ * A replica of the Weekly Plan panel, showing a training week.
  *
- * It reuses the app's own `.week-grid` / `.week-grid-scroll` classes, so it
- * scrolls sideways on a phone exactly like the real panel does.
+ * It used to show a week of the graphics-and-engine track this app was built
+ * for, with a DSA rotation on "Two Pointers" and a maths rotation on "Linear
+ * Algebra" — which asks a visitor to understand two unfamiliar things before
+ * they can judge the third. A training week explains itself: everybody knows
+ * what a push day is, and what it means for the emphasis to move on next week.
+ *
+ * Markup rather than the live component: no workspace, no IndexedDB, no client
+ * JS. The day cards deliberately mirror `components/WeeklyPlan.tsx`'s DayCard —
+ * focus tag, the two lists, today's highlight, dimmed future days — and it
+ * reuses the app's own `.week-grid` classes, so it scrolls sideways on a phone
+ * exactly like the real panel does.
  */
 
 interface PreviewDay {
@@ -18,91 +21,133 @@ interface PreviewDay {
   /** Focus type label and colour, as configured on the track. */
   label: string;
   color: string;
-  revision?: { title: string; done: boolean }[];
-  focus: { title: string; done: boolean }[];
+  /** The two lists a day carries. Their headings are the track's own words —
+   *  a study track calls them Revision and Focus, a training one Warm-up and
+   *  Session — so they travel with the data rather than being hard-coded. */
+  lists: { heading: string; items: { title: string; done: boolean }[] }[];
   state: "past" | "today" | "future";
 }
+
+const PUSH = "#f59e0b";
+const PULL = "#0ea5e9";
+const LEGS = "#a855f7";
+const CARDIO = "#22c55e";
+const REST = "#a1a1aa";
 
 const DAYS: PreviewDay[] = [
   {
     name: "Mon",
-    label: "Math",
-    color: "#a78bfa",
-    revision: [{ title: "Two Pointers", done: true }],
-    focus: [
-      { title: "Mathematics", done: true },
-      { title: "C++ Book", done: true },
-      { title: "Ray Tracer", done: true },
+    label: "Push",
+    color: PUSH,
+    lists: [
+      { heading: "Warm-up", items: [{ title: "Shoulder mobility", done: true }] },
+      {
+        heading: "Session",
+        items: [
+          { title: "Bench press", done: true },
+          { title: "Overhead press", done: true },
+          { title: "Triceps", done: true },
+        ],
+      },
     ],
     state: "past",
   },
   {
     name: "Tue",
-    label: "DSA Pattern",
-    color: "#34d399",
-    revision: [{ title: "Linear Algebra", done: true }],
-    focus: [
-      { title: "DSA Pattern Study", done: true },
-      { title: "C++ Book", done: true },
-      { title: "LearnOpenGL", done: false },
+    label: "Pull",
+    color: PULL,
+    lists: [
+      { heading: "Warm-up", items: [{ title: "Band pull-aparts", done: true }] },
+      {
+        heading: "Session",
+        items: [
+          { title: "Deadlift", done: true },
+          { title: "Barbell row", done: true },
+          { title: "Curls", done: false },
+        ],
+      },
     ],
     state: "past",
   },
   {
     name: "Wed",
-    label: "Math",
-    color: "#a78bfa",
-    revision: [{ title: "Two Pointers", done: true }],
-    focus: [
-      { title: "Mathematics", done: true },
-      { title: "C++ Book", done: true },
-      { title: "Ray Tracer", done: true },
+    label: "Legs",
+    color: LEGS,
+    lists: [
+      { heading: "Warm-up", items: [{ title: "Hip mobility", done: true }] },
+      {
+        heading: "Session",
+        items: [
+          { title: "Front squat", done: true },
+          { title: "Walking lunges", done: true },
+          { title: "Calves", done: true },
+        ],
+      },
     ],
     state: "past",
   },
   {
     name: "Thu",
-    label: "DSA Pattern",
-    color: "#34d399",
-    revision: [{ title: "Linear Algebra", done: true }],
-    focus: [
-      { title: "DSA Pattern Study", done: true },
-      { title: "C++ Book", done: false },
-      { title: "LearnOpenGL", done: false },
+    label: "Push",
+    color: PUSH,
+    lists: [
+      { heading: "Warm-up", items: [{ title: "Shoulder mobility", done: true }] },
+      {
+        heading: "Session",
+        items: [
+          { title: "Incline press", done: true },
+          { title: "Dips", done: false },
+          { title: "Lateral raises", done: false },
+        ],
+      },
     ],
     state: "today",
   },
   {
     name: "Fri",
-    label: "Math",
-    color: "#a78bfa",
-    revision: [{ title: "Two Pointers", done: false }],
-    focus: [
-      { title: "Mathematics", done: false },
-      { title: "C++ Book", done: false },
-      { title: "Ray Tracer", done: false },
+    label: "Pull",
+    color: PULL,
+    lists: [
+      { heading: "Warm-up", items: [{ title: "Band pull-aparts", done: false }] },
+      {
+        heading: "Session",
+        items: [
+          { title: "Pull-ups", done: false },
+          { title: "Cable row", done: false },
+          { title: "Face pulls", done: false },
+        ],
+      },
     ],
     state: "future",
   },
   {
     name: "Sat",
-    label: "DS Implementation",
-    color: "#fbbf24",
-    revision: [{ title: "Linear Algebra", done: false }],
-    focus: [
-      { title: "Data Structure Implementation", done: false },
-      { title: "C++ Book", done: false },
-      { title: "LearnOpenGL", done: false },
+    label: "Conditioning",
+    color: CARDIO,
+    lists: [
+      { heading: "Warm-up", items: [{ title: "Easy jog, 10 min", done: false }] },
+      {
+        heading: "Session",
+        items: [
+          { title: "5km at tempo", done: false },
+          { title: "Core circuit", done: false },
+        ],
+      },
     ],
     state: "future",
   },
   {
     name: "Sun",
-    label: "Free",
-    color: "#a1a1aa",
-    focus: [
-      { title: "Review week's problems", done: false },
-      { title: "Catch up on readings", done: false },
+    label: "Rest",
+    color: REST,
+    lists: [
+      {
+        heading: "Session",
+        items: [
+          { title: "Long walk", done: false },
+          { title: "Stretch, 15 min", done: false },
+        ],
+      },
     ],
     state: "future",
   },
@@ -158,14 +203,14 @@ function ItemList({
 
 export default function WeeklyPlanPreview() {
   return (
-    <div className="glass-panel select-none border-l-4 border-accent-muted">
+    <div className="glass-panel landing-lift select-none border-l-4 border-accent-muted">
       <div className="flex flex-col gap-3">
         {/* Header — title, the week the plan is showing, and the rotation pill */}
         <div className="flex flex-col gap-3 border-b border-card-border pb-3">
           <div className="flex flex-wrap items-center gap-3">
             <h3 className="m-0 inline-flex items-center gap-2 whitespace-nowrap text-[1.1rem] font-semibold text-foreground">
               <CalendarDays size={16} strokeWidth={2.5} className="text-muted-foreground" />
-              Weekly Study Plan
+              Weekly Training Plan
             </h3>
             <span className="shrink-0 rounded-md border border-card-border bg-surface-muted px-3 py-1 font-mono text-[0.85rem] font-medium">
               Week 12
@@ -174,15 +219,15 @@ export default function WeeklyPlanPreview() {
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-2 whitespace-nowrap rounded-md border border-dashed border-accent/30 bg-accent/[0.08] px-3 py-1.5">
               <span className="text-[0.7rem] font-semibold uppercase tracking-[0.05em] text-muted-foreground">
-                DSA rotation:
+                Upper rotation:
               </span>
-              <span className="font-mono text-[0.85rem] font-bold text-accent">Two Pointers</span>
+              <span className="font-mono text-[0.85rem] font-bold text-accent">Incline press</span>
             </span>
             <span className="inline-flex items-center gap-2 whitespace-nowrap rounded-md border border-dashed border-accent/30 bg-accent/[0.08] px-3 py-1.5">
               <span className="text-[0.7rem] font-semibold uppercase tracking-[0.05em] text-muted-foreground">
-                Math rotation:
+                Lower rotation:
               </span>
-              <span className="font-mono text-[0.85rem] font-bold text-accent">Linear Algebra</span>
+              <span className="font-mono text-[0.85rem] font-bold text-accent">Front squat</span>
             </span>
           </div>
         </div>
@@ -224,10 +269,9 @@ export default function WeeklyPlanPreview() {
                     </span>
                   </div>
 
-                  {day.revision && (
-                    <ItemList heading="Revision" items={day.revision} isToday={isToday} />
-                  )}
-                  <ItemList heading="Focus" items={day.focus} isToday={isToday} />
+                  {day.lists.map((list) => (
+                    <ItemList key={list.heading} heading={list.heading} items={list.items} isToday={isToday} />
+                  ))}
                 </div>
               );
             })}
