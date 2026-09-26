@@ -7,6 +7,26 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.79.0] - 2026-09-26
+
+### Added
+- **Hold a row to scroll it on its own.** The stack of tracks in Progress answered one question —
+  what did these months look like across all of them — and could not answer the other, which is how
+  one track's summer compares with another's winter. A swipe still moves every row together, so the
+  columns stay lined up; holding a row for a moment first and then dragging moves that one alone. It
+  lifts, lights up in its own colour and the rest fade back, so it is never in doubt which one the
+  finger has hold of, and it keeps its new position after release until it is put back.
+
+  Hold-then-drag is the one that has to be asked for, because the common case should be the one you
+  get without knowing there is a choice — and it is already what My Space means by "pick this one
+  up".
+
+### Changed
+- The rows have air between them. They were a single block of squares in which a row was something
+  you had to count out.
+- The strips are no longer in a `ScrollView` — rows that can drift apart need an offset each, and a
+  `ScrollView` has exactly one — so they carry a scroll bar of their own making instead.
+
 ## [0.78.0] - 2026-09-26
 
 ### Added
