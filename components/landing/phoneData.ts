@@ -24,14 +24,20 @@ export const PREVIEW_TODAY = "2026-09-26";
  * would have written into it that a generated one cannot invent: what its
  * current phase is about, and what it is working through. The days, the
  * streaks and the timeline are all real output from the generator.
+ *
+ * Deliberately ordinary goals. The first of these used to be a graphics and
+ * engine track, which is the one this app was built for and the one fewest
+ * visitors can picture — a landing page is the wrong place to make someone
+ * work out what the example means before they can judge the tool.
  */
 const DRESSING = [
   {
-    name: "Graphics & engine dev",
-    phase: "Rasterizer & pipeline",
-    deliverables: ["Software rasterizer", "OBJ loader"],
-    materials: ["Real-Time Rendering", "PBR, 3rd ed."],
-    focus: ["Focus", "Focus", "Focus", "Focus", "Focus", "Review", "Free"],
+    name: "Learn the guitar",
+    phase: "Chords & rhythm",
+    deliverables: ["Play a song end to end", "Record a clean take"],
+    materials: ["Justin Guitar, grade 2", "Hal Leonard, book 1"],
+    focus: ["Practice", "Practice", "Theory", "Practice", "Practice", "Play", "Free"],
+    todo: ["Learn the F barre chord", "Metronome at 80bpm"],
   },
   {
     name: "Half marathon",
@@ -39,6 +45,7 @@ const DRESSING = [
     deliverables: ["Sub-2:00 at the 10k", "Long run past 18km"],
     materials: ["80/20 Running", "Club plan, week 12"],
     focus: ["Easy", "Intervals", "Rest", "Tempo", "Easy", "Long", "Rest"],
+    todo: ["Book the race", "New shoes before week 14"],
   },
   {
     name: "Land the senior role",
@@ -46,6 +53,7 @@ const DRESSING = [
     deliverables: ["Portfolio site", "Two write-ups published"],
     materials: ["Staff Engineer", "System design primer"],
     focus: ["Apply", "Build", "Build", "Apply", "Write", "Review", "Free"],
+    todo: ["Rewrite the CV summary", "Ask for two referrals"],
   },
 ];
 

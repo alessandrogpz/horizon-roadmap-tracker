@@ -7,6 +7,24 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.83.0] - 2026-09-26
+
+### Changed
+- **Every panel in the landing page's dashboard now does what its counterpart does.** Pick a day in
+  the Weekly Overview and that day's checklist opens under it; open the phase list and click a phase
+  to make it current; tick a deliverable, a material or a to-do; add a to-do; type in the notepad.
+  It is still a mock — nothing survives a reload — but nothing in it is a picture any more, and the
+  cards lift under the pointer, as do the cards on the rest of the page.
+- **The examples are ones anybody can picture.** The hero track was "Graphics & engine dev" and the
+  week was that track's twelfth, rotating through "Two Pointers" and "Linear Algebra" — which asks a
+  visitor to understand two unfamiliar things before they can judge the third. The hero track is
+  learning the guitar; the week is a training week, push and pull and legs, with the upper and lower
+  rotations moving on. Same panels, same behaviour, an example that explains itself.
+- Six pieces of copy cut or rewritten: the hero's sign-up footnote, the paragraph about why the
+  colours stop short of white and black (the swatches now carry a label instead), the second half of
+  the colour section's paragraph, and the phone section's. The hero no longer asks you to open it
+  *every morning*, and the comparison headline names Horizon rather than "a roadmap".
+
 ## [0.82.0] - 2026-09-26
 
 ### Added

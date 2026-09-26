@@ -88,9 +88,9 @@ const MODULES = [
 const TRACKS = [
   {
     color: TRACK_COLORS[0],
-    name: "Graphics & engine dev",
-    horizon: "13 months",
-    detail: "Phases from fundamentals to a shipped renderer, with a reading list and repo deliverables attached.",
+    name: "Learn the guitar",
+    horizon: "12 months",
+    detail: "Chords, then rhythm, then songs — with a practice rhythm for the week and a book to work through.",
   },
   {
     color: TRACK_COLORS[2],
@@ -294,8 +294,8 @@ export default function LandingPage() {
             <p className="max-w-xl text-[1rem] leading-relaxed text-muted-foreground sm:text-[1.08rem]">
               Not a to-do list. Give each goal its own{" "}
               <strong className="font-semibold text-foreground">track</strong> — a real deadline, the
-              phases in between, the rhythm you&apos;ll keep — then open it every morning and see
-              exactly where you are.
+              phases in between, the rhythm you&apos;ll keep — and whenever you open it, it tells you
+              where you are.
             </p>
 
             <Link
@@ -306,9 +306,6 @@ export default function LandingPage() {
               <ArrowRight size={16} strokeWidth={2.2} />
             </Link>
 
-            <p className="text-[0.8rem] text-subtle-foreground">
-              Free, and it opens straight into the app — there&apos;s nothing to sign up for.
-            </p>
           </div>
 
           {/* The app itself, working, rather than a drawing of it. The phone
@@ -331,23 +328,25 @@ export default function LandingPage() {
                 </h2>
                 <p className="text-[0.95rem] leading-relaxed text-muted-foreground">
                   Pick a track&apos;s colour when you make it and the whole app wears it while that
-                  track is open — buttons, rings, links, and its own run of days. Stack a year of
-                  them and it reads at a glance: whose row is whose, who is on a streak, and which
-                  weeks nobody turned up for.
+                  track is open — buttons, rings, links, and its own run of days.
                 </p>
-                <div className="mt-2 flex items-center gap-2">
-                  {TRACK_COLORS.map((color) => (
-                    <span
-                      key={color}
-                      className="h-6 w-6 rounded-full border border-black/20"
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
+                <div className="mt-2 flex flex-col gap-2">
+                  {/* The swatches need a name, or they are six circles sitting
+                      under a paragraph for no stated reason. */}
+                  <span className="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-subtle-foreground">
+                    Available track colours
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {TRACK_COLORS.map((color) => (
+                      <span
+                        key={color}
+                        title={color}
+                        className="h-6 w-6 rounded-full border border-black/20"
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
                 </div>
-                <p className="text-[0.8rem] text-subtle-foreground">
-                  Six, never white or black — those are reserved for the day a track began, so
-                  that mark stays findable whatever colour the track is wearing.
-                </p>
               </div>
               <div className="min-w-0">
                 <TrackStackPreview />
@@ -362,7 +361,8 @@ export default function LandingPage() {
             <div className="flex flex-col gap-3 max-w-2xl">
               <SectionLabel>The difference</SectionLabel>
               <h2 className="text-[1.6rem] font-semibold leading-tight tracking-tight sm:text-[2.1rem]">
-                A to-do list tells you what&apos;s left. A roadmap tells you where you are.
+                A to-do list tells you what&apos;s left.{" "}
+                <span className="text-accent">Horizon</span> tells you where you are.
               </h2>
               <p className="text-[0.95rem] leading-relaxed text-muted-foreground">
                 Long goals don&apos;t fail because you forgot a task. They fail because the distance
@@ -372,7 +372,7 @@ export default function LandingPage() {
             </div>
 
             <div className="mt-10 grid gap-4 sm:grid-cols-2">
-              <div className="glass-panel flex flex-col gap-4">
+              <div className="glass-panel landing-lift flex flex-col gap-4">
                 <h3 className="flex items-center gap-2 text-[0.8rem] font-semibold uppercase tracking-[0.06em] text-subtle-foreground">
                   <X size={14} strokeWidth={2.2} />
                   A to-do app
@@ -389,7 +389,7 @@ export default function LandingPage() {
                 </ul>
               </div>
 
-              <div className="glass-panel landing-panel-accent flex flex-col gap-4">
+              <div className="glass-panel landing-lift landing-panel-accent flex flex-col gap-4">
                 <h3 className="flex items-center gap-2 text-[0.8rem] font-semibold uppercase tracking-[0.06em] text-accent">
                   <HorizonMark className="h-3 w-auto" />
                   Horizon
@@ -424,7 +424,7 @@ export default function LandingPage() {
 
             <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {TRACKS.map((track) => (
-                <div key={track.name} className="glass-panel flex flex-col gap-3">
+                <div key={track.name} className="glass-panel landing-lift flex flex-col gap-3">
                   <div className="flex items-center gap-2.5">
                     <span
                       className="h-2.5 w-2.5 shrink-0 rounded-full"
@@ -460,9 +460,8 @@ export default function LandingPage() {
                 This is what a week in a track actually looks like.
               </h2>
               <p className="text-[0.95rem] leading-relaxed text-muted-foreground">
-                Below is week 12 of the engine track this app was built for — the real plan, not a
-                mock-up. Each day carries the focus type it was assigned, the rotation due on it and
-                the work that belongs there.
+                Below is week 12 of a training track. Each day carries the focus type it was
+                assigned, the rotation due on it and the work that belongs there.
               </p>
             </div>
 
@@ -495,7 +494,7 @@ export default function LandingPage() {
 
             <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {MODULES.map(({ icon: Icon, title, body }) => (
-                <div key={title} className="glass-panel flex flex-col gap-3">
+                <div key={title} className="glass-panel landing-lift flex flex-col gap-3">
                   <span className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-control)] border border-card-border bg-surface-muted text-accent">
                     <Icon size={17} strokeWidth={1.9} />
                   </span>
@@ -506,7 +505,7 @@ export default function LandingPage() {
             </div>
 
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <div className="glass-panel flex gap-4">
+              <div className="glass-panel landing-lift flex gap-4">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-control)] border border-card-border bg-surface-muted text-warning">
                   <Repeat size={17} strokeWidth={1.9} />
                 </span>
@@ -519,7 +518,7 @@ export default function LandingPage() {
                   </p>
                 </div>
               </div>
-              <div className="glass-panel flex gap-4">
+              <div className="glass-panel landing-lift flex gap-4">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-control)] border border-card-border bg-surface-muted text-warning">
                   <LayoutGrid size={17} strokeWidth={1.9} />
                 </span>
@@ -545,9 +544,8 @@ export default function LandingPage() {
                 The same tracks, rebuilt for a thumb.
               </h2>
               <p className="text-[0.95rem] leading-relaxed text-muted-foreground">
-                Not the website squeezed into a phone. The same data and the same rules, one shared
-                core, laid out again for one hand: the grid turns ninety degrees so a day is big
-                enough to press, and the gym gets a table you can type into between sets.
+                Not the website squeezed into a phone. Same data, same rules, laid out for one hand —
+                the grid turns ninety degrees so a day is big enough to press.
               </p>
             </div>
 
@@ -579,7 +577,7 @@ export default function LandingPage() {
             </div>
 
             <div className="mt-12 grid gap-4 sm:grid-cols-2">
-              <div className="glass-panel flex flex-col gap-2">
+              <div className="glass-panel landing-lift flex flex-col gap-2">
                 <h3 className="flex items-center gap-2 text-[0.95rem] font-semibold">
                   <Smartphone size={15} strokeWidth={2.2} className="text-accent" />
                   Install the website
@@ -590,7 +588,7 @@ export default function LandingPage() {
                   everything on this page is in it.
                 </p>
               </div>
-              <div className="glass-panel landing-panel-accent flex flex-col gap-2">
+              <div className="glass-panel landing-lift landing-panel-accent flex flex-col gap-2">
                 <h3 className="flex items-center gap-2 text-[0.95rem] font-semibold">
                   <Download size={15} strokeWidth={2.2} className="text-accent" />
                   Or the Android app
@@ -621,7 +619,7 @@ export default function LandingPage() {
 
             <div className="mt-10 grid gap-4 sm:grid-cols-2">
               {STEPS.map((step) => (
-                <div key={step.n} className="glass-panel flex gap-4">
+                <div key={step.n} className="glass-panel landing-lift flex gap-4">
                   <span className="font-mono text-[0.8rem] font-semibold text-accent">
                     {step.n}
                   </span>
@@ -658,7 +656,7 @@ export default function LandingPage() {
 
             <div className="mt-10 grid gap-4 sm:grid-cols-2">
               {ACCOUNT_POINTS.map(({ icon: Icon, title, body }) => (
-                <div key={title} className="glass-panel flex gap-4">
+                <div key={title} className="glass-panel landing-lift flex gap-4">
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-control)] border border-card-border bg-surface-muted text-accent">
                     <Icon size={17} strokeWidth={1.9} />
                   </span>
@@ -684,7 +682,7 @@ export default function LandingPage() {
 
             <div className="mt-10 grid gap-4 sm:grid-cols-2">
               {DATA_POINTS.map(({ icon: Icon, title, body }) => (
-                <div key={title} className="glass-panel flex gap-4">
+                <div key={title} className="glass-panel landing-lift flex gap-4">
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-control)] border border-card-border bg-surface-muted text-success">
                     <Icon size={17} strokeWidth={1.9} />
                   </span>
