@@ -25,6 +25,7 @@ export default function TrackYearStrip({
   gap = 2,
   start,
   today,
+  pad = true,
   className,
 }: {
   /** Week-major, padded to sevens — what `yearCalendar` and `streakCalendar`
@@ -37,6 +38,9 @@ export default function TrackYearStrip({
    *  whichever colour the track is wearing. */
   start?: string;
   today?: string;
+  /** Pad the front out to a whole year, so that every track in a list draws a
+   *  day at the same size whatever age it is. */
+  pad?: boolean;
   className?: string;
 }) {
   // Always the full year, with the empty weeks padded in at the front. Sized
@@ -46,7 +50,10 @@ export default function TrackYearStrip({
   const recent = days.slice(-YEAR_WEEKS * 7);
   const weeks: StreakDay[][] = [];
   for (let i = 0; i < recent.length; i += 7) weeks.push(recent.slice(i, i + 7));
-  while (weeks.length < YEAR_WEEKS) weeks.unshift(BLANK_WEEK);
+  // Padded to a full year only when a full year was asked for. A caller that
+  // hands over ten weeks wants ten columns, not ten with forty-three empty
+  // ones in front of them.
+  if (pad) while (weeks.length < YEAR_WEEKS) weeks.unshift(BLANK_WEEK);
 
   return (
     <div className={className} style={{ display: "flex", gap }}>
