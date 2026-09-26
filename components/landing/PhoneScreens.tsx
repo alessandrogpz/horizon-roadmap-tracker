@@ -1,10 +1,17 @@
+"use client";
+
 /**
  * Three phone screens, drawn from the app's own parts and the app's own demo
  * data: the run of days, the home column, and a set being logged.
  *
- * All server-rendered and static — see `phoneData.ts` for why the date is
- * pinned.
+ * They respond the way the app does — the shape control switches, a day
+ * highlights, a set ticks, a panel opens — because three phones you cannot
+ * touch, sitting under a heading about what the app is like in your hand,
+ * make the opposite point from the one intended. The date is pinned; see
+ * `phoneData.ts`.
  */
+
+import { useState } from "react";
 
 import {
   BookOpen,
@@ -58,18 +65,28 @@ function AppBar({ title, back = true }: { title: string; back?: boolean }) {
 }
 
 /** The phone's segmented control: the two ways of laying the same days out. */
-function Segmented({ options, value }: { options: string[]; value: string }) {
+function Segmented({
+  options,
+  value,
+  onPick,
+}: {
+  options: string[];
+  value: string;
+  onPick: (option: string) => void;
+}) {
   return (
     <div className="flex rounded-lg border border-card-border bg-surface-muted p-0.5">
       {options.map((option) => (
-        <span
+        <button
           key={option}
-          className={`flex-1 rounded-[6px] py-1 text-center text-[0.55rem] font-semibold ${
-            option === value ? "bg-card text-foreground" : "text-muted-foreground"
+          onClick={() => onPick(option)}
+          aria-pressed={option === value}
+          className={`flex-1 cursor-pointer rounded-[6px] py-1 text-center text-[0.55rem] font-semibold transition-colors ${
+            option === value ? "bg-card text-foreground" : "text-muted-foreground hover:text-foreground"
           }`}
         >
           {option}
-        </span>
+        </button>
       ))}
     </div>
   );
@@ -104,6 +121,9 @@ function Tile({
 
 /** Progress: the run of days, laid out down the screen rather than across it. */
 export function ProgressScreen() {
+  const [shape, setShape] = useState("Continuous");
+  const [picked, setPicked] = useState<string | null>(null);
+
   return (
     <div className="flex h-full flex-col gap-2 pt-1">
       <AppBar title={PREVIEW_TRACK.name} />
@@ -114,7 +134,7 @@ export function ProgressScreen() {
         <Tile icon={<Calendar size={8} strokeWidth={3} />} label="Last 30" value={PREVIEW_TRACK.stats.activeLast30} unit="active" />
       </div>
 
-      <Segmented options={["By month", "Continuous"]} value="Continuous" />
+      <Segmented options={["By month", "Continuous"]} value={shape} onPick={setShape} />
 
       <div className="flex items-center justify-center gap-2">
         <span className="flex h-4 w-4 items-center justify-center rounded border border-card-border">
@@ -145,18 +165,36 @@ export function ProgressScreen() {
               </span>
             ) : null}
             {week.map((day) => (
-              <span
+              <button
                 key={day.date}
-                className="h-[26px] w-[26px] rounded"
+                onClick={() => setPicked((current) => (current === day.date ? null : day.date))}
+                title={`${day.date}: ${day.count} logged`}
+                className="h-[26px] w-[26px] cursor-pointer rounded transition-transform hover:scale-110"
                 style={{
                   background: shadeOf(ACCENT, day.count, "var(--streak-0)"),
-                  boxShadow: day.date === PREVIEW_TODAY ? "inset 0 0 0 2px var(--foreground)" : undefined,
+                  boxShadow:
+                    day.date === picked
+                      ? `inset 0 0 0 2px ${ACCENT}`
+                      : day.date === PREVIEW_TODAY
+                        ? "inset 0 0 0 2px var(--foreground)"
+                        : undefined,
                 }}
               />
             ))}
           </div>
         ))}
       </div>
+
+      {picked && (
+        <div className="flex items-center justify-between gap-2 rounded border border-card-border bg-card px-2 py-1 text-[0.55rem]">
+          <span className="text-foreground">
+            {picked} · {PREVIEW_WEEKS.flat().find((day) => day.date === picked)?.count ?? 0} logged
+          </span>
+          <button onClick={() => setPicked(null)} className="cursor-pointer text-subtle-foreground">
+            ✕
+          </button>
+        </div>
+      )}
 
       <div className="mt-auto flex items-center gap-1 pt-1 text-[0.48rem] text-subtle-foreground">
         <span>Less</span>
@@ -181,15 +219,18 @@ export function ProgressScreen() {
 /** The panels below the two open ones, collapsed to their headers — which is
  *  what the column actually looks like once a few are folded away. */
 const PANELS = [
-  { icon: Flame, title: "Consistency", tint: "#22c55e" },
-  { icon: Dumbbell, title: "Workout", tint: "#f59e0b" },
-  { icon: Timer, title: "Timer", tint: "#ef4444" },
-  { icon: BookOpen, title: "Materials", tint: "#0ea5e9" },
-  { icon: StickyNote, title: "Notepad", tint: "#a855f7" },
+  { icon: Flame, title: "Consistency", tint: "#22c55e", blurb: "A year of days, a week to a row. Tap one to see what was done on it." },
+  { icon: Dumbbell, title: "Workout", tint: "#f59e0b", blurb: "Named sessions — push, pull, legs — with a row per set." },
+  { icon: Timer, title: "Timer", tint: "#ef4444", blurb: "Twenty-five minutes of work, five of rest, beside the plan it belongs to." },
+  { icon: BookOpen, title: "Materials", tint: "#0ea5e9", blurb: "Books, courses and links, each with its own notes." },
+  { icon: StickyNote, title: "Notepad", tint: "#a855f7", blurb: "Jot it down here, sort it out later." },
 ];
 
 /** My Space: the whole track as one column of panels you drag into order. */
 export function MySpaceScreen() {
+  const [day, setDay] = useState(5);
+  const [open, setOpen] = useState<string | null>(null);
+
   return (
     <div className="flex h-full flex-col gap-2 pt-1">
       <AppBar title={PREVIEW_TRACK.name} back={false} />
@@ -204,17 +245,23 @@ export function MySpaceScreen() {
           Weekly Overview
         </span>
         <div className="flex justify-between">
-          {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day, index) => (
-            <span key={day} className="flex flex-col items-center gap-1">
+          {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((name, index) => (
+            <button
+              key={name}
+              onClick={() => setDay(index)}
+              className="flex cursor-pointer flex-col items-center gap-1"
+            >
               <span
-                className="h-[13px] w-[13px] rounded-full"
+                className="h-[13px] w-[13px] rounded-full transition-transform hover:scale-110"
                 style={{
                   background: index === 5 ? "#22c55e" : index === 6 ? "var(--surface-hover)" : ACCENT,
-                  boxShadow: index === 5 ? "0 0 0 2px var(--foreground)" : undefined,
+                  boxShadow: index === day ? "0 0 0 2px var(--foreground)" : undefined,
                 }}
               />
-              <span className={`text-[0.45rem] ${index === 5 ? "font-bold text-foreground" : "text-subtle-foreground"}`}>{day}</span>
-            </span>
+              <span className={`text-[0.45rem] ${index === day ? "font-bold text-foreground" : "text-subtle-foreground"}`}>
+                {name}
+              </span>
+            </button>
           ))}
         </div>
       </div>
@@ -243,17 +290,30 @@ export function MySpaceScreen() {
 
       {/* The rest, collapsed */}
       {PANELS.map((panel) => (
-        <div key={panel.title} className="flex items-center gap-1.5 rounded-xl border border-card-border bg-card p-2.5 text-[0.62rem] font-bold text-foreground">
-          <span className="flex h-4 w-4 items-center justify-center rounded" style={{ background: `${panel.tint}28`, color: panel.tint }}>
-            <panel.icon size={9} strokeWidth={2.5} />
-          </span>
-          {panel.title}
-          {panel.title === "Consistency" && (
-            <span className="ml-auto text-[0.62rem] font-bold" style={{ color: "#22c55e" }}>
-              {PREVIEW_TRACK.streak} days
+        <button
+          key={panel.title}
+          onClick={() => setOpen((current) => (current === panel.title ? null : panel.title))}
+          className={`flex w-full cursor-pointer flex-col gap-1.5 rounded-xl border bg-card p-2.5 text-left transition-colors ${
+            open === panel.title ? "border-accent-muted" : "border-card-border hover:border-card-border-hover"
+          }`}
+        >
+          <span className="flex items-center gap-1.5 text-[0.62rem] font-bold text-foreground">
+            <span className="flex h-4 w-4 items-center justify-center rounded" style={{ background: `${panel.tint}28`, color: panel.tint }}>
+              <panel.icon size={9} strokeWidth={2.5} />
             </span>
+            {panel.title}
+            {panel.title === "Consistency" && (
+              <span className="ml-auto text-[0.62rem] font-bold" style={{ color: "#22c55e" }}>
+                {PREVIEW_TRACK.streak} days
+              </span>
+            )}
+          </span>
+          {/* A panel opens where it stands, which is what tapping one does on
+              the phone — no screen change, the column just makes room. */}
+          {open === panel.title && (
+            <span className="text-[0.55rem] leading-snug text-muted-foreground">{panel.blurb}</span>
           )}
-        </div>
+        </button>
       ))}
     </div>
   );
@@ -268,6 +328,10 @@ const SETS = [
 
 /** Workout: a session logged set by set, on the phone only. */
 export function WorkoutScreen() {
+  const [done, setDone] = useState<Record<number, boolean>>(() =>
+    Object.fromEntries(SETS.map((row) => [row.set, row.done]))
+  );
+
   return (
     <div className="flex h-full flex-col gap-2.5 pt-1">
       <AppBar title="Workout" />
@@ -286,10 +350,12 @@ export function WorkoutScreen() {
           <span />
         </div>
         {SETS.map((row) => (
-          <div
+          <button
             key={row.set}
-            className="grid grid-cols-[22px_1fr_44px_38px_20px] items-center gap-x-1.5 rounded-md px-0.5 py-1 text-[0.6rem]"
-            style={{ background: row.done ? `${ACCENT}1f` : "transparent" }}
+            onClick={() => setDone((current) => ({ ...current, [row.set]: !current[row.set] }))}
+            title={`Tick set ${row.set}`}
+            className="grid w-full cursor-pointer grid-cols-[22px_1fr_44px_38px_20px] items-center gap-x-1.5 rounded-md px-0.5 py-1 text-left text-[0.6rem] transition-colors"
+            style={{ background: done[row.set] ? `${ACCENT}1f` : "transparent" }}
           >
             <span className="font-bold text-muted-foreground">{row.set}</span>
             <span className="font-mono text-subtle-foreground">{row.previous}</span>
@@ -298,9 +364,9 @@ export function WorkoutScreen() {
             <CheckCircle2
               size={13}
               strokeWidth={2.5}
-              style={{ color: row.done ? ACCENT : "var(--subtle-foreground)" }}
+              style={{ color: done[row.set] ? ACCENT : "var(--subtle-foreground)" }}
             />
-          </div>
+          </button>
         ))}
         <span className="text-[0.55rem] font-semibold" style={{ color: ACCENT }}>
           + Add set

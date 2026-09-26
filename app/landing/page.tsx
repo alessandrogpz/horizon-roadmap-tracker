@@ -26,6 +26,7 @@ import HorizonMark from "@/components/HorizonMark";
 import ThemeToggle from "@/components/ThemeToggle";
 import AppPreview from "@/components/landing/AppPreview";
 import Reveal from "@/components/landing/Reveal";
+import SmoothAnchors from "@/components/landing/SmoothAnchors";
 import WeeklyPlanPreview from "@/components/landing/WeeklyPlanPreview";
 import PhoneFrame from "@/components/landing/PhoneFrame";
 import TrackStackPreview from "@/components/landing/TrackStackPreview";
@@ -66,12 +67,12 @@ const MODULES = [
   {
     icon: BookMarked,
     title: "Materials",
-    body: "Books, courses, papers and links grouped into collapsible categories — each with its own markdown notes and a live preview pane.",
+    body: "Books, courses, videos and links, grouped how you like — each with its own notes beside it.",
   },
   {
     icon: GitBranch,
     title: "Deliverables",
-    body: "The things a track has to actually produce. Repo-backed items pull live git stats: branch, uncommitted changes, last commit message.",
+    body: "The things a track has to actually produce, ticked off as they land. Link a code repository and it keeps an eye on that too.",
   },
   {
     icon: Timer,
@@ -106,6 +107,15 @@ const TRACKS = [
   },
 ];
 
+/** What each tab of a drawn phone shows. Shared by all three, so every tab
+ *  bar on the page goes somewhere — Today is the one screen not drawn, and
+ *  it keeps whatever was on the screen rather than blanking it. */
+const PHONE_SCREENS = {
+  space: <MySpaceScreen />,
+  plan: <WorkoutScreen />,
+  progress: <ProgressScreen />,
+};
+
 const COMPARISON = [
   {
     todo: "A flat list that resets every morning",
@@ -121,7 +131,7 @@ const COMPARISON = [
   },
   {
     todo: "Tasks with no story behind them",
-    horizon: "A full markdown roadmap living behind every track",
+    horizon: "A full written plan living behind every track",
   },
 ];
 
@@ -139,7 +149,7 @@ const STEPS = [
   {
     n: "03",
     title: "Shape the phases",
-    body: "Rewrite the placeholder phases, add your own, give each a deadline. Then write the full plan in markdown if you want one.",
+    body: "Rewrite the placeholder phases, add your own, give each a deadline. Then write the plan out in full if you want one.",
   },
   {
     n: "04",
@@ -233,6 +243,8 @@ export default function LandingPage() {
   return (
     <div className="relative min-h-screen overflow-x-hidden">
       <div className="app-glow" />
+      {/* Every in-page link rolls to where it points rather than snapping. */}
+      <SmoothAnchors />
 
       {/* ── Nav ─────────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 border-b border-card-border bg-background/80 backdrop-blur-md">
@@ -324,11 +336,12 @@ export default function LandingPage() {
               <div className="flex min-w-0 flex-col gap-3">
                 <SectionLabel>One colour each</SectionLabel>
                 <h2 className="text-[1.6rem] font-semibold leading-tight tracking-tight sm:text-[2.1rem]">
-                  Three tracks, three colours, one year.
+                  Every track in its own colour, on one year.
                 </h2>
                 <p className="text-[0.95rem] leading-relaxed text-muted-foreground">
                   Pick a track&apos;s colour when you make it and the whole app wears it while that
-                  track is open — buttons, rings, links, and its own run of days.
+                  track is open — buttons, rings, links, and its own run of days. Run as many tracks
+                  as you like; they stack on the same calendar, whatever their number.
                 </p>
                 <div className="mt-2 flex flex-col gap-2">
                   {/* The swatches need a name, or they are six circles sitting
@@ -512,7 +525,7 @@ export default function LandingPage() {
                 <div className="flex flex-col gap-1.5">
                   <h3 className="text-[0.95rem] font-semibold">Rotations</h3>
                   <p className="text-[0.85rem] leading-relaxed text-muted-foreground">
-                    For anything that cycles — a ten-week algorithm rotation on Mon/Wed/Fri, a
+                    For anything that cycles — a ten-week exercise rotation on Mon/Wed/Fri, a
                     reading rotation on Tue/Thu. Define the cycle once; the right item lands in
                     the right day automatically, week after week.
                   </p>
@@ -555,6 +568,7 @@ export default function LandingPage() {
                 accent={TRACK_COLORS[0]}
                 label="Progress"
                 caption="A week to a row, running down the page. Tap any day to see what was done on it."
+                screens={PHONE_SCREENS}
               >
                 <ProgressScreen />
               </PhoneFrame>
@@ -563,6 +577,7 @@ export default function LandingPage() {
                 accent={TRACK_COLORS[0]}
                 label="My Space"
                 caption="The whole track as one column. Hold any panel to pick it up and rearrange."
+                screens={PHONE_SCREENS}
               >
                 <MySpaceScreen />
               </PhoneFrame>
@@ -571,6 +586,7 @@ export default function LandingPage() {
                 accent={TRACK_COLORS[0]}
                 label="Workout"
                 caption="A row per set, with last week's numbers beside today's. Phone only."
+                screens={PHONE_SCREENS}
               >
                 <WorkoutScreen />
               </PhoneFrame>
@@ -636,7 +652,7 @@ export default function LandingPage() {
         </section>
 
         {/* ── Accounts ──────────────────────────────────────────────────── */}
-        <section id="accounts" className="border-t border-card-border">
+        <section id="accounts" className="scroll-mt-16 border-t border-card-border">
           <Reveal className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
             <div className="flex flex-col gap-3 max-w-2xl">
               <SectionLabel>Accounts</SectionLabel>
@@ -697,7 +713,7 @@ export default function LandingPage() {
         </section>
 
         {/* ── Questions ─────────────────────────────────────────────────── */}
-        <section id="questions" className="border-t border-card-border">
+        <section id="questions" className="scroll-mt-16 border-t border-card-border">
           <Reveal className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
             <div className="flex flex-col gap-3 max-w-2xl">
               <SectionLabel>Before you start</SectionLabel>
