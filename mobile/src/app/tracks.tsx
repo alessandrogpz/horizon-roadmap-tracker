@@ -21,12 +21,9 @@ import { ConfirmSheet, type Confirmation } from "../components/ConfirmSheet";
 import { DatePicker, describeDate } from "../components/DatePicker";
 import { getSettings } from "@shared/settings";
 import { streakCalendar } from "@shared/stats";
+import { firstFreeColor, TRACK_COLORS } from "@shared/trackColors";
 import { TrackHeatmap } from "../components/TrackHeatmap";
 import { Refreshable } from "../components/Refreshable";
-
-/** The colours a track can be. A fixed set rather than a picker: the picker
- *  is a native module, and these stay legible in both themes. */
-const TRACK_COLOURS = ["#0ea5e9", "#22c55e", "#f59e0b", "#ef4444", "#a855f7", "#64748b"];
 
 export default function TracksScreen() {
   const { workspace, today, switchTrack, addTrack, editTrackById, restoreWorkspace } = useWorkspace();
@@ -39,10 +36,7 @@ export default function TracksScreen() {
    *  allowed — six colours and no cap on tracks means it has to be — but it
    *  should not be what happens by default, because telling them apart in the
    *  list is the whole point of having colours. */
-  const suggestedColour = useMemo(() => {
-    const taken = new Set(tracks.map((track) => track.meta.color));
-    return TRACK_COLOURS.find((colour) => !taken.has(colour)) ?? TRACK_COLOURS[0];
-  }, [tracks]);
+  const suggestedColour = useMemo(() => firstFreeColor(tracks.map((track) => track.meta.color)), [tracks]);
   const [creating, setCreating] = useState(false);
   const [newStart, setNewStart] = useState(todayYMD);
   const [newEnd, setNewEnd] = useState("");
@@ -206,7 +200,11 @@ export default function TracksScreen() {
 
               {/* A year of this track, in this track's colour. What the list
                   is for is seeing which ones you are actually keeping up. */}
-              <TrackHeatmap days={streakCalendar(track, today, weekStartsOn)} colour={colour} />
+              <TrackHeatmap
+                days={streakCalendar(track, today, weekStartsOn)}
+                colour={colour}
+                start={track.startDate}
+              />
             </Pressable>
           </SwipeRow>
         );
@@ -343,7 +341,7 @@ function TrackSettings({
   palette: Palette;
 }) {
   const [name, setName] = useState(track?.meta.name ?? "");
-  const [color, setColor] = useState(track?.meta.color || TRACK_COLOURS[0]);
+  const [color, setColor] = useState(track?.meta.color || TRACK_COLORS[0]);
   const [startDate, setStartDate] = useState(track?.startDate ?? todayYMD());
   const [picking, setPicking] = useState<"start" | "end" | null>(null);
   const [endDate, setEndDate] = useState(() =>
@@ -452,7 +450,7 @@ function Swatches({
 }) {
   return (
     <View style={styles.swatches}>
-      {TRACK_COLOURS.map((option) => (
+      {TRACK_COLORS.map((option) => (
         <Pressable
           key={option}
           accessibilityRole="button"

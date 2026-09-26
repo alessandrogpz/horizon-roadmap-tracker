@@ -2,7 +2,7 @@
 // No React, no I/O — everything here is derived from a TrackState plus "what
 // day is it", so each shape is testable on its own.
 
-import type { Material, Phase, TrackState } from "./types";
+import type { CompletedItem, Material, Phase, TrackState } from "./types";
 import { currentStreakLength, completedItemTitle } from "./streak";
 import { dateForDay, dayForDate, daysSince, formatDateYMD, parseYMD } from "./dates";
 import { trackTotalDays, recommendedPhaseId } from "./trackActions";
@@ -119,6 +119,49 @@ export function streakCalendar(
   }
   while (days.length % 7 !== 0) days.push({ date: "", count: 0 });
   return days;
+}
+
+/**
+ * One calendar year of days, padded out to whole weeks at both ends.
+ *
+ * Unlike `streakCalendar`, which runs from a track's own start to today and so
+ * grows as the track does, this is a fixed shape you can step through a year
+ * at a time — and a shape that is the same for every track, which is what lets
+ * several be stacked with their columns lining up.
+ *
+ * Days outside the track's life are blank rather than zero: the track did not
+ * exist to be missed, and neither does tomorrow. The year is also capped at
+ * today, so the current one does not open on three months of empty December.
+ */
+export function yearCalendar(
+  history: Record<string, CompletedItem[]>,
+  startDate: string,
+  year: number,
+  todayStr: string,
+  weekStartsOn: "sun" | "mon" = "sun"
+): StreakDay[] {
+  if (!startDate) return [];
+  const counts: Record<string, number> = {};
+  Object.entries(history).forEach(([date, items]) => {
+    counts[date] = items?.length ?? 0;
+  });
+
+  const cursor = new Date(year, 0, 1);
+  const offset = weekStartsOn === "mon" ? (cursor.getDay() + 6) % 7 : cursor.getDay();
+  cursor.setDate(cursor.getDate() - offset);
+  const lastDay = new Date(year, 11, 31);
+  const now = parseYMD(todayStr);
+  const end = lastDay < now ? lastDay : now;
+
+  const out: StreakDay[] = [];
+  while (cursor <= end) {
+    const date = formatDateYMD(cursor);
+    const lived = date >= startDate && date <= todayStr;
+    out.push({ date: lived ? date : "", count: lived ? counts[date] ?? 0 : 0 });
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  while (out.length % 7 !== 0) out.push({ date: "", count: 0 });
+  return out;
 }
 
 // --- Timeline ----------------------------------------------------------
