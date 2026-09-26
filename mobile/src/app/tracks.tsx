@@ -14,11 +14,14 @@ import { dateForDay, dayForDate, formatDateYMD, isDateStr, todayYMD } from "@sha
 import { currentStreakLength } from "@shared/streak";
 import type { TrackState } from "@shared/types";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
-import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
+import { RADIUS, SPACING, TYPE, withAlpha, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { SwipeRow } from "../components/SwipeRow";
 import { ConfirmSheet, type Confirmation } from "../components/ConfirmSheet";
 import { DatePicker, describeDate } from "../components/DatePicker";
+import { getSettings } from "@shared/settings";
+import { streakCalendar } from "@shared/stats";
+import { TrackHeatmap } from "../components/TrackHeatmap";
 import { Refreshable } from "../components/Refreshable";
 
 /** The colours a track can be. A fixed set rather than a picker: the picker
@@ -27,14 +30,26 @@ const TRACK_COLOURS = ["#0ea5e9", "#22c55e", "#f59e0b", "#ef4444", "#a855f7", "#
 
 export default function TracksScreen() {
   const { workspace, today, switchTrack, addTrack, editTrackById, restoreWorkspace } = useWorkspace();
+  const weekStartsOn = getSettings().weekStartsOn;
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
 
   const tracks = workspace ? visibleTracks(workspace) : [];
+  /** The first colour nobody has taken. Two tracks in the same colour is
+   *  allowed — six colours and no cap on tracks means it has to be — but it
+   *  should not be what happens by default, because telling them apart in the
+   *  list is the whole point of having colours. */
+  const suggestedColour = useMemo(() => {
+    const taken = new Set(tracks.map((track) => track.meta.color));
+    return TRACK_COLOURS.find((colour) => !taken.has(colour)) ?? TRACK_COLOURS[0];
+  }, [tracks]);
   const [creating, setCreating] = useState(false);
   const [newStart, setNewStart] = useState(todayYMD);
   const [newEnd, setNewEnd] = useState("");
   const [name, setName] = useState("");
+  // Chosen before the template is, because the template row is also the
+  // button that creates the track — there is no step after it to ask in.
+  const [newColour, setNewColour] = useState<string | null>(null);
   const [settingsFor, setSettingsFor] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<Confirmation | null>(null);
   // Which date field is being chosen, if any. One picker serves them all
@@ -67,6 +82,8 @@ export default function TracksScreen() {
     [editTrackById, switchTrack, tracks, workspace]
   );
 
+  const chosenColour = newColour ?? suggestedColour;
+
   const create = useCallback(
     (templateId: string) => {
       const template = TEMPLATE_LIST.find((entry) => entry.id === templateId);
@@ -82,7 +99,9 @@ export default function TracksScreen() {
 
       const seeded = seedTrackFromTemplate(template, {
         name: name.trim() || template.label,
-        color: template.defaultColor,
+        // The colour is the track's own from here on: its accent everywhere
+        // inside it, and the ink its year of days is drawn in.
+        color: chosenColour,
         startDate: start,
         phases: template.buildPhases(days),
         weekSchedule: template.defaultWeekSchedule,
@@ -101,12 +120,13 @@ export default function TracksScreen() {
         ),
       });
       setName("");
+      setNewColour(null);
       setNewStart(todayYMD());
       setNewEnd("");
       setCreating(false);
       router.back();
     },
-    [addTrack, name, newEnd, newStart]
+    [addTrack, chosenColour, name, newEnd, newStart]
   );
 
   return (
@@ -114,6 +134,7 @@ export default function TracksScreen() {
       {tracks.map((track) => {
         const active = track.meta.id === workspace?.activeTrackId;
         const streak = currentStreakLength(track.streakHistory ?? [], today);
+        const colour = track.meta.color || palette.accent;
         const canDelete = tracks.length > 1;
         return (
           <SwipeRow
@@ -143,7 +164,7 @@ export default function TracksScreen() {
               accessibilityRole="button"
               accessibilityState={{ selected: active }}
               accessibilityHint={canDelete ? "Swipe right to delete" : undefined}
-              style={[styles.card, active && { borderColor: palette.accent }]}
+              style={[styles.card, { borderColor: active ? colour : palette.cardBorder }]}
               onPress={() => {
                 switchTrack(track.meta.id);
                 router.back();
@@ -153,14 +174,39 @@ export default function TracksScreen() {
               }}
               delayLongPress={350}
             >
-              <View style={[styles.dot, { backgroundColor: track.meta.color || palette.accent }]} />
-              <View style={styles.text}>
-                <Text style={styles.name}>{track.meta.name}</Text>
-                <Text style={styles.muted}>
-                  {streak > 0 ? `${streak} day${streak === 1 ? "" : "s"} in a row` : "no streak yet"}
-                  {active ? " · open" : ""}
-                </Text>
+              {/* The track's colour, laid over the card rather than replacing
+                  its background: an rgba background would composite against
+                  the page and take the card's lift with it. Faint — the row
+                  has a heatmap in the same colour and the tint is only there
+                  so the card is recognisably that track's before you read
+                  anything on it. */}
+              <View
+                pointerEvents="none"
+                style={[
+                  StyleSheet.absoluteFill,
+                  { borderRadius: RADIUS.card, backgroundColor: withAlpha(colour, active ? 0.12 : 0.05) },
+                ]}
+              />
+              <View style={styles.head}>
+                <View style={[styles.dot, { backgroundColor: colour }]} />
+                <View style={styles.text}>
+                  <Text style={styles.name}>{track.meta.name}</Text>
+                  <Text style={styles.muted}>
+                    {streak > 0 ? `${streak} day${streak === 1 ? "" : "s"} in a row` : "no streak yet"}
+                    {active ? " · open" : ""}
+                  </Text>
+                </View>
+                {streak > 0 && (
+                  <View style={[styles.streak, { backgroundColor: withAlpha(colour, 0.16) }]}>
+                    <Ionicons name="flame" size={12} color={colour} />
+                    <Text style={[styles.streakCount, { color: colour }]}>{streak}</Text>
+                  </View>
+                )}
               </View>
+
+              {/* A year of this track, in this track's colour. What the list
+                  is for is seeing which ones you are actually keeping up. */}
+              <TrackHeatmap days={streakCalendar(track, today, weekStartsOn)} colour={colour} />
             </Pressable>
           </SwipeRow>
         );
@@ -204,6 +250,12 @@ export default function TracksScreen() {
             autoFocus
             accessibilityLabel="Track name"
           />
+          <Text style={styles.fieldLabel}>Colour</Text>
+          {/* Not decoration. This is the accent the whole track wears from
+              here on — its buttons, its rings, its year of days — so it is
+              asked for at the same moment as the name. */}
+          <Swatches value={chosenColour} onPick={setNewColour} styles={styles} palette={palette} />
+
           <Text style={styles.fieldLabel}>Starts</Text>
           <DateField
             value={newStart}
@@ -230,7 +282,10 @@ export default function TracksScreen() {
           </Text>
           {TEMPLATE_LIST.map((template) => (
             <Pressable key={template.id} accessibilityRole="button" style={styles.templateRow} onPress={() => create(template.id)}>
-              <View style={[styles.dot, { backgroundColor: template.defaultColor }]} />
+              {/* The chosen colour, not the template's — these rows are the
+                  create button, and they should show what is about to be
+                  made rather than what the template would have picked. */}
+              <View style={[styles.dot, { backgroundColor: chosenColour }]} />
               <View style={styles.text}>
                 <Text style={styles.name}>{template.label}</Text>
                 <Text style={styles.muted}>{template.description}</Text>
@@ -319,22 +374,7 @@ function TrackSettings({
       />
 
       <Text style={styles.fieldLabel}>Colour</Text>
-      <View style={styles.swatches}>
-        {TRACK_COLOURS.map((option) => (
-          <Pressable
-            key={option}
-            accessibilityRole="button"
-            accessibilityLabel={`Colour ${option}`}
-            accessibilityState={{ selected: color === option }}
-            onPress={() => setColor(option)}
-            style={[
-              styles.swatch,
-              { backgroundColor: option },
-              color === option && { borderColor: palette.foreground, borderWidth: 2 },
-            ]}
-          />
-        ))}
-      </View>
+      <Swatches value={color} onPick={setColor} styles={styles} palette={palette} />
 
       <Text style={styles.fieldLabel}>Started on</Text>
       <DateField value={startDate} onPress={() => setPicking("start")} styles={styles} palette={palette} />
@@ -396,6 +436,41 @@ function TrackSettings({
   );
 }
 
+/** The six colours a track can wear, and which one it is wearing. Shared by
+ *  the create panel and the settings panel so that changing a track's colour
+ *  later is the same gesture as choosing it in the first place. */
+function Swatches({
+  value,
+  onPick,
+  styles,
+  palette,
+}: {
+  value: string;
+  onPick: (colour: string) => void;
+  styles: ReturnType<typeof makeStyles>;
+  palette: Palette;
+}) {
+  return (
+    <View style={styles.swatches}>
+      {TRACK_COLOURS.map((option) => (
+        <Pressable
+          key={option}
+          accessibilityRole="button"
+          accessibilityLabel={`Colour ${option}`}
+          accessibilityState={{ selected: value === option }}
+          onPress={() => onPick(option)}
+          style={[styles.swatch, { backgroundColor: option }]}
+        >
+          {/* The tick, rather than a ring around the outside. A ring on a
+              circle of colour reads as a seventh colour at a glance; a mark
+              inside it reads as a choice. */}
+          {value === option && <Ionicons name="checkmark" size={16} color="#ffffff" />}
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
 /** A date, shown as a date and opened as a picker. Never a text box: every
  *  date here feeds arithmetic — a phase deadline is a day count from the start
  *  — so an unparseable one is not a cosmetic problem, and the only thing the
@@ -434,8 +509,8 @@ function makeStyles(palette: Palette) {
     screen: { flex: 1, backgroundColor: palette.background },
     content: { padding: SPACING.lg, gap: SPACING.md },
     card: {
-      flexDirection: "row",
-      alignItems: "center",
+      // A name and a year of days, stacked. It was a single row when it held
+      // only the name.
       gap: SPACING.md,
       padding: SPACING.lg,
       borderRadius: RADIUS.card,
@@ -443,6 +518,16 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
     },
+    head: { flexDirection: "row", alignItems: "center", gap: SPACING.md },
+    streak: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 3,
+      paddingHorizontal: SPACING.sm,
+      paddingVertical: 3,
+      borderRadius: RADIUS.control,
+    },
+    streakCount: { ...TYPE.micro, fontWeight: "700" },
     dot: { width: 10, height: 10, borderRadius: 5 },
     text: { flex: 1, gap: 2 },
     name: { color: palette.foreground, ...TYPE.heading, fontWeight: "600" },
@@ -481,7 +566,15 @@ function makeStyles(palette: Palette) {
     },
     dateValue: { color: palette.foreground, ...TYPE.subhead, fontWeight: "600" },
     swatches: { flexDirection: "row", gap: SPACING.sm },
-    swatch: { width: 26, height: 26, borderRadius: 13, borderWidth: 1, borderColor: "rgba(0,0,0,0.2)" },
+    swatch: {
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 1,
+      borderColor: "rgba(0,0,0,0.2)",
+    },
     footnote: { color: palette.subtleForeground, ...TYPE.micro, lineHeight: 16 },
     input: {
       paddingHorizontal: SPACING.md,

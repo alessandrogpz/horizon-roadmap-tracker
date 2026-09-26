@@ -7,6 +7,38 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.77.0] - 2026-09-26
+
+### Added
+- **A colour per track, and a year of days to show it off.** Every track already carried a `color`
+  nobody had chosen and almost nothing drew. It is now asked for when the track is created — six
+  swatches beside the name, pre-picked to the first one no other track has taken — and from then on
+  it is the track's accent everywhere inside it: buttons, rings, links, the progress grid. Opening a
+  track changes the app's accent to it, which is one `setAccent` on the theme rather than a colour
+  threaded through every screen.
+
+- **The track list is now a list of years.** Each row carries fifty-three weeks of its own days
+  under the name, in the track's own colour, with the live streak beside it — which turns the track
+  switcher into the place you go to see which tracks you are actually keeping up. The grid measures
+  the card it is in and sizes a day to fit, and always draws the full year with the empty weeks
+  padded in at the front, so a three-week-old track and a two-year-old one have days of the same
+  size and can be compared at all.
+
+- **All tracks at once, in Progress.** A control beside the year switches the grid between this
+  track and every track combined — the one question three separate grids could not answer, which is
+  whether *anything* happened yesterday. A combined day is painted in the colour of whichever track
+  put the most into it, the key below the graph stops explaining depth and starts naming colours,
+  and tapping a day still says what was done, with each item told which track it came from. It only
+  appears when there is more than one track to combine.
+
+### Changed
+- The consistency grid is drawn in the track's colour instead of a hard-coded green. The day a track
+  began used to be painted in the accent, which stopped meaning anything once the scale itself
+  became the accent; it is now the full colour with a ring of the page cut out of it.
+- Months with nothing in them are no longer drawn. In the year a track began there could be eleven
+  of them — a heading over a block of empty squares — between the top of the graph and the first
+  real day.
+
 ## [0.76.2] - 2026-09-26
 
 ### Fixed
