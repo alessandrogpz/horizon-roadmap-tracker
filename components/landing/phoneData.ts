@@ -22,12 +22,20 @@ const NAMES = ["Graphics & engine dev", "Half marathon", "Land the senior role"]
 
 const demo = buildDemoTracks(PREVIEW_TODAY);
 
+/** How many weeks of the year the landing's stacked preview shows. Enough to
+ *  fill the card it sits in, ending on today. */
+const PREVIEW_WEEKS_SHOWN = 26;
+
 export const PREVIEW_TRACKS = demo.map((track, index) => ({
   id: track.meta.id,
   name: NAMES[index] ?? track.meta.name,
   color: track.meta.color,
   startDate: track.startDate,
-  days: yearCalendar(track.completedItemsHistory, track.startDate, 2026, PREVIEW_TODAY, "mon"),
+  // The recent end of the year, not its start. A calendar year begins in
+  // January and a track rarely does, so the whole year drawn from the left is
+  // mostly the blank months before anything happened — which is a poor
+  // advertisement for a consistency graph.
+  days: yearCalendar(track.completedItemsHistory, track.startDate, 2026, PREVIEW_TODAY, "mon").slice(-PREVIEW_WEEKS_SHOWN * 7),
   pct: timelineStats(track).progressPct,
   streak: currentStreakLength(track.streakHistory, PREVIEW_TODAY),
   stats: streakStats(track, PREVIEW_TODAY),

@@ -196,16 +196,27 @@ export default function Dashboard() {
   /** Soft-delete: flips meta.archived rather than removing the track record,
    *  so the deletion is an ordinary field change that propagates correctly
    *  through the normal sync/merge path (see visibleTracks' doc comment). */
-  const handleDeleteTrack = () => {
+  /**
+   * Deleting a track — any track, not only the open one.
+   *
+   * Implemented as `meta.archived`, and that is not a euphemism: the sync
+   * merge reconciles two devices by comparing records, so a track removed by
+   * *absence* here would simply be handed back by the next sync from the
+   * account's copy. A flag is a change both sides can agree on.
+   */
+  const handleDeleteTrack = (trackId?: string) => {
     if (!workspace || !track) return;
-    const remaining = visibleTracks(workspace).filter((t) => t.meta.id !== track.meta.id);
+    const target = workspace.tracks[trackId ?? track.meta.id];
+    if (!target) return;
+    const remaining = visibleTracks(workspace).filter((other) => other.meta.id !== target.meta.id);
     if (remaining.length === 0) return;
 
-    const archived: TrackState = { ...track, meta: { ...track.meta, archived: true } };
+    const archived: TrackState = { ...target, meta: { ...target.meta, archived: true } };
     const next: Workspace = {
       ...workspace,
       tracks: { ...workspace.tracks, [archived.meta.id]: archived },
-      activeTrackId: workspace.activeTrackId === track.meta.id ? remaining[0].meta.id : workspace.activeTrackId,
+      activeTrackId:
+        workspace.activeTrackId === archived.meta.id ? remaining[0].meta.id : workspace.activeTrackId,
     };
     void commitWorkspace(next);
   };
