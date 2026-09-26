@@ -15,16 +15,30 @@
 // tabs: "Deliverables" at the top of a screen you arrived at from Plan is more
 // use than the track name repeated a fourth time.
 
+import { useEffect } from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { WorkspaceProvider } from "../workspace/WorkspaceProvider";
+import { useWorkspace, WorkspaceProvider } from "../workspace/WorkspaceProvider";
 import { SyncProvider } from "../sync/SyncProvider";
 import { TimerProvider } from "../timer/TimerProvider";
 import { UndoProvider } from "../components/UndoBar";
 import { ThemeProvider, useTheme } from "../theme/ThemeProvider";
 import { TYPE } from "../theme";
+
+/** Tells the theme which track is open, so the accent follows it. */
+function TrackAccent() {
+  const { track } = useWorkspace();
+  const { setAccent } = useTheme();
+  const colour = track?.meta.color;
+
+  useEffect(() => {
+    setAccent(colour || null);
+  }, [colour, setAccent]);
+
+  return null;
+}
 
 export default function RootLayout() {
   return (
@@ -35,6 +49,10 @@ export default function RootLayout() {
       <ThemeProvider>
         <SafeAreaProvider>
           <WorkspaceProvider>
+            {/* Paints the app in the open track's colour. Inside the
+                workspace because that is where the track is; above the
+                screens because all of them use it. */}
+            <TrackAccent />
             {/* Inside the workspace: a sync writes the merged workspace
                 straight back into it. */}
             <SyncProvider>

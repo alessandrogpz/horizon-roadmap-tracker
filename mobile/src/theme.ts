@@ -95,6 +95,11 @@ export const TYPE = {
   eyebrow: { fontSize: 11, letterSpacing: 1.1, textTransform: "uppercase" },
 } as const;
 
+// The colour helpers live in the shared core, because the website draws the
+// same grid from the same numbers. Re-exported here so that everything on the
+// phone still reaches for them where it reaches for the rest of the theme.
+export { shadeOf, withAlpha, shadeScale, lighten, SHADE_STEPS } from "@shared/colors";
+
 export const RADIUS = { control: 8, card: 14 } as const;
 
 /** Every control in the app header — the sync chip, the theme button, the

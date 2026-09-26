@@ -1,26 +1,47 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { Activity, Check, Flame, X } from "lucide-react";
-import type { CompletedItem } from "@/lib/types";
-import { todayYMD } from "@/lib/dates";
+import { Activity, Check, Flame, Layers, X } from "lucide-react";
+import type { CompletedItem, TrackState } from "@/lib/types";
+import { parseYMD, todayYMD } from "@/lib/dates";
 import { currentStreakLength } from "@/lib/streak";
 import { streakCalendar } from "@/lib/stats";
 import { useAppSettings } from "@/lib/useAppSettings";
+import AllTracksYear from "@/components/AllTracksYear";
 import Portal from "@/components/Portal";
 import StreakGrid, { type StreakCell } from "@/components/StreakGrid";
 
 export default function StreakGraph({
   streakHistory = [],
   completedItemsHistory = {},
-  startDate
+  startDate,
+  color,
+  tracks = [],
 }: {
   streakHistory?: string[];
   completedItemsHistory?: { [date: string]: CompletedItem[] };
   startDate?: string;
+  /** The open track's colour, for the key. The grid itself is painted through
+   *  `--streak-1` … `--streak-4`, which the track's accent already rewrote. */
+  color?: string;
+  /** Every visible track, for the stacked view. Left empty, the control that
+   *  reaches it is not drawn at all. */
+  tracks?: TrackState[];
 }) {
   const [selectedDateDetails, setSelectedDateDetails] = useState<string | null>(null);
+  /**
+   * Whose days these are: this track's, or every track's stacked.
+   *
+   * A person running three tracks has three panels and no way to ask the one
+   * question that spans them — did I do *anything* yesterday. Only offered
+   * when there is more than one track, because with one there is nothing to
+   * stack and the control would be a switch between a thing and itself.
+   */
+  const [scope, setScope] = useState<"track" | "all">("track");
   const settings = useAppSettings();
+  const today = todayYMD();
+  const canCombine = tracks.length > 1;
+  const combined = scope === "all" && canCombine;
 
   // Walking every day from startDate to today is real work on a year-long
   // track, so memoize it — otherwise it re-runs on every unrelated re-render.
@@ -64,7 +85,11 @@ export default function StreakGraph({
     return {
       id: day.date,
       level: levelFor(day.count),
-      title: `${day.date}: ${day.count} update${day.count !== 1 ? "s" : ""}${accomplishments}`,
+      mark: day.date === startDate ? "start" : day.date === today ? "today" : undefined,
+      title:
+        `${day.date}: ${day.count} update${day.count !== 1 ? "s" : ""}` +
+        (day.date === startDate ? " — the day this track started" : "") +
+        accomplishments,
     };
   });
 
@@ -81,11 +106,59 @@ export default function StreakGraph({
             {streak} day{streak === 1 ? "" : "s"}
           </span>
           <span className="text-muted-foreground">{totalActive} active</span>
+          {canCombine && (
+            <button
+              onClick={() => setScope(combined ? "track" : "all")}
+              aria-pressed={combined}
+              title={combined ? "Show only this track" : "Show every track"}
+              className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[0.7rem] font-semibold border transition-colors cursor-pointer ${
+                combined
+                  ? "border-accent-muted bg-accent/10 text-accent"
+                  : "border-card-border bg-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Layers size={11} strokeWidth={2.5} />
+              {combined ? "All tracks" : "This track"}
+            </button>
+          )}
         </div>
       </div>
       <div className="py-2.5">
-        <StreakGrid cells={cells} onCellClick={setSelectedDateDetails} />
+        {combined ? (
+          <AllTracksYear
+            tracks={tracks}
+            year={parseYMD(today).getFullYear()}
+            today={today}
+            weekStartsOn={settings.weekStartsOn}
+          />
+        ) : (
+          <StreakGrid cells={cells} onCellClick={setSelectedDateDetails} />
+        )}
       </div>
+
+      {/* The key. Four strengths of the track's own colour, and the day it
+          began in the page's opposite — which is why the colours a track can
+          wear stop short of white and black. */}
+      {!combined && (
+        <div className="flex items-center gap-1.5 text-[0.68rem] text-subtle-foreground">
+          <span>Less</span>
+          {[0, 1, 2, 3, 4].map((level) => (
+            <span
+              key={level}
+              className="h-2.5 w-2.5 rounded-[2px]"
+              style={{ backgroundColor: `var(--streak-${level})` }}
+            />
+          ))}
+          <span>More</span>
+          {startDate && (
+            <>
+              <span className="ml-3 h-2.5 w-2.5 rounded-[2px]" style={{ backgroundColor: "var(--foreground)" }} />
+              <span>started</span>
+            </>
+          )}
+          {color && <span className="sr-only">Drawn in this track&apos;s colour, {color}.</span>}
+        </div>
+      )}
 
       {/* Into <body>, not here: this modal is position:fixed inside a panel
           that carries a transform while it's being dragged, which would make

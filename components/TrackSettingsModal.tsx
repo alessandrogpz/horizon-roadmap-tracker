@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
 import { dateForDay, dayForDate, formatDateYMD } from "@/lib/dates";
+import ColorSwatches from "@/components/shared/ColorSwatches";
 
 interface TrackSettingsFields {
   name: string;
@@ -67,14 +68,12 @@ export default function TrackSettingsModal({ name, color, startDate, totalDays, 
           />
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-[0.8rem] text-muted-foreground">Accent color</label>
-          <input
-            type="color"
-            value={draftColor}
-            onChange={(e) => setDraftColor(e.target.value)}
-            className="w-12 h-10 border border-card-border bg-transparent cursor-pointer p-0 rounded-md"
-          />
+        <div className="flex flex-col gap-2">
+          {/* Not decoration. This is the accent the whole track wears — its
+              buttons, its rings, its links and the four strengths its year of
+              days is drawn in. */}
+          <label className="text-[0.8rem] text-muted-foreground">Colour</label>
+          <ColorSwatches value={draftColor} onPick={setDraftColor} />
         </div>
 
         <div className="flex gap-3">

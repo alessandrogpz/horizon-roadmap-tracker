@@ -7,6 +7,134 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.80.0] - 2026-09-26
+
+### Added
+- **The website catches up with the phone.** Everything the last four releases built on Android now
+  exists on the web, arranged for a desk rather than a hand:
+  - A track's colour is asked for when the track is made, from the same six swatches, and applied to
+    the whole page. `components/TrackAccent.tsx` rewrites `--accent`, `--accent-hover`,
+    `--accent-muted`, `--ring` and `--streak-1` … `--streak-4` on `<html>`, so every accent in the
+    app follows the open track without a colour being threaded through a single component.
+  - Making a track is now a dialog — name, colour, start, deadline, template — instead of a click
+    that dropped a track called "New Track" into the workspace with a horizon nobody had chosen.
+  - The track switcher carries a year of each track's days under its name, in that track's colour,
+    with the run it is on. It was a column of names, which answered "which tracks exist" and nothing
+    else.
+  - Consistency is drawn in the track's colour, with the day it began marked in the page's opposite,
+    and a key under it. With more than one track open, a control stacks every track's year on the
+    same calendar columns.
+  - Settings will add and remove `test1`, `test2` and `test3`, the same three demo tracks the phone
+    offers, from the same generator.
+- **The landing page shows the phone.** Three drawn screens — Progress, My Space and a workout being
+  logged set by set — built from the app's own components and the app's own demo data rather than
+  photographed, so they cannot go stale. Plus a section on what a colour per track buys you, drawn
+  with the real stacked view, and an honest word about the PWA: installing the website is a complete
+  way to use Horizon, and the Android app is for the handful of things a browser cannot reach.
+
+### Changed
+- `shadeOf`, `withAlpha` and the shade scale moved from the phone's theme into `lib/colors.ts`, and
+  the list of track colours into `lib/trackColors.ts`. Both apps paint the same grid from the same
+  numbers; two implementations of "four steps of one hue" is two ramps that drift.
+- The phone's track colour picker replaced the website's `<input type="color">`. A free choice lets
+  someone pick a colour the app then has to work around — the grid paints four strengths of it, and
+  a colour near the page's own is four shades of nothing.
+- `yearCalendar` moved into `lib/stats.ts`, where the stacked views on both platforms and the
+  landing page's previews all reach it.
+- README and `DEVELOPMENT.md` gained what a track's colour is and the two rules that are easy to
+  break: the picker never offers white or black, because the day a track began is drawn in the
+  page's opposite; and a free-form colour input is not an improvement.
+
+### Removed
+- **Dragging one row of the stacked view on its own.** Added in 0.79.0 and taken out after use: it
+  was a second gesture on a view whose whole claim is that the columns line up, and it earned its
+  complexity from nobody. The spacing between rows, which arrived with it, stays.
+
+## [0.79.0] - 2026-09-26
+
+### Added
+- **Hold a row to scroll it on its own.** The stack of tracks in Progress answered one question —
+  what did these months look like across all of them — and could not answer the other, which is how
+  one track's summer compares with another's winter. A swipe still moves every row together, so the
+  columns stay lined up; holding a row for a moment first and then dragging moves that one alone. It
+  lifts, lights up in its own colour and the rest fade back, so it is never in doubt which one the
+  finger has hold of, and it keeps its new position after release until it is put back.
+
+  Hold-then-drag is the one that has to be asked for, because the common case should be the one you
+  get without knowing there is a choice — and it is already what My Space means by "pick this one
+  up".
+
+### Changed
+- The rows have air between them. They were a single block of squares in which a row was something
+  you had to count out.
+- The strips are no longer in a `ScrollView` — rows that can drift apart need an offset each, and a
+  `ScrollView` has exactly one — so they carry a scroll bar of their own making instead.
+
+## [0.78.0] - 2026-09-26
+
+### Added
+- **Three tracks to look at**, from Settings. Every screen that shows more than one track at once is
+  impossible to judge on an account with one track and no history, and ticking several hundred days
+  by hand to see it is not a reasonable ask. `test1`, `test2` and `test3` arrive in three colours
+  with a year or more of days already on them, generated from a fixed seed so they are the same
+  three tracks tomorrow — a screenshot of something wrong in test2 is worth something only if test2
+  does not change underneath it. They are ordinary tracks otherwise, and the same button takes them
+  away again.
+
+- **All tracks, read sideways.** The combined view in Progress is no longer one grid with the
+  colours fought over; it is one strip per track, stacked, in the shape everyone knows from a year
+  of contributions — weeks across, weekdays down — zoomed out from the single-track grid's
+  thumb-sized days and scrolled side to side instead of down. Each track's name and a progress ring
+  in its own colour stay pinned at the left while the years slide underneath, which is what makes
+  the stack comparable: the same Tuesday is the same column on every row. It opens at the recent
+  end, and month names run along the top.
+
+  A single track keeps the vertical grid. Seven columns down the page is the only way a day stays
+  big enough to tap, and tapping a day is what a single track's grid is for.
+
+### Changed
+- **The day a track began is drawn in white on a dark screen and black on a light one**, never in a
+  colour. It was the track's own colour with a ring cut out of it, which is legible until you
+  compare it to a day at full strength. The six colours a track may wear deliberately stop short of
+  white and black so this mark can never collide with one — that constraint now lives with the list
+  itself rather than in whoever remembers it.
+- The same mark appears on the year under each track in the switcher, so the beginning of a track
+  reads the same wherever it is drawn.
+- The colours a track can be moved out of the phone's track screen and into the shared core, where
+  the demo tracks and anything else that needs them can reach the one list.
+
+## [0.77.0] - 2026-09-26
+
+### Added
+- **A colour per track, and a year of days to show it off.** Every track already carried a `color`
+  nobody had chosen and almost nothing drew. It is now asked for when the track is created — six
+  swatches beside the name, pre-picked to the first one no other track has taken — and from then on
+  it is the track's accent everywhere inside it: buttons, rings, links, the progress grid. Opening a
+  track changes the app's accent to it, which is one `setAccent` on the theme rather than a colour
+  threaded through every screen.
+
+- **The track list is now a list of years.** Each row carries fifty-three weeks of its own days
+  under the name, in the track's own colour, with the live streak beside it — which turns the track
+  switcher into the place you go to see which tracks you are actually keeping up. The grid measures
+  the card it is in and sizes a day to fit, and always draws the full year with the empty weeks
+  padded in at the front, so a three-week-old track and a two-year-old one have days of the same
+  size and can be compared at all.
+
+- **All tracks at once, in Progress.** A control beside the year switches the grid between this
+  track and every track combined — the one question three separate grids could not answer, which is
+  whether *anything* happened yesterday. A combined day is painted in the colour of whichever track
+  put the most into it, the key below the graph stops explaining depth and starts naming colours,
+  and tapping a day still says what was done, with each item told which track it came from. It only
+  appears when there is more than one track to combine.
+
+### Changed
+- The consistency grid is drawn in the track's colour instead of a hard-coded green. The day a track
+  began used to be painted in the accent, which stopped meaning anything once the scale itself
+  became the accent; it is now the full colour with a ring of the page cut out of it.
+- Months with nothing in them are no longer drawn. In the year a track began there could be eleven
+  of them — a heading over a block of empty squares — between the top of the graph and the first
+  real day.
+
 ## [0.76.2] - 2026-09-26
 
 ### Fixed
