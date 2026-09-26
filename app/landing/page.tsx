@@ -107,15 +107,6 @@ const TRACKS = [
   },
 ];
 
-/** What each tab of a drawn phone shows. Shared by all three, so every tab
- *  bar on the page goes somewhere — Today is the one screen not drawn, and
- *  it keeps whatever was on the screen rather than blanking it. */
-const PHONE_SCREENS = {
-  space: <MySpaceScreen />,
-  plan: <WorkoutScreen />,
-  progress: <ProgressScreen />,
-};
-
 const COMPARISON = [
   {
     todo: "A flat list that resets every morning",
@@ -385,7 +376,7 @@ export default function LandingPage() {
             </div>
 
             <div className="mt-10 grid gap-4 sm:grid-cols-2">
-              <div className="glass-panel landing-lift flex flex-col gap-4">
+              <div className="glass-panel flex flex-col gap-4">
                 <h3 className="flex items-center gap-2 text-[0.8rem] font-semibold uppercase tracking-[0.06em] text-subtle-foreground">
                   <X size={14} strokeWidth={2.2} />
                   A to-do app
@@ -402,7 +393,7 @@ export default function LandingPage() {
                 </ul>
               </div>
 
-              <div className="glass-panel landing-lift landing-panel-accent flex flex-col gap-4">
+              <div className="glass-panel landing-panel-accent flex flex-col gap-4">
                 <h3 className="flex items-center gap-2 text-[0.8rem] font-semibold uppercase tracking-[0.06em] text-accent">
                   <HorizonMark className="h-3 w-auto" />
                   Horizon
@@ -437,7 +428,7 @@ export default function LandingPage() {
 
             <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {TRACKS.map((track) => (
-                <div key={track.name} className="glass-panel landing-lift flex flex-col gap-3">
+                <div key={track.name} className="glass-panel flex flex-col gap-3">
                   <div className="flex items-center gap-2.5">
                     <span
                       className="h-2.5 w-2.5 shrink-0 rounded-full"
@@ -507,7 +498,7 @@ export default function LandingPage() {
 
             <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {MODULES.map(({ icon: Icon, title, body }) => (
-                <div key={title} className="glass-panel landing-lift flex flex-col gap-3">
+                <div key={title} className="glass-panel flex flex-col gap-3">
                   <span className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-control)] border border-card-border bg-surface-muted text-accent">
                     <Icon size={17} strokeWidth={1.9} />
                   </span>
@@ -518,7 +509,7 @@ export default function LandingPage() {
             </div>
 
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <div className="glass-panel landing-lift flex gap-4">
+              <div className="glass-panel flex gap-4">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-control)] border border-card-border bg-surface-muted text-warning">
                   <Repeat size={17} strokeWidth={1.9} />
                 </span>
@@ -531,7 +522,7 @@ export default function LandingPage() {
                   </p>
                 </div>
               </div>
-              <div className="glass-panel landing-lift flex gap-4">
+              <div className="glass-panel flex gap-4">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-control)] border border-card-border bg-surface-muted text-warning">
                   <LayoutGrid size={17} strokeWidth={1.9} />
                 </span>
@@ -568,7 +559,6 @@ export default function LandingPage() {
                 accent={TRACK_COLORS[0]}
                 label="Progress"
                 caption="A week to a row, running down the page. Tap any day to see what was done on it."
-                screens={PHONE_SCREENS}
               >
                 <ProgressScreen />
               </PhoneFrame>
@@ -577,7 +567,6 @@ export default function LandingPage() {
                 accent={TRACK_COLORS[0]}
                 label="My Space"
                 caption="The whole track as one column. Hold any panel to pick it up and rearrange."
-                screens={PHONE_SCREENS}
               >
                 <MySpaceScreen />
               </PhoneFrame>
@@ -586,14 +575,13 @@ export default function LandingPage() {
                 accent={TRACK_COLORS[0]}
                 label="Workout"
                 caption="A row per set, with last week's numbers beside today's. Phone only."
-                screens={PHONE_SCREENS}
               >
                 <WorkoutScreen />
               </PhoneFrame>
             </div>
 
             <div className="mt-12 grid gap-4 sm:grid-cols-2">
-              <div className="glass-panel landing-lift flex flex-col gap-2">
+              <div className="glass-panel flex flex-col gap-2">
                 <h3 className="flex items-center gap-2 text-[0.95rem] font-semibold">
                   <Smartphone size={15} strokeWidth={2.2} className="text-accent" />
                   Install the website
@@ -604,7 +592,7 @@ export default function LandingPage() {
                   everything on this page is in it.
                 </p>
               </div>
-              <div className="glass-panel landing-lift landing-panel-accent flex flex-col gap-2">
+              <div className="glass-panel landing-panel-accent flex flex-col gap-2">
                 <h3 className="flex items-center gap-2 text-[0.95rem] font-semibold">
                   <Download size={15} strokeWidth={2.2} className="text-accent" />
                   Or the Android app
@@ -635,7 +623,7 @@ export default function LandingPage() {
 
             <div className="mt-10 grid gap-4 sm:grid-cols-2">
               {STEPS.map((step) => (
-                <div key={step.n} className="glass-panel landing-lift flex gap-4">
+                <div key={step.n} className="glass-panel flex gap-4">
                   <span className="font-mono text-[0.8rem] font-semibold text-accent">
                     {step.n}
                   </span>
@@ -672,7 +660,7 @@ export default function LandingPage() {
 
             <div className="mt-10 grid gap-4 sm:grid-cols-2">
               {ACCOUNT_POINTS.map(({ icon: Icon, title, body }) => (
-                <div key={title} className="glass-panel landing-lift flex gap-4">
+                <div key={title} className="glass-panel flex gap-4">
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-control)] border border-card-border bg-surface-muted text-accent">
                     <Icon size={17} strokeWidth={1.9} />
                   </span>
@@ -698,7 +686,7 @@ export default function LandingPage() {
 
             <div className="mt-10 grid gap-4 sm:grid-cols-2">
               {DATA_POINTS.map(({ icon: Icon, title, body }) => (
-                <div key={title} className="glass-panel landing-lift flex gap-4">
+                <div key={title} className="glass-panel flex gap-4">
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-control)] border border-card-border bg-surface-muted text-success">
                     <Icon size={17} strokeWidth={1.9} />
                   </span>
