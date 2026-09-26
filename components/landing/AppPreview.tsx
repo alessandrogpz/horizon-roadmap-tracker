@@ -19,6 +19,7 @@ import HorizonMark from "@/components/HorizonMark";
 import StreakGrid, { type StreakCell } from "@/components/StreakGrid";
 import { shadeOf, withAlpha } from "@/lib/colors";
 import { formatDayMonthYear, parseYMD } from "@/lib/dates";
+import type { PreviewTrack } from "./phoneData";
 import {
   PREVIEW_TODAY,
   PREVIEW_TODAY_INDEX,
@@ -41,6 +42,51 @@ import {
  * picture. It is deliberately not the whole app — there is nothing to type
  * into, and no state survives a reload.
  */
+/**
+ * The four numbers across the top, and what each one opens into.
+ *
+ * In the app every one of these is a button with a detail panel behind it, so
+ * here they are too — four figures you cannot press is the clearest way to
+ * tell someone they are looking at a picture.
+ */
+const METRICS: {
+  label: string;
+  icon?: React.ReactNode;
+  of: (track: PreviewTrack) => { value: string; unit: string; ring?: number };
+  detail: (track: PreviewTrack) => string;
+}[] = [
+  {
+    label: "Streak",
+    icon: <Flame size={11} strokeWidth={2.5} className="text-warning" />,
+    of: (track) => ({ value: `${track.streak}`, unit: "days" }),
+    detail: (track) =>
+      `${track.streak} days in a row, and the longest run on this track is ${track.stats.longest}. A day counts once anything is ticked on it.`,
+  },
+  {
+    label: "Timeline",
+    of: (track) => ({
+      value: `${track.dayOfTrack}`,
+      unit: `/ ${track.timeline.totalDays}`,
+      ring: track.pct,
+    }),
+    detail: (track) =>
+      `Day ${track.dayOfTrack} of ${track.timeline.totalDays}, which is ${Math.round(track.pct)}% of the way to the date you set. ${track.timeline.daysRemaining} left.`,
+  },
+  {
+    label: "Active",
+    icon: <Check size={11} strokeWidth={2.5} className="text-accent" />,
+    of: (track) => ({ value: `${track.stats.activeDays}`, unit: "days" }),
+    detail: (track) => `${track.stats.activeDays} days with something on them since this track began.`,
+  },
+  {
+    label: "Last 30",
+    icon: <TrendingUp size={11} strokeWidth={2.5} className="text-accent" />,
+    of: (track) => ({ value: `${track.stats.activeLast30}`, unit: "of 30" }),
+    detail: (track) =>
+      `${track.stats.activeLast30} of the last 30 days. The number that moves first when a habit slips, and the one worth watching.`,
+  },
+];
+
 /** What a track's four phases are called before anyone renames them — which
  *  is what a new track actually arrives with. */
 const PHASE_NAMES = ["Getting started", "Building the habit", "Going deeper", "Finishing it"];
@@ -58,6 +104,8 @@ export default function AppPreview() {
    *  phase timeline does. */
   const [phase, setPhase] = useState(1);
   const [phasesOpen, setPhasesOpen] = useState(false);
+  /** Which of the four numbers has been opened, as the app's stat tiles do. */
+  const [stat, setStat] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [todo, setTodo] = useState("");
   const [extraTodos, setExtraTodos] = useState<string[]>([]);
@@ -135,16 +183,43 @@ export default function AppPreview() {
       </div>
 
       {/* ── The four numbers ──────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-1.5 pt-3 sm:grid-cols-4">
-        <Metric label="Streak" value={`${track.streak}`} unit="days" icon={<Flame size={11} strokeWidth={2.5} className="text-warning" />} />
-        <Metric label="Timeline" value={`${track.dayOfTrack}`} unit={`/ ${track.timeline.totalDays}`} ring={track.pct} />
-        <Metric label="Active" value={`${track.stats.activeDays}`} unit="days" icon={<Check size={11} strokeWidth={2.5} className="text-accent" />} />
-        <Metric label="Last 30" value={`${track.stats.activeLast30}`} unit="of 30" icon={<TrendingUp size={11} strokeWidth={2.5} className="text-accent" />} />
+      <div className="grid grid-cols-2 gap-1.5 pt-3 lg:grid-cols-4">
+        {METRICS.map((metric) => {
+          const shown = metric.of(track);
+          return (
+            <Metric
+              key={metric.label}
+              label={metric.label}
+              value={shown.value}
+              unit={shown.unit}
+              icon={metric.icon}
+              ring={shown.ring}
+              open={stat === metric.label}
+              onClick={() => setStat((current) => (current === metric.label ? null : metric.label))}
+            />
+          );
+        })}
       </div>
 
+      {/* What a number means, as the app's own stat tiles open into. */}
+      {stat && (
+        <div className="mt-1.5 flex items-start gap-2 rounded-[8px] border border-accent-muted bg-accent/[0.06] px-2.5 py-2">
+          <span className="min-w-0 flex-1 text-[0.62rem] leading-snug text-muted-foreground">
+            {METRICS.find((metric) => metric.label === stat)?.detail(track)}
+          </span>
+          <button onClick={() => setStat(null)} className="cursor-pointer text-subtle-foreground hover:text-foreground">
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* ── The panels ────────────────────────────────────────────────── */}
-      <div className="grid gap-2 pt-3 sm:grid-cols-[1.25fr_1fr]">
-        <div className="flex flex-col gap-2">
+      {/* `minmax(0, …)`, not a bare `fr`. An `fr` track has an automatic
+          minimum of `auto`, so a column whose content does not fit pushes the
+          grid wider than the card it is in — which is what broke this panel at
+          every width between a phone and a desk. */}
+      <div className="grid grid-cols-1 gap-2 pt-3 sm:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+        <div className="flex min-w-0 flex-col gap-2">
           <Panel icon={<CalendarDays size={10} strokeWidth={2.5} />} title="Weekly Overview">
             <div className="flex justify-between gap-0.5">
               {PREVIEW_WEEK.map((name, dayIndex) => {
@@ -191,7 +266,15 @@ export default function AppPreview() {
 
           <Panel icon={<Flame size={10} strokeWidth={2.5} />} title="Consistency" trailing={`${track.streak} days`}>
             <div className="relative">
-              <div className="flex gap-3 overflow-hidden">
+              {/* Scrolls rather than clips, as the real panel does: a month
+                  cut in half at the card's edge looks like a mistake. */}
+              <div
+                className="flex gap-3 overflow-x-auto pb-0.5"
+                style={{
+                  maskImage: "linear-gradient(to right, #000 92%, transparent)",
+                  WebkitMaskImage: "linear-gradient(to right, #000 92%, transparent)",
+                }}
+              >
                 {months.map((month) => (
                   <div key={month.key} className="flex flex-col gap-1">
                     <span className="text-[0.55rem] font-semibold text-muted-foreground">{month.label.split(" ")[0]}</span>
@@ -236,16 +319,22 @@ export default function AppPreview() {
           </Panel>
         </div>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex min-w-0 flex-col gap-2">
           <Panel
             icon={<Milestone size={10} strokeWidth={2.5} />}
             title="Phases"
-            action={{ label: phasesOpen ? "Hide" : "All four", onClick: () => setPhasesOpen((open) => !open) }}
+            action={{ label: phasesOpen ? "Hide" : "Phases", onClick: () => setPhasesOpen((open) => !open) }}
           >
-            <div className="flex items-baseline gap-2">
+            {/* The figure and the phase name open the list too — in the app
+                this whole block is the way into the phase timeline, and a
+                small link in the corner is a small target. */}
+            <button
+              onClick={() => setPhasesOpen((open) => !open)}
+              className="flex w-full cursor-pointer items-baseline gap-2 text-left"
+            >
               <span className="font-mono text-[1.15rem] font-bold leading-none text-accent">{Math.round(track.pct)}%</span>
               <span className="min-w-0 flex-1 truncate font-semibold">{PHASE_NAMES[phase] ?? track.phase}</span>
-            </div>
+            </button>
             <div className="h-1 w-full overflow-hidden rounded-full bg-surface-hover">
               <div className="h-full rounded-full bg-accent transition-[width] duration-500" style={{ width: `${track.pct}%` }} />
             </div>
@@ -377,15 +466,26 @@ function Metric({
   unit,
   icon,
   ring,
+  open,
+  onClick,
 }: {
   label: string;
   value: string;
   unit: string;
   icon?: React.ReactNode;
   ring?: number;
+  open: boolean;
+  onClick: () => void;
 }) {
   return (
-    <div className="flex items-center gap-2 rounded-[8px] border border-card-border bg-card/60 px-2 py-1.5 transition-colors hover:border-card-border-hover hover:bg-surface-hover">
+    <button
+      onClick={onClick}
+      aria-pressed={open}
+      title={`${label} — click for detail`}
+      className={`flex cursor-pointer items-center gap-2 rounded-[8px] border bg-card/60 px-2 py-1.5 text-left transition-colors hover:bg-surface-hover ${
+        open ? "border-accent-muted bg-accent/[0.06]" : "border-card-border hover:border-card-border-hover"
+      }`}
+    >
       {ring !== undefined ? (
         <svg width={22} height={22} viewBox="0 0 22 22" className="shrink-0 -rotate-90" aria-hidden="true">
           <circle cx="11" cy="11" r="9" fill="none" stroke="var(--card-border)" strokeWidth="3" />
@@ -412,7 +512,7 @@ function Metric({
           <span className="truncate text-[0.55rem] text-subtle-foreground">{unit}</span>
         </span>
       </span>
-    </div>
+    </button>
   );
 }
 
