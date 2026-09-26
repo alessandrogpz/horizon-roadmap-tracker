@@ -161,7 +161,7 @@ export default function SecurityPage() {
       <section className="border-b border-card-border">
         <Reveal className="mx-auto grid max-w-6xl gap-4 px-4 py-14 sm:grid-cols-2 sm:px-6 lg:grid-cols-3">
           {MEASURES.map(({ icon: Icon, title, body }) => (
-            <div key={title} className="glass-panel landing-lift flex flex-col gap-3">
+            <div key={title} className="glass-panel flex flex-col gap-3">
               <span className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-control)] border border-card-border bg-surface-muted text-accent">
                 <Icon size={17} strokeWidth={1.9} />
               </span>

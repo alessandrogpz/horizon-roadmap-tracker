@@ -1,7 +1,4 @@
-"use client";
-
-import { useState } from "react";
-import { CalendarDays, Check, Plus, X } from "lucide-react";
+import { CalendarDays, Check } from "lucide-react";
 
 /**
  * A replica of the Weekly Plan panel, showing a training week.
@@ -17,10 +14,10 @@ import { CalendarDays, Check, Plus, X } from "lucide-react";
  * own `.week-grid` classes, so it scrolls sideways on a phone exactly like the
  * real panel does.
  *
- * It holds no workspace and writes nothing, but it is not inert: the boxes
- * tick, a day can be picked, and a rotation can be added. A week plan whose
- * checkboxes do nothing is the one panel on this page where a visitor is most
- * likely to try.
+ * A picture of the panel, not a copy of it. The boxes were briefly real, and
+ * a week plan whose checkboxes tick and then forget is the clearest way on
+ * this page to mislead somebody about the one thing they came to find out.
+ * Nothing here responds, and nothing here looks as though it would.
  */
 
 interface PreviewDay {
@@ -160,19 +157,6 @@ const DAYS: PreviewDay[] = [
   },
 ];
 
-/** What a box started as, so the first click flips it rather than setting it
- *  to true. Keyed the same way `ItemList` keys its rows. */
-function seeded(key: string): boolean {
-  for (const day of DAYS) {
-    for (const list of day.lists) {
-      for (const item of list.items) {
-        if (`${day.name}-${list.heading}-${item.title}` === key) return item.done;
-      }
-    }
-  }
-  return false;
-}
-
 /** A drawn checkbox rather than a real `<input>`, but a real button: the row
  *  around it is what takes the click, the same as in the app. */
 function Box({ done }: { done: boolean }) {
@@ -189,16 +173,10 @@ function ItemList({
   heading,
   items,
   isToday,
-  dayName,
-  ticked,
-  onToggle,
 }: {
   heading: string;
   items: { title: string; done: boolean }[];
   isToday: boolean;
-  dayName: string;
-  ticked: Record<string, boolean>;
-  onToggle: (key: string) => void;
 }) {
   return (
     <div>
@@ -206,52 +184,30 @@ function ItemList({
         {heading}
       </span>
       <div className="mt-[0.15rem] flex flex-col gap-[0.15rem]">
-        {items.map((item) => {
-          const key = `${dayName}-${heading}-${item.title}`;
-          // The seeded value is the starting point; a click owns it after
-          // that, which is how a checkbox behaves everywhere else.
-          const done = key in ticked ? ticked[key] : item.done;
-          return (
-            <button
-              key={item.title}
-              onClick={() => onToggle(key)}
-              className="flex w-full cursor-pointer items-start gap-[0.3rem] rounded text-left transition-colors hover:bg-surface-hover"
+        {items.map((item) => (
+          <div key={item.title} className="flex items-start gap-[0.3rem]">
+            <Box done={item.done} />
+            <span
+              className={`text-[0.72rem] leading-[1.3] ${
+                item.done
+                  ? "text-subtle-foreground line-through"
+                  : isToday
+                    ? "text-foreground"
+                    : "text-muted-foreground"
+              }`}
             >
-              <Box done={done} />
-              <span
-                className={`text-[0.72rem] leading-[1.3] ${
-                  done
-                    ? "text-subtle-foreground line-through"
-                    : isToday
-                      ? "text-foreground"
-                      : "text-muted-foreground"
-                }`}
-              >
-                {item.title}
-              </span>
-            </button>
-          );
-        })}
+              {item.title}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
 export default function WeeklyPlanPreview() {
-  const [ticked, setTicked] = useState<Record<string, boolean>>({});
-  const [picked, setPicked] = useState<string | null>(null);
-  /** Rotations the visitor adds. The two the week starts with are the
-   *  track's; these are theirs, and the point of letting them is that a
-   *  rotation is the one idea in this app nobody arrives already knowing. */
-  const [rotations, setRotations] = useState<{ scope: string; item: string }[]>([]);
-  const [adding, setAdding] = useState(false);
-  const [draftScope, setDraftScope] = useState("");
-  const [draftItem, setDraftItem] = useState("");
-
-  const toggle = (key: string) => setTicked((current) => ({ ...current, [key]: !(key in current ? current[key] : seeded(key)) }));
-
   return (
-    <div className="glass-panel landing-lift select-none border-l-4 border-accent-muted">
+    <div aria-hidden="true" className="glass-panel select-none border-l-4 border-accent-muted">
       <div className="flex flex-col gap-3">
         {/* Header — title, the week the plan is showing, and the rotation pill */}
         <div className="flex flex-col gap-3 border-b border-card-border pb-3">
@@ -278,71 +234,6 @@ export default function WeeklyPlanPreview() {
               <span className="font-mono text-[0.85rem] font-bold text-accent">Front squat</span>
             </span>
 
-            {rotations.map((rotation, index) => (
-              <span
-                key={`${rotation.scope}-${index}`}
-                className="inline-flex items-center gap-2 whitespace-nowrap rounded-md border border-dashed border-accent/30 bg-accent/[0.08] px-3 py-1.5"
-              >
-                <span className="text-[0.7rem] font-semibold uppercase tracking-[0.05em] text-muted-foreground">
-                  {rotation.scope} rotation:
-                </span>
-                <span className="font-mono text-[0.85rem] font-bold text-accent">{rotation.item}</span>
-                <button
-                  onClick={() => setRotations((current) => current.filter((_, i) => i !== index))}
-                  aria-label={`Remove the ${rotation.scope} rotation`}
-                  className="cursor-pointer text-subtle-foreground transition-colors hover:text-foreground"
-                >
-                  <X size={11} strokeWidth={2.5} />
-                </button>
-              </span>
-            ))}
-
-            {adding ? (
-              <form
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  if (!draftScope.trim() || !draftItem.trim()) return;
-                  setRotations((current) => [...current, { scope: draftScope.trim(), item: draftItem.trim() }]);
-                  setDraftScope("");
-                  setDraftItem("");
-                  setAdding(false);
-                }}
-                className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-accent/40 bg-accent/[0.08] px-2 py-1"
-              >
-                <input
-                  value={draftScope}
-                  onChange={(event) => setDraftScope(event.target.value)}
-                  placeholder="Core"
-                  autoFocus
-                  className="w-[5.5rem] rounded border border-card-border bg-input-bg px-1.5 py-1 text-[0.75rem] text-foreground outline-none placeholder:text-subtle-foreground"
-                />
-                <input
-                  value={draftItem}
-                  onChange={(event) => setDraftItem(event.target.value)}
-                  placeholder="Hanging leg raise"
-                  className="w-[9rem] rounded border border-card-border bg-input-bg px-1.5 py-1 font-mono text-[0.75rem] text-foreground outline-none placeholder:font-sans placeholder:text-subtle-foreground"
-                />
-                <button type="submit" className="btn px-2 py-1 text-[0.72rem]">
-                  Add
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAdding(false)}
-                  aria-label="Cancel"
-                  className="cursor-pointer text-subtle-foreground transition-colors hover:text-foreground"
-                >
-                  <X size={12} strokeWidth={2.5} />
-                </button>
-              </form>
-            ) : (
-              <button
-                onClick={() => setAdding(true)}
-                className="inline-flex cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-md border border-dashed border-card-border-hover px-3 py-1.5 text-[0.75rem] font-semibold text-muted-foreground transition-colors hover:border-accent-muted hover:text-foreground"
-              >
-                <Plus size={12} strokeWidth={2.5} />
-                New rotation
-              </button>
-            )}
           </div>
         </div>
 
@@ -355,25 +246,21 @@ export default function WeeklyPlanPreview() {
               return (
                 <div
                   key={day.name}
-                  className={`flex min-h-[160px] flex-col gap-[0.35rem] overflow-hidden rounded-lg px-2 py-[0.6rem] transition-opacity ${
-                    isToday || picked === day.name
+                  className={`flex min-h-[160px] flex-col gap-[0.35rem] overflow-hidden rounded-lg px-2 py-[0.6rem] ${
+                    isToday
                       ? "border border-accent bg-accent/[0.06] shadow-[0_0_12px_rgba(14,165,233,0.15)]"
                       : "border border-card-border bg-input-bg"
-                  } ${day.state === "future" && picked !== day.name ? "opacity-50" : ""}`}
+                  } ${day.state === "future" ? "opacity-50" : ""}`}
                 >
-                  <button
-                    onClick={() => setPicked((current) => (current === day.name ? null : day.name))}
-                    title={`Open ${day.name}`}
-                    className="w-full cursor-pointer border-b border-card-border pb-1 text-center"
-                  >
+                  <div className="border-b border-card-border pb-1 text-center">
                     <span
                       className={`text-[0.7rem] uppercase tracking-[0.05em] ${
-                        isToday || picked === day.name ? "font-bold text-foreground" : "font-semibold text-muted-foreground"
+                        isToday ? "font-bold text-foreground" : "font-semibold text-muted-foreground"
                       }`}
                     >
                       {day.name}
                     </span>
-                  </button>
+                  </div>
 
                   <div className="mb-[0.15rem] flex justify-center">
                     <span
@@ -388,15 +275,7 @@ export default function WeeklyPlanPreview() {
                   </div>
 
                   {day.lists.map((list) => (
-                    <ItemList
-                      key={list.heading}
-                      heading={list.heading}
-                      items={list.items}
-                      isToday={isToday || picked === day.name}
-                      dayName={day.name}
-                      ticked={ticked}
-                      onToggle={toggle}
-                    />
+                    <ItemList key={list.heading} heading={list.heading} items={list.items} isToday={isToday} />
                   ))}
                 </div>
               );
