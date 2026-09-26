@@ -8,6 +8,7 @@ import {
   ChevronDown,
   Flame,
   GitBranch,
+  ListTodo,
   Milestone,
   MoreHorizontal,
   NotebookPen,
@@ -40,12 +41,28 @@ import {
  * picture. It is deliberately not the whole app — there is nothing to type
  * into, and no state survives a reload.
  */
+/** What a track's four phases are called before anyone renames them — which
+ *  is what a new track actually arrives with. */
+const PHASE_NAMES = ["Getting started", "Building the habit", "Going deeper", "Finishing it"];
+
 export default function AppPreview() {
   const [index, setIndex] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [openDay, setOpenDay] = useState<string | null>(null);
+  /** Everything tickable, in one map keyed by track so switching and coming
+   *  back does not forget what you ticked — which is what the app does. */
   const [done, setDone] = useState<Record<string, boolean>>({});
+  /** Which day of the week is selected, as the Weekly Overview panel does. */
+  const [day, setDay] = useState(PREVIEW_TODAY_INDEX);
+  /** Which phase is current. Clicking one makes it current, as the app's
+   *  phase timeline does. */
+  const [phase, setPhase] = useState(1);
+  const [phasesOpen, setPhasesOpen] = useState(false);
+  const [note, setNote] = useState("");
+  const [todo, setTodo] = useState("");
+  const [extraTodos, setExtraTodos] = useState<string[]>([]);
   const track = PREVIEW_TRACKS[index];
+  const tick = (key: string) => setDone((current) => ({ ...current, [key]: !current[key] }));
 
   // The track's colour, scoped to this card. `--streak-0` is left alone: it is
   // the colour of a day with nothing on it, which belongs to the page.
@@ -130,16 +147,20 @@ export default function AppPreview() {
         <div className="flex flex-col gap-2">
           <Panel icon={<CalendarDays size={10} strokeWidth={2.5} />} title="Weekly Overview">
             <div className="flex justify-between gap-0.5">
-              {PREVIEW_WEEK.map((day, dayIndex) => {
+              {PREVIEW_WEEK.map((name, dayIndex) => {
                 const today = dayIndex === PREVIEW_TODAY_INDEX;
+                const picked = dayIndex === day;
                 return (
-                  <div
-                    key={day}
-                    className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-[5px] border px-0.5 py-1 transition-colors ${
-                      today ? "border-accent-muted bg-accent/[0.08]" : "border-transparent"
+                  <button
+                    key={name}
+                    onClick={() => setDay(dayIndex)}
+                    className={`flex min-w-0 flex-1 cursor-pointer flex-col items-center gap-1 rounded-[5px] border px-0.5 py-1 transition-colors ${
+                      picked ? "border-accent-muted bg-accent/[0.10]" : "border-transparent hover:bg-surface-hover"
                     }`}
                   >
-                    <span className={`text-[0.58rem] font-semibold ${today ? "text-foreground" : "text-subtle-foreground"}`}>{day}</span>
+                    <span className={`text-[0.58rem] font-semibold ${picked || today ? "text-foreground" : "text-subtle-foreground"}`}>
+                      {name}
+                    </span>
                     <span className="font-mono text-[0.5rem] text-subtle-foreground">{PREVIEW_WEEK_DATES[dayIndex]}</span>
                     <span
                       className="w-full truncate rounded-[3px] px-1 py-px text-center text-[0.5rem] font-semibold"
@@ -150,8 +171,20 @@ export default function AppPreview() {
                     >
                       {track.focus[dayIndex]}
                     </span>
-                  </div>
+                  </button>
                 );
+              })}
+            </div>
+
+            {/* What that day asks of you, which is the second half of the
+                real panel: pick a day and its checklist is right there. */}
+            <div className="mt-1 flex flex-col gap-1 border-t border-card-border pt-1.5">
+              <span className="text-[0.5rem] font-bold uppercase tracking-[0.08em] text-accent">
+                {PREVIEW_WEEK[day]} · {track.focus[day]}
+              </span>
+              {track.deliverables.concat(track.materials[0]).slice(0, 3).map((item, itemIndex) => {
+                const key = `${track.id}-${day}-${itemIndex}`;
+                return <Tickable key={key} label={item} on={!!done[key]} onToggle={() => tick(key)} color={track.color} />;
               })}
             </div>
           </Panel>
@@ -204,55 +237,136 @@ export default function AppPreview() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <Panel icon={<Milestone size={10} strokeWidth={2.5} />} title="Phases">
+          <Panel
+            icon={<Milestone size={10} strokeWidth={2.5} />}
+            title="Phases"
+            action={{ label: phasesOpen ? "Hide" : "All four", onClick: () => setPhasesOpen((open) => !open) }}
+          >
             <div className="flex items-baseline gap-2">
               <span className="font-mono text-[1.15rem] font-bold leading-none text-accent">{Math.round(track.pct)}%</span>
-              <span className="min-w-0 flex-1 truncate font-semibold">{track.phase}</span>
+              <span className="min-w-0 flex-1 truncate font-semibold">{PHASE_NAMES[phase] ?? track.phase}</span>
             </div>
             <div className="h-1 w-full overflow-hidden rounded-full bg-surface-hover">
               <div className="h-full rounded-full bg-accent transition-[width] duration-500" style={{ width: `${track.pct}%` }} />
             </div>
+
+            {/* The four phases, and clicking one makes it current — which is
+                what the timeline in the real panel does. */}
+            {phasesOpen && (
+              <div className="mt-1 flex flex-col gap-1 border-t border-card-border pt-1.5">
+                {PHASE_NAMES.map((name, phaseIndex) => {
+                  const state = phaseIndex < phase ? "done" : phaseIndex === phase ? "current" : "todo";
+                  return (
+                    <button
+                      key={name}
+                      onClick={() => setPhase(phaseIndex)}
+                      className="flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 text-left transition-colors hover:bg-surface-hover"
+                    >
+                      <span
+                        className="h-1.5 w-1.5 shrink-0 rounded-full"
+                        style={{
+                          background: state === "todo" ? "var(--surface-hover)" : track.color,
+                          boxShadow: state === "current" ? `0 0 0 3px ${withAlpha(track.color, 0.2)}` : undefined,
+                        }}
+                      />
+                      <span className={`flex-1 truncate ${state === "todo" ? "text-subtle-foreground" : "text-muted-foreground"}`}>
+                        {name}
+                      </span>
+                      <span className="font-mono text-[0.55rem] text-subtle-foreground">{(phaseIndex + 1) * 25}%</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </Panel>
 
           <Panel icon={<GitBranch size={10} strokeWidth={2.5} />} title="Deliverables">
             {track.deliverables.map((item) => {
-              const key = `${track.id}-${item}`;
-              const ticked = done[key];
-              return (
-                <button
-                  key={item}
-                  onClick={() => setDone((current) => ({ ...current, [key]: !current[key] }))}
-                  className="flex w-full cursor-pointer items-center gap-1.5 text-left transition-colors hover:text-foreground"
-                >
-                  <span
-                    className="flex h-3 w-3 shrink-0 items-center justify-center rounded-[3px] border transition-colors"
-                    style={{
-                      borderColor: ticked ? track.color : "var(--card-border-hover)",
-                      background: ticked ? track.color : "transparent",
-                    }}
-                  >
-                    {ticked && <Check size={8} strokeWidth={4} className="text-background" />}
-                  </span>
-                  <span className={`truncate ${ticked ? "text-subtle-foreground line-through" : "text-muted-foreground"}`}>{item}</span>
-                </button>
-              );
+              const key = `${track.id}-deliverable-${item}`;
+              return <Tickable key={key} label={item} on={!!done[key]} onToggle={() => tick(key)} color={track.color} />;
             })}
           </Panel>
 
           <Panel icon={<BookMarked size={10} strokeWidth={2.5} />} title="Materials">
-            {track.materials.map((item) => (
-              <span key={item} className="truncate text-muted-foreground">
-                {item}
-              </span>
-            ))}
+            {track.materials.map((item) => {
+              const key = `${track.id}-material-${item}`;
+              return <Tickable key={key} label={item} on={!!done[key]} onToggle={() => tick(key)} color={track.color} />;
+            })}
+          </Panel>
+
+          <Panel icon={<ListTodo size={10} strokeWidth={2.5} />} title="To-do">
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (!todo.trim()) return;
+                setExtraTodos((current) => [...current, todo.trim()]);
+                setTodo("");
+              }}
+              className="flex gap-1"
+            >
+              <input
+                value={todo}
+                onChange={(event) => setTodo(event.target.value)}
+                placeholder="Add a to-do…"
+                className="min-w-0 flex-1 rounded border border-card-border bg-input-bg px-1.5 py-1 text-[0.62rem] text-foreground outline-none placeholder:text-subtle-foreground focus-visible:border-accent-muted"
+              />
+              <button
+                type="submit"
+                className="shrink-0 cursor-pointer rounded border border-card-border bg-surface-muted px-1.5 text-[0.6rem] font-semibold text-foreground transition-colors hover:border-accent-muted"
+              >
+                Add
+              </button>
+            </form>
+            {track.todo.concat(extraTodos).map((item, itemIndex) => {
+              const key = `${track.id}-todo-${itemIndex}-${item}`;
+              return <Tickable key={key} label={item} on={!!done[key]} onToggle={() => tick(key)} color={track.color} />;
+            })}
           </Panel>
 
           <Panel icon={<NotebookPen size={10} strokeWidth={2.5} />} title="Notepad">
-            <span className="italic text-subtle-foreground">Jot it down here, sort it out later.</span>
+            {/* A real field. Every other panel here does something when you
+                touch it, and a notepad you cannot write in is the one that
+                gives the game away. */}
+            <textarea
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              rows={2}
+              placeholder="Jot it down here, sort it out later."
+              className="w-full resize-none rounded border border-card-border bg-input-bg px-1.5 py-1 text-[0.62rem] leading-snug text-foreground outline-none placeholder:italic placeholder:text-subtle-foreground focus-visible:border-accent-muted"
+            />
           </Panel>
         </div>
       </div>
     </div>
+  );
+}
+
+/** A line with a box you can tick. The app has four of these panels and they
+ *  all behave the same way, so this does too. */
+function Tickable({
+  label,
+  on,
+  onToggle,
+  color,
+}: {
+  label: string;
+  on: boolean;
+  onToggle: () => void;
+  color: string;
+}) {
+  return (
+    <button
+      onClick={onToggle}
+      className="flex w-full cursor-pointer items-center gap-1.5 text-left transition-colors hover:text-foreground"
+    >
+      <span
+        className="flex h-3 w-3 shrink-0 items-center justify-center rounded-[3px] border transition-colors"
+        style={{ borderColor: on ? color : "var(--card-border-hover)", background: on ? color : "transparent" }}
+      >
+        {on && <Check size={8} strokeWidth={4} className="text-background" />}
+      </span>
+      <span className={`truncate ${on ? "text-subtle-foreground line-through" : "text-muted-foreground"}`}>{label}</span>
+    </button>
   );
 }
 
@@ -308,11 +422,14 @@ function Panel({
   icon,
   title,
   trailing,
+  action,
   children,
 }: {
   icon: React.ReactNode;
   title: string;
   trailing?: string;
+  /** The small link some panels carry in their corner — "All four", "Hide". */
+  action?: { label: string; onClick: () => void };
   children: React.ReactNode;
 }) {
   return (
@@ -321,6 +438,14 @@ function Panel({
         <span className="text-accent">{icon}</span>
         <span className="text-[0.6rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">{title}</span>
         {trailing && <span className="ml-auto font-mono text-[0.58rem] text-accent">{trailing}</span>}
+        {action && (
+          <button
+            onClick={action.onClick}
+            className="ml-auto cursor-pointer text-[0.58rem] font-semibold text-accent transition-opacity hover:opacity-80"
+          >
+            {action.label}
+          </button>
+        )}
       </div>
       {children}
     </div>
