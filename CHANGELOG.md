@@ -7,6 +7,27 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.85.0] - 2026-09-26
+
+### Removed
+- **The simulated app on the landing page.** 0.83.0 and 0.84.0 made the previews behave: the stat
+  tiles opened, the boxes ticked, the track menu recoloured the card, the phones' tab bars switched
+  screens, a rotation could be added. On reflection that was the wrong idea. A preview that
+  half-works tells a visitor something about the product that is not true, and the moment one of
+  those ticks fails to save, the thing they have been misled about is the only thing the page is
+  for. The layouts are exactly as they were; every control in them is drawn again.
+- **And the hover states that went with them.** A hover is a claim that something will happen on a
+  click. On a page whose job is to describe an app rather than be one, that claim is false
+  everywhere except the links and the buttons, which have their own. The cards no longer lift, the
+  previews no longer rise off their shelf, and the panels inside them no longer light up. All three
+  previews are `aria-hidden` again, which is what a picture of an interface should be.
+
+### Kept
+- The scroll reveals and the easing on in-page links. Those are how the page moves, not claims about
+  what it can do.
+- The layouts, the examples and the copy from 0.83.0 and 0.84.0, including the fix that stopped the
+  hero's dashboard widening past its own card.
+
 ## [0.84.0] - 2026-09-26
 
 ### Fixed
