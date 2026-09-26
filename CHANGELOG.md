@@ -7,6 +7,39 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.84.0] - 2026-09-26
+
+### Fixed
+- **The hero's dashboard broke out of its own card** at every width between a phone and a desk. A
+  bare `fr` grid track has an automatic minimum of `auto`, so a column whose content does not fit
+  widens the grid instead of shrinking itself — the same mistake that pushed the colour section's
+  headline off the right edge in 0.82.0, in a second place. The consistency months scroll now rather
+  than being clipped mid-month.
+
+### Added
+- **The four numbers across the top of the preview open**, as the app's own stat tiles do: what the
+  streak counts, how far through the timeline you are, what "last 30" is measuring. The percentage
+  and the phase name open the phase list too — a small link in the corner was a small target.
+- **The stacked all-tracks preview responds.** Picking a row brings it forward and pushes the others
+  back; picking a day says what was done on it. It was `aria-hidden` and inert, sitting next to a
+  paragraph claiming the stack reads at a glance.
+- **The weekly plan ticks, picks and adds.** Every box toggles, a day can be opened, and there is a
+  **New rotation** button that adds one and a cross that removes it — a rotation is the one idea in
+  this app nobody arrives already knowing, so it is the one worth letting people try.
+- **The phones' tab bars work**, and each screen responds: the shape control switches, a day
+  highlights, a set ticks, a panel opens where it stands. Three phones you cannot touch, under a
+  heading about what the app is like in your hand, made the opposite point.
+- **In-page links roll rather than snap**, easing in and out, with the speed rising as the distance
+  does — a jump to the questions is quicker than four times the hop to the next section, not four
+  times slower. A wheel or a touch mid-flight cancels it, and `prefers-reduced-motion` gets the jump.
+
+### Changed
+- The colour section stops counting to three: "Every track in its own colour, on one year", and it
+  says outright that you can run as many as you like.
+- Specialised examples swapped for ones anybody can picture: the rotation is an exercise rotation
+  rather than an algorithm one, Materials lost its markdown editor and preview pane, and Deliverables
+  leads with the things a track produces rather than with git statistics.
+
 ## [0.83.0] - 2026-09-26
 
 ### Changed
