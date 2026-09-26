@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Flame } from "lucide-react";
 import type { TrackState } from "@/lib/types";
 import { timelineStats, yearCalendar, type StreakDay } from "@/lib/stats";
@@ -63,15 +63,33 @@ export default function AllTracksYear({
   const columns = Math.ceil(ruler.length / 7);
   const marks = useMemo(() => monthMarks(ruler), [ruler]);
 
+  /**
+   * Opened at the recent end.
+   *
+   * A year starts in January and a track rarely does, so left to itself the
+   * view opened on however many blank months came before the first real day —
+   * in one case five of them, with the actual history off the right edge.
+   * Jumped rather than animated, and once per year: this is where the graph
+   * starts, not somewhere it travels to while you watch.
+   */
+  const strips = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const node = strips.current;
+    if (node) node.scrollLeft = node.scrollWidth;
+  }, [columns, year]);
+
   if (columns === 0 || rows.length === 0) return null;
 
   return (
     <div className="flex gap-3">
-      <div className="shrink-0" style={{ width: 128 }}>
+      {/* Narrower on a phone: a fixed 128 left only about ten weeks of strip
+          beside it on a 375-point screen, which is not enough of a year to be
+          worth stacking. */}
+      <div className="w-[104px] shrink-0 sm:w-[128px]">
         {/* Level with the strips, which start one label-row lower. */}
         <div style={{ height: 16 }} />
         {rows.map((row) => (
-          <div key={row.track.meta.id} className="flex items-start gap-2" style={{ height: 7 * CELL + 6 * GAP, marginBottom: 12 }}>
+          <div key={row.track.meta.id} className="flex items-start gap-1.5" style={{ height: 7 * CELL + 6 * GAP, marginBottom: 12 }}>
             <TrackRing
               pct={row.pct}
               color={row.color}
@@ -95,7 +113,7 @@ export default function AllTracksYear({
         ))}
       </div>
 
-      <div className="min-w-0 flex-1 overflow-x-auto">
+      <div ref={strips} className="min-w-0 flex-1 overflow-x-auto">
         <div style={{ width: columns * COLUMN }}>
           <div className="relative text-[0.65rem] text-subtle-foreground" style={{ height: 16 }}>
             {marks.map((mark) => (

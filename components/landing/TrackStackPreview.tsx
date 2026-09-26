@@ -55,6 +55,7 @@ export default function TrackStackPreview() {
               gap={3}
               start={track.startDate}
               today={PREVIEW_TODAY}
+              pad={false}
             />
           ))}
         </div>
