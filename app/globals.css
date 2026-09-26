@@ -816,3 +816,24 @@ select option:disabled {
     transition: none;
   }
 }
+
+/* Every card on the marketing pages answers the pointer.
+   `.glass-panel:hover` already brightens the border and deepens the shadow,
+   which reads on a dashboard where the cards are the furniture and on a
+   landing page not at all. A point of movement is what says the thing is
+   alive; the dashboard's own panels stay still, because there the cards get
+   picked up and dragged and a hover lift would fight the drag. */
+.landing-lift {
+  will-change: transform;
+}
+
+.landing-lift:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-lift:hover {
+    transform: none;
+  }
+}
