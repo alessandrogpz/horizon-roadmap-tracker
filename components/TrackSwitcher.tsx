@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, Flame, Plus } from "lucide-react";
+import { ChevronDown, Flame, Plus, Trash2 } from "lucide-react";
 import type { TrackState } from "@/lib/types";
 import { streakCalendar } from "@/lib/stats";
 import { currentStreakLength } from "@/lib/streak";
@@ -14,6 +14,8 @@ interface TrackSwitcherProps {
   activeTrackId: string;
   onSwitch: (trackId: string) => void;
   onNewTrack: () => void;
+  /** Archives a track. Absent, the rows carry no delete affordance. */
+  onDelete?: (trackId: string) => void;
 }
 
 /**
@@ -25,8 +27,12 @@ interface TrackSwitcherProps {
  * track's own colour and the run it is on, because the question anyone
  * actually opens this for is which ones they are keeping up.
  */
-export default function TrackSwitcher({ tracks, activeTrackId, onSwitch, onNewTrack }: TrackSwitcherProps) {
+export default function TrackSwitcher({ tracks, activeTrackId, onSwitch, onNewTrack, onDelete }: TrackSwitcherProps) {
   const [open, setOpen] = useState(false);
+  /** Which row has been armed for deletion. One decision per intent: the
+   *  trash icon asks, the second tap does it, and opening the menu again
+   *  forgets. */
+  const [confirming, setConfirming] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const settings = useAppSettings();
   const today = todayYMD();
@@ -51,11 +57,14 @@ export default function TrackSwitcher({ tracks, activeTrackId, onSwitch, onNewTr
     if (!open) return;
     const handleClickOutside = (e: MouseEvent) => {
       if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setConfirming(null);
         setOpen(false);
       }
     };
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key !== "Escape") return;
+      setConfirming(null);
+      setOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("keydown", handleEscape);
@@ -67,10 +76,16 @@ export default function TrackSwitcher({ tracks, activeTrackId, onSwitch, onNewTr
 
   if (!activeTrack) return null;
 
+  // One track cannot be deleted: the app has nowhere to stand without it.
+  const canDelete = Boolean(onDelete) && tracks.length > 1;
+
   return (
     <div ref={rootRef} className="relative">
       <button
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => {
+          setConfirming(null);
+          setOpen((o) => !o);
+        }}
         aria-expanded={open}
         className="flex items-center gap-1.5 bg-transparent border-none p-0 cursor-pointer text-[0.85rem] font-semibold text-accent hover:underline"
         title="Switch track"
@@ -84,20 +99,17 @@ export default function TrackSwitcher({ tracks, activeTrackId, onSwitch, onNewTr
         <ChevronDown size={12} strokeWidth={2.5} className={`text-subtle-foreground transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
+      {/* Pinned to the viewport on a phone and hung off the button on a desk.
+          A 360-point menu anchored to a button sixty points from the left edge
+          is 400 points wide on a 375-point screen, and the page — the only
+          page in this app that had to — scrolled sideways. */}
       {open && (
-        <div className="absolute left-0 top-[calc(100%+0.5rem)] z-50 w-[360px] max-w-[calc(100vw-2rem)] bg-card border border-card-border rounded-md shadow-[0_10px_25px_-5px_rgba(0,0,0,0.5)] overflow-hidden">
+        <div className="fixed inset-x-2 top-[3.6rem] z-50 max-h-[70vh] overflow-y-auto rounded-md border border-card-border bg-card shadow-[0_10px_25px_-5px_rgba(0,0,0,0.5)] sm:absolute sm:inset-x-auto sm:left-0 sm:top-[calc(100%+0.5rem)] sm:max-h-none sm:w-[360px]">
           {rows.map((row) => {
             const active = row.track.meta.id === activeTrackId;
+            const armed = confirming === row.track.meta.id;
             return (
-              <button
-                key={row.track.meta.id}
-                onClick={() => {
-                  setOpen(false);
-                  if (!active) onSwitch(row.track.meta.id);
-                }}
-                aria-current={active}
-                className="relative w-full flex flex-col gap-2 px-3 py-2.5 text-left bg-transparent border-none border-b border-card-border cursor-pointer transition-colors duration-150 hover:bg-surface-hover"
-              >
+              <div key={row.track.meta.id} className="relative border-b border-card-border last:border-b-0">
                 {/* The track's colour laid over the row rather than replacing
                     its background, so the row keeps the surface it sits on. */}
                 <span
@@ -105,30 +117,68 @@ export default function TrackSwitcher({ tracks, activeTrackId, onSwitch, onNewTr
                   className="absolute inset-0 pointer-events-none"
                   style={{ backgroundColor: row.color, opacity: active ? 0.12 : 0.04 }}
                 />
-                <span className="relative flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: row.color }} />
-                  <span className="flex-1 truncate text-[0.85rem] font-semibold text-foreground">{row.track.meta.name}</span>
-                  {row.streak > 0 && (
-                    <span
-                      className="inline-flex items-center gap-1 rounded px-1.5 py-px text-[0.65rem] font-bold"
-                      style={{ color: row.color, backgroundColor: "var(--surface-hover)" }}
-                    >
-                      <Flame size={9} strokeWidth={2.5} />
-                      {row.streak}
-                    </span>
-                  )}
-                </span>
-                <TrackYearStrip
-                  days={row.days}
-                  color={row.color}
-                  cell={4}
-                  gap={2}
-                  start={row.track.startDate}
-                  className="relative"
-                />
-              </button>
+                <button
+                  onClick={() => {
+                    setOpen(false);
+                    if (!active) onSwitch(row.track.meta.id);
+                  }}
+                  aria-current={active}
+                  className="relative flex w-full flex-col gap-2 border-none bg-transparent px-3 py-2.5 text-left transition-colors duration-150 cursor-pointer hover:bg-surface-hover"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: row.color }} />
+                    <span className="flex-1 truncate text-[0.85rem] font-semibold text-foreground">{row.track.meta.name}</span>
+                    {row.streak > 0 && (
+                      <span
+                        className="inline-flex items-center gap-1 rounded px-1.5 py-px text-[0.65rem] font-bold"
+                        style={{ color: row.color, backgroundColor: "var(--surface-hover)" }}
+                      >
+                        <Flame size={9} strokeWidth={2.5} />
+                        {row.streak}
+                      </span>
+                    )}
+                    {/* Room for the delete button, which sits over this end of
+                        the line rather than inside the row's own button — a
+                        button cannot contain another one. */}
+                    {canDelete && <span className="w-6 shrink-0" />}
+                  </span>
+                  <TrackYearStrip
+                    days={row.days}
+                    color={row.color}
+                    cell={4}
+                    gap={2}
+                    start={row.track.startDate}
+                  />
+                </button>
+
+                {canDelete && (
+                  <button
+                    onClick={() => {
+                      if (!armed) {
+                        setConfirming(row.track.meta.id);
+                        return;
+                      }
+                      setConfirming(null);
+                      setOpen(false);
+                      onDelete?.(row.track.meta.id);
+                    }}
+                    onBlur={() => setConfirming((current) => (current === row.track.meta.id ? null : current))}
+                    title={armed ? "Tap again to delete" : `Delete ${row.track.meta.name}`}
+                    aria-label={armed ? `Confirm deleting ${row.track.meta.name}` : `Delete ${row.track.meta.name}`}
+                    className={`absolute right-2.5 top-2 flex h-6 items-center gap-1 rounded-[var(--radius-control)] border px-1.5 text-[0.62rem] font-semibold transition-colors cursor-pointer ${
+                      armed
+                        ? "border-red-500/50 bg-red-500/15 text-red-400"
+                        : "border-transparent bg-transparent text-subtle-foreground hover:border-card-border hover:bg-surface-hover hover:text-red-400"
+                    }`}
+                  >
+                    <Trash2 size={12} strokeWidth={2} />
+                    {armed && <span>Sure?</span>}
+                  </button>
+                )}
+              </div>
             );
           })}
+
           <button
             onClick={() => {
               setOpen(false);

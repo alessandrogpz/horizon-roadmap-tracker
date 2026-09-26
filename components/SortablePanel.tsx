@@ -52,7 +52,13 @@ export default function SortablePanel({ id, children, index = 0, onEdit, onHide 
       className="relative group"
       onTouchStart={listeners?.onTouchStart as React.TouchEventHandler<HTMLDivElement> | undefined}
     >
-      <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-150">
+      {/* Invisible is not absent: an `opacity-0` button still takes the tap.
+          On a phone, where there is no hover to reveal them, these three sat
+          silently over the top-right corner of every panel and swallowed
+          whatever a panel had put there — tapping the Consistency scope
+          toggle hid the panel instead. They are out of the way of pointers
+          until they are actually shown. */}
+      <div className="pointer-events-none absolute top-3 right-3 z-10 flex items-center gap-1.5 opacity-0 transition-opacity duration-150 group-hover:pointer-events-auto group-hover:opacity-100 focus-within:pointer-events-auto focus-within:opacity-100">
         {onEdit && (
           <button onClick={onEdit} className={chromeBtn} title="Edit panel" aria-label="Edit panel">
             <Pencil size={13} strokeWidth={2} />

@@ -1,15 +1,45 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { Activity, Check, Flame, Layers, X } from "lucide-react";
+import { Activity, Check, ChevronLeft, ChevronRight, Flame, Layers, X } from "lucide-react";
 import type { CompletedItem, TrackState } from "@/lib/types";
 import { parseYMD, todayYMD } from "@/lib/dates";
 import { currentStreakLength } from "@/lib/streak";
-import { streakCalendar } from "@/lib/stats";
+import { monthCalendar, yearCalendar, yearsWithHistory } from "@/lib/stats";
 import { useAppSettings } from "@/lib/useAppSettings";
 import AllTracksYear from "@/components/AllTracksYear";
 import Portal from "@/components/Portal";
 import StreakGrid, { type StreakCell } from "@/components/StreakGrid";
+
+/** The two ways of laying the same days out. */
+const SHAPES = [
+  { value: "months", label: "By month" },
+  { value: "continuous", label: "Continuous" },
+] as const;
+
+/** One step through the years. Disabled rather than hidden at the ends, so the
+ *  control keeps its shape and the year stays where the eye left it. */
+function YearStep({
+  direction,
+  disabled,
+  onClick,
+}: {
+  direction: -1 | 1;
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  const Icon = direction === -1 ? ChevronLeft : ChevronRight;
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={direction === -1 ? "Previous year" : "Next year"}
+      className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-[var(--radius-control)] border border-card-border bg-surface-muted text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+    >
+      <Icon size={13} strokeWidth={2.5} />
+    </button>
+  );
+}
 
 export default function StreakGraph({
   streakHistory = [],
@@ -38,21 +68,42 @@ export default function StreakGraph({
    * stack and the control would be a switch between a thing and itself.
    */
   const [scope, setScope] = useState<"track" | "all">("track");
+  /**
+   * By month is the default, as it is on the phone: a calendar year as one
+   * unbroken ribbon of weeks is hard to read a month out of, because nothing
+   * marks where one ends. The continuous shape is still worth having for
+   * seeing a long run at a glance, so it is a toggle rather than a
+   * replacement.
+   */
+  const [byMonth, setByMonth] = useState(true);
   const settings = useAppSettings();
   const today = todayYMD();
+  const [year, setYear] = useState(() => parseYMD(today).getFullYear());
   const canCombine = tracks.length > 1;
   const combined = scope === "all" && canCombine;
 
-  // Walking every day from startDate to today is real work on a year-long
-  // track, so memoize it — otherwise it re-runs on every unrelated re-render.
+  /**
+   * One calendar year, always — not the whole track.
+   *
+   * The grid used to run from the track's first day to today, so it grew as
+   * the track did: by month twelve it was fifty-odd columns squeezed into a
+   * half-width panel, at a few points a day. A year is a shape you can hold
+   * in your head, it fits at a size you can actually see and click, and it
+   * gives the arrows something to step through.
+   */
   const days = useMemo(
-    () =>
-      streakCalendar(
-        { startDate: startDate || "", completedItemsHistory },
-        todayYMD(),
-        settings.weekStartsOn
-      ),
-    [completedItemsHistory, startDate, settings.weekStartsOn]
+    () => yearCalendar(completedItemsHistory, startDate || "", year, today, settings.weekStartsOn),
+    [completedItemsHistory, settings.weekStartsOn, startDate, today, year]
+  );
+
+  const months = useMemo(
+    () => monthCalendar(completedItemsHistory, startDate || "", year, today, settings.weekStartsOn),
+    [completedItemsHistory, settings.weekStartsOn, startDate, today, year]
+  );
+
+  const years = useMemo(
+    () => yearsWithHistory(completedItemsHistory, startDate || "", today),
+    [completedItemsHistory, startDate, today]
   );
 
   const streak = useMemo(() => currentStreakLength(streakHistory, todayYMD()), [streakHistory]);
@@ -69,10 +120,10 @@ export default function StreakGraph({
 
   const itemAsObject = (it: CompletedItem) => (typeof it === "string" ? { title: it, description: "" } : { description: "", ...it });
 
-  // streakCalendar already returns week-major order, which is exactly how
-  // StreakGrid flows: column-first over seven rows, one week per column.
-  const cells: StreakCell[] = days.map((day, i) => {
-    if (!day.date) return { id: `pad-${i}`, level: 0, filled: false };
+  /** One day, as the grid wants it. Shared by both shapes so a square means
+   *  the same thing, and is the same size, whichever way it is arranged. */
+  const cellFor = (day: { date: string; count: number } | null, key: string): StreakCell => {
+    if (!day) return { id: key, level: 0, filled: false };
     const items = completedItemsHistory[day.date] || [];
     const accomplishments = items.length
       ? `\nAccomplished:\n• ${items
@@ -91,11 +142,19 @@ export default function StreakGraph({
         (day.date === startDate ? " — the day this track started" : "") +
         accomplishments,
     };
-  });
+  };
+
+  // `yearCalendar` returns week-major order, which is exactly how StreakGrid
+  // flows: column-first over seven rows, one week per column.
+  const cells: StreakCell[] = days.map((day, index) => cellFor(day.date ? day : null, `pad-${index}`));
 
   return (
     <div className="glass-panel">
-      <div className="flex items-center justify-between gap-3 flex-wrap mb-1">
+      {/* The right-hand end stops short of the panel's hover chrome — the
+          hide and drag buttons live in that corner, and although they are
+          invisible until the panel is hovered, they still take the tap.
+          Nothing clickable belongs under them. */}
+      <div className="flex items-center justify-between gap-3 flex-wrap pr-16">
         <h2 className="section-title !mb-0">
           <Activity size={14} strokeWidth={2.5} className="section-icon" />
           Consistency
@@ -106,33 +165,90 @@ export default function StreakGraph({
             {streak} day{streak === 1 ? "" : "s"}
           </span>
           <span className="text-muted-foreground">{totalActive} active</span>
-          {canCombine && (
-            <button
-              onClick={() => setScope(combined ? "track" : "all")}
-              aria-pressed={combined}
-              title={combined ? "Show only this track" : "Show every track"}
-              className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[0.7rem] font-semibold border transition-colors cursor-pointer ${
-                combined
-                  ? "border-accent-muted bg-accent/10 text-accent"
-                  : "border-card-border bg-transparent text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Layers size={11} strokeWidth={2.5} />
-              {combined ? "All tracks" : "This track"}
-            </button>
-          )}
         </div>
       </div>
-      <div className="py-2.5">
-        {combined ? (
-          <AllTracksYear
-            tracks={tracks}
-            year={parseYMD(today).getFullYear()}
-            today={today}
-            weekStartsOn={settings.weekStartsOn}
+
+      {/* Shape, year and scope on one line of their own, below the heading
+          and clear of the chrome. */}
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {!combined && (
+          <div className="flex rounded-[var(--radius-control)] border border-card-border bg-surface-muted p-0.5">
+            {SHAPES.map((shape) => {
+              const on = (shape.value === "months") === byMonth;
+              return (
+                <button
+                  key={shape.value}
+                  onClick={() => setByMonth(shape.value === "months")}
+                  aria-pressed={on}
+                  className={`cursor-pointer rounded-[calc(var(--radius-control)-2px)] px-2.5 py-1 text-[0.72rem] font-semibold transition-colors ${
+                    on ? "bg-card text-foreground" : "bg-transparent text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {shape.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="flex items-center gap-1">
+          <YearStep
+            direction={-1}
+            disabled={year <= years.first}
+            onClick={() => setYear(year - 1)}
           />
+          <span className="min-w-[3.2rem] text-center font-mono text-[0.78rem] font-bold text-foreground">{year}</span>
+          <YearStep
+            direction={1}
+            disabled={year >= years.last}
+            onClick={() => setYear(year + 1)}
+          />
+        </div>
+
+        {canCombine && (
+          <button
+            onClick={() => setScope(combined ? "track" : "all")}
+            aria-pressed={combined}
+            title={combined ? "Show only this track" : "Show every track"}
+            className={`sm:ml-auto inline-flex cursor-pointer items-center gap-1 rounded-[var(--radius-control)] border px-2.5 py-1 text-[0.72rem] font-semibold transition-colors ${
+              combined
+                ? "border-accent-muted bg-accent/10 text-accent"
+                : "border-card-border bg-surface-muted text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Layers size={11} strokeWidth={2.5} />
+            {combined ? "All tracks" : "This track"}
+          </button>
+        )}
+      </div>
+
+      <div className="py-3">
+        {combined ? (
+          <AllTracksYear tracks={tracks} year={year} today={today} weekStartsOn={settings.weekStartsOn} />
+        ) : byMonth ? (
+          // Months wrap across the panel rather than running off the side of
+          // it. Each block starts on the weekday its 1st fell on, which is
+          // what makes a month recognisable as that month.
+          <div className="flex flex-wrap gap-x-5 gap-y-4">
+            {months.map((month) => (
+              <div key={month.key} className="flex flex-col gap-1.5">
+                <span className="text-[0.68rem] font-semibold text-muted-foreground">{month.label}</span>
+                <StreakGrid
+                  cells={month.cells.map((day, index) => cellFor(day, `${month.key}-pad-${index}`))}
+                  onCellClick={setSelectedDateDetails}
+                />
+              </div>
+            ))}
+            {months.length === 0 && (
+              <span className="text-[0.85rem] italic text-muted-foreground">Nothing recorded in {year}.</span>
+            )}
+          </div>
         ) : (
-          <StreakGrid cells={cells} onCellClick={setSelectedDateDetails} />
+          // A whole year at a readable cell size is wider than a half-width
+          // panel, so it scrolls sideways rather than shrinking its days.
+          <div className="-mx-1 overflow-x-auto px-1 pb-1">
+            <StreakGrid cells={cells} onCellClick={setSelectedDateDetails} />
+          </div>
         )}
       </div>
 
