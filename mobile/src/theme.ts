@@ -95,32 +95,10 @@ export const TYPE = {
   eyebrow: { fontSize: 11, letterSpacing: 1.1, textTransform: "uppercase" },
 } as const;
 
-/**
- * A track's colour at a given strength, for the consistency grid.
- *
- * Four steps of one hue rather than four fixed greens: a track is told apart
- * by its colour everywhere else in the app, and its own history is the last
- * place that should be painted somebody else's. The steps are alpha over
- * whatever is behind them, which keeps them legible in both themes without
- * needing two ramps.
- */
-export function shadeOf(colour: string, count: number, empty: string): string {
-  if (count <= 0) return empty;
-  const alpha = count === 1 ? 0.3 : count === 2 ? 0.52 : count === 3 ? 0.76 : 1;
-  return withAlpha(colour, alpha);
-}
-
-/** `#rrggbb` at an opacity, as `rgba()`. Returns the colour untouched if it is
- *  not a hex triple, because a palette value may be anything. */
-export function withAlpha(colour: string, alpha: number): string {
-  const hex = colour.trim().replace("#", "");
-  if (!/^[0-9a-fA-F]{6}$/.test(hex)) return colour;
-  const value = parseInt(hex, 16);
-  const r = (value >> 16) & 255;
-  const g = (value >> 8) & 255;
-  const b = value & 255;
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
+// The colour helpers live in the shared core, because the website draws the
+// same grid from the same numbers. Re-exported here so that everything on the
+// phone still reaches for them where it reaches for the rest of the theme.
+export { shadeOf, withAlpha, shadeScale, lighten, SHADE_STEPS } from "@shared/colors";
 
 export const RADIUS = { control: 8, card: 14 } as const;
 

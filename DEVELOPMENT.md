@@ -67,6 +67,9 @@ The Dexie (IndexedDB) database and Google Drive `database.json` used for daily p
 | Merge/conflict resolution | `lib/merge.ts` |
 | What an edit does to a track | `lib/trackActions.ts` (materials, portfolio, phases, identity) and `lib/completions.ts` (checkboxes, streak) |
 | Pure workspace queries | `lib/selectors.ts` |
+| The colours a track can wear | `lib/trackColors.ts` — the list, and why white and black are not on it |
+| A track's colour at the grid's four strengths | `lib/colors.ts` (`shadeOf`, `withAlpha`, `lighten`) |
+| Demo tracks (`test1`/`test2`/`test3`) | `lib/demoTracks.ts`, offered from Settings on both platforms |
 | App state + persistence timing | `components/workspace/WorkspaceProvider.tsx` |
 | Which dashboard modules exist | `lib/modules.ts` (data) + `components/panels/registry.tsx` (icon + panel) |
 | Local MongoDB (replica set, users, secrets) | `compose.yaml`, `docker/mongo-init.js`, `scripts/dev-env.mjs`; usage in the README |
@@ -103,6 +106,40 @@ as features are added, so anything unexpected in it is a reason to stop.
 When a change adds a field that must reach the server, deploy `main` before or
 alongside the OTA update — the schema tolerating it is a safety net, not a
 substitute for the field actually arriving.
+
+## A track's colour
+
+Every track carries `meta.color`, chosen when the track is created from the
+six in `lib/trackColors.ts`. It is not decoration: it is the accent the whole
+app wears while that track is open, and the ink that track's history is drawn
+in.
+
+- **The web** rewrites CSS variables. `components/TrackAccent.tsx` sets
+  `--accent`, `--accent-hover`, `--accent-muted`, `--ring` and `--streak-1` …
+  `--streak-4` on `<html>` from the open track. Everything already reads from
+  those variables, so nothing else had to change.
+- **The phone** does the same thing one level up: `setAccent` on
+  `mobile/src/theme/ThemeProvider.tsx` overlays `palette.accent`, and
+  `TrackAccent` in `mobile/src/app/_layout.tsx` calls it when the track
+  changes. Components that need the raw colour — the grids — read
+  `track.meta.color` and pass it to `shadeOf`.
+
+`--streak-0`, the colour of a day with nothing on it, is deliberately left to
+the theme. It belongs to the page, not to the track, and in light mode it is
+the only one of the five that has to stay readable against white.
+
+Two rules that are easy to break:
+
+1. **The picker offers six colours and never white or black.** The day a track
+   began is drawn in the page's opposite — white on a dark screen, black on a
+   light one — so that it is findable whatever the track is wearing. Add white
+   to the list and that mark vanishes on exactly one track. It was previously
+   drawn in the accent, which stopped meaning anything the moment the scale
+   itself became the accent.
+2. **A free-form colour input is not an improvement.** The grid paints four
+   strengths of the chosen hue, and a colour near the page's own is four
+   shades of nothing. The web used `<input type="color">` and lost it for this
+   reason.
 
 ## Type on the phone
 
