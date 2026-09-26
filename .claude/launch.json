@@ -4,8 +4,23 @@
     {
       "name": "horizon-mobile-web",
       "runtimeExecutable": "sh",
-      "runtimeArgs": ["-c", "cd mobile && exec npx expo start --web --port 8098"],
+      "runtimeArgs": [
+        "-c",
+        "cd mobile && exec npx expo start --web --port 8098"
+      ],
       "port": 8098
+    },
+    {
+      "name": "horizon-web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "3111"
+      ],
+      "port": 3111
     }
   ]
 }

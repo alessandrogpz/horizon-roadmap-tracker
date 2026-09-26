@@ -18,6 +18,16 @@ export interface StreakCell {
   title?: string;
   /** False for the cells that pad the final partial week out to seven. */
   filled?: boolean;
+  /**
+   * A day worth finding rather than a day worth counting.
+   *
+   * `start` is drawn in the page's opposite — white on a dark screen, black
+   * on a light one — and never in a colour, because the grid itself is now
+   * the track's colour and a mark painted in that colour disappears against
+   * a busy day. The six colours a track may wear deliberately stop short of
+   * white and black so that this can never collide with one.
+   */
+  mark?: "start" | "today";
 }
 
 /** Largest a day cell is allowed to get, and the gutter between them (px). */
@@ -60,7 +70,12 @@ export default function StreakGrid({
             }`}
             style={{
               backgroundColor:
-                cell.filled === false ? "transparent" : `var(--streak-${cell.level})`,
+                cell.filled === false
+                  ? "transparent"
+                  : cell.mark === "start"
+                    ? "var(--foreground)"
+                    : `var(--streak-${cell.level})`,
+              boxShadow: cell.mark === "today" ? "0 0 0 1.5px var(--foreground)" : undefined,
             }}
           />
         );
