@@ -16,6 +16,7 @@ import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-na
 import { Link } from "expo-router";
 import Constants from "expo-constants";
 import { visibleTracks } from "@shared/selectors";
+import { buildDemoTracks, DEMO_TRACK_NAMES, isDemoTrack } from "@shared/demoTracks";
 import { getSettings, updateSettings, type AppSettings } from "@shared/settings";
 import {
   CancelledError,
@@ -36,7 +37,7 @@ import { describeHour, HourWheel } from "../components/HourWheel";
 import { Refreshable } from "../components/Refreshable";
 
 export default function SettingsScreen() {
-  const { workspace, replaceWorkspace, resetLocal } = useWorkspace();
+  const { workspace, today, addTrack, switchTrack, editTrackById, replaceWorkspace, resetLocal } = useWorkspace();
   const { palette } = useTheme();
   const styles = useMemo(() => makeStyles(palette), [palette]);
 
@@ -51,6 +52,40 @@ export default function SettingsScreen() {
     const timer = setTimeout(() => setConfirming(false), 8000);
     return () => clearTimeout(timer);
   }, [confirming]);
+
+  /**
+   * Three tracks with a year of history, and a way to take them away again.
+   *
+   * Everything that shows more than one track at once is impossible to look at
+   * on a real account's first month, and ticking several hundred days by hand
+   * to see it is not a reasonable ask. They are ordinary tracks — recognised
+   * by name, not by a flag — so nothing else in the app has to know they are
+   * different, and deleting them is the same archive every other track gets.
+   */
+  const demoTracks = useMemo(
+    () => (workspace ? visibleTracks(workspace).filter(isDemoTrack) : []),
+    [workspace]
+  );
+
+  const addDemoTracks = useCallback(() => {
+    const wasOpen = workspace?.activeTrackId;
+    buildDemoTracks(today).forEach((track) => addTrack(track));
+    // `addTrack` opens what it adds, which is right when a person made the
+    // track and wrong when three arrived at once from a settings screen.
+    if (wasOpen) switchTrack(wasOpen);
+  }, [addTrack, switchTrack, today, workspace]);
+
+  const removeDemoTracks = useCallback(() => {
+    const keep = workspace ? visibleTracks(workspace).find((track) => !isDemoTrack(track)) : undefined;
+    // Off the track being deleted first: archiving the open one leaves the app
+    // standing on a track nothing will show it.
+    if (keep && demoTracks.some((track) => track.meta.id === workspace?.activeTrackId)) {
+      switchTrack(keep.meta.id);
+    }
+    demoTracks.forEach((track) =>
+      editTrackById(track.meta.id, (current) => ({ ...current, meta: { ...current.meta, archived: true } }))
+    );
+  }, [demoTracks, editTrackById, switchTrack, workspace]);
 
   const wipe = useCallback(async () => {
     setBusy(true);
@@ -241,6 +276,43 @@ export default function SettingsScreen() {
               </Pressable>
             </View>
           </View>
+        )}
+      </View>
+
+      <View style={[styles.row, styles.rowStack]}>
+        <Text style={styles.rowTitle}>Demo tracks</Text>
+        <Text style={styles.muted}>
+          {DEMO_TRACK_NAMES.join(", ")} — three tracks in three colours, each with a year or more of
+          days already ticked. They are there to give the screens that show several tracks at once
+          something to show, and to be something to break in without touching a real track. Ordinary
+          tracks otherwise: open them, edit them, delete them.
+        </Text>
+        <View style={styles.choices}>
+          <Pressable
+            accessibilityRole="button"
+            disabled={demoTracks.length > 0}
+            onPress={addDemoTracks}
+            style={styles.choice}
+          >
+            <Text style={[styles.choiceLabel, demoTracks.length > 0 && { color: palette.subtleForeground }]}>
+              Add them
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            disabled={demoTracks.length === 0}
+            onPress={removeDemoTracks}
+            style={styles.choice}
+          >
+            <Text style={[styles.choiceLabel, demoTracks.length === 0 && { color: palette.subtleForeground }]}>
+              Remove them
+            </Text>
+          </Pressable>
+        </View>
+        {demoTracks.length > 0 && (
+          <Text style={styles.good}>
+            {demoTracks.length} demo track{demoTracks.length === 1 ? "" : "s"} on this phone.
+          </Text>
         )}
       </View>
 

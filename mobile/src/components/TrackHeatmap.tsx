@@ -24,7 +24,17 @@ const DOT_SHARE = 0.78;
  *  same nothing in every one of them. */
 const BLANK_WEEK: StreakDay[] = Array.from({ length: 7 }, () => ({ date: "", count: 0 }));
 
-export function TrackHeatmap({ days, colour }: { days: StreakDay[]; colour: string }) {
+export function TrackHeatmap({
+  days,
+  colour,
+  start,
+}: {
+  days: StreakDay[];
+  colour: string;
+  /** The track's first day, marked the same way the Progress grid marks it:
+   *  in the page's opposite, so it survives whichever colour the track is. */
+  start?: string;
+}) {
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
   // Measured rather than assumed. Hard-coded five-point days overflowed the
@@ -75,7 +85,11 @@ export function TrackHeatmap({ days, colour }: { days: StreakDay[]; colour: stri
                 borderRadius: Math.max(1, dot * 0.25),
                 // A padding cell is not a day with nothing in it, so it is not
                 // drawn at all rather than drawn as an empty one.
-                backgroundColor: day.date ? shadeOf(colour, day.count, palette.surfaceMuted) : "transparent",
+                backgroundColor: !day.date
+                  ? "transparent"
+                  : day.date === start
+                    ? palette.foreground
+                    : shadeOf(colour, day.count, palette.surfaceMuted),
               }}
             />
           ))}
