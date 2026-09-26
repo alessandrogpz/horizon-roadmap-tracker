@@ -13,7 +13,7 @@ import { PREVIEW_TODAY, PREVIEW_TRACKS } from "./phoneData";
  */
 export default function TrackStackPreview() {
   return (
-    <div aria-hidden="true" className="glass-panel landing-preview flex flex-col gap-3 select-none">
+    <div aria-hidden="true" className="glass-panel landing-preview flex min-w-0 select-none flex-col gap-3 overflow-hidden">
       <div className="flex items-baseline justify-between gap-3 border-b border-card-border pb-3">
         <span className="text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
           Consistency · all tracks
@@ -22,7 +22,7 @@ export default function TrackStackPreview() {
       </div>
 
       <div className="flex gap-3 overflow-hidden">
-        <div className="flex shrink-0 flex-col gap-3" style={{ width: 132 }}>
+        <div className="w-[104px] shrink-0 flex-col gap-3 sm:w-[132px] flex">
           {PREVIEW_TRACKS.map((track) => (
             <div key={track.id} className="flex items-start gap-2" style={{ height: 7 * 11 + 6 * 3 }}>
               <TrackRing pct={track.pct} color={track.color} />

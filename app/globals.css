@@ -739,3 +739,80 @@ select option:disabled {
     padding: 1.25rem;
   }
 }
+
+/* The panels inside a preview. The real dashboard's cards, one size down:
+   the same surface and the same lift under the cursor, because the point of
+   showing the app on a marketing page is that it behaves like the app. */
+.landing-mini-panel {
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--card-bg) 70%, transparent);
+  padding: 0.55rem 0.65rem;
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.landing-mini-panel:hover {
+  border-color: var(--accent-muted);
+  background: color-mix(in srgb, var(--card-bg) 92%, transparent);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-panel);
+}
+
+/* A preview sitting on a shelf rather than floating on the page: a soft pool
+   of the track's own colour under it, and a lift when the pointer arrives. */
+.landing-stage {
+  position: relative;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.landing-stage::before {
+  content: "";
+  position: absolute;
+  inset: 12% 4% -8%;
+  border-radius: 999px;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 26%, transparent), transparent 75%);
+  filter: blur(46px);
+  opacity: 0.55;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.landing-stage:hover {
+  transform: translateY(-3px);
+}
+
+.landing-stage:hover::before {
+  opacity: 0.85;
+}
+
+/* Sections arrive as you reach them. One page of scroll needs something to
+   reward the scrolling; this is the cheapest honest version of it — no
+   library, no layout thrash, and it does nothing at all for anyone who has
+   asked their machine to stop moving things. */
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-stage,
+  .landing-stage:hover,
+  .landing-mini-panel,
+  .landing-mini-panel:hover {
+    transform: none;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
