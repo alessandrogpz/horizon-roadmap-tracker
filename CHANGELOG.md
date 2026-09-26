@@ -7,6 +7,49 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.80.0] - 2026-09-26
+
+### Added
+- **The website catches up with the phone.** Everything the last four releases built on Android now
+  exists on the web, arranged for a desk rather than a hand:
+  - A track's colour is asked for when the track is made, from the same six swatches, and applied to
+    the whole page. `components/TrackAccent.tsx` rewrites `--accent`, `--accent-hover`,
+    `--accent-muted`, `--ring` and `--streak-1` … `--streak-4` on `<html>`, so every accent in the
+    app follows the open track without a colour being threaded through a single component.
+  - Making a track is now a dialog — name, colour, start, deadline, template — instead of a click
+    that dropped a track called "New Track" into the workspace with a horizon nobody had chosen.
+  - The track switcher carries a year of each track's days under its name, in that track's colour,
+    with the run it is on. It was a column of names, which answered "which tracks exist" and nothing
+    else.
+  - Consistency is drawn in the track's colour, with the day it began marked in the page's opposite,
+    and a key under it. With more than one track open, a control stacks every track's year on the
+    same calendar columns.
+  - Settings will add and remove `test1`, `test2` and `test3`, the same three demo tracks the phone
+    offers, from the same generator.
+- **The landing page shows the phone.** Three drawn screens — Progress, My Space and a workout being
+  logged set by set — built from the app's own components and the app's own demo data rather than
+  photographed, so they cannot go stale. Plus a section on what a colour per track buys you, drawn
+  with the real stacked view, and an honest word about the PWA: installing the website is a complete
+  way to use Horizon, and the Android app is for the handful of things a browser cannot reach.
+
+### Changed
+- `shadeOf`, `withAlpha` and the shade scale moved from the phone's theme into `lib/colors.ts`, and
+  the list of track colours into `lib/trackColors.ts`. Both apps paint the same grid from the same
+  numbers; two implementations of "four steps of one hue" is two ramps that drift.
+- The phone's track colour picker replaced the website's `<input type="color">`. A free choice lets
+  someone pick a colour the app then has to work around — the grid paints four strengths of it, and
+  a colour near the page's own is four shades of nothing.
+- `yearCalendar` moved into `lib/stats.ts`, where the stacked views on both platforms and the
+  landing page's previews all reach it.
+- README and `DEVELOPMENT.md` gained what a track's colour is and the two rules that are easy to
+  break: the picker never offers white or black, because the day a track began is drawn in the
+  page's opposite; and a free-form colour input is not an improvement.
+
+### Removed
+- **Dragging one row of the stacked view on its own.** Added in 0.79.0 and taken out after use: it
+  was a second gesture on a view whose whole claim is that the columns line up, and it earned its
+  complexity from nobody. The spacing between rows, which arrived with it, stays.
+
 ## [0.79.0] - 2026-09-26
 
 ### Added

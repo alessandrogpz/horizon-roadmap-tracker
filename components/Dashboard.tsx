@@ -16,8 +16,8 @@ import { SortableContext, verticalListSortingStrategy, arrayMove, sortableKeyboa
 import { LayoutGrid, LoaderCircle } from "lucide-react";
 import type { PanelColumns, Phase, TrackState, WeekDay, Workspace } from "@/lib/types";
 import { visibleTracks } from "@/lib/selectors";
-import { daysSince, todayYMD } from "@/lib/dates";
-import { blankTrack } from "@/lib/templates";
+import { daysSince } from "@/lib/dates";
+
 import { MODULES, defaultPanelColumns, homeColumnFor, resolveTrackLayout } from "@/lib/modules";
 import { recommendedPhaseId, removePhase, setCurrentPhase, setWeeklyRhythm, updatePhase, updateTrackIdentity } from "@/lib/trackActions";
 import { loadGoogleGisScript } from "@/lib/googleSignIn";
@@ -26,6 +26,8 @@ import { useAccount } from "@/components/useAccount";
 import { panelFor, type PanelContext } from "@/components/panels/registry";
 import PanelErrorBoundary from "@/components/panels/PanelErrorBoundary";
 import DashboardHeader from "@/components/DashboardHeader";
+import NewTrackModal from "@/components/NewTrackModal";
+import TrackAccent from "@/components/TrackAccent";
 import PhaseDetailModal from "@/components/PhaseDetailModal";
 import RotationModal from "@/components/RotationModal";
 import ScheduleDayModal from "@/components/ScheduleDayModal";
@@ -63,6 +65,7 @@ export default function Dashboard() {
   const [showRhythmEditor, setShowRhythmEditor] = useState(false);
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedPhase, setSelectedPhase] = useState<Phase | null>(null);
+  const [creatingTrack, setCreatingTrack] = useState(false);
 
   // Local, draggable copy of the panel order. It mirrors the active track's
   // stored layout but must also hold ahead-of-persistence state during an
@@ -266,6 +269,10 @@ export default function Dashboard() {
 
   return (
     <main className="container">
+      {/* The open track's colour, applied to the page's accent variables — so
+          a track wears its colour everywhere without a colour being threaded
+          through every component. */}
+      <TrackAccent color={track.meta.color} />
       <div className="app-glow" aria-hidden="true" />
       <DndContext
         sensors={panelSensors}
@@ -282,7 +289,7 @@ export default function Dashboard() {
             syncTarget={account ? "account" : "local"}
             onSync={handleSyncWorkspace}
             onSwitchTrack={(trackId) => void switchTrack(trackId)}
-            onNewTrack={() => addTrack(blankTrack("New Track", todayYMD()))}
+            onNewTrack={async () => setCreatingTrack(true)}
             onEditTrack={(fields) => void commitTrack((prev) => updateTrackIdentity(prev, fields), "track identity")}
             onDeleteTrack={handleDeleteTrack}
             canDeleteTrack={visibleTracks(workspace).length > 1}
@@ -358,6 +365,13 @@ export default function Dashboard() {
           rotationId={rotationModal.rotationId}
           onClose={() => setRotationModal(null)}
           applyChange={updateTrack}
+        />
+      )}
+      {creatingTrack && (
+        <NewTrackModal
+          takenColors={visibleTracks(workspace).map((other) => other.meta.color)}
+          onCreate={(created) => void addTrack(created)}
+          onClose={() => setCreatingTrack(false)}
         />
       )}
       {showRhythmEditor && (

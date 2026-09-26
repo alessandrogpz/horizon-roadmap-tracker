@@ -155,10 +155,19 @@ mongodb://horizon_app:<password>@localhost:27017,localhost:27018,localhost:27019
 
 ## Progressive Web App (PWA) on Mobile
 
-You can install the tracker as a native standalone application on your Android/iOS phone:
-1. Open your live Vercel URL on your phone's browser (e.g., Chrome or Safari).
+The website installs as a standalone app on Android and iOS, and it is a
+complete way to use Horizon rather than a preview of one — everything below is
+there, including the consistency grid, the stacked all-tracks view, tracks in
+their own colours and offline storage. Install it if you would rather not
+download anything.
+
+1. Open your live URL on your phone's browser (Chrome or Safari).
 2. Tap the browser menu and select **Add to Home screen** or **Install app**.
-3. Launch the app from your home screen. It will load in full-screen standalone mode (no browser address bars, complete with your custom glossy graphics torus launcher icon).
+3. Launch it from your home screen. It runs full-screen, with no address bar.
+
+What the installed Android app adds over the PWA is the handful of things a
+browser cannot reach: the step counter (Health Connect), the share sheet, deep
+links and backups written through Android's Storage Access Framework.
 
 ---
 
@@ -193,11 +202,13 @@ build and release workflow.
 
 *   **Weekly overview:** What each day of a track is for, and what that day actually holds — the rotation topics due that week, the day's own checklist, the gym plan for that kind of day. On the phone it is a calendar you can walk through, a week at a time or a month at a glance, so what a future week asks for is something you look up rather than work out.
 *   **Phases:** Interactive vertical timeline of a track's phases, their deadlines and what each one asks for.
-*   **Consistency:** GitHub-style contributions graph tracking every day you showed up, in real time.
+*   **Consistency:** A year of days, the shape everyone knows from a contributions graph, drawn in the track's own colour — four strengths of one hue, with the day the track began marked in white on a dark screen and black on a light one. With more than one track open, the same panel stacks every track's year on the same calendar columns, so "did I do *anything* yesterday" is one glance rather than three panels. On the phone the grid turns ninety degrees and runs down the screen, a week to a row, because that is the only way a day stays big enough to tap.
+*   **A colour per track:** Chosen when the track is created, and from then on the accent the whole app wears while that track is open — buttons, rings, links, and its own history. The track list is a list of years in those colours, which turns "which tracks do I have" into "which ones am I actually keeping up".
 *   **Deliverables:** Repository checklists, with live git statistics (branch, modified status, last commit message) pulled from local git repos or GitHub.
 *   **Gym plan:** The exercises a training day asks for, with sets and reps against each and a tick as you work through them. Which days it applies to comes from the track's weekly rhythm, so the plan and the week are never two answers to one question.
 *   **Materials & Notes:** Track references, edit study notes in a Markdown editor with a live Preview pane, and query repo statistics.
 *   **Search & insights (signed in):** Full-text search across your tracks, materials, phases, roadmaps and notes, and your history (active days, weekday habits, months, per-track streaks), both computed by MongoDB on the server.
+*   **Demo data:** Settings will add `test1`, `test2` and `test3` — three tracks in three colours with a year or more of days already ticked, generated from a fixed seed so they are the same three tracks tomorrow. They exist so the views that show several tracks at once have something to show on a new account, and so there is something to break in without touching a real track. The same button takes them away.
 *   **Cloud Sync:** All data lives in your browser (IndexedDB). Signed in, the same data syncs through your Horizon account (MongoDB on the server), merged per item on the server so two devices never overwrite each other. Signed out, nothing leaves the device — which is a complete way to use it, not a degraded one.
 
 ---
