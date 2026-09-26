@@ -33,7 +33,8 @@ interface DashboardHeaderProps {
   /** Resolves once the new track is active. */
   onNewTrack: () => Promise<void>;
   onEditTrack: (fields: { name: string; color: string; startDate: string; totalDays: number }) => void;
-  onDeleteTrack: () => void;
+  /** With an id, that track; without one, the open one. */
+  onDeleteTrack: (trackId?: string) => void;
   canDeleteTrack: boolean;
   moduleState: ModuleState[];
   onToggleModule: (id: string) => void;
@@ -219,6 +220,7 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
             activeTrackId={workspace.activeTrackId}
             onSwitch={onSwitchTrack}
             onNewTrack={() => void handleNewTrack()}
+            onDelete={canDeleteTrack ? onDeleteTrack : undefined}
           />
         </div>
 
