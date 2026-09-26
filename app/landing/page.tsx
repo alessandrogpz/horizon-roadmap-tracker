@@ -26,6 +26,10 @@ import HorizonMark from "@/components/HorizonMark";
 import ThemeToggle from "@/components/ThemeToggle";
 import DashboardPreview from "@/components/landing/DashboardPreview";
 import WeeklyPlanPreview from "@/components/landing/WeeklyPlanPreview";
+import PhoneFrame from "@/components/landing/PhoneFrame";
+import TrackStackPreview from "@/components/landing/TrackStackPreview";
+import { MySpaceScreen, ProgressScreen, WorkoutScreen } from "@/components/landing/PhoneScreens";
+import { TRACK_COLORS } from "@/lib/trackColors";
 
 export const metadata: Metadata = {
   title: "Horizon — a roadmap tracker for the goals you're actually chasing",
@@ -56,7 +60,7 @@ const MODULES = [
   {
     icon: Flame,
     title: "Consistency",
-    body: "A contributions-style grid of every day you showed up, and the streak riding on it. The one number that beats motivation.",
+    body: "A year of days in the track's own colour, and the streak riding on it. Run more than one track and the same panel stacks them on the same calendar columns — one glance for all of them.",
   },
   {
     icon: BookMarked,
@@ -75,26 +79,26 @@ const MODULES = [
   },
   {
     icon: Dumbbell,
-    title: "Gym plan",
-    body: "The exercises a training day asks for, with the sets and reps against each and a tick as you work through them. Which days it applies to comes from the week.",
+    title: "Workout",
+    body: "Named sessions you pick from — push, pull, legs — each with its exercises, a row per set, and last week's numbers beside today's so you know what to beat.",
   },
 ];
 
 const TRACKS = [
   {
-    color: "#0ea5e9",
+    color: TRACK_COLORS[0],
     name: "Graphics & engine dev",
     horizon: "13 months",
     detail: "Phases from fundamentals to a shipped renderer, with a reading list and repo deliverables attached.",
   },
   {
-    color: "#f97316",
+    color: TRACK_COLORS[2],
     name: "Half marathon in October",
     horizon: "20 weeks",
     detail: "Strength, cardio and rest laid out across the week, building volume phase by phase.",
   },
   {
-    color: "#a78bfa",
+    color: TRACK_COLORS[4],
     name: "Land the senior role",
     horizon: "6 months",
     detail: "Skill up, get visible, apply in volume, then close — each stage with its own checklist.",
@@ -204,7 +208,7 @@ const FAQ = [
   },
   {
     q: "Can I use it on my phone?",
-    a: "Yes. Open it in your phone's browser and choose Add to Home Screen: it installs like an app, opens full-screen and works offline, with its own copy of your data on that device.",
+    a: "Two ways, and both are complete. Open it in your phone's browser and choose Add to Home Screen: it installs, opens full-screen, works offline and keeps its own copy of your data. Or install the Android app, which is the same tracks arranged for a thumb and adds the things a browser cannot reach — a step counter, the share sheet, deep links.",
   },
   {
     q: "Can I get my data out?",
@@ -244,8 +248,14 @@ export default function LandingPage() {
               Features
             </a>
             <a
-              href="#how"
+              href="#phone"
               className="hidden text-[0.85rem] text-muted-foreground transition-colors hover:text-foreground sm:block"
+            >
+              On the phone
+            </a>
+            <a
+              href="#how"
+              className="hidden text-[0.85rem] text-muted-foreground transition-colors hover:text-foreground md:block"
             >
               How it works
             </a>
@@ -301,8 +311,50 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="lg:pl-4">
+          {/* The dashboard, with the phone leaning on it — because the two
+              are one product sharing one core, and the hero should say so
+              before the copy has to. */}
+          <div className="relative lg:pl-4">
             <DashboardPreview />
+            <div className="pointer-events-none absolute -bottom-14 -right-2 hidden w-[190px] origin-bottom-right scale-[0.78] xl:block">
+              <PhoneFrame tab="progress" accent={TRACK_COLORS[0]}>
+                <ProgressScreen />
+              </PhoneFrame>
+            </div>
+          </div>
+        </section>
+
+        {/* ── A colour per track ────────────────────────────────────────── */}
+        <section className="border-t border-card-border">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
+            <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+              <div className="flex flex-col gap-3">
+                <SectionLabel>One colour each</SectionLabel>
+                <h2 className="text-[1.6rem] font-semibold leading-tight tracking-tight sm:text-[2.1rem]">
+                  Three tracks, three colours, one year.
+                </h2>
+                <p className="text-[0.95rem] leading-relaxed text-muted-foreground">
+                  Pick a track&apos;s colour when you make it and the whole app wears it while
+                  that track is open — buttons, rings, links, and its own run of days. Which
+                  means a year of them stacked together is readable at a glance: whose row is
+                  whose, who is on a streak, and which weeks nobody turned up for.
+                </p>
+                <div className="mt-2 flex items-center gap-2">
+                  {TRACK_COLORS.map((color) => (
+                    <span
+                      key={color}
+                      className="h-6 w-6 rounded-full border border-black/20"
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+                <p className="text-[0.8rem] text-subtle-foreground">
+                  Six, never white or black — those are reserved for the day a track began, so
+                  that mark stays findable whatever colour the track is wearing.
+                </p>
+              </div>
+              <TrackStackPreview />
+            </div>
           </div>
         </section>
 
@@ -483,6 +535,77 @@ export default function LandingPage() {
                     to your home screen.
                   </p>
                 </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── On the phone ──────────────────────────────────────────────── */}
+        <section id="phone" className="scroll-mt-16 border-t border-card-border">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
+            <div className="flex max-w-2xl flex-col gap-3">
+              <SectionLabel>In your hand</SectionLabel>
+              <h2 className="text-[1.6rem] font-semibold leading-tight tracking-tight sm:text-[2.1rem]">
+                The same tracks, rebuilt for a thumb.
+              </h2>
+              <p className="text-[0.95rem] leading-relaxed text-muted-foreground">
+                Not the website squeezed into a phone. The same data and the same rules — one
+                shared core, unchanged — laid out again for one hand: the grid turns ninety
+                degrees so a day is big enough to press, the dashboard becomes one column you
+                drag into the order you want, and the gym gets a table you can actually type
+                into between sets.
+              </p>
+            </div>
+
+            <div className="mt-12 flex flex-wrap justify-center gap-10 lg:gap-14">
+              <PhoneFrame
+                tab="progress"
+                accent={TRACK_COLORS[0]}
+                label="Progress"
+                caption="A week to a row, running down the page. Tap any day to see what was done on it."
+              >
+                <ProgressScreen />
+              </PhoneFrame>
+              <PhoneFrame
+                tab="space"
+                accent={TRACK_COLORS[0]}
+                label="My Space"
+                caption="The whole track as one column. Hold any panel to pick it up and rearrange."
+              >
+                <MySpaceScreen />
+              </PhoneFrame>
+              <PhoneFrame
+                tab="plan"
+                accent={TRACK_COLORS[0]}
+                label="Workout"
+                caption="A row per set, with last week's numbers beside today's. Phone only."
+              >
+                <WorkoutScreen />
+              </PhoneFrame>
+            </div>
+
+            <div className="mt-12 grid gap-4 sm:grid-cols-2">
+              <div className="glass-panel flex flex-col gap-2">
+                <h3 className="flex items-center gap-2 text-[0.95rem] font-semibold">
+                  <Smartphone size={15} strokeWidth={2.2} className="text-accent" />
+                  Install the website
+                </h3>
+                <p className="text-[0.88rem] leading-relaxed text-muted-foreground">
+                  Add to Home Screen on Android or iOS and it runs full-screen, offline, with its
+                  own copy of your data. A complete way to use Horizon, not a preview of one —
+                  everything on this page is in it.
+                </p>
+              </div>
+              <div className="glass-panel landing-panel-accent flex flex-col gap-2">
+                <h3 className="flex items-center gap-2 text-[0.95rem] font-semibold">
+                  <Download size={15} strokeWidth={2.2} className="text-accent" />
+                  Or the Android app
+                </h3>
+                <p className="text-[0.88rem] leading-relaxed text-muted-foreground">
+                  A real app sharing the same core, for the handful of things a browser cannot
+                  reach: a step counter wired to Health Connect, the share sheet, deep links, and
+                  backups written straight to your files.
+                </p>
               </div>
             </div>
           </div>

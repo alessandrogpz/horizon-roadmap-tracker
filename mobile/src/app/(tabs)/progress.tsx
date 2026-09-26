@@ -17,15 +17,17 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Link } from "expo-router";
 import type { StreakDay } from "@shared/stats";
 import type { CompletedItem } from "@shared/types";
-import { streakStats } from "@shared/stats";
-import { completedItemTitle, currentStreakLength } from "@shared/streak";
+import { streakStats, yearCalendar } from "@shared/stats";
+import { visibleTracks } from "@shared/selectors";
+import { completedItemTitle, currentStreakLength, rebuildStreakHistory } from "@shared/streak";
 import { formatDateYMD, formatDayMonthYear, parseYMD } from "@shared/dates";
 import { getSettings } from "@shared/settings";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
 import { Refreshable } from "../../components/Refreshable";
 import { Segmented } from "../../components/Segmented";
 import { StatTile } from "../../components/StatTile";
-import { RADIUS, SPACING, TYPE, type Palette } from "../../theme";
+import { AllTracksYear } from "../../components/AllTracksYear";
+import { RADIUS, SPACING, TYPE, shadeOf, withAlpha, type Palette } from "../../theme";
 import { usePalette } from "../../theme/ThemeProvider";
 
 const CELL = 26;
@@ -43,7 +45,7 @@ const WEEKDAYS_SUN = ["S", "M", "T", "W", "T", "F", "S"];
 const WEEKDAYS_MON = ["M", "T", "W", "T", "F", "S", "S"];
 
 export default function ProgressScreen() {
-  const { track, today } = useWorkspace();
+  const { workspace, track, today } = useWorkspace();
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
   const [openDay, setOpenDay] = useState<string | null>(null);
@@ -52,6 +54,74 @@ export default function ProgressScreen() {
   // continuous shape is still worth having for seeing a long run at a glance,
   // so it is a toggle rather than a replacement.
   const [byMonth, setByMonth] = useState(true);
+  /**
+   * Whose days these are: the open track's, or every track's at once.
+   *
+   * A person running three tracks has three grids and no way to ask the one
+   * question that spans them — did I do *anything* yesterday. The combined
+   * view answers it, and paints each day in the colour of whichever track put
+   * the most into it, so a month of one colour reads as a month where one
+   * thing crowded out the rest.
+   */
+  const [scope, setScope] = useState<"track" | "all">("track");
+
+  const tracks = useMemo(() => (workspace ? visibleTracks(workspace) : []), [workspace]);
+  /** The tracks the grid is drawn from. One, or all of them. */
+  const sources = useMemo(
+    () => (scope === "all" ? tracks : track ? [track] : []),
+    [scope, track, tracks]
+  );
+
+  /** The days, merged. One track's history is used as it stands; several are
+   *  concatenated, with each item told which track it came from — on a day
+   *  with four things on it the question is immediately which. */
+  const history = useMemo(() => {
+    if (sources.length === 1) return sources[0].completedItemsHistory ?? {};
+    const out: Record<string, CompletedItem[]> = {};
+    for (const source of sources) {
+      const name = source.meta.name;
+      for (const [date, items] of Object.entries(source.completedItemsHistory ?? {})) {
+        if (!items?.length) continue;
+        const tagged = items.map((item) => {
+          const description = typeof item === "string" ? "" : item.description ?? "";
+          return { title: completedItemTitle(item), description: description ? `${name} · ${description}` : name };
+        });
+        out[date] = out[date] ? [...out[date], ...tagged] : tagged;
+      }
+    }
+    return out;
+  }, [sources]);
+
+  /** The ink. One track's own colour throughout, or — across all of them —
+   *  the colour of whichever track did the most on that particular day. */
+  const colourOf = useMemo(() => {
+    const own = track?.meta.color || palette.accent;
+    if (sources.length <= 1) return () => own;
+    const leader: Record<string, { colour: string; count: number }> = {};
+    for (const source of sources) {
+      const colour = source.meta.color || palette.accent;
+      for (const [date, items] of Object.entries(source.completedItemsHistory ?? {})) {
+        const count = items?.length ?? 0;
+        if (count <= 0) continue;
+        const best = leader[date];
+        if (!best || count > best.count) leader[date] = { colour, count };
+      }
+    }
+    return (date: string) => leader[date]?.colour ?? own;
+  }, [palette.accent, sources, track]);
+
+  /** The first day there was anything to miss. Across several tracks that is
+   *  the earliest of their starts: an older track's days are not blanks on a
+   *  younger one's account. */
+  const firstDay = useMemo(
+    () =>
+      sources.reduce(
+        (earliest, source) =>
+          source.startDate && (!earliest || source.startDate < earliest) ? source.startDate : earliest,
+        ""
+      ),
+    [sources]
+  );
 
   const weekStartsOn = getSettings().weekStartsOn;
   const [year, setYear] = useState(() => parseYMD(today).getFullYear());
@@ -64,11 +134,11 @@ export default function ProgressScreen() {
    *  should not pretend otherwise. */
   const years = useMemo(() => {
     const now = parseYMD(today).getFullYear();
-    const dates = Object.keys(track?.completedItemsHistory ?? {});
-    if (track?.startDate) dates.push(track.startDate);
+    const dates = Object.keys(history);
+    if (firstDay) dates.push(firstDay);
     const earliest = dates.reduce((low, date) => Math.min(low, Number(date.slice(0, 4))), now);
     return { first: earliest, last: now };
-  }, [today, track]);
+  }, [firstDay, history, today]);
 
   /** A whole calendar year of cells, always — Jan 1 to Dec 31, padded out to
    *  whole weeks at both ends. The grid used to run from the track's start to
@@ -78,35 +148,26 @@ export default function ProgressScreen() {
    *  Days outside the track's own life are left blank rather than drawn as
    *  zeroes, which is the same rule as before: the track did not exist to be
    *  missed, and neither does tomorrow. */
-  const days = useMemo(() => {
-    if (!track?.startDate) return [];
-    const counts: Record<string, number> = {};
-    Object.entries(track.completedItemsHistory ?? {}).forEach(([date, items]) => {
-      counts[date] = items?.length ?? 0;
-    });
+  const days = useMemo(
+    () => yearCalendar(history, firstDay, year, today, weekStartsOn),
+    [firstDay, history, today, weekStartsOn, year]
+  );
 
-    const cursor = new Date(year, 0, 1);
-    const offset = weekStartsOn === "mon" ? (cursor.getDay() + 6) % 7 : cursor.getDay();
-    cursor.setDate(cursor.getDate() - offset);
-    // The year, but never past today. Reading newest-first, an uncapped year
-    // opens the current one on three months of blank December and makes you
-    // scroll down to reach the month you are in.
-    const lastDay = new Date(year, 11, 31);
-    const now = parseYMD(today);
-    const end = lastDay < now ? lastDay : now;
-
-    const out: StreakDay[] = [];
-    while (cursor <= end) {
-      const date = formatDateYMD(cursor);
-      const lived = date >= track.startDate && date <= today;
-      out.push({ date: lived ? date : "", count: lived ? counts[date] ?? 0 : 0 });
-      cursor.setDate(cursor.getDate() + 1);
-    }
-    while (out.length % 7 !== 0) out.push({ date: "", count: 0 });
-    return out;
-  }, [today, track, weekStartsOn, year]);
-  const stats = useMemo(() => (track ? streakStats(track, today) : null), [track, today]);
-  const streak = currentStreakLength(track?.streakHistory ?? [], today);
+  /** The three numbers, over whatever is in scope. Across several tracks the
+   *  run is a run of days with *something* on them, which is the question the
+   *  combined view exists to answer. */
+  const streakDates = useMemo(() => rebuildStreakHistory(history), [history]);
+  const stats = useMemo(
+    () =>
+      track
+        ? streakStats(
+            { ...track, startDate: firstDay || track.startDate, completedItemsHistory: history, streakHistory: streakDates },
+            today
+          )
+        : null,
+    [firstDay, history, streakDates, today, track]
+  );
+  const streak = currentStreakLength(streakDates, today);
 
   /** The calendar arrives as a flat run of padded cells; a week is seven of
    *  them, which is what makes this a plain chunk rather than a date
@@ -149,9 +210,9 @@ export default function ProgressScreen() {
    *  every block lines up with the same seven columns at the top of the screen
    *  — which is the point of grouping them at all. */
   const months = useMemo(() => {
-    if (!track?.startDate) return [];
+    if (!firstDay) return [];
     const counts: Record<string, number> = {};
-    Object.entries(track.completedItemsHistory ?? {}).forEach(([date, items]) => {
+    Object.entries(history).forEach(([date, items]) => {
       counts[date] = items?.length ?? 0;
     });
 
@@ -174,23 +235,25 @@ export default function ProgressScreen() {
         const date = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
         // Days outside the track's own life are left blank rather than drawn
         // as zeroes: the track did not exist to be missed.
-        const inRange = date >= track.startDate && date <= today;
+        const inRange = date >= firstDay && date <= today;
         cells.push(inRange ? { date, count: counts[date] ?? 0 } : null);
       }
 
-      blocks.push({ key: `${year}-${month}`, label: `${MONTHS[month]} ${year}`, cells });
+      // A month with nothing in range is not a month of this track — it is a
+      // heading over a block of empty squares, and in the year a track began
+      // there can be eleven of them to scroll past before the first real day.
+      if (cells.some((cell) => cell)) {
+        blocks.push({ key: `${year}-${month}`, label: `${MONTHS[month]} ${year}`, cells });
+      }
       cursor.setMonth(cursor.getMonth() + 1);
     }
     // Chronological, for the same reason the weeks are: the days inside a
     // month already run downward, so the months have to as well or the last
     // day of one block is followed by the first day of an *earlier* one.
     return blocks;
-  }, [today, track, weekStartsOn, year]);
+  }, [firstDay, history, today, weekStartsOn, year]);
 
-  const titlesFor = useCallback(
-    (date: string) => track?.completedItemsHistory?.[date] ?? [],
-    [track]
-  );
+  const titlesFor = useCallback((date: string) => history[date] ?? [], [history]);
 
   if (!track) {
     return (
@@ -201,7 +264,20 @@ export default function ProgressScreen() {
   }
 
   const labels = weekStartsOn === "mon" ? WEEKDAYS_MON : WEEKDAYS_SUN;
-  const shapeKey = `${byMonth ? "months" : "continuous"}-${year}`;
+  const shapeKey = `${byMonth ? "months" : "continuous"}-${year}-${scope}`;
+  /** The day the data starts. Across all tracks that is the oldest track's
+   *  first day, which is still the edge of the data and still worth finding. */
+  const startMark = firstDay;
+  // The scale is drawn in the open track's colour, and in grey when several
+  // tracks are on screen: a red ladder under four rows, none of them red,
+  // reads as a fifth track rather than as a key. Grey rather than plain ink,
+  // so the top of the scale cannot be mistaken for the "started" mark sitting
+  // two swatches along from it.
+  const legendColour =
+    scope === "all" && tracks.length > 1 ? palette.mutedForeground : track.meta.color || palette.accent;
+  const canCombine = tracks.length > 1;
+  /** Several tracks at once, which is a different shape entirely. */
+  const combined = scope === "all" && tracks.length > 1;
 
   return (
     // The page itself does not scroll. Everything written — the three numbers,
@@ -241,13 +317,18 @@ export default function ProgressScreen() {
         />
       </View>
 
-      <View style={styles.toggle}>
-        <Segmented
-          options={SHAPES}
-          value={byMonth ? "months" : "continuous"}
-          onChange={(shape) => setByMonth(shape === "months")}
-        />
-      </View>
+      {/* By month or continuous is a choice about the *vertical* grid. The
+          many-track view has one shape — a strip per track — so the control
+          would be two dead buttons. */}
+      {!combined && (
+        <View style={styles.toggle}>
+          <Segmented
+            options={SHAPES}
+            value={byMonth ? "months" : "continuous"}
+            onChange={(shape) => setByMonth(shape === "months")}
+          />
+        </View>
+      )}
 
       <View style={styles.yearRow}>
         <YearStep
@@ -265,6 +346,34 @@ export default function ProgressScreen() {
           styles={styles}
           palette={palette}
         />
+
+        {/* Whose days these are, parked in the space the year arrows were
+            already leaving empty. Absolutely placed so the year stays centred
+            on the screen rather than being shunted left by a control that has
+            nothing to do with it. With one track there is nothing to combine,
+            so it is not there at all. */}
+        {canCombine && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ selected: scope === "all" }}
+            accessibilityLabel={
+              scope === "all"
+                ? `Showing every track. Tap to show only ${track.meta.name}.`
+                : `Showing ${track.meta.name}. Tap to show every track.`
+            }
+            onPress={() => setScope(scope === "all" ? "track" : "all")}
+            style={[styles.scope, scope === "all" && { backgroundColor: withAlpha(palette.accent, 0.16) }]}
+          >
+            <Ionicons
+              name={scope === "all" ? "layers" : "flag-outline"}
+              size={13}
+              color={scope === "all" ? palette.accent : palette.subtleForeground}
+            />
+            <Text style={[styles.scopeLabel, scope === "all" && { color: palette.accent }]} numberOfLines={1}>
+              {scope === "all" ? "All tracks" : "This track"}
+            </Text>
+          </Pressable>
+        )}
       </View>
 
       {/* The weekday header belongs to the screen, not to each block: every
@@ -290,15 +399,17 @@ export default function ProgressScreen() {
           of what a consistency grid is for — and a fixed width left to sit at
           `flex-start` is a grid pushed into the left third of the screen with
           nothing beside it. */}
-      <View style={[styles.chart, styles.weekdayHead]}>
-        <View style={styles.weekdayRow}>
-          {labels.map((label, index) => (
-            <Text key={index} style={styles.weekdayLabel} allowFontScaling={false}>
-              {label}
-            </Text>
-          ))}
+      {!combined && (
+        <View style={[styles.chart, styles.weekdayHead]}>
+          <View style={styles.weekdayRow}>
+            {labels.map((label, index) => (
+              <Text key={index} style={styles.weekdayLabel} allowFontScaling={false}>
+                {label}
+              </Text>
+            ))}
+          </View>
         </View>
-      </View>
+      )}
 
       {/* The graph, and the only thing on this screen that scrolls. Pulling it
           down past the top still syncs, the same as every other screen. */}
@@ -312,13 +423,21 @@ export default function ProgressScreen() {
         // Jumped, not animated, and only once per year or shape: this is where
         // the graph *starts*, not somewhere it travels to while you watch.
         onContentSizeChange={() => {
-          if (landedOn.current === shapeKey) return;
+          // The sideways shape starts at its own top; only the vertical one
+          // opens at the recent end, because in that one the recent end is
+          // the bottom.
+          if (combined || landedOn.current === shapeKey) return;
           landedOn.current = shapeKey;
           gridRef.current?.scrollToEnd({ animated: false });
         }}
         style={styles.grid}
         contentContainerStyle={styles.gridContent}
       >
+        {combined ? (
+          <Animated.View key={shapeKey} entering={FadeIn.duration(240)}>
+            <AllTracksYear tracks={tracks} year={year} today={today} weekStartsOn={weekStartsOn} />
+          </Animated.View>
+        ) : (
         <View style={styles.chart}>
         {/* Keyed by shape and year, so changing either is a change you watch
             rather than one you find has happened. Only this one view animates:
@@ -341,7 +460,8 @@ export default function ProgressScreen() {
                       key={index}
                       day={day}
                       today={today}
-                      start={track.startDate}
+                      colour={colourOf(day.date)}
+                      start={startMark}
                       open={openDay === day.date}
                       onPress={() => setOpenDay(openDay === day.date ? null : day.date)}
                       styles={styles}
@@ -381,7 +501,8 @@ export default function ProgressScreen() {
                     key={cell}
                     day={day}
                     today={today}
-                    start={track.startDate}
+                    colour={colourOf(day.date)}
+                    start={startMark}
                     open={openDay === day.date}
                     onPress={() => setOpenDay(openDay === day.date ? null : day.date)}
                     styles={styles}
@@ -404,8 +525,11 @@ export default function ProgressScreen() {
           ))}
         </Animated.View>
         </View>
+        )}
 
-        {weeks.length === 0 && <Text style={styles.muted}>Nothing recorded on this track yet.</Text>}
+        {!combined && weeks.length === 0 && (
+          <Text style={styles.muted}>Nothing recorded on this track yet.</Text>
+        )}
       </Refreshable>
 
       {/* The key, and the way through to the long view, on one line at the
@@ -416,14 +540,20 @@ export default function ProgressScreen() {
         <View style={styles.legend}>
           <Text style={styles.legendLabel}>Less</Text>
           {[0, 1, 2, 3, 4].map((count) => (
-            <View key={count} style={[styles.legendCell, { backgroundColor: shade(count, palette) }]} />
+            <View
+              key={count}
+              style={[styles.legendCell, { backgroundColor: shadeOf(legendColour, count, palette.surfaceMuted) }]}
+            />
           ))}
           <Text style={styles.legendLabel}>More</Text>
 
-          {track.startDate && (
+          {startMark && (
             <>
               <View style={styles.legendGap} />
-              <View style={[styles.legendCell, { backgroundColor: palette.accent }]} />
+              {/* White on a dark screen, black on a light one — never the
+                  track's colour, which is the point: the day a track began
+                  has to be findable whichever of the six it is wearing. */}
+              <View style={[styles.legendCell, { backgroundColor: palette.foreground }]} />
               <Text style={styles.legendLabel}>started</Text>
             </>
           )}
@@ -479,6 +609,7 @@ function YearStep({
 function Cell({
   day,
   today,
+  colour,
   start,
   open,
   onPress,
@@ -487,18 +618,27 @@ function Cell({
 }: {
   day: StreakDay;
   today: string;
-  /** The track's first day, which gets a colour of its own. */
+  /** The ink this day is drawn in: the track's own colour, or — across all of
+   *  them — the colour of whichever track did the most that day. */
+  colour: string;
+  /** The track's first day, which gets a mark of its own. */
   start?: string;
   open: boolean;
   onPress: () => void;
   styles: ReturnType<typeof makeStyles>;
   palette: Palette;
 }) {
-  // The day the track began is drawn in the accent rather than on the green
-  // scale. The scale answers "how much", and the first day is not a quantity —
-  // it is the edge of the data, and worth being able to find. Everything
-  // before it stays blank in both shapes, because the track did not exist to
-  // be missed.
+  // The day the track began is drawn in the page's opposite — white on a dark
+  // screen, black on a light one — rather than anywhere on the scale. The
+  // scale answers "how much", and the first day is not a quantity: it is the
+  // edge of the data, and worth being able to find.
+  //
+  // It has to be a colour the track cannot also be wearing, which is why the
+  // six offered in the picker stop short of white and black. Painting it in
+  // the accent stopped working the moment the scale itself became the accent,
+  // and painting it in the track's colour has the same problem one step later.
+  // Everything before it stays blank in both shapes, because the track did not
+  // exist to be missed.
   const began = Boolean(start) && day.date === start;
 
   return (
@@ -511,9 +651,12 @@ function Cell({
       onPress={onPress}
       style={[
         styles.cell,
-        { backgroundColor: began ? palette.accent : shade(day.count, palette) },
+        { backgroundColor: shadeOf(colour, day.count, palette.surfaceMuted) },
+        began && { backgroundColor: palette.foreground },
         day.date === today && { borderWidth: 2, borderColor: palette.foreground },
-        open && { borderWidth: 2, borderColor: palette.accent },
+        // A ring in the page's own colour, not the accent: the accent is now
+        // the fill, and a ring cannot be seen against the thing it is on.
+        open && { borderWidth: 2, borderColor: palette.foreground },
       ]}
     />
   );
@@ -569,16 +712,6 @@ function DayDetail({
       )}
     </View>
   );
-}
-
-/** Four steps of green, so a busy day reads as darker rather than needing its
- *  number read. */
-function shade(count: number, palette: Palette): string {
-  if (count <= 0) return palette.surfaceMuted;
-  if (count === 1) return "#14532d";
-  if (count === 2) return "#166534";
-  if (count === 3) return "#16a34a";
-  return "#22c55e";
 }
 
 function makeStyles(palette: Palette) {
@@ -724,6 +857,21 @@ function makeStyles(palette: Palette) {
       backgroundColor: palette.surfaceMuted,
     },
     legendCell: { width: 12, height: 12, borderRadius: 3 },
+    scope: {
+      position: "absolute",
+      right: 0,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      maxWidth: 104,
+      paddingHorizontal: SPACING.sm,
+      paddingVertical: 5,
+      borderRadius: RADIUS.control,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.surfaceMuted,
+    },
+    scopeLabel: { color: palette.subtleForeground, ...TYPE.micro, fontWeight: "700", flexShrink: 1 },
     legendGap: { width: SPACING.md },
     legendLabel: { color: palette.subtleForeground, ...TYPE.micro, marginHorizontal: SPACING.xs },
     muted: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },

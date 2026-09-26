@@ -6,6 +6,7 @@ import {
   Clock,
   Download,
   Info,
+  Sparkles,
   Upload,
   X,
 } from "lucide-react";
@@ -23,6 +24,10 @@ import type { BackupBundle } from "@/lib/export";
 import { updateSettings } from "@/lib/settings";
 import { useAppSettings } from "@/lib/useAppSettings";
 import { googleClientId, signOut } from "@/lib/account";
+import { buildDemoTracks, DEMO_TRACK_NAMES, isDemoTrack } from "@/lib/demoTracks";
+import { todayYMD } from "@/lib/dates";
+import { visibleTracks } from "@/lib/selectors";
+import { useWorkspace, useWorkspaceActions } from "@/components/workspace/WorkspaceProvider";
 import AccountRow from "./AccountRow";
 
 /**
@@ -111,6 +116,9 @@ export default function SettingsModal({
   const [pending, setPending] = useState<{ bundle: BackupBundle; summary: BackupSummary } | null>(null);
   const [confirmWipe, setConfirmWipe] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const { workspace } = useWorkspace();
+  const { addTrack, commitWorkspace, switchTrack } = useWorkspaceActions();
+  const demoTracks = workspace ? visibleTracks(workspace).filter(isDemoTrack) : [];
 
   // How much this origin is actually holding — worth knowing before deciding
   // whether a backup matters. Async, so it lands after first paint.
@@ -170,6 +178,44 @@ export default function SettingsModal({
       setError(err instanceof Error ? err.message : "Restore failed");
       setBusy(null);
     }
+  };
+
+  /**
+   * Three tracks with a year of history, and a way to take them away again.
+   *
+   * Everything that shows more than one track at once — the stacked view in
+   * Consistency, the years under each name in the switcher — is impossible to
+   * judge on an account in its first month, and ticking several hundred days
+   * by hand to see it is not a reasonable ask. They are ordinary tracks,
+   * recognised by name rather than by a flag, so nothing else in the app has
+   * to know they are different.
+   */
+  const addDemoTracks = async () => {
+    const wasOpen = workspace?.activeTrackId;
+    for (const track of buildDemoTracks(todayYMD())) await addTrack(track);
+    // `addTrack` opens what it adds, which is right when a person made the
+    // track and wrong when three arrived at once from a settings dialog.
+    if (wasOpen) await switchTrack(wasOpen);
+  };
+
+  const removeDemoTracks = async () => {
+    if (!workspace || demoTracks.length === 0) return;
+    const keep = visibleTracks(workspace).find((track) => !isDemoTrack(track));
+    const ids = new Set(demoTracks.map((track) => track.meta.id));
+    const tracks = { ...workspace.tracks };
+    // Archived, not removed: the sync merge reconciles two devices by
+    // comparing records, so a track deleted by *absence* here would simply be
+    // handed back by the next sync from the account's copy.
+    ids.forEach((id) => {
+      tracks[id] = { ...tracks[id], meta: { ...tracks[id].meta, archived: true } };
+    });
+    await commitWorkspace({
+      ...workspace,
+      tracks,
+      // Off the track being deleted first: archiving the open one leaves the
+      // app standing on a track nothing will show it.
+      activeTrackId: ids.has(workspace.activeTrackId) && keep ? keep.meta.id : workspace.activeTrackId,
+    });
   };
 
   const doWipe = async () => {
@@ -338,6 +384,27 @@ export default function SettingsModal({
           <a href="/landing" className={quietButton}>
             About
           </a>
+        </Row>
+
+        <Row
+          icon={<Sparkles size={16} strokeWidth={2} />}
+          title="Demo tracks"
+          hint={`${DEMO_TRACK_NAMES.join(", ")} — three tracks in three colours, each with a year or more of days already ticked. They give the views that show several tracks at once something to show, and are something to break in without touching a real track. Ordinary tracks otherwise: open them, edit them, delete them.`}
+        >
+          <button
+            onClick={() => void addDemoTracks()}
+            disabled={demoTracks.length > 0}
+            className={quietButton}
+          >
+            {demoTracks.length > 0 ? `${demoTracks.length} added` : "Add them"}
+          </button>
+          <button
+            onClick={() => void removeDemoTracks()}
+            disabled={demoTracks.length === 0}
+            className={quietButton}
+          >
+            Remove them
+          </button>
         </Row>
 
         {/* ── Danger zone ────────────────────────────────────────────── */}
