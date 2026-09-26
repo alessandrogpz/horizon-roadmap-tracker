@@ -7,6 +7,39 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.78.0] - 2026-09-26
+
+### Added
+- **Three tracks to look at**, from Settings. Every screen that shows more than one track at once is
+  impossible to judge on an account with one track and no history, and ticking several hundred days
+  by hand to see it is not a reasonable ask. `test1`, `test2` and `test3` arrive in three colours
+  with a year or more of days already on them, generated from a fixed seed so they are the same
+  three tracks tomorrow — a screenshot of something wrong in test2 is worth something only if test2
+  does not change underneath it. They are ordinary tracks otherwise, and the same button takes them
+  away again.
+
+- **All tracks, read sideways.** The combined view in Progress is no longer one grid with the
+  colours fought over; it is one strip per track, stacked, in the shape everyone knows from a year
+  of contributions — weeks across, weekdays down — zoomed out from the single-track grid's
+  thumb-sized days and scrolled side to side instead of down. Each track's name and a progress ring
+  in its own colour stay pinned at the left while the years slide underneath, which is what makes
+  the stack comparable: the same Tuesday is the same column on every row. It opens at the recent
+  end, and month names run along the top.
+
+  A single track keeps the vertical grid. Seven columns down the page is the only way a day stays
+  big enough to tap, and tapping a day is what a single track's grid is for.
+
+### Changed
+- **The day a track began is drawn in white on a dark screen and black on a light one**, never in a
+  colour. It was the track's own colour with a ring cut out of it, which is legible until you
+  compare it to a day at full strength. The six colours a track may wear deliberately stop short of
+  white and black so this mark can never collide with one — that constraint now lives with the list
+  itself rather than in whoever remembers it.
+- The same mark appears on the year under each track in the switcher, so the beginning of a track
+  reads the same wherever it is drawn.
+- The colours a track can be moved out of the phone's track screen and into the shared core, where
+  the demo tracks and anything else that needs them can reach the one list.
+
 ## [0.77.0] - 2026-09-26
 
 ### Added
