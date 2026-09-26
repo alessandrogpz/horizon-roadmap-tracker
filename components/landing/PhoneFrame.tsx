@@ -1,7 +1,3 @@
-"use client";
-
-import { useState } from "react";
-
 /**
  * A phone, drawn rather than photographed.
  *
@@ -10,7 +6,10 @@ import { useState } from "react";
  * would go stale the first time a colour changed; this cannot, because it is
  * built out of the same parts.
  *
- * Decorative: `aria-hidden`, no interaction, no client JS.
+ * The tab bar was briefly a working one. It is lit and still again: three
+ * phones on a marketing page are a photograph of an app, and a photograph
+ * that half-works is worse than one that plainly does not. Decorative
+ * throughout — `aria-hidden`, no handlers, no client JS.
  */
 import { CheckCircle, Flame, LayoutGrid, Map } from "lucide-react";
 
@@ -26,28 +25,21 @@ export default function PhoneFrame({
   caption,
   tab,
   accent,
-  screens,
   children,
 }: {
   /** Left off where the phone is decoration leaning on something else. */
   label?: string;
   caption?: string;
-  /** Which of the four tabs it opens on. The bar is what makes a drawn
-   *  rectangle read as a screen rather than as a card — and it works: the
-   *  tabs switch what the phone is showing, because a tab bar that does
-   *  nothing is the fastest way to tell someone this is a photograph. */
+  /** Which of the four tabs is lit. The bar is what makes a drawn rectangle
+   *  read as a screen rather than as a card. */
   tab?: (typeof TABS)[number]["id"];
   accent?: string;
-  /** What each tab shows. Any tab without a screen is still lit and still
-   *  pressable; it simply keeps the one you were on. */
-  screens?: Partial<Record<(typeof TABS)[number]["id"], React.ReactNode>>;
   children: React.ReactNode;
 }) {
-  const [open, setOpen] = useState(tab);
-  const shown = (open && screens?.[open]) || children;
   return (
     <figure className="flex flex-col items-center gap-4">
       <div
+        aria-hidden="true"
         className="relative w-[258px] shrink-0 rounded-[2.2rem] border border-card-border bg-card p-[9px] shadow-[0_1px_2px_rgba(0,0,0,0.4),0_30px_60px_-30px_rgba(0,0,0,0.9)]"
       >
         {/* The bezel's inner lip, which is what stops a drawn phone reading as
@@ -61,19 +53,13 @@ export default function PhoneFrame({
               <span className="inline-block h-[6px] w-[10px] rounded-[1px] border border-current" />
             </span>
           </div>
-          <div className={`overflow-hidden px-3 ${tab ? "h-[438px]" : "h-[480px] pb-3"}`}>{shown}</div>
+          <div className={`overflow-hidden px-3 ${tab ? "h-[438px]" : "h-[480px] pb-3"}`}>{children}</div>
           {tab && (
             <div className="flex items-stretch justify-between border-t border-card-border px-2 pt-1.5 pb-2.5">
               {TABS.map((entry) => {
-                const on = entry.id === open;
+                const on = entry.id === tab;
                 return (
-                  <button
-                    key={entry.id}
-                    onClick={() => setOpen(entry.id)}
-                    aria-pressed={on}
-                    title={entry.label}
-                    className="flex flex-1 cursor-pointer flex-col items-center gap-1 rounded py-0.5 transition-colors hover:bg-surface-hover"
-                  >
+                  <span key={entry.id} className="flex flex-1 flex-col items-center gap-1 py-0.5">
                     <entry.icon
                       size={14}
                       strokeWidth={on ? 2.6 : 2}
@@ -85,7 +71,7 @@ export default function PhoneFrame({
                     >
                       {entry.label}
                     </span>
-                  </button>
+                  </span>
                 );
               })}
             </div>
