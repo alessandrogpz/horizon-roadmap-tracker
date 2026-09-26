@@ -7,6 +7,23 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.81.1] - 2026-09-26
+
+### Fixed
+- **The consistency grid is one row now, in both shapes, and it opens with today at the right.**
+  0.81.0 got the month shape half right and the continuous one wrong. Months wrapped onto a second
+  and third line, which puts the current month in the middle of the panel and the oldest one in the
+  corner the eye starts at; the continuous shape opened on January, so a track that began in June
+  opened on five months of empty squares with its history off the right edge. Both are a single row
+  in one scroller, pinned to the recent end, scrolled back by hand for the rest of the year.
+- The continuous shape also drops the weeks before the track existed, the same way months with
+  nothing in them were already dropped — otherwise they are width you have to scroll past to reach
+  a day.
+- The pin survives the panel changing width — a phone turning, the dashboard's two columns
+  collapsing into one — which the first version could not see, because nothing about the content
+  changes and it was left sitting on January at the old width's offset. Only on a width change:
+  scrolling back through the year is never yanked forward.
+
 ## [0.81.0] - 2026-09-26
 
 ### Added
