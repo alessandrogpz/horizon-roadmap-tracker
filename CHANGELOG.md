@@ -7,6 +7,41 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.81.0] - 2026-09-26
+
+### Added
+- **By month on the website**, and it is the default, as it is on the phone. A calendar year as one
+  unbroken ribbon of weeks is hard to read a month out of, because nothing marks where one ends;
+  months wrap across the panel instead, each block starting on the weekday its 1st fell on. The
+  continuous shape is still a tap away, and a year stepper sits between them.
+- **Deleting a track from the switcher.** Every row carries a trash icon that asks once and does it
+  on the second tap. It was previously only possible for the track you already had open, through its
+  settings dialog.
+
+### Changed
+- **A day in the consistency grid is a fixed size now, not a share of the panel's width.** The
+  columns used to stretch to fill, which is fine for a season and unreadable for a year: fifty-odd
+  columns in a half-width panel gave cells about four points across, too small to see a shade in and
+  far too small to hit. The grid also shows one calendar year rather than the whole track, so it
+  stops growing as the track does — the same model the phone has used since 0.77.0.
+- **The stacked all-tracks view opens at the recent end.** A year starts in January and a track
+  rarely does, so it opened on however many blank months came first, with the actual history off the
+  right edge. The landing page's preview had the same problem and now draws the last half-year.
+- `monthCalendar` and `yearsWithHistory` joined `yearCalendar` in `lib/stats.ts`, replacing the
+  phone's inline copies. Both apps arrange the same days the same way.
+
+### Fixed
+- **A panel's hover chrome swallowed taps meant for the panel.** The hide, edit and drag buttons in
+  every panel's top-right corner are `opacity-0` until the panel is hovered — but invisible is not
+  absent, and an `opacity-0` button still takes the tap. On a phone, where there is no hover to
+  reveal them, tapping the Consistency panel's scope toggle hid the panel instead. They are now out
+  of the way of pointers until they are actually shown, and the toggle moved to a row of its own
+  besides.
+- **The track switcher no longer runs off the side of a phone.** A 360-point menu anchored to a
+  button sixty points from the left edge is 400 points wide on a 375-point screen, which made the
+  dashboard the one page in the app that scrolled sideways. It is pinned to the viewport below the
+  header on a phone and hung off the button on a desk.
+
 ## [0.80.0] - 2026-09-26
 
 ### Added

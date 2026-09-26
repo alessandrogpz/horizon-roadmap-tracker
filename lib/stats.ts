@@ -164,6 +164,83 @@ export function yearCalendar(
   return out;
 }
 
+/** One month of a year, as a block that starts on the right weekday. */
+export interface MonthBlock {
+  key: string;
+  label: string;
+  /** `null` for the leading cells that push the 1st under its weekday, and for
+   *  days outside the track's own life. */
+  cells: (StreakDay | null)[];
+}
+
+/**
+ * A year broken into months, each block padded so the 1st lands under the
+ * right weekday.
+ *
+ * The continuous shape — one unbroken ribbon of weeks — is good for seeing a
+ * long run at a glance and bad for reading a month out of, because nothing
+ * marks where one ends. Both apps offer the two, and both default to this one.
+ *
+ * Months with nothing in range are dropped rather than drawn: in the year a
+ * track began there can be eleven of them, which is eleven headings over
+ * blocks of empty squares before the first real day.
+ */
+export function monthCalendar(
+  history: Record<string, CompletedItem[]>,
+  startDate: string,
+  year: number,
+  todayStr: string,
+  weekStartsOn: "sun" | "mon" = "sun"
+): MonthBlock[] {
+  if (!startDate) return [];
+  const counts: Record<string, number> = {};
+  Object.entries(history).forEach(([date, items]) => {
+    counts[date] = items?.length ?? 0;
+  });
+
+  const blocks: MonthBlock[] = [];
+  const now = parseYMD(todayStr);
+  // Months that have not happened yet are not months of this track's year.
+  const stop = year === now.getFullYear() ? now.getMonth() : 11;
+
+  for (let month = 0; month <= stop; month += 1) {
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstWeekday = new Date(year, month, 1).getDay();
+    const offset = weekStartsOn === "mon" ? (firstWeekday + 6) % 7 : firstWeekday;
+    const cells: (StreakDay | null)[] = Array.from({ length: offset }, () => null);
+
+    for (let day = 1; day <= daysInMonth; day += 1) {
+      const date = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      // Days outside the track's own life are left blank rather than drawn as
+      // zeroes: the track did not exist to be missed.
+      const lived = date >= startDate && date <= todayStr;
+      cells.push(lived ? { date, count: counts[date] ?? 0 } : null);
+    }
+
+    if (cells.some((cell) => cell)) {
+      blocks.push({ key: `${year}-${month}`, label: `${MONTH_NAMES[month]} ${year}`, cells });
+    }
+  }
+
+  return blocks;
+}
+
+export const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** The years a track has anything to show for, from its first to the one we
+ *  are in — so a stepper cannot offer a 2019 the track never had. */
+export function yearsWithHistory(
+  history: Record<string, CompletedItem[]>,
+  startDate: string,
+  todayStr: string
+): { first: number; last: number } {
+  const now = parseYMD(todayStr).getFullYear();
+  const dates = Object.keys(history);
+  if (startDate) dates.push(startDate);
+  const earliest = dates.reduce((low, date) => Math.min(low, Number(date.slice(0, 4))), now);
+  return { first: earliest, last: now };
+}
+
 // --- Timeline ----------------------------------------------------------
 
 export interface PhaseWindow {

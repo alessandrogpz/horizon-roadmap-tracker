@@ -17,10 +17,10 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Link } from "expo-router";
 import type { StreakDay } from "@shared/stats";
 import type { CompletedItem } from "@shared/types";
-import { streakStats, yearCalendar } from "@shared/stats";
+import { monthCalendar, streakStats, yearCalendar, yearsWithHistory } from "@shared/stats";
 import { visibleTracks } from "@shared/selectors";
 import { completedItemTitle, currentStreakLength, rebuildStreakHistory } from "@shared/streak";
-import { formatDateYMD, formatDayMonthYear, parseYMD } from "@shared/dates";
+import { formatDayMonthYear, parseYMD } from "@shared/dates";
 import { getSettings } from "@shared/settings";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
 import { Refreshable } from "../../components/Refreshable";
@@ -132,13 +132,10 @@ export default function ProgressScreen() {
   /** The years worth offering: from whenever this track first has anything to
    *  show, to the one we are in. A track cannot have a 2019 and the arrows
    *  should not pretend otherwise. */
-  const years = useMemo(() => {
-    const now = parseYMD(today).getFullYear();
-    const dates = Object.keys(history);
-    if (firstDay) dates.push(firstDay);
-    const earliest = dates.reduce((low, date) => Math.min(low, Number(date.slice(0, 4))), now);
-    return { first: earliest, last: now };
-  }, [firstDay, history, today]);
+  const years = useMemo(
+    () => yearsWithHistory(history, firstDay, today),
+    [firstDay, history, today]
+  );
 
   /** A whole calendar year of cells, always — Jan 1 to Dec 31, padded out to
    *  whole weeks at both ends. The grid used to run from the track's start to
@@ -209,49 +206,13 @@ export default function ProgressScreen() {
    *  under the right weekday, then one cell per day. Months are separated, and
    *  every block lines up with the same seven columns at the top of the screen
    *  — which is the point of grouping them at all. */
-  const months = useMemo(() => {
-    if (!firstDay) return [];
-    const counts: Record<string, number> = {};
-    Object.entries(history).forEach(([date, items]) => {
-      counts[date] = items?.length ?? 0;
-    });
-
-    const blocks: { key: string; label: string; cells: (StreakDay | null)[] }[] = [];
-
-    const cursor = new Date(year, 0, 1);
-    const now = parseYMD(today);
-    // Same rule as the continuous shape: months that have not happened yet are
-    // not months of this track's year.
-    const stop = year === now.getFullYear() ? now.getMonth() : 11;
-    while (cursor.getFullYear() === year && cursor.getMonth() <= stop) {
-      const month = cursor.getMonth();
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-      const firstWeekday = new Date(year, month, 1).getDay();
-      const offset = weekStartsOn === "mon" ? (firstWeekday + 6) % 7 : firstWeekday;
-      const cells: (StreakDay | null)[] = Array.from({ length: offset }, () => null);
-
-      for (let day = 1; day <= daysInMonth; day += 1) {
-        const date = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-        // Days outside the track's own life are left blank rather than drawn
-        // as zeroes: the track did not exist to be missed.
-        const inRange = date >= firstDay && date <= today;
-        cells.push(inRange ? { date, count: counts[date] ?? 0 } : null);
-      }
-
-      // A month with nothing in range is not a month of this track — it is a
-      // heading over a block of empty squares, and in the year a track began
-      // there can be eleven of them to scroll past before the first real day.
-      if (cells.some((cell) => cell)) {
-        blocks.push({ key: `${year}-${month}`, label: `${MONTHS[month]} ${year}`, cells });
-      }
-      cursor.setMonth(cursor.getMonth() + 1);
-    }
-    // Chronological, for the same reason the weeks are: the days inside a
-    // month already run downward, so the months have to as well or the last
-    // day of one block is followed by the first day of an *earlier* one.
-    return blocks;
-  }, [firstDay, history, today, weekStartsOn, year]);
+  const months = useMemo(
+    // Chronological, like the weeks: the days inside a month already run
+    // downward, so the months have to as well, or the last day of one block is
+    // followed by the first day of an *earlier* one.
+    () => monthCalendar(history, firstDay, year, today, weekStartsOn),
+    [firstDay, history, today, weekStartsOn, year]
+  );
 
   const titlesFor = useCallback((date: string) => history[date] ?? [], [history]);
 

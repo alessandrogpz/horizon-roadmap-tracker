@@ -1,6 +1,5 @@
 /**
- * The consistency grid itself — seven rows of day cells, one column per week,
- * sized to fill whatever width it's given rather than scrolling sideways.
+ * The consistency grid itself — seven rows of day cells, one column per week.
  *
  * Shared on purpose: the dashboard's StreakGraph and the landing page's
  * dashboard miniature both render through this, so the two can never drift
@@ -16,7 +15,7 @@ export interface StreakCell {
   level: number;
   /** Native tooltip. Absent on filler cells. */
   title?: string;
-  /** False for the cells that pad the final partial week out to seven. */
+  /** False for the cells that pad a week out to seven, at either end. */
   filled?: boolean;
   /**
    * A day worth finding rather than a day worth counting.
@@ -30,52 +29,57 @@ export interface StreakCell {
   mark?: "start" | "today";
 }
 
-/** Largest a day cell is allowed to get, and the gutter between them (px). */
-const MAX_CELL = 16;
-const GAP = 2;
+/**
+ * How big a day is, and the gutter between them.
+ *
+ * Fixed, not stretched. The columns used to share the panel's width evenly,
+ * which is fine for a season and unreadable for a year: fifty-odd columns in
+ * a half-width panel gave cells about four points across, too small to see a
+ * shade in and far too small to hit. A day is now always this size, and a
+ * grid too wide for its panel scrolls or is read a month at a time.
+ */
+export const CELL = 16;
+export const GAP = 2;
 
 export default function StreakGrid({
   cells,
+  cell = CELL,
   onCellClick,
+  className,
 }: {
   cells: StreakCell[];
+  /** Overridable only for miniatures — the landing page's hero draws a whole
+   *  half-year inside a card. */
+  cell?: number;
   onCellClick?: (id: string) => void;
+  className?: string;
 }) {
-  const columns = Math.ceil(cells.length / 7);
-
   return (
     <div
-      className="grid grid-flow-col grid-rows-7 gap-[2px]"
-      style={{
-        // Columns share the width evenly rather than taking a fixed cell size,
-        // so a 13-month track fills the panel exactly at whatever size fits...
-        gridAutoColumns: "minmax(0, 1fr)",
-        // ...but a track that's only a few weeks old would otherwise stretch
-        // its handful of columns into huge tiles, so cap the total width at
-        // what MAX_CELL-sized cells would occupy and let it sit left-aligned.
-        maxWidth: `${columns * (MAX_CELL + GAP) - GAP}px`,
-      }}
+      className={`grid grid-flow-col grid-rows-7 ${className ?? ""}`}
+      style={{ gap: GAP, gridAutoColumns: `${cell}px`, width: "max-content" }}
     >
-      {cells.map((cell) => {
-        const interactive = cell.filled !== false && !!onCellClick;
+      {cells.map((entry) => {
+        const interactive = entry.filled !== false && !!onCellClick;
         return (
           <div
-            key={cell.id}
-            title={cell.title}
-            onClick={interactive ? () => onCellClick(cell.id) : undefined}
-            className={`aspect-square rounded-[1.5px] ${
+            key={entry.id}
+            title={entry.title}
+            onClick={interactive ? () => onCellClick(entry.id) : undefined}
+            className={`rounded-[2px] ${
               interactive
-                ? "cursor-pointer transition-transform duration-150 hover:scale-[1.6] hover:ring-1 hover:ring-accent/50"
+                ? "cursor-pointer transition-transform duration-150 hover:scale-[1.35] hover:ring-1 hover:ring-accent/50"
                 : ""
             }`}
             style={{
+              height: cell,
               backgroundColor:
-                cell.filled === false
+                entry.filled === false
                   ? "transparent"
-                  : cell.mark === "start"
+                  : entry.mark === "start"
                     ? "var(--foreground)"
-                    : `var(--streak-${cell.level})`,
-              boxShadow: cell.mark === "today" ? "0 0 0 1.5px var(--foreground)" : undefined,
+                    : `var(--streak-${entry.level})`,
+              boxShadow: entry.mark === "today" ? "0 0 0 1.5px var(--foreground)" : undefined,
             }}
           />
         );
