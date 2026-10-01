@@ -7,6 +7,26 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.88.0] - 2026-10-01
+
+### Added
+- **One working control on the landing page: the track name.** The hero's dashboard is still a
+  picture — 0.85.0 took the simulation out for good reasons and it stays out — but switching tracks
+  is the exception, and the only one. It is the idea the whole product rests on, and it is the one
+  thing a still picture genuinely cannot say: that the accent, the consistency grid, the phase, the
+  deliverables, the materials, the to-dos and the week all change together. Open the menu and it
+  lists the three tracks exactly as the app's own switcher does — a colour dot, a name, a streak and
+  a year of days each — and picking one repaints the whole card.
+  - A line under the card says so, which is the whole of the invitation: *Try it: the track name at
+    the top really does switch.*
+  - `aria-hidden` moved off the card and onto the parts of it that are pictures, so the menu reads as
+    the control it is and the drawn dashboard still reads as a photograph. One interactive element
+    in the card; everything else is drawn.
+- **The preview's consistency grid now wears the track's colour too**, through the same four
+  `--streak-*` variables `TrackAccent` writes when a track is opened — scoped to the card. It had
+  stayed the theme's green while the rest of the card was blue, which contradicted the one claim
+  that section of the page is making.
+
 ## [0.87.1] - 2026-10-01
 
 ### Changed

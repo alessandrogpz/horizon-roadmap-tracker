@@ -18,6 +18,7 @@ import {
   Check,
   X,
   RefreshCw,
+  MousePointerClick,
   Search,
   Trash2,
   ShieldCheck,
@@ -311,12 +312,20 @@ export default function LandingPage() {
 
           </div>
 
-          {/* The app itself, working, rather than a drawing of it. The phone
-              used to lean on this corner; once the dashboard became a real
-              miniature the phone was covering half of it, and it has a
-              section of its own further down. */}
-          <div className="landing-stage relative">
+          {/* A picture of the dashboard with one working control in it: the
+              track name. Everything else is drawn. The phone used to lean on
+              this corner; once the dashboard became a real miniature the
+              phone was covering half of it, and it has a section of its own
+              further down. */}
+          <div className="landing-stage relative flex flex-col gap-2">
             <AppPreview />
+            {/* One line, under the card rather than in it — the card is the
+                app's own bar and a hint inside it would be a thing the app
+                does not have. */}
+            <p className="m-0 flex items-center justify-center gap-1.5 text-[0.78rem] text-subtle-foreground">
+              <MousePointerClick size={13} strokeWidth={2} className="shrink-0 text-accent" />
+              Try it: the track name at the top really does switch.
+            </p>
           </div>
         </section>
 

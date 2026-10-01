@@ -797,4 +797,11 @@ select option:disabled {
    The cards briefly did, along with the previews and the panels inside them.
    A hover state is a claim that something will happen on a click, and on a
    page whose job is to describe an app rather than be one, that claim is
-   false everywhere except the links and the buttons — which have their own. */
+   false everywhere except the links and the buttons — which have their own.
+
+   There is exactly one other: the track name in the hero's dashboard, which
+   really does switch the preview between the three tracks. It is the one
+   thing a still picture cannot say — that the accent, the grid, the phase and
+   the week all change together — so it gets a real control, a real hover, and
+   a line under the card telling you it is there. Everything else in that card
+   is drawn. See components/landing/AppPreview.tsx. */
