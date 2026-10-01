@@ -7,6 +7,46 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.90.0] - 2026-10-01
+
+### Added
+- **All tracks: one read-only board built from every track you have.** A workspace with six tracks
+  answers six questions well and the seventh — *what am I actually doing, across all of it* — not at
+  all. It is the first entry in the track switcher, and it is the same board you already know how to
+  read with more in it.
+  - **The week** shows what every track calls each day, in that track's colour, with the rotations
+    each one puts on it. Each track keeps its own week number: they started on different days, so
+    "week 12" is a different week for each of them.
+  - **The consistency grid** puts every track's day in one square, *divided* into a band per track
+    rather than blended. Blending was the obvious idea and the wrong one — blue and amber average to
+    a muddy grey that is neither, and the more tracks a day has the less a blend says. A day one
+    track worked is a solid square exactly as it is on that track's own panel.
+  - **The phases of every track on one timeline**, ordered by the date a phase opens rather than
+    grouped by track, because the question is "what is running now and what is next" — which is a
+    question about the calendar. Finished ones are folded away.
+  - **Deliverables and materials** from every track, each row carrying the colour and name of the
+    track it belongs to, unfinished first.
+  - **The numbers**: a streak that counts a day on which *any* track did something, and a progress
+    figure weighted by how long each goal is. A ninety-day track at 50% and a three-year track at
+    50% are not the same amount of work, and a plain mean would say they were.
+  - **`/roadmap?all=1`**: every roadmap on one page, as an index down the side and one document at a
+    time. Six roadmaps printed end to end is a document nobody reads to the bottom of.
+- **Tracks can be switched in and out of it** from a row of toggles at the top. The *excluded* list
+  is what gets stored, so a track made tomorrow is in the view by default — "everything except these
+  two" survives a new track and "these four" quietly loses it. Switching one off changes nothing but
+  this view.
+
+### Notes
+- It is read-only, and structurally rather than by a flag: there is no master track on disk, nothing
+  to save and nothing to merge, which is the only way to be sure that editing the aggregate can
+  never mean editing six real tracks by accident. The menu drops everything that would change a
+  track while it is open, rather than showing those rows disabled — a disabled row is a thing that
+  looks like it should work.
+- Whether the view is open, and which tracks are in it, are device preferences alongside the day
+  rollover hour. Which track is *active* is data and syncs; which of the two ways of looking at the
+  workspace you last used is this browser's own business.
+- Only offered with more than one track. One track's all-tracks view is a worse copy of that track.
+
 ## [0.89.0] - 2026-10-01
 
 ### Added

@@ -66,6 +66,7 @@ The Dexie (IndexedDB) database and Google Drive `database.json` used for daily p
 | Shape upgrades | `lib/migrations/` (pipeline in `index.ts`, steps in `steps.ts`) |
 | Merge/conflict resolution | `lib/merge.ts` |
 | What an edit does to a track | `lib/trackActions.ts` (materials, portfolio, phases, identity) and `lib/completions.ts` (checkboxes, streak) |
+| The all-tracks (master) view | `lib/masterTrack.ts` — pure aggregation, never returns a `TrackState`; UI in `components/master/` |
 | Pure workspace queries | `lib/selectors.ts` — `orderedTracks` is what any *list* of tracks renders from; `visibleTracks` only when the order cannot matter |
 | The order of the track list | `TrackMeta.order` + `reorderTracks` in `lib/trackActions.ts`. Synced, unlike the panel order: written onto every visible track at once so the list is ordered throughout or not at all |
 | Where the community lives | `lib/community.ts` — one invite link, used by the landing page, both footers and both Settings screens; an empty override hides every link to it |
@@ -143,6 +144,36 @@ Two rules that are easy to break:
    strengths of the chosen hue, and a colour near the page's own is four
    shades of nothing. The web used `<input type="color">` and lost it for this
    reason.
+
+## The all-tracks view
+
+Every track at once, read-only, reached from the top of the track switcher.
+Three rules, and breaking any of them is how this feature would go wrong:
+
+1. **Read-only is structural, not a flag.** Nothing in `lib/masterTrack.ts`
+   returns a `TrackState` and nothing in `components/master/` takes a change
+   handler. There is no master track on disk, nothing to save and nothing to
+   merge — which is the only way to be sure that editing the aggregate can
+   never mean editing six real tracks by accident. Don't add an `onChange` to
+   a master panel; add a link to the track instead.
+2. **Everything keeps the colour of the track it came from.** An aggregate
+   whose rows all look the same is a list nobody can read. The consistency
+   grid *divides* a day into one band per contributing track rather than
+   blending their colours: blue and amber average to a muddy grey that is
+   neither, and the more tracks a day has the less a blend says.
+3. **Averages are weighted by the length of the goal** (`masterProgress`). A
+   ninety-day track at 50% and a three-year track at 50% are not the same
+   amount of work.
+
+Which tracks are in it lives in `AppSettings.masterExcluded` — the ones
+switched *off*, so a track made tomorrow is in the view by default. Whether
+the view is open is `AppSettings.masterView`: a device preference, like the
+theme, because which track is active is data and syncs while which of the two
+ways of looking at it you last used is this browser's business.
+
+`/roadmap?all=1` is the same idea for the roadmaps: an index down the side and
+one document at a time, because six roadmaps printed end to end is a document
+nobody reads to the bottom of.
 
 ## Days a track takes off
 

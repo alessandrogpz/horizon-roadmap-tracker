@@ -10,6 +10,7 @@ import type { SyncStatus } from "@/components/workspace/WorkspaceProvider";
 import { Cloud, Flame } from "lucide-react";
 import HorizonMark from "@/components/HorizonMark";
 import TrackSwitcher from "@/components/TrackSwitcher";
+import MasterStats from "@/components/master/MasterStats";
 import TrackSettingsModal from "@/components/TrackSettingsModal";
 import ThemeToggle from "@/components/ThemeToggle";
 import TopBarMenu, { type ModuleState } from "@/components/TopBarMenu";
@@ -37,6 +38,14 @@ interface DashboardHeaderProps {
   onDeleteTrack: (trackId?: string) => void;
   /** Saves a new order for the track list. */
   onReorderTracks: (orderedIds: string[]) => void;
+  /**
+   * The master view: every track at once, read-only. When it is open the
+   * header shows its numbers instead of the open track's, and the menu drops
+   * everything that would edit a track — there is no track here to edit.
+   */
+  masterTracks?: TrackState[] | null;
+  masterOpen?: boolean;
+  onOpenMaster?: () => void;
   canDeleteTrack: boolean;
   moduleState: ModuleState[];
   onToggleModule: (id: string) => void;
@@ -156,7 +165,7 @@ function StatTile({
   );
 }
 
-export default function DashboardHeader({ data, workspace, syncStatus, syncError, syncTarget = "local", onSync, onSwitchTrack, onNewTrack, onEditTrack, onDeleteTrack, onReorderTracks, canDeleteTrack, moduleState, onToggleModule, onEditRhythm, onNewRotation, onReloadWorkspace }: DashboardHeaderProps) {
+export default function DashboardHeader({ data, workspace, syncStatus, syncError, syncTarget = "local", onSync, onSwitchTrack, onNewTrack, onEditTrack, onDeleteTrack, onReorderTracks, masterTracks, masterOpen = false, onOpenMaster, canDeleteTrack, moduleState, onToggleModule, onEditRhythm, onNewRotation, onReloadWorkspace }: DashboardHeaderProps) {
   const [showTrackSettings, setShowTrackSettings] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
@@ -224,6 +233,8 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
             onNewTrack={() => void handleNewTrack()}
             onDelete={canDeleteTrack ? onDeleteTrack : undefined}
             onReorder={onReorderTracks}
+            onOpenMaster={onOpenMaster}
+            masterOpen={masterOpen}
           />
         </div>
 
@@ -265,7 +276,8 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
         <div className="ml-auto flex items-center gap-2">
           <ThemeToggle />
           <TopBarMenu
-            trackName={data.meta.name}
+            trackName={masterOpen ? "All tracks" : data.meta.name}
+            readOnly={masterOpen}
             roadmapEnabled={!!data.isSynced}
             modules={moduleState}
             onToggleModule={onToggleModule}
@@ -280,6 +292,9 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
       </div>
 
       {/* Hero metrics — the "am I on track?" glance, up front. */}
+      {masterOpen && masterTracks ? (
+        <MasterStats tracks={masterTracks} />
+      ) : (
       <div className="flex items-stretch gap-3 flex-wrap">
         <StatTile
           label="Current Streak"
@@ -333,8 +348,9 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
           </div>
         </button>
       </div>
+      )}
 
-      {openStat && (
+      {openStat && !masterOpen && (
         <StatDetailModal metric={openStat} track={data} onClose={() => setOpenStat(null)} />
       )}
 

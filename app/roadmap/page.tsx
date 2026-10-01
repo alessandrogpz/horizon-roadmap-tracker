@@ -3,7 +3,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Check } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { renderMarkdownToHtml } from "@/lib/markdown";
+import AllRoadmaps from "@/components/master/AllRoadmaps";
 import { WorkspaceProvider, useWorkspace, useWorkspaceActions } from "@/components/workspace/WorkspaceProvider";
 
 const SAVE_DEBOUNCE_MS = 800;
@@ -127,10 +129,22 @@ function RoadmapEditor() {
   );
 }
 
+/** One track's roadmap, or every track's. `?all=1` is how the master view
+ *  reaches this page; without it nothing about this route has changed. */
+function Roadmap() {
+  const all = useSearchParams().get("all") === "1";
+  return all ? <AllRoadmaps /> : <RoadmapEditor />;
+}
+
 export default function RoadmapPage() {
   return (
     <WorkspaceProvider>
-      <RoadmapEditor />
+      {/* `useSearchParams` reads something that only exists once the request
+          is known, so the route would otherwise opt the whole page out of
+          static rendering. */}
+      <React.Suspense fallback={null}>
+        <Roadmap />
+      </React.Suspense>
     </WorkspaceProvider>
   );
 }

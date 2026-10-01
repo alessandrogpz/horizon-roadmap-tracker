@@ -45,6 +45,10 @@ interface TopBarMenuProps {
   onOpenSettings: () => void;
   /** Only when signed in: search and history come from the account. */
   onOpenInsights?: () => void;
+  /** The master view is open, so there is no track here to edit: everything
+   *  that would change one is left out rather than shown disabled. A disabled
+   *  row is a thing that looks like it should work. */
+  readOnly?: boolean;
 }
 
 function Item({
@@ -93,6 +97,7 @@ export default function TopBarMenu({
   onNewTrack,
   onOpenSettings,
   onOpenInsights,
+  readOnly = false,
 }: TopBarMenuProps) {
   const [open, setOpen] = useState(false);
   // Which edge the popover aligns to, chosen on open so it always lands fully
@@ -163,22 +168,29 @@ export default function TopBarMenu({
             </span>
           </div>
 
-          <Item icon={<Pencil size={15} strokeWidth={2} />} label="Track settings…" onClick={run(onEditTrack)} />
-          <Item icon={<CalendarCog size={15} strokeWidth={2} />} label="Weekly rhythm…" onClick={run(onEditRhythm)} />
-          <Item icon={<Repeat size={15} strokeWidth={2} />} label="New rotation…" onClick={run(onNewRotation)} />
+          {!readOnly && (
+            <>
+              <Item icon={<Pencil size={15} strokeWidth={2} />} label="Track settings…" onClick={run(onEditTrack)} />
+              <Item icon={<CalendarCog size={15} strokeWidth={2} />} label="Weekly rhythm…" onClick={run(onEditRhythm)} />
+              <Item icon={<Repeat size={15} strokeWidth={2} />} label="New rotation…" onClick={run(onNewRotation)} />
+            </>
+          )}
           <Item
             icon={<Map size={15} strokeWidth={2} />}
-            label={roadmapEnabled ? "Full roadmap" : "Full roadmap (locked)"}
+            label={roadmapEnabled ? (readOnly ? "All roadmaps" : "Full roadmap") : "Full roadmap (locked)"}
             disabled={!roadmapEnabled}
             hint={roadmapEnabled ? undefined : "Connect Google Drive to unlock"}
             // A full page load on purpose: it fires `pagehide`, which flushes any
             // pending save in WorkspaceProvider. router.push would unmount the
             // provider without that flush and could drop the last edit.
-            // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-            onClick={run(() => window.location.assign("/roadmap"))}
+            onClick={run(() => window.location.assign(readOnly ? "/roadmap?all=1" : "/roadmap"))}
           />
           <Item icon={<Plus size={15} strokeWidth={2} />} label="New track" onClick={run(onNewTrack)} />
 
+          {/* The master view has a fixed board — there is nothing stored for
+              it to remember an arrangement in, so there is nothing to
+              arrange. */}
+          {!readOnly && (
           <div className="mt-1 border-t border-card-border pt-0.5">
             <SectionLabel>Panels</SectionLabel>
             {modules.map((m) => {
@@ -215,6 +227,7 @@ export default function TopBarMenu({
               Closing a panel only hides it for this track — its data is kept.
             </span>
           </div>
+          )}
 
           <div className="mt-1 border-t border-card-border pt-0.5">
             <SectionLabel>This device</SectionLabel>
