@@ -24,11 +24,26 @@ export interface AppSettings {
    *  and it keeps the weekend as two adjacent columns rather than splitting it
    *  across both ends of the row. */
   weekStartsOn: "sun" | "mon";
+  /** Whether the app opens on the master view — every track at once, read-only
+   *  — rather than on the open track. A view preference and therefore a device
+   *  one: which track is *active* is workspace data and syncs; which of the two
+   *  ways of looking at it you last used is this browser's own business. */
+  masterView: boolean;
+  /**
+   * Track ids switched off in the master view.
+   *
+   * The ones switched *off* rather than the ones switched on, so a track made
+   * tomorrow is in the view by default. "Everything except these two" survives
+   * a new track; "these four" quietly loses it.
+   */
+  masterExcluded: string[];
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
   dayRolloverHour: 0,
   weekStartsOn: "mon",
+  masterView: false,
+  masterExcluded: [],
 };
 
 export const SETTINGS_EVENT = "horizon-settings-change";
@@ -85,6 +100,12 @@ function normalize(raw: unknown): AppSettings {
     // missing or malformed value lands on Monday rather than silently on
     // whichever branch happens to be the else.
     weekStartsOn: obj.weekStartsOn === "sun" ? "sun" : DEFAULT_SETTINGS.weekStartsOn,
+    masterView: obj.masterView === true,
+    // Strings only, and capped: this is a hand-editable blob in localStorage,
+    // and the list is only ever compared against track ids.
+    masterExcluded: Array.isArray(obj.masterExcluded)
+      ? obj.masterExcluded.filter((id): id is string => typeof id === "string").slice(0, 500)
+      : [],
   };
 }
 

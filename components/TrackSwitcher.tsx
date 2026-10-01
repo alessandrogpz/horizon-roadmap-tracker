@@ -19,7 +19,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ChevronDown, Flame, GripVertical, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, Flame, GripVertical, Layers, Lock, Plus, Trash2 } from "lucide-react";
 import type { StreakDay } from "@/lib/stats";
 import type { TrackState } from "@/lib/types";
 import { streakCalendar } from "@/lib/stats";
@@ -37,6 +37,12 @@ interface TrackSwitcherProps {
   onDelete?: (trackId: string) => void;
   /** Saves a new order for the list. Absent, the rows cannot be dragged. */
   onReorder?: (orderedIds: string[]) => void;
+  /** Opens the master view — every track at once, read-only. Absent, the row
+   *  that reaches it is not drawn. */
+  onOpenMaster?: () => void;
+  /** Whether the master view is the thing currently on screen, in which case
+   *  the button names it rather than naming a track. */
+  masterOpen?: boolean;
 }
 
 interface Row {
@@ -67,6 +73,8 @@ export default function TrackSwitcher({
   onNewTrack,
   onDelete,
   onReorder,
+  onOpenMaster,
+  masterOpen = false,
 }: TrackSwitcherProps) {
   const [open, setOpen] = useState(false);
   /** Which row has been armed for deletion. One decision per intent: the
@@ -238,12 +246,16 @@ export default function TrackSwitcher({
         className="flex items-center gap-1.5 bg-transparent border-none p-0 cursor-pointer text-[0.85rem] font-semibold text-accent hover:underline"
         title="Switch track"
       >
-        <span
-          className="h-2 w-2 rounded-full shrink-0"
-          style={{ backgroundColor: activeTrack.meta.color || "var(--accent)" }}
-          aria-hidden="true"
-        />
-        <span>{activeTrack.meta.name}</span>
+        {masterOpen ? (
+          <Layers size={11} strokeWidth={2.5} className="shrink-0" aria-hidden="true" />
+        ) : (
+          <span
+            className="h-2 w-2 rounded-full shrink-0"
+            style={{ backgroundColor: activeTrack.meta.color || "var(--accent)" }}
+            aria-hidden="true"
+          />
+        )}
+        <span>{masterOpen ? "All tracks" : activeTrack.meta.name}</span>
         <ChevronDown size={12} strokeWidth={2.5} className={`text-subtle-foreground transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
@@ -260,6 +272,26 @@ export default function TrackSwitcher({
           ref={menuRef}
           className="fixed inset-x-2 top-[3.6rem] z-50 max-h-[70vh] overflow-y-auto overscroll-contain rounded-md border border-card-border bg-card shadow-[0_10px_25px_-5px_rgba(0,0,0,0.5)] sm:absolute sm:inset-x-auto sm:left-0 sm:top-[calc(100%+0.5rem)] sm:max-h-none sm:w-[360px]"
         >
+          {onOpenMaster && tracks.length > 1 && (
+            <button
+              onClick={() => {
+                close();
+                onOpenMaster();
+              }}
+              aria-current={masterOpen}
+              className={`flex w-full items-center gap-2 border-b border-card-border px-3 py-2.5 text-left text-[0.8rem] font-semibold transition-colors ${
+                masterOpen ? "bg-accent/[0.10] text-accent" : "bg-transparent text-muted-foreground hover:bg-surface-hover hover:text-foreground"
+              } cursor-pointer border-x-0 border-t-0`}
+            >
+              <Layers size={13} strokeWidth={2.5} className="shrink-0" />
+              <span className="flex-1">All tracks</span>
+              <span className="inline-flex items-center gap-1 text-[0.62rem] font-semibold uppercase tracking-[0.05em] text-subtle-foreground">
+                <Lock size={9} strokeWidth={2.5} />
+                Read only
+              </span>
+            </button>
+          )}
+
           {canReorder ? (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={rows.map((row) => row.track.meta.id)} strategy={verticalListSortingStrategy}>
