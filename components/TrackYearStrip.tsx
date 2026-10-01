@@ -14,7 +14,7 @@
 
 import type { StreakDay } from "@/lib/stats";
 import { shadeOf } from "@/lib/colors";
-import { isRestDate } from "@/lib/restDays";
+import { marksRestDay } from "@/lib/restDays";
 
 /** Fifty-three columns is a year plus the part-weeks at either end. */
 export const YEAR_WEEKS = 53;
@@ -26,6 +26,7 @@ export default function TrackYearStrip({
   gap = 2,
   start,
   today,
+  markToday = true,
   rest,
   pad = true,
   onDayClick,
@@ -40,10 +41,20 @@ export default function TrackYearStrip({
   /** The track's first day, marked in the page's opposite so that it survives
    *  whichever colour the track is wearing. */
   start?: string;
+  /** What day it is. Two jobs: it rings today, and it tells the day-off mark
+   *  which days have already happened. */
   today?: string;
-  /** Weekday names this track has off. A day on one of them that passed with
-   *  nothing recorded keeps its empty square and gains a dot, so a planned
-   *  gap does not read as a missed day. */
+  /** Ring today. On by default, and turned off for strips drawn small enough
+   *  that a 1.5-point ring is most of a cell — the track switcher's rows are
+   *  four points a day, where the ring reads as a bright blob rather than a
+   *  mark. Those strips end at today anyway, so it says nothing the shape has
+   *  not already said. */
+  markToday?: boolean;
+  /** Weekday names this track has off. A day on one of them that *passed*
+   *  with nothing recorded keeps its empty square and gains a dot, so a
+   *  planned gap does not read as a missed day. Needs `today` to know which
+   *  days have passed, and `start` to know which ones the track was there
+   *  for; without `today` nothing is marked. */
   rest?: ReadonlySet<string>;
   /** Pad the front out to a whole year, so that every track in a list draws a
    *  day at the same size whatever age it is. */
@@ -72,9 +83,11 @@ export default function TrackYearStrip({
           {week.map((day, dayIndex) => {
             const began = Boolean(start) && day.date === start;
             const pressable = Boolean(onDayClick) && Boolean(day.date);
-            // A day off that passed with nothing on it. Only when it is empty:
-            // work done on a rest day is still work, and it is drawn as such.
-            const resting = Boolean(rest) && day.count === 0 && !began && isRestDate(day.date, rest!);
+            // A day off that *passed* with nothing on it. Only when it is
+            // empty: work done on a rest day is still work, and it is drawn
+            // as such.
+            const resting =
+              Boolean(rest) && day.count === 0 && !began && marksRestDay(day.date, rest!, today ?? "", start);
             const dot = Math.max(2, Math.round(cell * 0.34));
             return (
               <div
@@ -102,7 +115,10 @@ export default function TrackYearStrip({
                     : began
                       ? "var(--foreground)"
                       : shadeOf(color, day.count, "var(--streak-0)"),
-                  boxShadow: day.date && today && day.date === today ? "0 0 0 1.5px var(--foreground)" : undefined,
+                  boxShadow:
+                    markToday && day.date && today && day.date === today
+                      ? "0 0 0 1.5px var(--foreground)"
+                      : undefined,
                 }}
               >
                 {resting && (

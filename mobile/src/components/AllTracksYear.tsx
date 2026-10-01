@@ -17,7 +17,7 @@ import { useMemo, useRef } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { timelineStats, yearCalendar, type StreakDay } from "@shared/stats";
-import { isRestDate, restWeekdays, trackStreak } from "@shared/restDays";
+import { marksRestDay, restWeekdays, trackStreak } from "@shared/restDays";
 import { parseYMD } from "@shared/dates";
 import type { TrackState } from "@shared/types";
 import { Ring } from "./Ring";
@@ -171,7 +171,10 @@ export function AllTracksYear({
                 <View key={index} style={styles.week}>
                   {week.map((day, dayIndex) => {
                     const began = Boolean(day.date) && day.date === row.track.startDate;
-                    const resting = day.count === 0 && !began && isRestDate(day.date, row.rest);
+                    const resting =
+                      day.count === 0 &&
+                      !began &&
+                      marksRestDay(day.date, row.rest, today, row.track.startDate);
                     return (
                       <View
                         key={dayIndex}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { bridges, isRestDate, isRestType, restWeekdays, streakWithRest, trackStreak } from "../restDays";
+import { bridges, isRestDate, isRestType, marksRestDay, restWeekdays, streakWithRest, trackStreak } from "../restDays";
 import { setRestDay } from "../focusTypes";
 import { streakStats } from "../stats";
 import type { FocusType, TrackState, WeekDay } from "../types";
@@ -71,6 +71,45 @@ describe("which days are off", () => {
     const next = setRestDay({ focusTypes: pool, weekSchedule: week(["Sun"]) }, "free", false);
     expect(next.focusTypes.free.restDay).toBe(false);
     expect(restWeekdays({ weekSchedule: next.weekSchedule, focusTypes: next.focusTypes }).size).toBe(0);
+  });
+});
+
+describe("which days off get the mark", () => {
+  const rest = new Set(["Sun"]);
+  // Sundays either side of a Saturday "today".
+  const LAST_SUNDAY = "2026-09-27";
+  const NEXT_SUNDAY = "2026-10-04";
+
+  it("marks a day off that has already happened", () => {
+    expect(marksRestDay(LAST_SUNDAY, rest, SAT)).toBe(true);
+  });
+
+  it("does not mark one that has not", () => {
+    // The whole point: a Sunday next week is not a day off, it is a day.
+    expect(marksRestDay(NEXT_SUNDAY, rest, SAT)).toBe(false);
+    expect(marksRestDay("2026-12-27", rest, SAT)).toBe(false);
+  });
+
+  it("marks today, when today is a day off", () => {
+    expect(marksRestDay(SUN, rest, SUN)).toBe(true);
+  });
+
+  it("does not mark a day before the track existed", () => {
+    // `streakCalendar` runs from the *week* a track began in, so up to six
+    // real dates before the first day come back with a count of zero.
+    expect(marksRestDay(LAST_SUNDAY, rest, SAT, "2026-09-28")).toBe(false);
+    expect(marksRestDay(LAST_SUNDAY, rest, SAT, "2026-09-27")).toBe(true);
+    expect(marksRestDay(LAST_SUNDAY, rest, SAT, "2026-01-01")).toBe(true);
+  });
+
+  it("is never true for a padding cell, or with no idea what day it is", () => {
+    expect(marksRestDay("", rest, SAT)).toBe(false);
+    expect(marksRestDay(LAST_SUNDAY, rest, "")).toBe(false);
+  });
+
+  it("still requires the weekday to be one the week has off", () => {
+    expect(marksRestDay("2026-09-26", rest, SAT)).toBe(false); // a Saturday
+    expect(marksRestDay(LAST_SUNDAY, new Set(), SAT)).toBe(false);
   });
 });
 
