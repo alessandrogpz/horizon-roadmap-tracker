@@ -408,7 +408,7 @@ function TrackRow({
       <div className="absolute right-2.5 top-2 flex items-center gap-1">
         {canDelete && (
           <button
-            onClick={onDelete === undefined ? undefined : () => (armed ? onDelete() : onArm())}
+            onClick={() => (armed ? onDelete() : onArm())}
             onBlur={onDisarm}
             title={armed ? "Tap again to delete" : `Delete ${row.track.meta.name}`}
             aria-label={armed ? `Confirm deleting ${row.track.meta.name}` : `Delete ${row.track.meta.name}`}

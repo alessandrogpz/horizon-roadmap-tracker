@@ -7,6 +7,12 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.91.1] - 2026-10-01
+
+### Fixed
+- A redundant guard on the track switcher's delete button — the handler it was checking for is a
+  required prop and is always there.
+
 ## [0.91.0] - 2026-10-01
 
 ### Added
