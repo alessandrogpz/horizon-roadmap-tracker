@@ -17,6 +17,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { Link } from "expo-router";
 import type { RotationDef } from "@shared/types";
 import { setWeeklyRhythm } from "@shared/trackActions";
@@ -25,8 +26,10 @@ import {
   recolorFocusType,
   removeFocusType,
   renameFocusType,
+  setRestDay,
   type FocusPool,
 } from "@shared/focusTypes";
+import { isRestType } from "@shared/restDays";
 import { DAYS_SHORT } from "@shared/dates";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { useUndo } from "../components/UndoBar";
@@ -192,6 +195,27 @@ export default function RhythmScreen() {
                 />
               ))}
             </View>
+            {/* A day off, rather than a day missed. These bridge the streak
+                instead of breaking it, and the grid marks them with a dot. */}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ selected: isRestType(key, type) }}
+              accessibilityLabel={
+                isRestType(key, type)
+                  ? `${type.label} is a day off`
+                  : `Make ${type.label} a day off`
+              }
+              hitSlop={8}
+              onPress={() => changePool((pool) => setRestDay(pool, key, !isRestType(key, type)))}
+              style={[styles.restToggle, isRestType(key, type) && { borderColor: palette.accent }]}
+            >
+              <Ionicons
+                name="moon-outline"
+                size={13}
+                color={isRestType(key, type) ? palette.accent : palette.subtleForeground}
+              />
+            </Pressable>
+
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={
@@ -488,6 +512,15 @@ function makeStyles(palette: Palette) {
       minHeight: 44,
       lineHeight: 44,
       textAlign: "center",
+    },
+    restToggle: {
+      width: 26,
+      height: 26,
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: RADIUS.control,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
     },
     swatches: { flexDirection: "row", gap: 4 },
     swatch: { width: 18, height: 18, borderRadius: 9, borderWidth: 1, borderColor: "rgba(0,0,0,0.2)" },

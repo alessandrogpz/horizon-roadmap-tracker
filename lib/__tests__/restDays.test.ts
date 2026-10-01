@@ -1,0 +1,153 @@
+import { describe, it, expect } from "vitest";
+import { bridges, isRestDate, isRestType, restWeekdays, streakWithRest, trackStreak } from "../restDays";
+import { setRestDay } from "../focusTypes";
+import { streakStats } from "../stats";
+import type { FocusType, TrackState, WeekDay } from "../types";
+
+// Anchors. 2026-09-28 is a Monday, so the week runs Mon 28 … Sun 2026-10-04.
+const MON = "2026-09-28";
+const SAT = "2026-10-03";
+const SUN = "2026-10-04";
+
+const week = (restOn: string[]): WeekDay[] =>
+  ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((name) =>
+    restOn.includes(name)
+      ? { name, type: "free", label: "Free" }
+      : { name, type: "study", label: "Study" }
+  );
+
+const pool: Record<string, FocusType> = {
+  study: { label: "Study", color: "#0ea5e9" },
+  free: { label: "Free", color: "#a1a1aa" },
+};
+
+const track = (overrides: Partial<TrackState> = {}): TrackState =>
+  ({
+    meta: { id: "t1", name: "Track", color: "#0ea5e9", templateId: "custom", createdAt: 0 },
+    currentPhase: 1,
+    startDate: "2026-09-01",
+    streakHistory: [],
+    lastTasksResetDate: "",
+    dailyTasks: {},
+    dailyRevisionItems: {},
+    phases: [],
+    portfolio: [],
+    materials: [],
+    completedItemsHistory: {},
+    weeklyCompletions: {},
+    weekSchedule: week(["Sun"]),
+    focusTypes: pool,
+    ...overrides,
+  }) as TrackState;
+
+describe("which days are off", () => {
+  it("reads the flag when a type carries one", () => {
+    expect(isRestType("anything", { restDay: true })).toBe(true);
+    expect(isRestType("free", { restDay: false })).toBe(false);
+  });
+
+  it("falls back to the two keys every template ships, for data that predates the flag", () => {
+    expect(isRestType("free")).toBe(true);
+    expect(isRestType("rest")).toBe(true);
+    expect(isRestType("study")).toBe(false);
+    // Not guessed from the label: a type nobody has marked is a working day.
+    expect(isRestType("recovery", { label: "Recovery", color: "#fff" } as FocusType)).toBe(false);
+  });
+
+  it("collects the weekdays a track has off", () => {
+    expect([...restWeekdays(track({ weekSchedule: week(["Sat", "Sun"]) }))].sort()).toEqual(["Sat", "Sun"]);
+    expect(restWeekdays(track({ weekSchedule: week([]) })).size).toBe(0);
+    expect(restWeekdays(null).size).toBe(0);
+  });
+
+  it("maps a date onto one", () => {
+    const rest = new Set(["Sun"]);
+    expect(isRestDate(SUN, rest)).toBe(true);
+    expect(isRestDate(SAT, rest)).toBe(false);
+    expect(isRestDate("", rest)).toBe(false);
+  });
+
+  it("lets a day off be turned back into a working day, and remembers it", () => {
+    const next = setRestDay({ focusTypes: pool, weekSchedule: week(["Sun"]) }, "free", false);
+    expect(next.focusTypes.free.restDay).toBe(false);
+    expect(restWeekdays({ weekSchedule: next.weekSchedule, focusTypes: next.focusTypes }).size).toBe(0);
+  });
+});
+
+describe("a streak across days off", () => {
+  const rest = new Set(["Sun"]);
+
+  it("is unbroken by a day the week has off", () => {
+    // Worked Mon–Sat, Sunday off, and it is now Sunday.
+    const history = ["2026-09-28", "2026-09-29", "2026-09-30", "2026-10-01", "2026-10-02", SAT];
+    expect(streakWithRest(history, SUN, rest)).toBe(6);
+    // Without the rule it was six too — the anchor falls back to yesterday —
+    // but one more day shows the difference.
+    expect(streakWithRest(history, "2026-10-05", rest)).toBe(6);
+    expect(streakWithRest(history, "2026-10-05", new Set())).toBe(0);
+  });
+
+  it("does not count the day off as a day of work", () => {
+    // Only Saturday worked, then a Sunday off, then Monday.
+    expect(streakWithRest([SAT, "2026-10-05"], "2026-10-05", rest)).toBe(2);
+  });
+
+  it("still breaks on a working day that was missed", () => {
+    // Friday worked, Saturday (a working day) missed, Sunday off.
+    expect(streakWithRest(["2026-10-02"], "2026-10-05", rest)).toBe(0);
+  });
+
+  it("counts work recorded on a day off", () => {
+    expect(streakWithRest([SAT, SUN], SUN, rest)).toBe(2);
+  });
+
+  it("terminates when every day of the week is off", () => {
+    const every = new Set(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]);
+    // Nothing older than the first recorded day can extend a run, which is
+    // what stops the walk rather than a day that was worked.
+    expect(streakWithRest([MON], "2026-12-25", every)).toBe(1);
+    expect(streakWithRest([], "2026-12-25", every)).toBe(0);
+  });
+
+  it("is what trackStreak reports for a track", () => {
+    const history = ["2026-10-02", SAT];
+    expect(trackStreak(track({ streakHistory: history }), "2026-10-05")).toBe(2);
+    expect(trackStreak(track({ streakHistory: history, weekSchedule: week([]) }), "2026-10-05")).toBe(0);
+    expect(trackStreak(null, "2026-10-05")).toBe(0);
+  });
+});
+
+describe("consecutive, once days off are stepped over", () => {
+  const rest = new Set(["Sun"]);
+
+  it("is plain adjacency when there is no gap", () => {
+    expect(bridges(SAT, SUN, rest)).toBe(true);
+    expect(bridges(SAT, SAT, rest)).toBe(false);
+  });
+
+  it("joins two days separated only by days off", () => {
+    expect(bridges(SAT, "2026-10-05", rest)).toBe(true);
+    expect(bridges("2026-10-02", "2026-10-05", rest)).toBe(false);
+  });
+
+  it("does not walk gaps that cannot be bridged", () => {
+    // A fortnight contains working days whatever else is in it.
+    expect(bridges("2026-09-01", "2026-10-05", rest)).toBe(false);
+    expect(bridges("2026-09-01", "2026-10-05", new Set(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]))).toBe(true);
+  });
+
+  it("gives the longest run the same rule as the current one", () => {
+    const history = ["2026-09-25", "2026-09-26", "2026-09-28"]; // Fri, Sat, Mon
+    const resting = streakStats(track({ streakHistory: history, weekSchedule: week(["Sun"]) }), "2026-10-05");
+    const working = streakStats(track({ streakHistory: history, weekSchedule: week([]) }), "2026-10-05");
+    expect(resting.longest).toBe(3);
+    expect(working.longest).toBe(2);
+  });
+
+  it("takes an override, for a view that combines several tracks", () => {
+    const history = ["2026-09-25", "2026-09-26", "2026-09-28"];
+    // The track rests on Sunday; the combined view says nobody does.
+    const stats = streakStats(track({ streakHistory: history }), "2026-10-05", new Set());
+    expect(stats.longest).toBe(2);
+  });
+});

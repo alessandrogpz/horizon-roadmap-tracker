@@ -14,6 +14,7 @@ import { activeTrack, withActiveTrack } from "@shared/selectors";
 import { migrateWorkspace } from "@shared/migrations";
 import { applyTrackBookkeeping } from "@shared/bookkeeping";
 import { blankTrack } from "@shared/templates";
+import { reorderTracks } from "@shared/trackActions";
 import { todayYMD } from "@shared/dates";
 import { applyDailyResetIfNeeded } from "@shared/dailyReset";
 import { clearAll, loadWorkspace, saveWorkspace } from "../storage/db";
@@ -36,6 +37,9 @@ interface WorkspaceValue {
   /** Adds a track and opens it. */
   addTrack: (track: TrackState) => void;
   switchTrack: (trackId: string) => void;
+  /** Puts the track list in a new order. Synced, unlike the panel order:
+   *  "which of my tracks comes first" is the same question on a laptop. */
+  reorderTracks: (orderedIds: string[]) => void;
   /** After a sync: the merged workspace the server sent back, already stored. */
   replaceWorkspace: (workspace: Workspace) => void;
   /** Puts a previous workspace back, on screen *and* on disk — what Undo needs.
@@ -190,6 +194,26 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     [commit]
   );
 
+  const reorder = useCallback(
+    (orderedIds: string[]) => {
+      const workspaceNow = current.current;
+      if (!workspaceNow) return;
+      const tracks = reorderTracks(workspaceNow.tracks, orderedIds);
+      // Bookkeeping per track, as every other edit gets: a position is
+      // structural config, so each one that moved has to bump its version or
+      // the account's copy wins the next merge and the order comes undone.
+      const stamped: Record<string, TrackState> = { ...tracks };
+      for (const id of orderedIds) {
+        const before = workspaceNow.tracks[id];
+        const after = tracks[id];
+        if (!before || !after || before === after) continue;
+        stamped[id] = applyTrackBookkeeping(before, after, false).track;
+      }
+      commit({ ...workspaceNow, tracks: stamped });
+    },
+    [commit]
+  );
+
   const switchTrack = useCallback(
     (trackId: string) => {
       const workspaceNow = current.current;
@@ -217,8 +241,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo<WorkspaceValue>(
-    () => ({ workspace, track, today, loading, toggleItem, editTrack, editTrackById, addTrack, switchTrack, replaceWorkspace, restoreWorkspace, resetLocal }),
-    [workspace, track, today, loading, toggleItem, editTrack, editTrackById, addTrack, switchTrack, replaceWorkspace, restoreWorkspace, resetLocal]
+    () => ({ workspace, track, today, loading, toggleItem, editTrack, editTrackById, addTrack, switchTrack, reorderTracks: reorder, replaceWorkspace, restoreWorkspace, resetLocal }),
+    [workspace, track, today, loading, toggleItem, editTrack, editTrackById, addTrack, switchTrack, reorder, replaceWorkspace, restoreWorkspace, resetLocal]
   );
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;

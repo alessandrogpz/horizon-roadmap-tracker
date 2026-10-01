@@ -12,6 +12,20 @@ import type { TrackState, Workspace } from "./types";
 export const visibleTracks = (workspace: Workspace): TrackState[] =>
   Object.values(workspace.tracks).filter((t) => !t.meta.archived);
 
+/**
+ * The same tracks, in the order the user put them in.
+ *
+ * What every list of tracks should render from. Until someone reorders them
+ * nothing carries an `order`, and they fall back to the order they were made
+ * in — which is what the app did before, and the only sensible default.
+ */
+export const orderedTracks = (workspace: Workspace): TrackState[] =>
+  [...visibleTracks(workspace)].sort(
+    (a, b) =>
+      (a.meta.order ?? Number.MAX_SAFE_INTEGER) - (b.meta.order ?? Number.MAX_SAFE_INTEGER) ||
+      (a.meta.createdAt ?? 0) - (b.meta.createdAt ?? 0)
+  );
+
 /** The track the dashboard is currently showing, or null if there isn't one. */
 export const activeTrack = (workspace: Workspace): TrackState | null =>
   workspace.tracks[workspace.activeTrackId] ?? null;

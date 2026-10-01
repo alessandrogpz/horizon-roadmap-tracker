@@ -18,8 +18,9 @@ import { Link } from "expo-router";
 import type { StreakDay } from "@shared/stats";
 import type { CompletedItem } from "@shared/types";
 import { monthCalendar, streakStats, yearCalendar, yearsWithHistory } from "@shared/stats";
-import { visibleTracks } from "@shared/selectors";
-import { completedItemTitle, currentStreakLength, rebuildStreakHistory } from "@shared/streak";
+import { orderedTracks } from "@shared/selectors";
+import { completedItemTitle, rebuildStreakHistory } from "@shared/streak";
+import { isRestDate, restWeekdays, streakWithRest } from "@shared/restDays";
 import { formatDayMonthYear, parseYMD } from "@shared/dates";
 import { getSettings } from "@shared/settings";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
@@ -65,7 +66,7 @@ export default function ProgressScreen() {
    */
   const [scope, setScope] = useState<"track" | "all">("track");
 
-  const tracks = useMemo(() => (workspace ? visibleTracks(workspace) : []), [workspace]);
+  const tracks = useMemo(() => (workspace ? orderedTracks(workspace) : []), [workspace]);
   /** The tracks the grid is drawn from. One, or all of them. */
   const sources = useMemo(
     () => (scope === "all" ? tracks : track ? [track] : []),
@@ -109,6 +110,19 @@ export default function ProgressScreen() {
     }
     return (date: string) => leader[date]?.colour ?? own;
   }, [palette.accent, sources, track]);
+
+  /**
+   * The weekdays the grid should treat as taken off.
+   *
+   * One track's own, or — across several — only the days *every* one of them
+   * has off. A Sunday that one track rests on and another works on is a day
+   * something was expected, so the combined grid should not excuse it.
+   */
+  const restDays = useMemo(() => {
+    if (sources.length === 0) return new Set<string>();
+    const sets = sources.map(restWeekdays);
+    return new Set([...sets[0]].filter((day) => sets.every((set) => set.has(day))));
+  }, [sources]);
 
   /** The first day there was anything to miss. Across several tracks that is
    *  the earliest of their starts: an older track's days are not blanks on a
@@ -159,12 +173,13 @@ export default function ProgressScreen() {
       track
         ? streakStats(
             { ...track, startDate: firstDay || track.startDate, completedItemsHistory: history, streakHistory: streakDates },
-            today
+            today,
+            restDays
           )
         : null,
-    [firstDay, history, streakDates, today, track]
+    [firstDay, history, restDays, streakDates, today, track]
   );
-  const streak = currentStreakLength(streakDates, today);
+  const streak = streakWithRest(streakDates, today, restDays);
 
   /** The calendar arrives as a flat run of padded cells; a week is seven of
    *  them, which is what makes this a plain chunk rather than a date
@@ -423,6 +438,7 @@ export default function ProgressScreen() {
                       today={today}
                       colour={colourOf(day.date)}
                       start={startMark}
+                      resting={day.count === 0 && isRestDate(day.date, restDays)}
                       open={openDay === day.date}
                       onPress={() => setOpenDay(openDay === day.date ? null : day.date)}
                       styles={styles}
@@ -464,6 +480,7 @@ export default function ProgressScreen() {
                     today={today}
                     colour={colourOf(day.date)}
                     start={startMark}
+                    resting={day.count === 0 && isRestDate(day.date, restDays)}
                     open={openDay === day.date}
                     onPress={() => setOpenDay(openDay === day.date ? null : day.date)}
                     styles={styles}
@@ -516,6 +533,16 @@ export default function ProgressScreen() {
                   has to be findable whichever of the six it is wearing. */}
               <View style={[styles.legendCell, { backgroundColor: palette.foreground }]} />
               <Text style={styles.legendLabel}>started</Text>
+            </>
+          )}
+
+          {restDays.size > 0 && (
+            <>
+              <View style={styles.legendGap} />
+              <View style={[styles.legendCell, styles.legendRest, { backgroundColor: palette.surfaceMuted }]}>
+                <View style={[styles.legendDot, { backgroundColor: legendColour }]} />
+              </View>
+              <Text style={styles.legendLabel}>day off</Text>
             </>
           )}
         </View>
@@ -572,6 +599,7 @@ function Cell({
   today,
   colour,
   start,
+  resting,
   open,
   onPress,
   styles,
@@ -584,6 +612,8 @@ function Cell({
   colour: string;
   /** The track's first day, which gets a mark of its own. */
   start?: string;
+  /** A day the week has off, which passed with nothing on it. */
+  resting?: boolean;
   open: boolean;
   onPress: () => void;
   styles: ReturnType<typeof makeStyles>;
@@ -601,13 +631,18 @@ function Cell({
   // Everything before it stays blank in both shapes, because the track did not
   // exist to be missed.
   const began = Boolean(start) && day.date === start;
+  // A day off is left empty and given a dot rather than filled in. Nothing
+  // was done on it — filling it would be a lie about the history — but the
+  // gap was the plan, and an unmarked gap reads as a day missed.
+  const off = Boolean(resting) && !began;
 
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={
         `${formatDayMonthYear(parseYMD(day.date))}, ${day.count} logged` +
-        (began ? ", the day this track started" : "")
+        (began ? ", the day this track started" : "") +
+        (off ? ", a day off" : "")
       }
       onPress={onPress}
       style={[
@@ -619,7 +654,9 @@ function Cell({
         // the fill, and a ring cannot be seen against the thing it is on.
         open && { borderWidth: 2, borderColor: palette.foreground },
       ]}
-    />
+    >
+      {off && <View style={[styles.restDot, { backgroundColor: colour }]} />}
+    </Pressable>
   );
 }
 
@@ -764,7 +801,12 @@ function makeStyles(palette: Palette) {
       // to stretch, which ran it the full width of the screen while the cells
       // stopped a third of the way across.
     },
-    cell: { width: CELL, height: CELL, borderRadius: 4 },
+    cell: { width: CELL, height: CELL, borderRadius: 4, alignItems: "center", justifyContent: "center" },
+    /** The mark on a day deliberately taken off: a dot, not a filled square.
+     *  Nothing was done on it, and the square has to keep saying so. */
+    restDot: { width: 7, height: 7, borderRadius: 4 },
+    legendRest: { alignItems: "center", justifyContent: "center" },
+    legendDot: { width: 4, height: 4, borderRadius: 2 },
     blank: { opacity: 0 },
     // A row holding the open day sits above its neighbours so the popover
     // inside it draws over the weeks below rather than under them.

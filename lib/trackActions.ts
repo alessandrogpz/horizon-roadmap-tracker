@@ -216,6 +216,28 @@ export const updateTrackIdentity = (track: TrackState, fields: TrackIdentityFiel
   };
 };
 
+/**
+ * Puts the tracks in the given order.
+ *
+ * Writes a position onto every track named, rather than only the ones that
+ * moved: a list half-ordered by hand and half by creation date has no
+ * well-defined sort, and the alternative — comparing a small index against a
+ * millisecond timestamp — is worse. Ids it is not given are left alone, so an
+ * archived track keeps whatever it had.
+ */
+export const reorderTracks = (
+  tracks: Record<string, TrackState>,
+  orderedIds: string[]
+): Record<string, TrackState> => {
+  const next = { ...tracks };
+  orderedIds.forEach((id, index) => {
+    const track = next[id];
+    if (!track || track.meta.order === index) return;
+    next[id] = { ...track, meta: { ...track.meta, order: index } };
+  });
+  return next;
+};
+
 export const setWeeklyRhythm = (
   track: TrackState,
   weekSchedule: WeekDay[],
