@@ -16,7 +16,7 @@
 
 import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { masterCalendar, masterRestWeekdays, masterStart, masterStreak } from "@shared/masterTrack";
+import { masterCalendar, masterRestOn, masterRestWeekdays, masterStart, masterStreak } from "@shared/masterTrack";
 import { marksRestDay } from "@shared/restDays";
 import { parseYMD } from "@shared/dates";
 import { getSettings } from "@shared/settings";
@@ -50,7 +50,9 @@ export function MasterProgress() {
     () => masterCalendar(sources, year, today, weekStartsOn),
     [sources, today, weekStartsOn, year]
   );
-  const restDays = useMemo(() => masterRestWeekdays(sources), [sources]);
+  const restDays = useMemo(() => masterRestOn(sources), [sources]);
+  // Whether a key is worth drawing — a standing question, not a dated one.
+  const everRests = useMemo(() => masterRestWeekdays(sources).size > 0, [sources]);
   const earliest = useMemo(() => masterStart(sources), [sources]);
   const isRest = useMemo(
     () => (date: string) => marksRestDay(date, restDays, today, earliest),
@@ -131,7 +133,7 @@ export function MasterProgress() {
                     </Text>
                   </View>
                 ))}
-                {restDays.size > 0 && (
+                {everRests && (
                   <View style={own.legendItem}>
                     <View style={[own.legendSwatch, own.legendRest]}>
                       <View style={[own.legendDot, { backgroundColor: palette.subtleForeground }]} />

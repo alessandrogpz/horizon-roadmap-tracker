@@ -156,6 +156,13 @@ export const TrackSchema = z.object({
   roadmapContent: text(500_000).optional(),
   panelColumns: PanelColumns.optional(),
   hiddenPanels: z.array(text(100)).max(100).optional(),
+  // When the week's days off changed. One entry per change, so a track that
+  // is reshaped weekly for a decade still fits inside this cap many times
+  // over.
+  restDaysFrom: z
+    .array(z.strictObject({ date: dateKey, days: z.array(day).max(7) }))
+    .max(1000)
+    .optional(),
 });
 
 /** Same reasoning as `TrackSchema`: a newer device must not be refused. */

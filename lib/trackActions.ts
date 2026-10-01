@@ -9,6 +9,7 @@
 import type { FocusType, Material, Phase, PortfolioProject, TrackState, WeekDay } from "./types";
 import { addCompletion, removeCompletion } from "./streak";
 import { dayForDate, todayYMD } from "./dates";
+import { restWeekdays } from "./restDays";
 
 /** The track's horizon in days: the last phase carrying a `recommendedByDay`
  *  threshold defines it. Tracks whose template sets none fall back to a year.
@@ -238,8 +239,44 @@ export const reorderTracks = (
   return next;
 };
 
+/**
+ * Changes the week, and dates the change.
+ *
+ * The dating is the point. A schedule is a decision about what comes next,
+ * not a claim about what already happened — so turning Thursday from a day
+ * off into a working day must not turn every Thursday you already took off
+ * into a day you missed, which would take the streak with it.
+ *
+ * The log only grows when the *set of days off* actually changes: renaming a
+ * focus type, recolouring one, or moving a day between two working types all
+ * leave it alone. The first entry is seeded at the track's start with the set
+ * as it was before this change, because a track written before the log
+ * existed still has a past that has to keep meaning what it meant.
+ */
 export const setWeeklyRhythm = (
   track: TrackState,
   weekSchedule: WeekDay[],
-  focusTypes: Record<string, FocusType>
-): TrackState => ({ ...track, weekSchedule, focusTypes });
+  focusTypes: Record<string, FocusType>,
+  /** The day the change takes effect from. Injected so this stays pure. */
+  todayStr: string = todayYMD()
+): TrackState => {
+  const before = restWeekdays(track);
+  const after = restWeekdays({ weekSchedule, focusTypes });
+  const next: TrackState = { ...track, weekSchedule, focusTypes };
+  if (sameDays(before, after)) return next;
+
+  const log = [...(track.restDaysFrom ?? [])];
+  // Nothing recorded yet: say what the week has been until now, from the
+  // first day there was a week to keep.
+  if (log.length === 0) log.push({ date: track.startDate || todayStr, days: [...before].sort() });
+
+  const days = [...after].sort();
+  const existing = log.findIndex((entry) => entry.date === todayStr);
+  if (existing >= 0) log[existing] = { date: todayStr, days };
+  else log.push({ date: todayStr, days });
+
+  return { ...next, restDaysFrom: log.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0)) };
+};
+
+const sameDays = (a: ReadonlySet<string>, b: ReadonlySet<string>): boolean =>
+  a.size === b.size && [...a].every((day) => b.has(day));

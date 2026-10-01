@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { Flame } from "lucide-react";
 import type { TrackState } from "@/lib/types";
 import { timelineStats, yearCalendar, type StreakDay } from "@/lib/stats";
-import { restWeekdays, trackStreak } from "@/lib/restDays";
+import { restScheduleOf, trackStreak } from "@/lib/restDays";
 import { parseYMD } from "@/lib/dates";
 import TrackRing from "@/components/TrackRing";
 import TrackYearStrip from "@/components/TrackYearStrip";
@@ -49,7 +49,7 @@ export default function AllTracksYear({
         streak: trackStreak(track, today),
         // Each row's own days off: two tracks stacked here rarely rest on the
         // same day, and a shared answer would mark one of them wrongly.
-        rest: restWeekdays(track),
+        rest: restScheduleOf(track),
       })),
     [today, tracks, weekStartsOn, year]
   );

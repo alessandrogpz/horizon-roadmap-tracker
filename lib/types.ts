@@ -253,6 +253,22 @@ export interface TrackState extends Omit<AppState, "hasUnsyncedChanges" | "lastS
    *  view (it's dropped from panelColumns and listed here) — the track's data
    *  behind it is never touched, so reopening restores it intact. */
   hiddenPanels?: string[];
+  /**
+   * When the week's days off changed, and to what.
+   *
+   * The track stores the week it has *now*. Without this, changing which days
+   * are off re-reads the whole past under the new shape: turn Thursday from a
+   * day off into a working day and every Thursday you ever took off becomes a
+   * day you missed, which takes the streak with it. A schedule is a decision
+   * about what comes next, not a claim about what already happened.
+   *
+   * Each entry is the set of weekdays off *from* that date until the next
+   * entry. Appended to only when the set actually changes, so a track whose
+   * week never moves carries nothing. Absent entirely on tracks that predate
+   * this, which read as "it has always been what it is now" — the behaviour
+   * they already had.
+   */
+  restDaysFrom?: { date: DateStr; days: string[] }[];
 }
 
 /** Dashboard panel keys, grouped by column. The two columns can hold a

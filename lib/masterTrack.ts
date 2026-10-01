@@ -25,7 +25,7 @@ import type { Material, Phase, PortfolioProject, TrackMeta, TrackState } from ".
 import { formatDateYMD, getDateForDayName, getWeekNum, parseYMD } from "./dates";
 import { monthCalendar, progressStats, timelineStats, yearCalendar, type MonthBlock, type StreakDay } from "./stats";
 import { computeRotationItemsForDay } from "./rotation";
-import { bridges, isRestType, restWeekdays, streakWithRest } from "./restDays";
+import { bridges, isRestType, restScheduleOf, restWeekdays, streakWithRest, type RestOn } from "./restDays";
 import { trackTotalDays } from "./trackActions";
 
 /** What a track contributed to one day. */
@@ -210,9 +210,25 @@ export function masterRestWeekdays(tracks: TrackState[]): ReadonlySet<string> {
   return new Set([...sets[0]].filter((day) => sets.every((set) => set.has(day))));
 }
 
+/**
+ * The same intersection, asked per date.
+ *
+ * Each track's own week is dated, so the days they *all* had off is a
+ * question about a day rather than a standing fact: two tracks can agree
+ * about Sunday in March and disagree about it in September.
+ */
+export function masterRestOn(tracks: TrackState[]): RestOn {
+  if (tracks.length === 0) return () => new Set();
+  const schedules = tracks.map(restScheduleOf);
+  return (date: string) => {
+    const sets = schedules.map((on) => on(date));
+    return new Set([...sets[0]].filter((day) => sets.every((set) => set.has(day))));
+  };
+}
+
 export function masterStreak(tracks: TrackState[], todayStr: string): MasterStreak {
   const history = masterHistory(tracks);
-  const rest = masterRestWeekdays(tracks);
+  const rest = masterRestOn(tracks);
 
   let longest = 0;
   let run = 0;

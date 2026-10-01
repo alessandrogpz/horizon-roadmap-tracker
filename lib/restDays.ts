@@ -12,12 +12,18 @@
 // work, and inflating it would make a track with five rest days a week look
 // like the most consistent thing anyone had ever done.
 //
-// There is one honest limitation. A track stores the week it has *now*, not
-// the week it had in March, so moving Sunday from Free to Study re-reads every
-// past Sunday as a working day. Keeping a dated history of the schedule would
-// fix it and would cost a field on every track, a merge rule and a migration,
-// for an answer that changes only when someone reshapes their week — and when
-// they do, the new shape is usually the one they would rather be judged by.
+// The week is *dated*. A schedule is a decision about what comes next, not a
+// claim about what already happened, so changing it never rewrites the past:
+// turn Thursday from a day off into a working day and every Thursday you
+// already took off stays taken off, dot and all, while Thursdays from today
+// onward are working days. The track keeps a short log of when the set
+// changed (`TrackState.restDaysFrom`); a track whose week never moves carries
+// nothing, and one written before the log existed reads as "it has always
+// been what it is now".
+//
+// Everything that asks about rest days therefore asks about a *date*, which
+// is what `RestOn` is: give it a day, it gives you the weekdays that were off
+// on that day.
 
 import { DAYS_SHORT, formatDateYMD, parseYMD } from "./dates";
 import type { FocusType, TrackState } from "./types";
@@ -39,7 +45,65 @@ export function isRestType(key: string, type?: Pick<FocusType, "restDay">): bool
   return type?.restDay ?? REST_BY_DEFAULT.has(key);
 }
 
-/** The weekday names ("Mon" … "Sun") this track has taken off. */
+/**
+ * The weekdays off on a given date.
+ *
+ * A function rather than a set, because the answer changes with the date: the
+ * week you keep now is not necessarily the week you kept in March, and a grid
+ * drawing a year has to ask once per day.
+ */
+export type RestOn = (date: string) => ReadonlySet<string>;
+
+const NONE: ReadonlySet<string> = new Set();
+
+/** A schedule that never changes. For callers that genuinely have one set —
+ *  and for tests. */
+export const fixedRest = (rest: ReadonlySet<string>): RestOn => () => rest;
+
+/**
+ * This track's schedule, as of any date.
+ *
+ * With no log, the current week has always been the week — which is what
+ * tracks written before the log assume, and what a track that has never been
+ * reshaped actually means. With a log, the entry in force on that date wins;
+ * a date before the first entry uses the first entry, which is the set the
+ * track opened with.
+ */
+export function restScheduleOf(
+  track: Pick<TrackState, "weekSchedule" | "focusTypes" | "restDaysFrom"> | null | undefined
+): RestOn {
+  if (!track) return () => NONE;
+  const log = track.restDaysFrom;
+  const current = restWeekdays(track);
+  if (!log || log.length === 0) return () => current;
+
+  // Sorted once here rather than trusted: entries are appended in order, but
+  // a merge between two devices can interleave them.
+  const entries = [...log].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  const sets = entries.map((entry) => new Set(entry.days) as ReadonlySet<string>);
+
+  return (date: string) => {
+    if (!date) return NONE;
+    let chosen = 0;
+    for (let i = 0; i < entries.length; i += 1) {
+      if (entries[i].date <= date) chosen = i;
+      else break;
+    }
+    return sets[chosen];
+  };
+}
+
+/** Whether this track ever takes a day off — for deciding whether a key is
+ *  worth drawing. Looks at the whole log, not just today's week. */
+export function anyRestDays(
+  track: Pick<TrackState, "weekSchedule" | "focusTypes" | "restDaysFrom"> | null | undefined
+): boolean {
+  if (!track) return false;
+  if (restWeekdays(track).size > 0) return true;
+  return (track.restDaysFrom ?? []).some((entry) => entry.days.length > 0);
+}
+
+/** The weekday names ("Mon" … "Sun") this track has taken off *now*. */
 export function restWeekdays(
   track: Pick<TrackState, "weekSchedule" | "focusTypes"> | null | undefined
 ): ReadonlySet<string> {
@@ -81,13 +145,14 @@ export function isRestDate(date: string, rest: ReadonlySet<string>): boolean {
  */
 export function marksRestDay(
   date: string,
-  rest: ReadonlySet<string>,
+  restOn: RestOn,
   todayStr: string,
   startDate?: string
 ): boolean {
   if (!date || !todayStr || date > todayStr) return false;
   if (startDate && date < startDate) return false;
-  return isRestDate(date, rest);
+  // The schedule *that day* had, not the one it has now.
+  return isRestDate(date, restOn(date));
 }
 
 /**
@@ -103,7 +168,7 @@ export function marksRestDay(
 export function streakWithRest(
   streakHistory: string[],
   todayStr: string,
-  rest: ReadonlySet<string>
+  restOn: RestOn
 ): number {
   if (!todayStr) return 0;
   const worked = new Set(streakHistory);
@@ -118,7 +183,7 @@ export function streakWithRest(
   let streak = 0;
   for (let date = formatDateYMD(cursor); date >= earliest; date = formatDateYMD(cursor)) {
     if (worked.has(date)) streak += 1;
-    else if (!isRestDate(date, rest)) break;
+    else if (!isRestDate(date, restOn(date))) break;
     cursor.setDate(cursor.getDate() - 1);
   }
   return streak;
@@ -127,31 +192,40 @@ export function streakWithRest(
 /** The track's current streak, with its own rest days applied. What every
  *  screen showing a flame should call. */
 export function trackStreak(
-  track: Pick<TrackState, "streakHistory" | "weekSchedule" | "focusTypes"> | null | undefined,
+  track:
+    | Pick<TrackState, "streakHistory" | "weekSchedule" | "focusTypes" | "restDaysFrom">
+    | null
+    | undefined,
   todayStr: string
 ): number {
   if (!track) return 0;
-  return streakWithRest(track.streakHistory ?? [], todayStr, restWeekdays(track));
+  return streakWithRest(track.streakHistory ?? [], todayStr, restScheduleOf(track));
 }
 
 /**
  * Whether two worked days are consecutive once rest days are stepped over.
  *
  * Used for the longest run, which has to apply the same rule as the current
- * one or the two numbers contradict each other. Bounded: with at least one
- * working weekday in the week, any gap of a week or more must contain one, so
- * there is nothing to walk.
+ * one or the two numbers contradict each other.
+ *
+ * Walked a day at a time, because the schedule can differ across the gap. It
+ * stops at the first working day, which in any ordinary week is within seven,
+ * and gives up past a year — a gap that long is only bridgeable by a week
+ * with no working days in it at all, which is a track that records nothing.
  */
-export function bridges(from: string, to: string, rest: ReadonlySet<string>): boolean {
+const LONGEST_BRIDGE = 366;
+
+export function bridges(from: string, to: string, restOn: RestOn): boolean {
   const start = parseYMD(from);
   const end = parseYMD(to);
   const gap = Math.round((end.getTime() - start.getTime()) / 86_400_000);
   if (gap <= 1) return gap === 1;
-  if (gap > 7) return rest.size === 7;
+  if (gap > LONGEST_BRIDGE) return false;
 
   for (let step = 1; step < gap; step += 1) {
     start.setDate(start.getDate() + 1);
-    if (!isRestDate(formatDateYMD(start), rest)) return false;
+    const date = formatDateYMD(start);
+    if (!isRestDate(date, restOn(date))) return false;
   }
   return true;
 }

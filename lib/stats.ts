@@ -4,7 +4,7 @@
 
 import type { CompletedItem, Material, Phase, TrackState } from "./types";
 import { completedItemTitle } from "./streak";
-import { bridges, restWeekdays, streakWithRest } from "./restDays";
+import { bridges, restScheduleOf, streakWithRest, type RestOn } from "./restDays";
 import { dateForDay, dayForDate, daysSince, formatDateYMD, parseYMD } from "./dates";
 import { trackTotalDays, recommendedPhaseId } from "./trackActions";
 
@@ -41,10 +41,10 @@ export interface StreakStats {
 export function streakStats(
   track: TrackState,
   todayStr: string,
-  /** The days off to step over. Defaults to the track's own; a view that
-   *  combines several passes the days *all* of them have off, because a day
-   *  one track was supposed to work on is not a day off. */
-  rest: ReadonlySet<string> = restWeekdays(track)
+  /** The days off to step over, by date. Defaults to the track's own; a view
+   *  that combines several passes the days *all* of them had off, because a
+   *  day one track was supposed to work on is not a day off. */
+  rest: RestOn = restScheduleOf(track)
 ): StreakStats {
   const history = [...new Set(track.streakHistory || [])].sort();
   const set = new Set(history);

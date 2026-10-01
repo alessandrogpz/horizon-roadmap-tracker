@@ -14,7 +14,7 @@
 
 import type { StreakDay } from "@/lib/stats";
 import { shadeOf } from "@/lib/colors";
-import { marksRestDay } from "@/lib/restDays";
+import { marksRestDay, type RestOn } from "@/lib/restDays";
 
 /** Fifty-three columns is a year plus the part-weeks at either end. */
 export const YEAR_WEEKS = 53;
@@ -50,12 +50,13 @@ export default function TrackYearStrip({
    *  mark. Those strips end at today anyway, so it says nothing the shape has
    *  not already said. */
   markToday?: boolean;
-  /** Weekday names this track has off. A day on one of them that *passed*
-   *  with nothing recorded keeps its empty square and gains a dot, so a
-   *  planned gap does not read as a missed day. Needs `today` to know which
-   *  days have passed, and `start` to know which ones the track was there
-   *  for; without `today` nothing is marked. */
-  rest?: ReadonlySet<string>;
+  /** The track's days off, by date — the week it kept *then*, not the one it
+   *  keeps now. A day on one of them that *passed* with nothing recorded
+   *  keeps its empty square and gains a dot, so a planned gap does not read
+   *  as a missed day. Needs `today` to know which days have passed, and
+   *  `start` to know which ones the track was there for; without `today`
+   *  nothing is marked. */
+  rest?: RestOn;
   /** Pad the front out to a whole year, so that every track in a list draws a
    *  day at the same size whatever age it is. */
   pad?: boolean;

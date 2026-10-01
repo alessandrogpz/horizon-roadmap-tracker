@@ -23,7 +23,7 @@ import { ChevronDown, Flame, GripVertical, Layers, Lock, Plus, Trash2 } from "lu
 import type { StreakDay } from "@/lib/stats";
 import type { TrackState } from "@/lib/types";
 import { streakCalendar } from "@/lib/stats";
-import { restWeekdays, trackStreak } from "@/lib/restDays";
+import { restScheduleOf, trackStreak, type RestOn } from "@/lib/restDays";
 import { todayYMD } from "@/lib/dates";
 import { useAppSettings } from "@/lib/useAppSettings";
 import TrackYearStrip from "@/components/TrackYearStrip";
@@ -50,7 +50,7 @@ interface Row {
   color: string;
   days: StreakDay[];
   streak: number;
-  rest: ReadonlySet<string>;
+  rest: RestOn;
   /** Carried on the row because `TrackRow` needs it and the strip cannot tell
    *  a day that has passed from one that has not without it. */
   today: string;
@@ -119,7 +119,7 @@ export default function TrackSwitcher({
             color: track.meta.color || "var(--accent)",
             days: streakCalendar(track, today, settings.weekStartsOn),
             streak: trackStreak(track, today),
-            rest: restWeekdays(track),
+            rest: restScheduleOf(track),
             today,
           }))
         : [],

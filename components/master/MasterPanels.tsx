@@ -23,6 +23,7 @@ import {
   masterMaterials,
   masterMonths,
   masterPhases,
+  masterRestOn,
   masterRestWeekdays,
   masterStart,
   masterStreak,
@@ -247,7 +248,9 @@ export function MasterConsistencyPanel({ tracks }: { tracks: TrackState[] }) {
   const [layout, setLayout] = useState<(typeof LAYOUTS)[number]["value"]>("rows");
   const [year, setYear] = useState(() => parseYMD(today).getFullYear());
 
-  const rest = useMemo(() => masterRestWeekdays(tracks), [tracks]);
+  const rest = useMemo(() => masterRestOn(tracks), [tracks]);
+  // Whether a key is worth drawing — a standing question, not a dated one.
+  const everRests = useMemo(() => masterRestWeekdays(tracks).size > 0, [tracks]);
   // The earliest day any selected track existed for: before it, there was
   // nothing to take off.
   const earliest = useMemo(() => masterStart(tracks), [tracks]);
@@ -387,7 +390,7 @@ export function MasterConsistencyPanel({ tracks }: { tracks: TrackState[] }) {
             {track.meta.name}
           </span>
         ))}
-        {rest.size > 0 && (
+        {everRests && (
           <span className="inline-flex items-center gap-1.5">
             <span className="flex h-2.5 w-2.5 items-center justify-center rounded-[2px]" style={{ background: "var(--streak-0)" }}>
               <span className="block h-1 w-1 rounded-full" style={{ background: "var(--subtle-foreground)" }} />
