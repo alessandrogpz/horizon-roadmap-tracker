@@ -68,6 +68,7 @@ The Dexie (IndexedDB) database and Google Drive `database.json` used for daily p
 | What an edit does to a track | `lib/trackActions.ts` (materials, portfolio, phases, identity) and `lib/completions.ts` (checkboxes, streak) |
 | Pure workspace queries | `lib/selectors.ts` |
 | The colours a track can wear | `lib/trackColors.ts` — the list, and why white and black are not on it |
+| Days a track takes off, and what they do to a streak | `lib/restDays.ts` — the flag, the fallback for data that predates it, and the bridging rule |
 | A track's colour at the grid's four strengths | `lib/colors.ts` (`shadeOf`, `withAlpha`, `lighten`) |
 | Demo tracks (`test1`/`test2`/`test3`) | `lib/demoTracks.ts`, offered from Settings on both platforms |
 | App state + persistence timing | `components/workspace/WorkspaceProvider.tsx` |
@@ -140,6 +141,35 @@ Two rules that are easy to break:
    strengths of the chosen hue, and a colour near the page's own is four
    shades of nothing. The web used `<input type="color">` and lost it for this
    reason.
+
+## Days a track takes off
+
+A focus type can be marked as a day off (`FocusType.restDay`), from the moon
+button in either platform's focus-type editor. Those days:
+
+- **bridge a streak** rather than breaking it, and never extend it — the count
+  stays a count of days worked (`lib/restDays.ts`);
+- **are drawn as a dot** in the consistency grid rather than filled in, because
+  nothing was done on them and the square has to keep saying so.
+
+Two things to know before changing any of it:
+
+1. **The flag may be absent**, on every type written before it existed. So
+   `isRestType` falls back to the two keys every template ships — `free` and
+   `rest` — and `setRestDay` always writes the flag, including when it agrees
+   with that fallback, so turning `free` into a working day survives a reload.
+   Never guess from a label: a type called "Recovery" is a working day until
+   somebody says otherwise.
+2. **A track stores the week it has now, not the week it had in March.** Moving
+   Sunday from Free to Study re-reads every past Sunday as a working day and
+   the streak changes. A dated history of the schedule would fix it, at the
+   cost of a field on every track, a merge rule and a migration — and when
+   someone reshapes their week, the new shape is usually the one they would
+   rather be judged by.
+
+Views that combine several tracks (the phone's all-tracks grid) use the days
+*every* track in scope has off — a day one of them was supposed to work on is
+not a day off. `streakStats` takes that set as an optional third argument.
 
 ## Type on the phone
 

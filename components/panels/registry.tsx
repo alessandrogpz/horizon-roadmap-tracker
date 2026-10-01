@@ -89,6 +89,8 @@ function StreakPanel() {
       completedItemsHistory={track.completedItemsHistory || {}}
       startDate={track.startDate}
       color={track.meta.color}
+      weekSchedule={track.weekSchedule}
+      focusTypes={track.focusTypes}
       tracks={workspace ? visibleTracks(workspace) : []}
     />
   );

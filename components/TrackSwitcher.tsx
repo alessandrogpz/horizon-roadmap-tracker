@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, Flame, Plus, Trash2 } from "lucide-react";
 import type { TrackState } from "@/lib/types";
 import { streakCalendar } from "@/lib/stats";
-import { currentStreakLength } from "@/lib/streak";
+import { restWeekdays, trackStreak } from "@/lib/restDays";
 import { todayYMD } from "@/lib/dates";
 import { useAppSettings } from "@/lib/useAppSettings";
 import TrackYearStrip from "@/components/TrackYearStrip";
@@ -47,7 +47,8 @@ export default function TrackSwitcher({ tracks, activeTrackId, onSwitch, onNewTr
             track,
             color: track.meta.color || "var(--accent)",
             days: streakCalendar(track, today, settings.weekStartsOn),
-            streak: currentStreakLength(track.streakHistory ?? [], today),
+            streak: trackStreak(track, today),
+            rest: restWeekdays(track),
           }))
         : [],
     [open, settings.weekStartsOn, today, tracks]
@@ -148,6 +149,7 @@ export default function TrackSwitcher({ tracks, activeTrackId, onSwitch, onNewTr
                     cell={4}
                     gap={2}
                     start={row.track.startDate}
+                    rest={row.rest}
                   />
                 </button>
 

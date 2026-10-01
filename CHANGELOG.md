@@ -7,6 +7,31 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.86.0] - 2026-10-01
+
+### Added
+- **A day off is now a kind of day, and it does not break a streak.** Any focus type can be marked
+  as one — the moon button in the focus-type editor, on both platforms — and the two every template
+  ships with, Free and Rest, already are. A day off *bridges* a run rather than extending it: the
+  streak survives it, and the number stays a count of days worked, because a track resting five days
+  a week should not look like the most consistent thing anyone has ever done. Before this, a plan
+  with Sunday off could never hold a streak past six, which punished people for following their own
+  schedule.
+- **The consistency grid marks them with a dot** rather than filling the square. Nothing was done on
+  that day and the square has to keep saying so; the dot, in the track's own colour, says the gap was
+  the plan. Web, PWA and phone, in the month grid, the continuous grid, the stacked all-tracks view,
+  the track switcher's strips and the phone's track list. The key gained a "day off" swatch.
+- The longest streak uses the same rule as the current one — they sit next to each other on the same
+  card, and a longest of 6 under a current of 41 reads as a bug.
+
+### Notes
+- A track stores the week it has *now*, not the week it had in March, so changing which days are off
+  re-reads the past under the new shape. Keeping a dated history of the schedule would cost a field
+  on every track, a merge rule and a migration, for an answer that changes only when someone reshapes
+  their week — and when they do, the new shape is usually the one they would rather be judged by.
+- Views that combine several tracks use the days *every* track in scope has off. A day one of them
+  was supposed to work on is not a day off.
+
 ## [0.85.1] - 2026-10-01
 
 ### Fixed

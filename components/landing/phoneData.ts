@@ -12,7 +12,7 @@
  */
 
 import { buildDemoTracks } from "@/lib/demoTracks";
-import { currentStreakLength } from "@/lib/streak";
+import { trackStreak } from "@/lib/restDays";
 import { monthCalendar, streakStats, timelineStats, yearCalendar } from "@/lib/stats";
 import { dayForDate } from "@/lib/dates";
 
@@ -79,7 +79,7 @@ export const PREVIEW_TRACKS = demo.map((track, index) => ({
   // advertisement for a consistency graph.
   days: yearCalendar(track.completedItemsHistory, track.startDate, 2026, PREVIEW_TODAY, "mon").slice(-PREVIEW_WEEKS_SHOWN * 7),
   pct: timelineStats(track).progressPct,
-  streak: currentStreakLength(track.streakHistory, PREVIEW_TODAY),
+  streak: trackStreak(track, PREVIEW_TODAY),
   stats: streakStats(track, PREVIEW_TODAY),
 }));
 

@@ -133,7 +133,7 @@ export const TrackSchema = z.object({
   completedItemsHistory: byDate(z.array(CompletedItem).max(1000)).optional(),
   weeklyCompletions: byDate(z.strictObject({ tasks: z.array(id).max(2000), revisions: z.array(id).max(2000) })).optional(),
   weekSchedule: z.array(z.strictObject({ name: text(20), type: text(100), label: text(500) })).max(14).optional(),
-  focusTypes: maxKeys(z.record(fieldKey, z.strictObject({ label: text(500), color: text(100) })), 100).optional(),
+  focusTypes: maxKeys(z.record(fieldKey, z.strictObject({ label: text(500), color: text(100), restDay: z.boolean().optional() })), 100).optional(),
   lastDailyRoutineCheck: text(100).optional(),
   dailyFocus: LegacyMap.optional(),
   dailyStudyPoints: LegacyMap.optional(),
