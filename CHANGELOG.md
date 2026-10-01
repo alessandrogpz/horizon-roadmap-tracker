@@ -7,6 +7,17 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.85.1] - 2026-10-01
+
+### Fixed
+- **The stacked all-tracks grid on the web drew its days thirteen columns right of the month they
+  were under.** Each row was padded out to a full fifty-three weeks — the right thing to do when a
+  strip is one of a list of tracks of different ages, and the wrong thing here, where every row is
+  already the same year as every other and as the ruler the month names are placed along. A year
+  capped at today is forty columns in October, so the thirteen weeks still to come were pushed in
+  at the front of every row and the whole stack slid right while the labels stayed put. The phone
+  never had this: it draws the rows itself, unpadded.
+
 ## [0.85.0] - 2026-09-26
 
 ### Removed

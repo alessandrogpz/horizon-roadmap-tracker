@@ -132,6 +132,16 @@ export default function AllTracksYear({
               gap={GAP}
               start={row.track.startDate}
               today={today}
+              // Never padded out to a full fifty-three weeks here, which is
+              // what the strip does when it is one of a list of different
+              // ages. These rows are already the same length as each other
+              // and as the ruler the month names are placed along — a year
+              // capped at today, blank where a track had not started —
+              // because `yearCalendar` pads them. Padding again added the
+              // thirteen weeks between today and New Year's Eve to the front
+              // of every row, so each row's days began thirteen columns to
+              // the right of the month they were under.
+              pad={false}
               className="mb-3"
             />
           ))}
