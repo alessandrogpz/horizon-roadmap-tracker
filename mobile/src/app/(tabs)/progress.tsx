@@ -10,17 +10,17 @@
 // size a thumb can actually land on, which is what makes each day tappable —
 // and a day worth tapping, because it can then say what was done on it.
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Link } from "expo-router";
+import { Link, useLocalSearchParams } from "expo-router";
 import type { StreakDay } from "@shared/stats";
 import type { CompletedItem } from "@shared/types";
 import { monthCalendar, streakStats, yearCalendar, yearsWithHistory } from "@shared/stats";
 import { orderedTracks } from "@shared/selectors";
 import { completedItemTitle, rebuildStreakHistory } from "@shared/streak";
-import { isRestDate, restWeekdays, streakWithRest } from "@shared/restDays";
+import { marksRestDay, restWeekdays, streakWithRest } from "@shared/restDays";
 import { formatDayMonthYear, parseYMD } from "@shared/dates";
 import { getSettings } from "@shared/settings";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
@@ -65,6 +65,22 @@ export default function ProgressScreen() {
    * thing crowded out the rest.
    */
   const [scope, setScope] = useState<"track" | "all">("track");
+
+  /**
+   * Opened from the all-tracks screen, this lands already showing all of them.
+   *
+   * Without it the link went to a grid of whichever single track happened to
+   * be open, which is the opposite of what the screen it came from is about.
+   * Read once rather than watched: the toggle below is still the user's, and
+   * a param that kept re-asserting itself would fight them for it.
+   */
+  const askedFor = useLocalSearchParams<{ scope?: string }>().scope;
+  const landed = useRef(false);
+  useEffect(() => {
+    if (landed.current || askedFor !== "all") return;
+    landed.current = true;
+    setScope("all");
+  }, [askedFor]);
 
   const tracks = useMemo(() => (workspace ? orderedTracks(workspace) : []), [workspace]);
   /** The tracks the grid is drawn from. One, or all of them. */
@@ -438,7 +454,7 @@ export default function ProgressScreen() {
                       today={today}
                       colour={colourOf(day.date)}
                       start={startMark}
-                      resting={day.count === 0 && isRestDate(day.date, restDays)}
+                      resting={day.count === 0 && marksRestDay(day.date, restDays, today, firstDay)}
                       open={openDay === day.date}
                       onPress={() => setOpenDay(openDay === day.date ? null : day.date)}
                       styles={styles}
@@ -480,7 +496,7 @@ export default function ProgressScreen() {
                     today={today}
                     colour={colourOf(day.date)}
                     start={startMark}
-                    resting={day.count === 0 && isRestDate(day.date, restDays)}
+                    resting={day.count === 0 && marksRestDay(day.date, restDays, today, firstDay)}
                     open={openDay === day.date}
                     onPress={() => setOpenDay(openDay === day.date ? null : day.date)}
                     styles={styles}
