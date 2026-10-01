@@ -10,6 +10,7 @@ import {
   MasterDeliverablesPanel,
   MasterMaterialsPanel,
   MasterPhasesPanel,
+  MasterTodoPanel,
   MasterWeekPanel,
 } from "./MasterPanels";
 
@@ -74,6 +75,7 @@ export default function MasterBoard({
           <div className="flex flex-col gap-8">
             <MasterDeliverablesPanel tracks={sources} />
             <MasterMaterialsPanel tracks={sources} />
+            <MasterTodoPanel tracks={sources} />
           </div>
         </>
       )}

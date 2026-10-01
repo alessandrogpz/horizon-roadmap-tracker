@@ -12,7 +12,7 @@
 // edit to land in. The way to change any of it is to open the track it belongs
 // to, which is one tap away in the row at the top.
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -29,6 +29,8 @@ import {
   masterStreak,
   masterWeek,
 } from "@shared/masterTrack";
+import { parseTodos, todoNoteId, type TodoItem } from "@shared/quickNotes";
+import { loadNotes } from "../storage/db";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { Refreshable } from "../components/Refreshable";
 import { Ring } from "../components/Ring";
@@ -68,6 +70,44 @@ export default function MasterScreen() {
   const deliverables = useMemo(() => masterDeliverables(sources), [sources]);
   const materials = useMemo(() => masterMaterials(sources), [sources]);
   const roadmaps = useMemo(() => masterRoadmaps(sources), [sources]);
+
+  /**
+   * Everything still on your plate, from every track.
+   *
+   * The one thing here that has to be fetched: a track's to-do list is a note
+   * rather than a field on the track, so it comes from the notes table instead
+   * of out of the aggregation with the rest. Done items are left out — a
+   * combined list is long enough already, and what it answers is what is left.
+   */
+  const [todos, setTodos] = useState<{ name: string; colour: string; items: TodoItem[] }[]>([]);
+  const sourceIds = sources.map((track) => track.meta.id).join("|");
+  useEffect(() => {
+    let cancelled = false;
+    void loadNotes().then((notes) => {
+      if (cancelled) return;
+      const byId = new Map(notes.map((note) => [note.id, note.content]));
+      setTodos(
+        sourceIds
+          .split("|")
+          .filter(Boolean)
+          .map((id) => {
+            const track = tracks.find((entry) => entry.meta.id === id);
+            return {
+              name: track?.meta.name ?? "",
+              colour: track?.meta.color ?? palette.accent,
+              items: parseTodos(byId.get(todoNoteId(id)) ?? "").filter((item) => !item.done),
+            };
+          })
+          .filter((entry) => entry.items.length > 0)
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+    // `tracks` and `sources` are rebuilt every render; the ids are what decide
+    // which notes to read.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sourceIds, palette.accent]);
 
   const open = useCallback(
     (trackId: string) => {
@@ -276,6 +316,24 @@ export default function MasterScreen() {
               <Chip name={track.name} colour={track.color} styles={styles} />
             </View>
           ))}
+
+          <Text style={styles.sectionTitle}>
+            To-do{todos.length > 0 ? ` · ${todos.reduce((n, entry) => n + entry.items.length, 0)}` : ""}
+          </Text>
+          {todos.length === 0 && <Text style={styles.muted}>Nothing left on the selected tracks.</Text>}
+          {todos.flatMap((entry) =>
+            entry.items.map((item, index) => (
+              <View key={`${entry.name}-${index}`} style={styles.row}>
+                <View style={[styles.box, { borderColor: palette.cardBorder }]} />
+                <View style={styles.rowText}>
+                  <Text style={styles.rowTitle} numberOfLines={2}>
+                    {item.text}
+                  </Text>
+                </View>
+                <Chip name={entry.name} colour={entry.colour} styles={styles} />
+              </View>
+            ))
+          )}
 
           {/* The roadmaps, as a way in rather than six documents end to end */}
           {roadmaps.length > 0 && (
