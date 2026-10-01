@@ -21,6 +21,7 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useWorkspace, WorkspaceProvider } from "../workspace/WorkspaceProvider";
+import { MasterModeProvider } from "../master/MasterMode";
 import { SyncProvider } from "../sync/SyncProvider";
 import { TimerProvider } from "../timer/TimerProvider";
 import { UndoProvider } from "../components/UndoBar";
@@ -53,6 +54,10 @@ export default function RootLayout() {
                 workspace because that is where the track is; above the
                 screens because all of them use it. */}
             <TrackAccent />
+            {/* One track or all of them. A mode rather than a screen: the
+                four tabs are the same tabs either way. Above the screens
+                because every one of them asks. */}
+            <MasterModeProvider>
             {/* Inside the workspace: a sync writes the merged workspace
                 straight back into it. */}
             <SyncProvider>
@@ -67,6 +72,7 @@ export default function RootLayout() {
                 </UndoProvider>
               </TimerProvider>
             </SyncProvider>
+            </MasterModeProvider>
           </WorkspaceProvider>
         </SafeAreaProvider>
       </ThemeProvider>
@@ -102,7 +108,6 @@ function Screens() {
         <Stack.Screen name="timer" options={{ title: "Timer" }} />
         <Stack.Screen name="steps" options={{ title: "Steps" }} />
         <Stack.Screen name="gym" options={{ title: "Workout" }} />
-        <Stack.Screen name="master" options={{ title: "All tracks" }} />
 
         <Stack.Screen name="tracks" options={{ title: "Your tracks", presentation: "modal" }} />
         <Stack.Screen name="settings" options={{ title: "Settings", presentation: "modal" }} />

@@ -7,6 +7,31 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.94.0] - 2026-10-01
+
+### Changed
+- **All tracks on the phone is now a mode, not a screen.** It is the same four tabs you already
+  know — My Space, Today, Plan, Progress — read-only, with every track folded into each of them and
+  the information where that tab already puts it. It was one long standalone screen, which meant
+  learning a second layout to answer questions the first layout already had places for.
+  - **My Space** — the numbers across all of it, then the phases, deliverables, materials and
+    to-dos of every track.
+  - **Today** — what each track is asking of today, and what each has already put down. Nothing
+    ticks: there is nothing to tick into.
+  - **Plan** — the week, with each track's name for each day and the rotations it lands there.
+  - **Progress** — the days, with the same **One per track / All in one** toggle the website has.
+  - The switches that say which tracks are in the view are on every one of those tabs. With six
+    tracks "what am I looking at" is asked constantly, and an answer behind a tap is an answer you
+    stop checking.
+- **The phone's own Progress shows the open track and nothing else.** Its "This track / All tracks"
+  toggle is gone, the same change the website's consistency panel got — a view about every track is
+  a strange thing to find behind a switch inside one track's screen.
+
+### Fixed
+- **Picking the track you were already in left you stuck in all-tracks on the phone too.** Same
+  cause as the website's, same fix: choosing a track is how you leave the mode, including the one
+  already open.
+
 ## [0.93.0] - 2026-10-01
 
 ### Changed
