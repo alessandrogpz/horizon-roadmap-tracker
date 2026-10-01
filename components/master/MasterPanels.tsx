@@ -32,6 +32,7 @@ import { useAppSettings } from "@/lib/useAppSettings";
 import { parseTodos, todoNoteId, type TodoItem } from "@/lib/quickNotes";
 import { readNote } from "@/lib/notes";
 import { useWorkspace } from "@/components/workspace/WorkspaceProvider";
+import AllTracksYear from "@/components/AllTracksYear";
 import MasterGrid from "./MasterGrid";
 
 /**
@@ -216,10 +217,34 @@ const SHAPES = [
   { value: "continuous", label: "Continuous" },
 ] as const;
 
+/**
+ * The two ways of looking at several tracks' days at once.
+ *
+ * `rows` keeps them apart — one strip per track, the same calendar columns on
+ * every row, so the same Tuesday is the same column everywhere and one
+ * track's summer can be read against another's. It is the default because it
+ * is the one that answers "how is each of them going".
+ *
+ * `one` puts them in the same squares, each day divided into a band per track
+ * that did something on it. That answers the other question — "did I do
+ * anything at all that day" — which rows make you scan a column for.
+ *
+ * These used to be in two different places: rows lived behind a toggle inside
+ * a single track's panel, which is a strange home for a view about every
+ * track, and the divided grid only existed here. A track's own panel now
+ * shows that track and nothing else, and both ways of seeing all of them live
+ * together where the question belongs.
+ */
+const LAYOUTS = [
+  { value: "rows", label: "One per track" },
+  { value: "one", label: "All in one" },
+] as const;
+
 export function MasterConsistencyPanel({ tracks }: { tracks: TrackState[] }) {
   const settings = useAppSettings();
   const today = todayYMD();
   const [byMonth, setByMonth] = useState(true);
+  const [layout, setLayout] = useState<(typeof LAYOUTS)[number]["value"]>("rows");
   const [year, setYear] = useState(() => parseYMD(today).getFullYear());
 
   const rest = useMemo(() => masterRestWeekdays(tracks), [tracks]);
@@ -248,7 +273,7 @@ export function MasterConsistencyPanel({ tracks }: { tracks: TrackState[] }) {
   useEffect(() => {
     const node = scroller.current;
     if (node) node.scrollLeft = node.scrollWidth;
-  }, [byMonth, days.length, months.length, year]);
+  }, [byMonth, days.length, layout, months.length, year]);
 
   const lastWidth = useRef(0);
   useEffect(() => {
@@ -261,7 +286,7 @@ export function MasterConsistencyPanel({ tracks }: { tracks: TrackState[] }) {
     });
     observer.observe(node);
     return () => observer.disconnect();
-  }, [byMonth]);
+  }, [byMonth, layout]);
 
   return (
     <PanelShell
@@ -279,6 +304,28 @@ export function MasterConsistencyPanel({ tracks }: { tracks: TrackState[] }) {
     >
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex rounded-[var(--radius-control)] border border-card-border bg-surface-muted p-0.5">
+          {LAYOUTS.map((option) => {
+            const on = option.value === layout;
+            return (
+              <button
+                key={option.value}
+                onClick={() => setLayout(option.value)}
+                aria-pressed={on}
+                className={`cursor-pointer rounded-[calc(var(--radius-control)-2px)] px-2.5 py-1 text-[0.72rem] font-semibold transition-colors ${
+                  on ? "bg-card text-foreground" : "bg-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* By month or continuous is a question about one grid, so it only
+            applies to the combined one. A row per track is always a ribbon —
+            that is what makes the rows comparable. */}
+        {layout === "one" && (
+        <div className="flex rounded-[var(--radius-control)] border border-card-border bg-surface-muted p-0.5">
           {SHAPES.map((shape) => {
             const on = (shape.value === "months") === byMonth;
             return (
@@ -295,6 +342,8 @@ export function MasterConsistencyPanel({ tracks }: { tracks: TrackState[] }) {
             );
           })}
         </div>
+        )}
+
         <div className="flex items-center gap-1">
           <YearStep direction={-1} disabled={year <= years.first} onClick={() => setYear(year - 1)} />
           <span className="min-w-[3.2rem] text-center font-mono text-[0.78rem] font-bold text-foreground">{year}</span>
@@ -302,24 +351,35 @@ export function MasterConsistencyPanel({ tracks }: { tracks: TrackState[] }) {
         </div>
       </div>
 
-      <div ref={scroller} className="-mx-1 overflow-x-auto px-1 py-1">
-        {byMonth ? (
-          <div className="flex w-max gap-5">
-            {months.map((month) => (
-              <div key={month.key} className="flex flex-col gap-1.5">
-                <span className="text-[0.68rem] font-semibold text-muted-foreground">{month.label}</span>
-                <MasterGrid days={month.cells} today={today} isRest={isRest} />
-              </div>
-            ))}
-            {months.length === 0 && <Empty>Nothing recorded in {year}.</Empty>}
-          </div>
-        ) : (
-          <MasterGrid days={days} today={today} isRest={isRest} />
-        )}
-      </div>
+      {layout === "rows" ? (
+        // Its own scroller, with the track names pinned outside it. Nested in
+        // the one below, the names would slide away with the years and the
+        // rows would stop saying whose they are.
+        <div className="py-1">
+          <AllTracksYear tracks={tracks} year={year} today={today} weekStartsOn={settings.weekStartsOn} />
+        </div>
+      ) : (
+        <div ref={scroller} className="-mx-1 overflow-x-auto px-1 py-1">
+          {byMonth ? (
+            <div className="flex w-max gap-5">
+              {months.map((month) => (
+                <div key={month.key} className="flex flex-col gap-1.5">
+                  <span className="text-[0.68rem] font-semibold text-muted-foreground">{month.label}</span>
+                  <MasterGrid days={month.cells} today={today} isRest={isRest} />
+                </div>
+              ))}
+              {months.length === 0 && <Empty>Nothing recorded in {year}.</Empty>}
+            </div>
+          ) : (
+            <MasterGrid days={days} today={today} isRest={isRest} />
+          )}
+        </div>
+      )}
 
-      {/* The key: which colour is whose. With several tracks the shades stop
-          meaning "how much" on their own, so the names have to be here. */}
+      {/* The key: which colour is whose. Only for the combined grid — the
+          rows carry their own names down the side, and repeating them under
+          the chart says nothing twice. */}
+      {layout === "one" && (
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[0.68rem] text-subtle-foreground">
         {tracks.map((track) => (
           <span key={track.meta.id} className="inline-flex items-center gap-1.5">
@@ -336,6 +396,7 @@ export function MasterConsistencyPanel({ tracks }: { tracks: TrackState[] }) {
           </span>
         )}
       </div>
+      )}
     </PanelShell>
   );
 }

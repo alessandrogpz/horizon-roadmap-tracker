@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Activity, Check, ChevronLeft, ChevronRight, Flame, Layers, X } from "lucide-react";
-import type { CompletedItem, FocusType, TrackState, WeekDay } from "@/lib/types";
+import { Activity, Check, ChevronLeft, ChevronRight, Flame, X } from "lucide-react";
+import type { CompletedItem, FocusType, WeekDay } from "@/lib/types";
 import { parseYMD, todayYMD } from "@/lib/dates";
 import { marksRestDay, restWeekdays, streakWithRest } from "@/lib/restDays";
 import { monthCalendar, yearCalendar, yearsWithHistory } from "@/lib/stats";
 import { useAppSettings } from "@/lib/useAppSettings";
-import AllTracksYear from "@/components/AllTracksYear";
 import Portal from "@/components/Portal";
 import StreakGrid, { type StreakCell } from "@/components/StreakGrid";
 
@@ -48,7 +47,6 @@ export default function StreakGraph({
   color,
   weekSchedule,
   focusTypes,
-  tracks = [],
 }: {
   streakHistory?: string[];
   completedItemsHistory?: { [date: string]: CompletedItem[] };
@@ -60,20 +58,8 @@ export default function StreakGraph({
   /** The open track's colour, for the key. The grid itself is painted through
    *  `--streak-1` … `--streak-4`, which the track's accent already rewrote. */
   color?: string;
-  /** Every visible track, for the stacked view. Left empty, the control that
-   *  reaches it is not drawn at all. */
-  tracks?: TrackState[];
 }) {
   const [selectedDateDetails, setSelectedDateDetails] = useState<string | null>(null);
-  /**
-   * Whose days these are: this track's, or every track's stacked.
-   *
-   * A person running three tracks has three panels and no way to ask the one
-   * question that spans them — did I do *anything* yesterday. Only offered
-   * when there is more than one track, because with one there is nothing to
-   * stack and the control would be a switch between a thing and itself.
-   */
-  const [scope, setScope] = useState<"track" | "all">("track");
   /**
    * By month is the default, as it is on the phone: a calendar year as one
    * unbroken ribbon of weeks is hard to read a month out of, because nothing
@@ -85,8 +71,6 @@ export default function StreakGraph({
   const settings = useAppSettings();
   const today = todayYMD();
   const [year, setYear] = useState(() => parseYMD(today).getFullYear());
-  const canCombine = tracks.length > 1;
-  const combined = scope === "all" && canCombine;
 
   /**
    * One calendar year, always — not the whole track.
@@ -192,7 +176,7 @@ export default function StreakGraph({
   useEffect(() => {
     const node = scroller.current;
     if (node) node.scrollLeft = node.scrollWidth;
-  }, [byMonth, combined, cells.length, months.length, year]);
+  }, [byMonth, cells.length, months.length, year]);
 
   /**
    * And again whenever the panel changes width, which the effect above cannot
@@ -214,7 +198,7 @@ export default function StreakGraph({
     });
     observer.observe(node);
     return () => observer.disconnect();
-  }, [byMonth, combined]);
+  }, [byMonth]);
 
   return (
     <div className="glass-panel">
@@ -236,11 +220,13 @@ export default function StreakGraph({
         </div>
       </div>
 
-      {/* Shape, year and scope on one line of their own, below the heading
-          and clear of the chrome. */}
+      {/* Shape and year on one line of their own, below the heading and clear
+          of the chrome. A track's panel shows that track and nothing else;
+          every track at once is a view of its own, reached from the top of
+          the track list, where it can offer the two shapes that question
+          actually has. */}
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        {!combined && (
-          <div className="flex rounded-[var(--radius-control)] border border-card-border bg-surface-muted p-0.5">
+        <div className="flex rounded-[var(--radius-control)] border border-card-border bg-surface-muted p-0.5">
             {SHAPES.map((shape) => {
               const on = (shape.value === "months") === byMonth;
               return (
@@ -256,8 +242,7 @@ export default function StreakGraph({
                 </button>
               );
             })}
-          </div>
-        )}
+        </div>
 
         <div className="flex items-center gap-1">
           <YearStep
@@ -273,21 +258,6 @@ export default function StreakGraph({
           />
         </div>
 
-        {canCombine && (
-          <button
-            onClick={() => setScope(combined ? "track" : "all")}
-            aria-pressed={combined}
-            title={combined ? "Show only this track" : "Show every track"}
-            className={`sm:ml-auto inline-flex cursor-pointer items-center gap-1 rounded-[var(--radius-control)] border px-2.5 py-1 text-[0.72rem] font-semibold transition-colors ${
-              combined
-                ? "border-accent-muted bg-accent/10 text-accent"
-                : "border-card-border bg-surface-muted text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Layers size={11} strokeWidth={2.5} />
-            {combined ? "All tracks" : "This track"}
-          </button>
-        )}
       </div>
 
       {/* One row, always, whichever shape — the recent end at the right, and
@@ -295,14 +265,6 @@ export default function StreakGraph({
           wrap onto a second and third line, which puts the current month in
           the middle of the panel and the oldest one in the corner your eye
           starts at. */}
-      {combined ? (
-        // Not inside the scroller below: the stacked view keeps its own, with
-        // the track names pinned outside it. Nested, the names would slide
-        // away with the years and the rows would stop saying whose they are.
-        <div className="py-3">
-          <AllTracksYear tracks={tracks} year={year} today={today} weekStartsOn={settings.weekStartsOn} />
-        </div>
-      ) : (
       <div ref={scroller} className="-mx-1 overflow-x-auto px-1 py-3">
         {byMonth ? (
           <div className="flex w-max gap-5">
@@ -325,13 +287,11 @@ export default function StreakGraph({
           <StreakGrid cells={cells} onCellClick={setSelectedDateDetails} />
         )}
       </div>
-      )}
 
       {/* The key. Four strengths of the track's own colour, and the day it
           began in the page's opposite — which is why the colours a track can
           wear stop short of white and black. */}
-      {!combined && (
-        <div className="flex items-center gap-1.5 text-[0.68rem] text-subtle-foreground">
+      <div className="flex items-center gap-1.5 text-[0.68rem] text-subtle-foreground">
           <span>Less</span>
           {[0, 1, 2, 3, 4].map((level) => (
             <span
@@ -359,8 +319,7 @@ export default function StreakGraph({
             </>
           )}
           {color && <span className="sr-only">Drawn in this track&apos;s colour, {color}.</span>}
-        </div>
-      )}
+      </div>
 
       {/* Into <body>, not here: this modal is position:fixed inside a panel
           that carries a transform while it's being dragged, which would make

@@ -16,7 +16,6 @@ import WeeklyPlan from "@/components/WeeklyPlan";
 import { useWorkspace, useWorkspaceActions } from "@/components/workspace/WorkspaceProvider";
 import { addPhase } from "@/lib/trackActions";
 import { notepadNoteId, todoNoteId } from "@/lib/quickNotes";
-import { orderedTracks } from "@/lib/selectors";
 
 /** Everything a panel needs from the dashboard that isn't workspace data:
  *  which week is being viewed, and how to open the various modals. Panels
@@ -81,7 +80,7 @@ function PhaseTrackerPanel({ ctx }: { ctx: PanelContext }) {
 }
 
 function StreakPanel() {
-  const { track, workspace } = useWorkspace();
+  const { track } = useWorkspace();
   if (!track) return null;
   return (
     <StreakGraph
@@ -91,7 +90,6 @@ function StreakPanel() {
       color={track.meta.color}
       weekSchedule={track.weekSchedule}
       focusTypes={track.focusTypes}
-      tracks={workspace ? orderedTracks(workspace) : []}
     />
   );
 }
