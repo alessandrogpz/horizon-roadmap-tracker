@@ -58,6 +58,16 @@ export function recolorFocusType(pool: FocusPool, key: string, color: string): F
   return { ...pool, focusTypes: { ...pool.focusTypes, [key]: { ...existing, color } } };
 }
 
+/** Marks a type as a day off, or stops it being one. Always writes the flag,
+ *  even when it agrees with the default for that key, so that turning `free`
+ *  into a working day survives a reload rather than falling back to the
+ *  guess `isRestType` makes for types that predate the flag. */
+export function setRestDay(pool: FocusPool, key: string, restDay: boolean): FocusPool {
+  const existing = pool.focusTypes[key];
+  if (!existing) return pool;
+  return { ...pool, focusTypes: { ...pool.focusTypes, [key]: { ...existing, restDay } } };
+}
+
 /**
  * Removes a type and re-points its days at whatever is left.
  *

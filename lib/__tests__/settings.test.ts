@@ -97,7 +97,7 @@ describe("retired AI settings", () => {
       "horizon-settings",
       JSON.stringify({ dayRolloverHour: 4, weekStartsOn: "mon", ai: { provider: "byok-gemini", geminiKey: "AIza-secret" } })
     );
-    expect(getSettings()).toEqual({ dayRolloverHour: 4, weekStartsOn: "mon" });
+    expect(getSettings()).toEqual({ dayRolloverHour: 4, weekStartsOn: "mon", masterView: false, masterExcluded: [] });
     expect(window.localStorage.getItem("horizon-settings")).not.toContain("AIza-secret");
   });
 

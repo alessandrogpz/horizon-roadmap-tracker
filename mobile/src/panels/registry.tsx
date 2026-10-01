@@ -19,7 +19,7 @@ import type { TrackState } from "@shared/types";
 import { isItemCompleted } from "@shared/completions";
 import { computeRotationItemsForDay, isRotationItem } from "@shared/rotation";
 import { DAYS_SHORT, getMondayOfDateWeek, getWeekNum, parseYMD } from "@shared/dates";
-import { currentStreakLength } from "@shared/streak";
+import { trackStreak } from "@shared/restDays";
 import { phaseStats, progressStats, streakCalendar, timelineStats } from "@shared/stats";
 import { PanelCard, Meter } from "./PanelCard";
 import { FITNESS_PANEL, STEPS_PANEL } from "./layout";
@@ -191,7 +191,7 @@ function PhasePanel({ track, today }: PanelProps) {
 function StreakPanel({ track, today }: PanelProps) {
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
-  const streak = currentStreakLength(track.streakHistory ?? [], today);
+  const streak = trackStreak(track, today);
   const days = useMemo(() => streakCalendar(track, today).slice(-35), [track, today]);
 
   return (

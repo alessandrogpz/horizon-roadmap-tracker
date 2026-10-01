@@ -3,13 +3,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import type { TrackState, Workspace } from "@/lib/types";
 import { daysSince, todayYMD } from "@/lib/dates";
-import { currentStreakLength } from "@/lib/streak";
+import { trackStreak } from "@/lib/restDays";
 import { phaseStats } from "@/lib/stats";
-import { visibleTracks } from "@/lib/selectors";
+import { orderedTracks } from "@/lib/selectors";
 import type { SyncStatus } from "@/components/workspace/WorkspaceProvider";
 import { Cloud, Flame } from "lucide-react";
 import HorizonMark from "@/components/HorizonMark";
 import TrackSwitcher from "@/components/TrackSwitcher";
+import MasterStats from "@/components/master/MasterStats";
 import TrackSettingsModal from "@/components/TrackSettingsModal";
 import ThemeToggle from "@/components/ThemeToggle";
 import TopBarMenu, { type ModuleState } from "@/components/TopBarMenu";
@@ -35,6 +36,16 @@ interface DashboardHeaderProps {
   onEditTrack: (fields: { name: string; color: string; startDate: string; totalDays: number }) => void;
   /** With an id, that track; without one, the open one. */
   onDeleteTrack: (trackId?: string) => void;
+  /** Saves a new order for the track list. */
+  onReorderTracks: (orderedIds: string[]) => void;
+  /**
+   * The master view: every track at once, read-only. When it is open the
+   * header shows its numbers instead of the open track's, and the menu drops
+   * everything that would edit a track — there is no track here to edit.
+   */
+  masterTracks?: TrackState[] | null;
+  masterOpen?: boolean;
+  onOpenMaster?: () => void;
   canDeleteTrack: boolean;
   moduleState: ModuleState[];
   onToggleModule: (id: string) => void;
@@ -154,7 +165,7 @@ function StatTile({
   );
 }
 
-export default function DashboardHeader({ data, workspace, syncStatus, syncError, syncTarget = "local", onSync, onSwitchTrack, onNewTrack, onEditTrack, onDeleteTrack, canDeleteTrack, moduleState, onToggleModule, onEditRhythm, onNewRotation, onReloadWorkspace }: DashboardHeaderProps) {
+export default function DashboardHeader({ data, workspace, syncStatus, syncError, syncTarget = "local", onSync, onSwitchTrack, onNewTrack, onEditTrack, onDeleteTrack, onReorderTracks, masterTracks, masterOpen = false, onOpenMaster, canDeleteTrack, moduleState, onToggleModule, onEditRhythm, onNewRotation, onReloadWorkspace }: DashboardHeaderProps) {
   const [showTrackSettings, setShowTrackSettings] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
@@ -191,7 +202,7 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
   // that the estimate was short, which estimates are.
   const overrunDays = Math.max(0, daysPassed - totalDays);
 
-  const streak = data.isSynced ? currentStreakLength(data.streakHistory, todayYMD()) : 0;
+  const streak = data.isSynced ? trackStreak(data, todayYMD()) : 0;
 
   const dotColor = syncStatus === "syncing"
     ? "bg-accent shadow-[0_0_8px_var(--accent)]"
@@ -216,11 +227,14 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
         <div className="flex items-center gap-1.5 min-w-0">
           <span className="text-muted-foreground hidden sm:inline">Track:</span>
           <TrackSwitcher
-            tracks={visibleTracks(workspace)}
+            tracks={orderedTracks(workspace)}
             activeTrackId={workspace.activeTrackId}
             onSwitch={onSwitchTrack}
             onNewTrack={() => void handleNewTrack()}
             onDelete={canDeleteTrack ? onDeleteTrack : undefined}
+            onReorder={onReorderTracks}
+            onOpenMaster={onOpenMaster}
+            masterOpen={masterOpen}
           />
         </div>
 
@@ -262,7 +276,8 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
         <div className="ml-auto flex items-center gap-2">
           <ThemeToggle />
           <TopBarMenu
-            trackName={data.meta.name}
+            trackName={masterOpen ? "All tracks" : data.meta.name}
+            readOnly={masterOpen}
             roadmapEnabled={!!data.isSynced}
             modules={moduleState}
             onToggleModule={onToggleModule}
@@ -277,6 +292,9 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
       </div>
 
       {/* Hero metrics — the "am I on track?" glance, up front. */}
+      {masterOpen && masterTracks ? (
+        <MasterStats tracks={masterTracks} />
+      ) : (
       <div className="flex items-stretch gap-3 flex-wrap">
         <StatTile
           label="Current Streak"
@@ -330,8 +348,9 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
           </div>
         </button>
       </div>
+      )}
 
-      {openStat && (
+      {openStat && !masterOpen && (
         <StatDetailModal metric={openStat} track={data} onClose={() => setOpenStat(null)} />
       )}
 

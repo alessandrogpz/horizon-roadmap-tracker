@@ -234,6 +234,16 @@ export default function WeeklyPlanPreview() {
               <span className="font-mono text-[0.85rem] font-bold text-accent">Front squat</span>
             </span>
 
+            {/* The way a third rotation is added, drawn exactly as the app
+                draws it — same dashed outline, same size, same words. It was
+                missing from the picture, which made the two pills look like
+                a fixed pair rather than a list you add to. A span, not a
+                button: this is a photograph of the panel, and a dotted
+                outline that does nothing when pressed is a worse lie than
+                one that is plainly part of the picture. */}
+            <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-md border border-dashed border-card-border-hover px-3 py-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.05em] text-muted-foreground">
+              + New Rotation
+            </span>
           </div>
         </div>
 

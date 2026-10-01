@@ -102,6 +102,7 @@ function Screens() {
         <Stack.Screen name="timer" options={{ title: "Timer" }} />
         <Stack.Screen name="steps" options={{ title: "Steps" }} />
         <Stack.Screen name="gym" options={{ title: "Workout" }} />
+        <Stack.Screen name="master" options={{ title: "All tracks" }} />
 
         <Stack.Screen name="tracks" options={{ title: "Your tracks", presentation: "modal" }} />
         <Stack.Screen name="settings" options={{ title: "Settings", presentation: "modal" }} />

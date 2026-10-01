@@ -6,6 +6,7 @@ import {
   Clock,
   Download,
   Info,
+  MessagesSquare,
   Sparkles,
   Upload,
   X,
@@ -25,6 +26,7 @@ import { updateSettings } from "@/lib/settings";
 import { useAppSettings } from "@/lib/useAppSettings";
 import { googleClientId, signOut } from "@/lib/account";
 import { buildDemoTracks, DEMO_TRACK_NAMES, isDemoTrack } from "@/lib/demoTracks";
+import { DISCORD_INVITE, hasCommunity } from "@/lib/community";
 import { todayYMD } from "@/lib/dates";
 import { visibleTracks } from "@/lib/selectors";
 import { useWorkspace, useWorkspaceActions } from "@/components/workspace/WorkspaceProvider";
@@ -385,6 +387,20 @@ export default function SettingsModal({
             About
           </a>
         </Row>
+
+        {/* Reachable from inside the app, not only from the page that sells
+            it. Somebody who wants to report something is already in here. */}
+        {hasCommunity() && (
+          <Row
+            icon={<MessagesSquare size={16} strokeWidth={2} />}
+            title="Community"
+            hint="A Discord: ask something, say what is broken, or show the track you are running. New versions get announced there too."
+          >
+            <a href={DISCORD_INVITE} target="_blank" rel="noreferrer noopener" className={quietButton}>
+              Join
+            </a>
+          </Row>
+        )}
 
         <Row
           icon={<Sparkles size={16} strokeWidth={2} />}

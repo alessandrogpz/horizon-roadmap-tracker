@@ -7,6 +7,186 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.92.0] - 2026-10-01
+
+### Added
+- **Everything still on your plate, in the all-tracks view** — every track's open to-dos in one
+  list, each with the track it belongs to, on the website and on the phone. It is the one panel
+  there that has to fetch something: a to-do list is a note rather than a field on the track, so it
+  comes from the notes table instead of out of the aggregation with the rest, and is re-read when a
+  sync lands. Done items are left out; a combined list is long enough already, and the question it
+  answers is what is left.
+
+## [0.91.1] - 2026-10-01
+
+### Fixed
+- A redundant guard on the track switcher's delete button — the handler it was checking for is a
+  required prop and is always there.
+
+## [0.91.0] - 2026-10-01
+
+### Added
+- **All tracks on the phone**, from the row above your track list. The same aggregation the website
+  uses — the numbers, the week, every track's phases on one timeline, the deliverables and the
+  materials — running down one column in the order it would be read, since a phone has one column.
+  The same switches decide which tracks are in it, and the same read-only banner says what it is.
+- The stacked consistency grid is *linked* from that screen rather than redrawn on it: Progress has
+  had an all-tracks mode for several versions, and two copies of the same picture are two things to
+  keep in step.
+- Tapping a phase, or a roadmap, opens the track it belongs to — which is the only way anything in
+  this view gets changed.
+
+## [0.90.0] - 2026-10-01
+
+### Added
+- **All tracks: one read-only board built from every track you have.** A workspace with six tracks
+  answers six questions well and the seventh — *what am I actually doing, across all of it* — not at
+  all. It is the first entry in the track switcher, and it is the same board you already know how to
+  read with more in it.
+  - **The week** shows what every track calls each day, in that track's colour, with the rotations
+    each one puts on it. Each track keeps its own week number: they started on different days, so
+    "week 12" is a different week for each of them.
+  - **The consistency grid** puts every track's day in one square, *divided* into a band per track
+    rather than blended. Blending was the obvious idea and the wrong one — blue and amber average to
+    a muddy grey that is neither, and the more tracks a day has the less a blend says. A day one
+    track worked is a solid square exactly as it is on that track's own panel.
+  - **The phases of every track on one timeline**, ordered by the date a phase opens rather than
+    grouped by track, because the question is "what is running now and what is next" — which is a
+    question about the calendar. Finished ones are folded away.
+  - **Deliverables and materials** from every track, each row carrying the colour and name of the
+    track it belongs to, unfinished first.
+  - **The numbers**: a streak that counts a day on which *any* track did something, and a progress
+    figure weighted by how long each goal is. A ninety-day track at 50% and a three-year track at
+    50% are not the same amount of work, and a plain mean would say they were.
+  - **`/roadmap?all=1`**: every roadmap on one page, as an index down the side and one document at a
+    time. Six roadmaps printed end to end is a document nobody reads to the bottom of.
+- **Tracks can be switched in and out of it** from a row of toggles at the top. The *excluded* list
+  is what gets stored, so a track made tomorrow is in the view by default — "everything except these
+  two" survives a new track and "these four" quietly loses it. Switching one off changes nothing but
+  this view.
+
+### Notes
+- It is read-only, and structurally rather than by a flag: there is no master track on disk, nothing
+  to save and nothing to merge, which is the only way to be sure that editing the aggregate can
+  never mean editing six real tracks by accident. The menu drops everything that would change a
+  track while it is open, rather than showing those rows disabled — a disabled row is a thing that
+  looks like it should work.
+- Whether the view is open, and which tracks are in it, are device preferences alongside the day
+  rollover hour. Which track is *active* is data and syncs; which of the two ways of looking at the
+  workspace you last used is this browser's own business.
+- Only offered with more than one track. One track's all-tracks view is a worse copy of that track.
+
+## [0.89.0] - 2026-10-01
+
+### Added
+- **Somewhere to talk: there is a Discord now.** A section on the landing page between the questions
+  and the last call to action, a link in the nav and in the footer, and a row in Settings on both
+  the website and the phone — because somebody who wants to report something is already inside the
+  app, not on the page that sells it.
+- The invite lives in `lib/community.ts`, one constant rather than a URL typed into four files.
+  `NEXT_PUBLIC_DISCORD_INVITE` overrides it on the web and `EXPO_PUBLIC_DISCORD_INVITE` on the
+  phone — two names because the two bundlers inline two different prefixes. Set it to an empty
+  string and every link to it disappears rather than pointing at nothing.
+
+## [0.88.0] - 2026-10-01
+
+### Added
+- **One working control on the landing page: the track name.** The hero's dashboard is still a
+  picture — 0.85.0 took the simulation out for good reasons and it stays out — but switching tracks
+  is the exception, and the only one. It is the idea the whole product rests on, and it is the one
+  thing a still picture genuinely cannot say: that the accent, the consistency grid, the phase, the
+  deliverables, the materials, the to-dos and the week all change together. Open the menu and it
+  lists the three tracks exactly as the app's own switcher does — a colour dot, a name, a streak and
+  a year of days each — and picking one repaints the whole card.
+  - A line under the card says so, which is the whole of the invitation: *Try it: the track name at
+    the top really does switch.*
+  - `aria-hidden` moved off the card and onto the parts of it that are pictures, so the menu reads as
+    the control it is and the drawn dashboard still reads as a photograph. One interactive element
+    in the card; everything else is drawn.
+- **The preview's consistency grid now wears the track's colour too**, through the same four
+  `--streak-*` variables `TrackAccent` writes when a track is opened — scoped to the card. It had
+  stayed the theme's green while the rest of the card was blue, which contradicted the one claim
+  that section of the page is making.
+
+## [0.87.1] - 2026-10-01
+
+### Changed
+- **The landing page's weekly plan now shows the "+ New Rotation" button**, drawn exactly as the app
+  draws it — same dashed outline, same size, same words. Without it the two rotation pills read as a
+  fixed pair rather than a list you add to, which understates the one feature that section is about.
+  Still a span rather than a button: the panel is a photograph, and a dotted outline that does
+  nothing when pressed is a worse lie than one that is plainly part of the picture.
+
+## [0.87.0] - 2026-10-01
+
+### Added
+- **The track list can be put in an order**, on all three — website, PWA and phone. It used to sit
+  in the order the tracks were made in, for good, which is the one order nobody chose: the track you
+  open every morning ends up third because you happened to think of it third.
+  - **On the phone**, hold a card and the whole list folds down to its headers, the held one comes to
+    your finger and the rest step aside as it passes — the same gesture, and the same code, as
+    rearranging the panels on My Space. Letting go drops it where it is and *does not* open it:
+    holding something to move it and finding you have navigated away is the worst outcome this
+    screen has.
+  - **On the website and the PWA**, each row grew a handle. Mouse: grab the handle. Touch: hold the
+    row anywhere, the same as a dashboard panel.
+  - The order is kept on the track (`meta.order`) rather than on the device, so it syncs. That is
+    the opposite of the panel order, which is per-device because the phone has one column and the
+    website has two — but "which of my tracks comes first" is the same question everywhere. It is
+    written onto every visible track at once, so the list is ordered throughout or not at all; a
+    track made afterwards has no position and sorts last, which is where a new track belongs.
+  - Everything that shows a list of tracks follows it: the switcher, the phone's track screen, and
+    the stacked all-tracks consistency grid.
+
+### Changed
+- **The phone's track card: holding it now moves it, so its settings moved to a left swipe.** Delete
+  stays on the right. Two directions, two meanings, which is the same arrangement every other list
+  in the app uses.
+
+### Fixed
+- **The PWA's track menu scrolled the page behind it** instead of the list — most obviously with a
+  handful of tracks, where the menu was short enough not to scroll at all and every drag went
+  straight through to the dashboard. Three things together, because no one of them covers every
+  browser: `overscroll-contain` on the list, `overflow: hidden` on the document while the menu is
+  open, and a `touchmove` that did not start inside the menu refused outright, which is what Safari
+  on iOS needs. The page keeps its scroll position throughout.
+
+## [0.86.0] - 2026-10-01
+
+### Added
+- **A day off is now a kind of day, and it does not break a streak.** Any focus type can be marked
+  as one — the moon button in the focus-type editor, on both platforms — and the two every template
+  ships with, Free and Rest, already are. A day off *bridges* a run rather than extending it: the
+  streak survives it, and the number stays a count of days worked, because a track resting five days
+  a week should not look like the most consistent thing anyone has ever done. Before this, a plan
+  with Sunday off could never hold a streak past six, which punished people for following their own
+  schedule.
+- **The consistency grid marks them with a dot** rather than filling the square. Nothing was done on
+  that day and the square has to keep saying so; the dot, in the track's own colour, says the gap was
+  the plan. Web, PWA and phone, in the month grid, the continuous grid, the stacked all-tracks view,
+  the track switcher's strips and the phone's track list. The key gained a "day off" swatch.
+- The longest streak uses the same rule as the current one — they sit next to each other on the same
+  card, and a longest of 6 under a current of 41 reads as a bug.
+
+### Notes
+- A track stores the week it has *now*, not the week it had in March, so changing which days are off
+  re-reads the past under the new shape. Keeping a dated history of the schedule would cost a field
+  on every track, a merge rule and a migration, for an answer that changes only when someone reshapes
+  their week — and when they do, the new shape is usually the one they would rather be judged by.
+- Views that combine several tracks use the days *every* track in scope has off. A day one of them
+  was supposed to work on is not a day off.
+
+## [0.85.1] - 2026-10-01
+
+### Fixed
+- **The stacked all-tracks grid on the web drew its days thirteen columns right of the month they
+  were under.** Each row was padded out to a full fifty-three weeks — the right thing to do when a
+  strip is one of a list of tracks of different ages, and the wrong thing here, where every row is
+  already the same year as every other and as the ruler the month names are placed along. A year
+  capped at today is forty columns in October, so the thirteen weeks still to come were pushed in
+  at the front of every row and the whole stack slid right while the labels stayed put. The phone
+  never had this: it draws the rows itself, unpadded.
+
 ## [0.85.0] - 2026-09-26
 
 ### Removed

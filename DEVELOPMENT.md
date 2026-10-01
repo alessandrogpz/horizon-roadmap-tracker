@@ -66,8 +66,12 @@ The Dexie (IndexedDB) database and Google Drive `database.json` used for daily p
 | Shape upgrades | `lib/migrations/` (pipeline in `index.ts`, steps in `steps.ts`) |
 | Merge/conflict resolution | `lib/merge.ts` |
 | What an edit does to a track | `lib/trackActions.ts` (materials, portfolio, phases, identity) and `lib/completions.ts` (checkboxes, streak) |
-| Pure workspace queries | `lib/selectors.ts` |
+| The all-tracks (master) view | `lib/masterTrack.ts` — pure aggregation, never returns a `TrackState`; UI in `components/master/` |
+| Pure workspace queries | `lib/selectors.ts` — `orderedTracks` is what any *list* of tracks renders from; `visibleTracks` only when the order cannot matter |
+| The order of the track list | `TrackMeta.order` + `reorderTracks` in `lib/trackActions.ts`. Synced, unlike the panel order: written onto every visible track at once so the list is ordered throughout or not at all |
+| Where the community lives | `lib/community.ts` — one invite link, used by the landing page, both footers and both Settings screens; an empty override hides every link to it |
 | The colours a track can wear | `lib/trackColors.ts` — the list, and why white and black are not on it |
+| Days a track takes off, and what they do to a streak | `lib/restDays.ts` — the flag, the fallback for data that predates it, and the bridging rule |
 | A track's colour at the grid's four strengths | `lib/colors.ts` (`shadeOf`, `withAlpha`, `lighten`) |
 | Demo tracks (`test1`/`test2`/`test3`) | `lib/demoTracks.ts`, offered from Settings on both platforms |
 | App state + persistence timing | `components/workspace/WorkspaceProvider.tsx` |
@@ -140,6 +144,70 @@ Two rules that are easy to break:
    strengths of the chosen hue, and a colour near the page's own is four
    shades of nothing. The web used `<input type="color">` and lost it for this
    reason.
+
+## The all-tracks view
+
+Every track at once, read-only, reached from the top of the track switcher.
+Three rules, and breaking any of them is how this feature would go wrong:
+
+1. **Read-only is structural, not a flag.** Nothing in `lib/masterTrack.ts`
+   returns a `TrackState` and nothing in `components/master/` takes a change
+   handler. There is no master track on disk, nothing to save and nothing to
+   merge — which is the only way to be sure that editing the aggregate can
+   never mean editing six real tracks by accident. Don't add an `onChange` to
+   a master panel; add a link to the track instead.
+2. **Everything keeps the colour of the track it came from.** An aggregate
+   whose rows all look the same is a list nobody can read. The consistency
+   grid *divides* a day into one band per contributing track rather than
+   blending their colours: blue and amber average to a muddy grey that is
+   neither, and the more tracks a day has the less a blend says.
+3. **Averages are weighted by the length of the goal** (`masterProgress`). A
+   ninety-day track at 50% and a three-year track at 50% are not the same
+   amount of work.
+
+Which tracks are in it lives in `AppSettings.masterExcluded` — the ones
+switched *off*, so a track made tomorrow is in the view by default. Whether
+the view is open is `AppSettings.masterView`: a device preference, like the
+theme, because which track is active is data and syncs while which of the two
+ways of looking at it you last used is this browser's business.
+
+On the phone it is `mobile/src/app/master.tsx`, reached from the row above the
+track list. One column rather than two, and the consistency grid is *not*
+redrawn there: Progress already has an all-tracks mode, so the screen links to
+it rather than keeping a second copy of the same picture in step.
+
+`/roadmap?all=1` is the same idea for the roadmaps: an index down the side and
+one document at a time, because six roadmaps printed end to end is a document
+nobody reads to the bottom of.
+
+## Days a track takes off
+
+A focus type can be marked as a day off (`FocusType.restDay`), from the moon
+button in either platform's focus-type editor. Those days:
+
+- **bridge a streak** rather than breaking it, and never extend it — the count
+  stays a count of days worked (`lib/restDays.ts`);
+- **are drawn as a dot** in the consistency grid rather than filled in, because
+  nothing was done on them and the square has to keep saying so.
+
+Two things to know before changing any of it:
+
+1. **The flag may be absent**, on every type written before it existed. So
+   `isRestType` falls back to the two keys every template ships — `free` and
+   `rest` — and `setRestDay` always writes the flag, including when it agrees
+   with that fallback, so turning `free` into a working day survives a reload.
+   Never guess from a label: a type called "Recovery" is a working day until
+   somebody says otherwise.
+2. **A track stores the week it has now, not the week it had in March.** Moving
+   Sunday from Free to Study re-reads every past Sunday as a working day and
+   the streak changes. A dated history of the schedule would fix it, at the
+   cost of a field on every track, a merge rule and a migration — and when
+   someone reshapes their week, the new shape is usually the one they would
+   rather be judged by.
+
+Views that combine several tracks (the phone's all-tracks grid) use the days
+*every* track in scope has off — a day one of them was supposed to work on is
+not a day off. `streakStats` takes that set as an optional third argument.
 
 ## Type on the phone
 

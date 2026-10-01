@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { Flame } from "lucide-react";
 import type { TrackState } from "@/lib/types";
 import { timelineStats, yearCalendar, type StreakDay } from "@/lib/stats";
-import { currentStreakLength } from "@/lib/streak";
+import { restWeekdays, trackStreak } from "@/lib/restDays";
 import { parseYMD } from "@/lib/dates";
 import TrackRing from "@/components/TrackRing";
 import TrackYearStrip from "@/components/TrackYearStrip";
@@ -46,7 +46,10 @@ export default function AllTracksYear({
         color: track.meta.color || "var(--accent)",
         days: yearCalendar(track.completedItemsHistory ?? {}, track.startDate, year, today, weekStartsOn),
         pct: timelineStats(track).progressPct,
-        streak: currentStreakLength(track.streakHistory ?? [], today),
+        streak: trackStreak(track, today),
+        // Each row's own days off: two tracks stacked here rarely rest on the
+        // same day, and a shared answer would mark one of them wrongly.
+        rest: restWeekdays(track),
       })),
     [today, tracks, weekStartsOn, year]
   );
@@ -132,6 +135,17 @@ export default function AllTracksYear({
               gap={GAP}
               start={row.track.startDate}
               today={today}
+              rest={row.rest}
+              // Never padded out to a full fifty-three weeks here, which is
+              // what the strip does when it is one of a list of different
+              // ages. These rows are already the same length as each other
+              // and as the ruler the month names are placed along — a year
+              // capped at today, blank where a track had not started —
+              // because `yearCalendar` pads them. Padding again added the
+              // thirteen weeks between today and New Year's Eve to the front
+              // of every row, so each row's days began thirteen columns to
+              // the right of the month they were under.
+              pad={false}
               className="mb-3"
             />
           ))}
