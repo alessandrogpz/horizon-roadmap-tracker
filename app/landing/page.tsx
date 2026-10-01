@@ -18,6 +18,7 @@ import {
   Check,
   X,
   RefreshCw,
+  MessagesSquare,
   MousePointerClick,
   Search,
   Trash2,
@@ -33,6 +34,7 @@ import PhoneFrame from "@/components/landing/PhoneFrame";
 import TrackStackPreview from "@/components/landing/TrackStackPreview";
 import { MySpaceScreen, ProgressScreen, WorkoutScreen } from "@/components/landing/PhoneScreens";
 import { TRACK_COLORS } from "@/lib/trackColors";
+import { DISCORD_INVITE, hasCommunity } from "@/lib/community";
 
 export const metadata: Metadata = {
   title: "Horizon — a roadmap tracker for the goals you're actually chasing",
@@ -263,6 +265,12 @@ export default function LandingPage() {
               className="hidden text-[0.85rem] text-muted-foreground transition-colors hover:text-foreground md:block"
             >
               How it works
+            </a>
+            <a
+              href="#community"
+              className="hidden text-[0.85rem] text-muted-foreground transition-colors hover:text-foreground md:block"
+            >
+              Community
             </a>
             <a
               href="#questions"
@@ -730,6 +738,42 @@ export default function LandingPage() {
           </Reveal>
         </section>
 
+        {/* ── Community ─────────────────────────────────────────────────── */}
+        {/* One place to ask something, say what is broken, or argue with a
+            decision. It sits after the questions on purpose: the FAQ answers
+            what can be answered in advance, and this is for everything else. */}
+        {hasCommunity() && (
+          <section id="community" className="scroll-mt-16 border-t border-card-border">
+            <Reveal className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-24">
+              <div className="glass-panel flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:gap-8">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-accent-muted bg-accent/10 text-accent">
+                  <MessagesSquare size={22} strokeWidth={1.9} />
+                </span>
+                <div className="flex min-w-0 flex-col gap-2">
+                  <SectionLabel>Community</SectionLabel>
+                  <h2 className="text-[1.35rem] font-semibold leading-tight tracking-tight sm:text-[1.7rem]">
+                    There&apos;s a Discord.
+                  </h2>
+                  <p className="max-w-xl text-[0.9rem] leading-relaxed text-muted-foreground">
+                    Ask something, say what is broken, or show the track you are running. It is
+                    also where new versions get announced and where a feature usually starts as
+                    somebody complaining about the current one.
+                  </p>
+                </div>
+                <a
+                  href={DISCORD_INVITE}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="btn btn-lg btn-solid flex w-full shrink-0 items-center justify-center gap-2 sm:ml-auto sm:w-auto"
+                >
+                  Join the Discord
+                  <ArrowRight size={16} strokeWidth={2.2} />
+                </a>
+              </div>
+            </Reveal>
+          </section>
+        )}
+
         {/* ── Final CTA ─────────────────────────────────────────────────── */}
         <section className="border-t border-card-border">
           <Reveal className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-28">
@@ -775,6 +819,16 @@ export default function LandingPage() {
           >
             Security
           </Link>
+          {hasCommunity() && (
+            <a
+              href={DISCORD_INVITE}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="text-[0.85rem] text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Discord
+            </a>
+          )}
         </div>
       </footer>
     </div>

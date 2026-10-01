@@ -16,6 +16,7 @@ import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-na
 import { Link } from "expo-router";
 import Constants from "expo-constants";
 import { visibleTracks } from "@shared/selectors";
+import { DISCORD_INVITE, hasCommunity } from "@shared/community";
 import { buildDemoTracks, DEMO_TRACK_NAMES, isDemoTrack } from "@shared/demoTracks";
 import { getSettings, updateSettings, type AppSettings } from "@shared/settings";
 import {
@@ -215,6 +216,20 @@ export default function SettingsScreen() {
         </View>
         <Ionicons name="chevron-forward" size={16} color={palette.subtleForeground} />
       </Pressable>
+
+      {/* Reachable from inside the app rather than only from the website:
+          somebody who wants to report something is already in here. */}
+      {hasCommunity() && (
+        <Pressable style={styles.row} accessibilityRole="link" onPress={() => void Linking.openURL(DISCORD_INVITE)}>
+          <View style={styles.rowText}>
+            <Text style={styles.rowTitle}>Community</Text>
+            <Text style={styles.muted}>
+              A Discord: ask something, say what is broken, or show the track you are running
+            </Text>
+          </View>
+          <Ionicons name="open-outline" size={16} color={palette.subtleForeground} />
+        </Pressable>
+      )}
 
       <View style={[styles.row, styles.rowStack]}>
         <Text style={styles.rowTitle}>Backup</Text>

@@ -7,6 +7,18 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.89.0] - 2026-10-01
+
+### Added
+- **Somewhere to talk: there is a Discord now.** A section on the landing page between the questions
+  and the last call to action, a link in the nav and in the footer, and a row in Settings on both
+  the website and the phone — because somebody who wants to report something is already inside the
+  app, not on the page that sells it.
+- The invite lives in `lib/community.ts`, one constant rather than a URL typed into four files.
+  `NEXT_PUBLIC_DISCORD_INVITE` overrides it on the web and `EXPO_PUBLIC_DISCORD_INVITE` on the
+  phone — two names because the two bundlers inline two different prefixes. Set it to an empty
+  string and every link to it disappears rather than pointing at nothing.
+
 ## [0.88.0] - 2026-10-01
 
 ### Added
