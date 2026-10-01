@@ -7,6 +7,16 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.92.0] - 2026-10-01
+
+### Added
+- **Everything still on your plate, in the all-tracks view** — every track's open to-dos in one
+  list, each with the track it belongs to, on the website and on the phone. It is the one panel
+  there that has to fetch something: a to-do list is a note rather than a field on the track, so it
+  comes from the notes table instead of out of the aggregation with the rest, and is re-read when a
+  sync lands. Done items are left out; a combined list is long enough already, and the question it
+  answers is what is left.
+
 ## [0.91.1] - 2026-10-01
 
 ### Fixed
