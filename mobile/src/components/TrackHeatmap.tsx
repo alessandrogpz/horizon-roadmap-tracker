@@ -9,7 +9,7 @@
 import { useMemo, useState } from "react";
 import { StyleSheet, View, type LayoutChangeEvent } from "react-native";
 import type { StreakDay } from "@shared/stats";
-import { isRestDate } from "@shared/restDays";
+import { marksRestDay } from "@shared/restDays";
 import { shadeOf, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
@@ -29,6 +29,7 @@ export function TrackHeatmap({
   days,
   colour,
   start,
+  today,
   rest,
 }: {
   days: StreakDay[];
@@ -36,8 +37,11 @@ export function TrackHeatmap({
   /** The track's first day, marked the same way the Progress grid marks it:
    *  in the page's opposite, so it survives whichever colour the track is. */
   start?: string;
-  /** Weekday names the track has off. An empty day on one of them carries a
-   *  dot rather than reading as a day missed. */
+  /** What day it is, so a day off that has not happened yet is not marked as
+   *  one. Without it nothing is marked. */
+  today?: string;
+  /** Weekday names the track has off. An empty day on one of them that has
+   *  passed carries a dot rather than reading as a day missed. */
   rest?: ReadonlySet<string>;
 }) {
   const palette = usePalette();
@@ -82,10 +86,13 @@ export function TrackHeatmap({
       {weeks.map((week, index) => (
         <View key={index} style={{ gap }}>
           {week.map((day, dayIndex) => {
-            // A day off that passed with nothing on it. Work done on a rest
+            // A day off that *passed* with nothing on it. Work done on a rest
             // day is still work, so only empty ones are marked.
             const resting =
-              Boolean(rest) && day.count === 0 && day.date !== start && isRestDate(day.date, rest!);
+              Boolean(rest) &&
+              day.count === 0 &&
+              day.date !== start &&
+              marksRestDay(day.date, rest!, today ?? "", start);
             return (
               <View
                 key={dayIndex}

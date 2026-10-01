@@ -51,6 +51,9 @@ interface Row {
   days: StreakDay[];
   streak: number;
   rest: ReadonlySet<string>;
+  /** Carried on the row because `TrackRow` needs it and the strip cannot tell
+   *  a day that has passed from one that has not without it. */
+  today: string;
 }
 
 /**
@@ -117,6 +120,7 @@ export default function TrackSwitcher({
             days: streakCalendar(track, today, settings.weekStartsOn),
             streak: trackStreak(track, today),
             rest: restWeekdays(track),
+            today,
           }))
         : [],
     [open, ordered, settings.weekStartsOn, today]
@@ -401,6 +405,8 @@ function TrackRow({
           cell={4}
           gap={2}
           start={row.track.startDate}
+          today={row.today}
+          markToday={false}
           rest={row.rest}
         />
       </button>

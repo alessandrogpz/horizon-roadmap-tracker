@@ -50,10 +50,44 @@ export function restWeekdays(
   return days;
 }
 
-/** Whether a "YYYY-MM-DD" falls on one of them. */
+/** Whether a "YYYY-MM-DD" falls on one of them. Weekday only — see
+ *  `marksRestDay` for the question the grids actually ask. */
 export function isRestDate(date: string, rest: ReadonlySet<string>): boolean {
   if (!date || rest.size === 0) return false;
   return rest.has(DAYS_SHORT[parseYMD(date).getDay()]);
+}
+
+/**
+ * Whether a day should carry the day-off mark.
+ *
+ * Three conditions, and the two beyond the weekday are the reason this exists
+ * rather than every grid calling `isRestDate` directly:
+ *
+ * - **It has already happened.** A Sunday next month is not a day off, it is a
+ *   day. Marking it says something about the future that nobody has lived yet,
+ *   and the mark means "this gap was the plan" — which is a claim about the
+ *   past. Today counts: a free day you are standing in is a day off until you
+ *   put something on it, and the moment you do, the caller's `count` stops
+ *   being zero and the square fills in instead.
+ * - **The track existed for it.** `streakCalendar` runs from the *week* its
+ *   track began in, so up to six real dates before the first day come back
+ *   with a count of zero — days the track was not there to take off.
+ * - It falls on a weekday the week has off.
+ *
+ * The bound used to be left to whichever calendar fed the grid: `yearCalendar`
+ * and `monthCalendar` blank out everything past today, so most views were
+ * right by accident. Views built on other calendars were not, and "right by
+ * accident" is not a property you can check.
+ */
+export function marksRestDay(
+  date: string,
+  rest: ReadonlySet<string>,
+  todayStr: string,
+  startDate?: string
+): boolean {
+  if (!date || !todayStr || date > todayStr) return false;
+  if (startDate && date < startDate) return false;
+  return isRestDate(date, rest);
 }
 
 /**
