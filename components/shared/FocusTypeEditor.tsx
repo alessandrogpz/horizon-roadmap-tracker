@@ -6,9 +6,11 @@ import {
   recolorFocusType,
   removeFocusType,
   renameFocusType,
+  setRestDay,
   type FocusPool,
 } from "@/lib/focusTypes";
-import { X } from "lucide-react";
+import { isRestType } from "@/lib/restDays";
+import { Moon, X } from "lucide-react";
 import type { FocusType, WeekDay } from "@/lib/types";
 
 interface FocusTypeEditorProps {
@@ -61,6 +63,23 @@ export default function FocusTypeEditor({ focusTypes, weekSchedule, onChange }: 
               className="w-6 h-6 border-none bg-transparent cursor-pointer p-0"
             />
 
+            {/* A day off, rather than a day missed. Days of this kind bridge
+                the streak instead of breaking it, and the consistency grid
+                marks them with a dot. */}
+            <button
+              onClick={() => apply(setRestDay(pool, key, !isRestType(key, val)))}
+              aria-pressed={isRestType(key, val)}
+              title={isRestType(key, val) ? `${val.label} is a day off — the streak survives it` : `Make ${val.label} a day off`}
+              aria-label={isRestType(key, val) ? `${val.label} is a day off` : `Make ${val.label} a day off`}
+              className={`flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded border transition-colors ${
+                isRestType(key, val)
+                  ? "border-accent-muted bg-accent/15 text-accent"
+                  : "border-card-border bg-transparent text-subtle-foreground hover:text-foreground"
+              }`}
+            >
+              <Moon size={12} strokeWidth={2.5} />
+            </button>
+
             <button
               onClick={() => apply(removeFocusType(pool, key))}
               disabled={Object.keys(focusTypes).length <= 1}
@@ -94,6 +113,11 @@ export default function FocusTypeEditor({ focusTypes, weekSchedule, onChange }: 
           Add Type
         </button>
       </div>
+
+      <p className="m-0 text-[0.68rem] leading-relaxed text-subtle-foreground">
+        The moon marks a kind of day you take off on purpose. Those days bridge a streak rather
+        than breaking it, and show in the consistency grid as a dot.
+      </p>
     </div>
   );
 }

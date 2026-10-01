@@ -3,7 +3,8 @@
 // day is it", so each shape is testable on its own.
 
 import type { CompletedItem, Material, Phase, TrackState } from "./types";
-import { currentStreakLength, completedItemTitle } from "./streak";
+import { completedItemTitle } from "./streak";
+import { bridges, restWeekdays, streakWithRest } from "./restDays";
 import { dateForDay, dayForDate, daysSince, formatDateYMD, parseYMD } from "./dates";
 import { trackTotalDays, recommendedPhaseId } from "./trackActions";
 
@@ -37,7 +38,14 @@ export interface StreakStats {
   recent: { date: string; titles: string[] }[];
 }
 
-export function streakStats(track: TrackState, todayStr: string): StreakStats {
+export function streakStats(
+  track: TrackState,
+  todayStr: string,
+  /** The days off to step over. Defaults to the track's own; a view that
+   *  combines several passes the days *all* of them have off, because a day
+   *  one track was supposed to work on is not a day off. */
+  rest: ReadonlySet<string> = restWeekdays(track)
+): StreakStats {
   const history = [...new Set(track.streakHistory || [])].sort();
   const set = new Set(history);
 
@@ -45,13 +53,7 @@ export function streakStats(track: TrackState, todayStr: string): StreakStats {
   let run = 0;
   let previous: string | null = null;
   for (const date of history) {
-    if (previous) {
-      const expected = parseYMD(previous);
-      expected.setDate(expected.getDate() + 1);
-      run = asYMD(expected) === date ? run + 1 : 1;
-    } else {
-      run = 1;
-    }
+    run = previous && bridges(previous, date, rest) ? run + 1 : 1;
     longest = Math.max(longest, run);
     previous = date;
   }
@@ -65,7 +67,7 @@ export function streakStats(track: TrackState, todayStr: string): StreakStats {
   const elapsed = track.startDate ? daysSince(track.startDate) : 0;
 
   return {
-    current: currentStreakLength(history, todayStr),
+    current: streakWithRest(history, todayStr, rest),
     longest,
     activeDays: history.length,
     activeLast30: activeWithin(set, todayStr, 30),

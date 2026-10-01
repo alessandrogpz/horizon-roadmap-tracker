@@ -14,6 +14,7 @@
 
 import type { StreakDay } from "@/lib/stats";
 import { shadeOf } from "@/lib/colors";
+import { isRestDate } from "@/lib/restDays";
 
 /** Fifty-three columns is a year plus the part-weeks at either end. */
 export const YEAR_WEEKS = 53;
@@ -25,6 +26,7 @@ export default function TrackYearStrip({
   gap = 2,
   start,
   today,
+  rest,
   pad = true,
   onDayClick,
   className,
@@ -39,6 +41,10 @@ export default function TrackYearStrip({
    *  whichever colour the track is wearing. */
   start?: string;
   today?: string;
+  /** Weekday names this track has off. A day on one of them that passed with
+   *  nothing recorded keeps its empty square and gains a dot, so a planned
+   *  gap does not read as a missed day. */
+  rest?: ReadonlySet<string>;
   /** Pad the front out to a whole year, so that every track in a list draws a
    *  day at the same size whatever age it is. */
   pad?: boolean;
@@ -66,15 +72,26 @@ export default function TrackYearStrip({
           {week.map((day, dayIndex) => {
             const began = Boolean(start) && day.date === start;
             const pressable = Boolean(onDayClick) && Boolean(day.date);
+            // A day off that passed with nothing on it. Only when it is empty:
+            // work done on a rest day is still work, and it is drawn as such.
+            const resting = Boolean(rest) && day.count === 0 && !began && isRestDate(day.date, rest!);
+            const dot = Math.max(2, Math.round(cell * 0.34));
             return (
               <div
                 key={dayIndex}
                 role={pressable ? "button" : undefined}
                 tabIndex={pressable ? -1 : undefined}
                 onClick={pressable ? () => onDayClick?.(day.date) : undefined}
-                title={day.date ? `${day.date}: ${day.count} update${day.count === 1 ? "" : "s"}` : undefined}
+                title={
+                  day.date
+                    ? `${day.date}: ${day.count} update${day.count === 1 ? "" : "s"}${resting ? " — a day off" : ""}`
+                    : undefined
+                }
                 style={{
                   cursor: pressable ? "pointer" : undefined,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                   width: cell,
                   height: cell,
                   borderRadius: Math.max(1, cell * 0.25),
@@ -87,7 +104,14 @@ export default function TrackYearStrip({
                       : shadeOf(color, day.count, "var(--streak-0)"),
                   boxShadow: day.date && today && day.date === today ? "0 0 0 1.5px var(--foreground)" : undefined,
                 }}
-              />
+              >
+                {resting && (
+                  <span
+                    aria-hidden="true"
+                    style={{ display: "block", width: dot, height: dot, borderRadius: "50%", background: color }}
+                  />
+                )}
+              </div>
             );
           })}
         </div>

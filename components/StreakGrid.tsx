@@ -25,8 +25,15 @@ export interface StreakCell {
    * the track's colour and a mark painted in that colour disappears against
    * a busy day. The six colours a track may wear deliberately stop short of
    * white and black so that this can never collide with one.
+   *
+   * `rest` is the third: a day the track's own week has off, which passed
+   * with nothing recorded. It keeps the empty square — nothing was done, and
+   * pretending otherwise would be a lie about the history — and carries a
+   * small dot in the track's colour to say the gap was the plan. Filling the
+   * square instead would make a week with Sunday off indistinguishable from
+   * one where Sunday was worked.
    */
-  mark?: "start" | "today";
+  mark?: "start" | "today" | "rest";
 }
 
 /**
@@ -66,7 +73,7 @@ export default function StreakGrid({
             key={entry.id}
             title={entry.title}
             onClick={interactive ? () => onCellClick(entry.id) : undefined}
-            className={`rounded-[2px] ${
+            className={`flex items-center justify-center rounded-[2px] ${
               interactive
                 ? "cursor-pointer transition-transform duration-150 hover:scale-[1.35] hover:ring-1 hover:ring-accent/50"
                 : ""
@@ -81,7 +88,15 @@ export default function StreakGrid({
                     : `var(--streak-${entry.level})`,
               boxShadow: entry.mark === "today" ? "0 0 0 1.5px var(--foreground)" : undefined,
             }}
-          />
+          >
+            {entry.mark === "rest" && (
+              <span
+                aria-hidden="true"
+                className="block rounded-full"
+                style={{ width: Math.max(3, Math.round(cell * 0.3)), height: Math.max(3, Math.round(cell * 0.3)), backgroundColor: "var(--accent)" }}
+              />
+            )}
+          </div>
         );
       })}
     </div>

@@ -15,11 +15,14 @@ import {
 import { SortableContext, verticalListSortingStrategy, arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { LayoutGrid, LoaderCircle } from "lucide-react";
 import type { PanelColumns, Phase, TrackState, WeekDay, Workspace } from "@/lib/types";
-import { visibleTracks } from "@/lib/selectors";
+import { orderedTracks, visibleTracks } from "@/lib/selectors";
+import { updateSettings } from "@/lib/settings";
+import { useAppSettings } from "@/lib/useAppSettings";
 import { daysSince } from "@/lib/dates";
 
 import { MODULES, defaultPanelColumns, homeColumnFor, resolveTrackLayout } from "@/lib/modules";
-import { recommendedPhaseId, removePhase, setCurrentPhase, setWeeklyRhythm, updatePhase, updateTrackIdentity } from "@/lib/trackActions";
+import { recommendedPhaseId, removePhase, reorderTracks, setCurrentPhase, setWeeklyRhythm, updatePhase, updateTrackIdentity } from "@/lib/trackActions";
+import { masterSources } from "@/lib/masterTrack";
 import { loadGoogleGisScript } from "@/lib/googleSignIn";
 import { useWorkspace, useWorkspaceActions } from "@/components/workspace/WorkspaceProvider";
 import { useAccount } from "@/components/useAccount";
@@ -28,6 +31,7 @@ import PanelErrorBoundary from "@/components/panels/PanelErrorBoundary";
 import DashboardHeader from "@/components/DashboardHeader";
 import NewTrackModal from "@/components/NewTrackModal";
 import TrackAccent from "@/components/TrackAccent";
+import MasterBoard from "@/components/master/MasterBoard";
 import PhaseDetailModal from "@/components/PhaseDetailModal";
 import RotationModal from "@/components/RotationModal";
 import ScheduleDayModal from "@/components/ScheduleDayModal";
@@ -66,6 +70,21 @@ export default function Dashboard() {
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedPhase, setSelectedPhase] = useState<Phase | null>(null);
   const [creatingTrack, setCreatingTrack] = useState(false);
+
+  /**
+   * The master view — every track at once, read-only.
+   *
+   * Kept in the device's settings rather than in the workspace, and
+   * deliberately: which track is *active* is data and syncs, but which of the
+   * two ways of looking at the workspace you last used is this browser's own
+   * business. It is also why there is no master track on disk — nothing is
+   * stored for it, so there is nothing an edit could land in.
+   */
+  const settings = useAppSettings();
+  const tracksInOrder = workspace ? orderedTracks(workspace) : [];
+  // Only ever open with something to aggregate. One track's master view is a
+  // worse copy of that track.
+  const masterOpen = settings.masterView && tracksInOrder.length > 1;
 
   // Local, draggable copy of the panel order. It mirrors the active track's
   // stored layout but must also hold ahead-of-persistence state during an
@@ -208,7 +227,7 @@ export default function Dashboard() {
     if (!workspace || !track) return;
     const target = workspace.tracks[trackId ?? track.meta.id];
     if (!target) return;
-    const remaining = visibleTracks(workspace).filter((other) => other.meta.id !== target.meta.id);
+    const remaining = orderedTracks(workspace).filter((other) => other.meta.id !== target.meta.id);
     if (remaining.length === 0) return;
 
     const archived: TrackState = { ...target, meta: { ...target.meta, archived: true } };
@@ -219,6 +238,22 @@ export default function Dashboard() {
         workspace.activeTrackId === archived.meta.id ? remaining[0].meta.id : workspace.activeTrackId,
     };
     void commitWorkspace(next);
+  };
+
+  /** A new order for the track list. Saved immediately rather than debounced:
+   *  it is a discrete decision, and the menu it was made in is usually closed
+   *  a moment later. */
+  const handleReorderTracks = (orderedIds: string[]) => {
+    if (!workspace) return;
+    void commitWorkspace({ ...workspace, tracks: reorderTracks(workspace.tracks, orderedIds) });
+  };
+
+  /** Switching a track in or out of the master view. Never touches the track. */
+  const toggleMasterTrack = (trackId: string) => {
+    const off = new Set(settings.masterExcluded);
+    if (off.has(trackId)) off.delete(trackId);
+    else off.add(trackId);
+    updateSettings({ masterExcluded: [...off] });
   };
 
   if (status === "loading") return <FullScreenMessage>Loading your Horizon workspace...</FullScreenMessage>;
@@ -299,10 +334,20 @@ export default function Dashboard() {
             syncError={syncError}
             syncTarget={account ? "account" : "local"}
             onSync={handleSyncWorkspace}
-            onSwitchTrack={(trackId) => void switchTrack(trackId)}
+            onSwitchTrack={(trackId) => {
+              // Picking a track is also how you leave the master view: it is
+              // one list, and choosing from it should land you where you
+              // chose rather than beside it.
+              if (settings.masterView) updateSettings({ masterView: false });
+              void switchTrack(trackId);
+            }}
             onNewTrack={async () => setCreatingTrack(true)}
             onEditTrack={(fields) => void commitTrack((prev) => updateTrackIdentity(prev, fields), "track identity")}
             onDeleteTrack={handleDeleteTrack}
+            onReorderTracks={handleReorderTracks}
+            masterTracks={masterOpen ? masterSources(tracksInOrder, settings.masterExcluded) : null}
+            masterOpen={masterOpen}
+            onOpenMaster={() => updateSettings({ masterView: true })}
             canDeleteTrack={visibleTracks(workspace).length > 1}
             moduleState={moduleState}
             onToggleModule={handleToggleModule}
@@ -311,8 +356,9 @@ export default function Dashboard() {
             onReloadWorkspace={() => void reload()}
           />
 
-          {/* Phase recommendation alert */}
-          {track.currentPhase !== recommendedPhase && (
+          {/* Phase recommendation alert — about the open track, so not while
+              the master view is showing every track's phases at once. */}
+          {!masterOpen && track.currentPhase !== recommendedPhase && (
             <div className="glass-panel border-l-4 !border-l-warning flex justify-between items-center px-6 py-4">
               <span className="text-[0.9rem] text-foreground">
                 Schedule suggestion: Time to transition to Phase {recommendedPhase} (Day {daysPassed})
@@ -327,6 +373,16 @@ export default function Dashboard() {
           )}
         </div>
 
+        {masterOpen ? (
+          <MasterBoard
+            tracks={tracksInOrder}
+            excluded={settings.masterExcluded}
+            onToggleTrack={toggleMasterTrack}
+            weekOffset={weekOffset}
+            setWeekOffset={setWeekOffset}
+          />
+        ) : (
+          <>
         <SortableContext items={panelColumns.left} strategy={verticalListSortingStrategy}>
           <div className="flex flex-col gap-8">{renderColumn(panelColumns.left, 0)}</div>
         </SortableContext>
@@ -334,8 +390,10 @@ export default function Dashboard() {
         <SortableContext items={panelColumns.right} strategy={verticalListSortingStrategy}>
           <div className="flex flex-col gap-8">{renderColumn(panelColumns.right, 1)}</div>
         </SortableContext>
+          </>
+        )}
 
-        {allModulesHidden && (
+        {!masterOpen && allModulesHidden && (
           <div className="col-span-full glass-panel flex flex-col items-center justify-center gap-3 py-16 text-center">
             <LayoutGrid size={28} strokeWidth={1.75} className="text-muted-foreground" />
             <p className="text-foreground text-sm font-medium">No modules are open for this track</p>

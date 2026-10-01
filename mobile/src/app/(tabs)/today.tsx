@@ -32,7 +32,7 @@ import {
   type DayItemRef,
   type ItemKind,
 } from "@shared/completions";
-import { currentStreakLength } from "@shared/streak";
+import { trackStreak } from "@shared/restDays";
 import { DAYS_SHORT, formatDateYMD, formatDayMonthYear, getWeekNum, parseYMD } from "@shared/dates";
 import { computeRotationItemsForDay, isRotationItem } from "@shared/rotation";
 import { focusOfDay } from "@shared/gym";
@@ -153,7 +153,7 @@ export default function TodayScreen() {
     },
     [editTrack, offer, restoreWorkspace, workspace]
   );
-  const streak = useMemo(() => currentStreakLength(track?.streakHistory ?? [], today), [track, today]);
+  const streak = useMemo(() => trackStreak(track, today), [track, today]);
 
   if (loading) {
     return (
