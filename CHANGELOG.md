@@ -7,6 +7,34 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.92.1] - 2026-10-01
+
+### Fixed
+- **The day-off dot appeared on days that had not happened yet.** The rule was left to whichever
+  calendar fed each grid — `yearCalendar` and `monthCalendar` blank out everything past today, so
+  most views were right by accident, and "right by accident" is not a property you can check. The
+  mark now asks for itself: a day off is marked only once it has passed, and only on a day the
+  track existed for. Web and phone, every grid.
+- **A day off before the track started was marked too.** `streakCalendar` runs from the *week* its
+  track began in, so up to six real dates arrive before the first day with a count of zero — days
+  the track was not there to take off. The same rule covers them.
+- **Today never showed its own dot.** The day-off mark and today's ring were competing for one
+  slot and the ring won, so the one day you are most likely to be looking at was the one day the
+  mark never appeared on. They are separate things now and a free day you are standing in gets
+  both. Work recorded on it still fills the square and drops the dot, as before.
+- **The track switcher's strips grew a white blob** at the end of every row — a side effect of
+  telling them what day it is, which they now need for the rule above. They say what day it is
+  without ringing it; at four points a day the ring was most of a cell, and those strips end at
+  today anyway.
+
+### Added
+- **The all-tracks screen on the phone draws the days itself**, one square per day split between
+  the tracks that did something on it, with a key naming each colour — the same picture the website
+  shows, in the phone's shape. It had only a link to Progress before, which is a different question
+  about the same days rather than a substitute for this one.
+- That link now opens Progress **already showing every track**. It was landing on a grid of
+  whichever single track happened to be open, which is the opposite of the screen it came from.
+
 ## [0.92.0] - 2026-10-01
 
 ### Added

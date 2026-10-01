@@ -662,6 +662,7 @@ function DraggableTrack({
             days={streakCalendar(track, today, weekStartsOn)}
             colour={colour}
             start={track.startDate}
+            today={today}
             rest={restWeekdays(track)}
           />
         </Animated.View>
