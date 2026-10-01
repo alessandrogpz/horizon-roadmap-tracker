@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { X } from "lucide-react";
+import { setWeeklyRhythm } from "@/lib/trackActions";
 import type { TrackState, WeekDay } from "@/lib/types";
 import { getDateForDayName, getWeekNum, parseYMD, todayYMD } from "@/lib/dates";
 import { DEFAULT_WEEK_SCHEDULE, DEFAULT_FOCUS_TYPES } from "@/lib/constants";
@@ -131,12 +132,19 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
                 onChange={(e) => {
                   const newType = e.target.value;
                   const newLabel = focusTypes[newType]?.label || newType;
-                  applyChange((previous) => ({
-                    ...previous,
-                    weekSchedule: (previous.weekSchedule || DEFAULT_WEEK_SCHEDULE).map((d) =>
-                      d.name === day.name ? { ...d, type: newType, label: newLabel } : d
-                    ),
-                  }));
+                  // Through `setWeeklyRhythm` rather than written in place:
+                  // that is where a change to the week gets dated, and a day
+                  // changed from here is as much a change to the week as one
+                  // changed from the rhythm editor.
+                  applyChange((previous) =>
+                    setWeeklyRhythm(
+                      previous,
+                      (previous.weekSchedule || DEFAULT_WEEK_SCHEDULE).map((d) =>
+                        d.name === day.name ? { ...d, type: newType, label: newLabel } : d
+                      ),
+                      previous.focusTypes || {}
+                    )
+                  );
                 }}
                 className="bg-input-bg border border-card-border rounded-md px-2 py-1.5 text-foreground text-[0.85rem] font-[inherit] outline-none cursor-pointer"
               >
@@ -161,7 +169,7 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
               focusTypes={focusTypes}
               weekSchedule={data.weekSchedule || DEFAULT_WEEK_SCHEDULE}
               onChange={(updatedTypes, updatedSchedule) => {
-                applyChange((previous) => ({ ...previous, focusTypes: updatedTypes, weekSchedule: updatedSchedule }));
+                applyChange((previous) => setWeeklyRhythm(previous, updatedSchedule, updatedTypes));
               }}
             />
           )}

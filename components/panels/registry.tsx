@@ -90,6 +90,7 @@ function StreakPanel() {
       color={track.meta.color}
       weekSchedule={track.weekSchedule}
       focusTypes={track.focusTypes}
+      restDaysFrom={track.restDaysFrom}
     />
   );
 }

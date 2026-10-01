@@ -2,9 +2,9 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Activity, Check, ChevronLeft, ChevronRight, Flame, X } from "lucide-react";
-import type { CompletedItem, FocusType, WeekDay } from "@/lib/types";
+import type { CompletedItem, FocusType, TrackState, WeekDay } from "@/lib/types";
 import { parseYMD, todayYMD } from "@/lib/dates";
-import { marksRestDay, restWeekdays, streakWithRest } from "@/lib/restDays";
+import { anyRestDays, marksRestDay, restScheduleOf, streakWithRest } from "@/lib/restDays";
 import { monthCalendar, yearCalendar, yearsWithHistory } from "@/lib/stats";
 import { useAppSettings } from "@/lib/useAppSettings";
 import Portal from "@/components/Portal";
@@ -47,6 +47,7 @@ export default function StreakGraph({
   color,
   weekSchedule,
   focusTypes,
+  restDaysFrom,
 }: {
   streakHistory?: string[];
   completedItemsHistory?: { [date: string]: CompletedItem[] };
@@ -55,6 +56,8 @@ export default function StreakGraph({
    *  day deliberately taken off from a day missed. */
   weekSchedule?: WeekDay[];
   focusTypes?: Record<string, FocusType>;
+  /** When the week's days off changed. Absent means it never has. */
+  restDaysFrom?: TrackState["restDaysFrom"];
   /** The open track's colour, for the key. The grid itself is painted through
    *  `--streak-1` … `--streak-4`, which the track's accent already rewrote. */
   color?: string;
@@ -96,10 +99,18 @@ export default function StreakGraph({
     [completedItemsHistory, startDate, today]
   );
 
-  /** The weekdays this track has off. Memoised on the two fields it is built
-   *  from, so the cell memo below is not rebuilt on every render by a fresh
-   *  Set that holds the same thing. */
-  const rest = useMemo(() => restWeekdays({ weekSchedule, focusTypes }), [focusTypes, weekSchedule]);
+  /** This track's days off, by date — the week it kept then, not the one it
+   *  keeps now. Memoised on the fields it is built from, so the cell memo
+   *  below is not rebuilt every render by a fresh resolver that answers the
+   *  same way. */
+  const rest = useMemo(
+    () => restScheduleOf({ weekSchedule, focusTypes, restDaysFrom }),
+    [focusTypes, restDaysFrom, weekSchedule]
+  );
+  const hasRestDays = useMemo(
+    () => anyRestDays({ weekSchedule, focusTypes, restDaysFrom }),
+    [focusTypes, restDaysFrom, weekSchedule]
+  );
 
   const streak = useMemo(() => streakWithRest(streakHistory, todayYMD(), rest), [rest, streakHistory]);
   const totalActive = streakHistory.length;
@@ -307,7 +318,7 @@ export default function StreakGraph({
               <span>started</span>
             </>
           )}
-          {rest.size > 0 && (
+          {hasRestDays && (
             <>
               <span
                 className="ml-3 flex h-2.5 w-2.5 items-center justify-center rounded-[2px]"

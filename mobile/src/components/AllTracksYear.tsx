@@ -17,7 +17,7 @@ import { useMemo, useRef } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { timelineStats, yearCalendar, type StreakDay } from "@shared/stats";
-import { marksRestDay, restWeekdays, trackStreak } from "@shared/restDays";
+import { marksRestDay, restScheduleOf, trackStreak, type RestOn } from "@shared/restDays";
 import { parseYMD } from "@shared/dates";
 import type { TrackState } from "@shared/types";
 import { Ring } from "./Ring";
@@ -50,7 +50,7 @@ interface Row {
   streak: number;
   /** This row's own days off. Two tracks stacked here rarely rest on the same
    *  day, so one shared answer would mark the wrong squares on one of them. */
-  rest: ReadonlySet<string>;
+  rest: RestOn;
 }
 
 export function AllTracksYear({
@@ -88,7 +88,7 @@ export function AllTracksYear({
           weeks,
           pct: timelineStats(track).progressPct,
           streak: trackStreak(track, today),
-          rest: restWeekdays(track),
+          rest: restScheduleOf(track),
         };
       }),
     [palette.accent, today, tracks, weekStartsOn, year]

@@ -36,7 +36,7 @@ import { hiddenPanelsFor, trackKind, type TrackKind } from "@shared/trackKinds";
 import { PANELS } from "../panels/layout";
 import { trackTotalDays, updateTrackIdentity } from "@shared/trackActions";
 import { dateForDay, dayForDate, formatDateYMD, isDateStr, todayYMD } from "@shared/dates";
-import { restWeekdays, trackStreak } from "@shared/restDays";
+import { restScheduleOf, trackStreak } from "@shared/restDays";
 import type { TrackState } from "@shared/types";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { useMasterMode } from "../master/MasterMode";
@@ -673,7 +673,7 @@ function DraggableTrack({
             colour={colour}
             start={track.startDate}
             today={today}
-            rest={restWeekdays(track)}
+            rest={restScheduleOf(track)}
           />
         </Animated.View>
       </View>
