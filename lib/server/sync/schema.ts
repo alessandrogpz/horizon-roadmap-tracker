@@ -118,6 +118,7 @@ export const TrackSchema = z.object({
     templateId: text(200),
     createdAt: timestamp,
     archived: z.boolean().optional(),
+    order: z.number().int().min(0).max(1000).optional(),
   }),
   currentPhase: z.number().int().min(0).max(10_000).optional(),
   startDate: text(30).optional(),
