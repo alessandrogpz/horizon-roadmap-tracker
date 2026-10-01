@@ -171,6 +171,11 @@ the view is open is `AppSettings.masterView`: a device preference, like the
 theme, because which track is active is data and syncs while which of the two
 ways of looking at it you last used is this browser's business.
 
+On the phone it is `mobile/src/app/master.tsx`, reached from the row above the
+track list. One column rather than two, and the consistency grid is *not*
+redrawn there: Progress already has an all-tracks mode, so the screen links to
+it rather than keeping a second copy of the same picture in step.
+
 `/roadmap?all=1` is the same idea for the roadmaps: an index down the side and
 one document at a time, because six roadmaps printed end to end is a document
 nobody reads to the bottom of.
