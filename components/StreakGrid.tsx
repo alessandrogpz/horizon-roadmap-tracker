@@ -26,14 +26,24 @@ export interface StreakCell {
    * a busy day. The six colours a track may wear deliberately stop short of
    * white and black so that this can never collide with one.
    *
-   * `rest` is the third: a day the track's own week has off, which passed
-   * with nothing recorded. It keeps the empty square — nothing was done, and
-   * pretending otherwise would be a lie about the history — and carries a
-   * small dot in the track's colour to say the gap was the plan. Filling the
-   * square instead would make a week with Sunday off indistinguishable from
-   * one where Sunday was worked.
    */
-  mark?: "start" | "today" | "rest";
+  mark?: "start" | "today";
+  /**
+   * A day the track's own week has off, which has passed with nothing
+   * recorded on it.
+   *
+   * Its own flag rather than a third `mark`, because it is not exclusive with
+   * the others: today can be a day off, and when it is, the square needs the
+   * ring *and* the dot. As a mark it was one or the other, and `today` won —
+   * so the one day you are most likely to be looking at was the one day the
+   * mark never appeared on.
+   *
+   * It keeps the empty square — nothing was done, and pretending otherwise
+   * would be a lie about the history — and carries a small dot to say the gap
+   * was the plan. Filling it instead would make a week with Sunday off
+   * indistinguishable from one where Sunday was worked.
+   */
+  rest?: boolean;
 }
 
 /**
@@ -89,7 +99,9 @@ export default function StreakGrid({
               boxShadow: entry.mark === "today" ? "0 0 0 1.5px var(--foreground)" : undefined,
             }}
           >
-            {entry.mark === "rest" && (
+            {/* Never on the first day: that square is already solid, drawn in
+                the page's opposite, and a dot on it reads as a smudge. */}
+            {entry.rest && entry.mark !== "start" && (
               <span
                 aria-hidden="true"
                 className="block rounded-full"

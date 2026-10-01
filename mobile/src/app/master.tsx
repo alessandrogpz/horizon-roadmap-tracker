@@ -19,13 +19,17 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { orderedTracks } from "@shared/selectors";
 import { formatDayMonthYear, parseYMD, todayYMD } from "@shared/dates";
 import { getSettings, updateSettings } from "@shared/settings";
+import { marksRestDay } from "@shared/restDays";
 import {
+  masterCalendar,
   masterDeliverables,
   masterMaterials,
   masterPhases,
   masterProgress,
+  masterRestWeekdays,
   masterRoadmaps,
   masterSources,
+  masterStart,
   masterStreak,
   masterWeek,
 } from "@shared/masterTrack";
@@ -34,6 +38,7 @@ import { loadNotes } from "../storage/db";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { Refreshable } from "../components/Refreshable";
 import { Ring } from "../components/Ring";
+import { MasterHeatmap } from "../components/MasterHeatmap";
 import { RADIUS, SPACING, TYPE, withAlpha, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
@@ -63,7 +68,23 @@ export default function MasterScreen() {
     });
   }, []);
 
+  const weekStartsOn = getSettings().weekStartsOn;
   const streak = useMemo(() => masterStreak(sources, today), [sources, today]);
+
+  /** The days themselves, one square per day with a band per track that did
+   *  something on it. A recent window — the whole year belongs on Progress,
+   *  which draws it as one row per track. */
+  const year = useMemo(() => parseYMD(today).getFullYear(), [today]);
+  const days = useMemo(
+    () => masterCalendar(sources, year, today, weekStartsOn),
+    [sources, today, weekStartsOn, year]
+  );
+  const restDays = useMemo(() => masterRestWeekdays(sources), [sources]);
+  const earliest = useMemo(() => masterStart(sources), [sources]);
+  const isRest = useCallback(
+    (date: string) => marksRestDay(date, restDays, today, earliest),
+    [earliest, restDays, today]
+  );
   const progress = useMemo(() => masterProgress(sources), [sources]);
   const week = useMemo(() => masterWeek(sources, 0), [sources]);
   const phases = useMemo(() => masterPhases(sources).filter((p) => p.state !== "done"), [sources]);
@@ -357,16 +378,52 @@ export default function MasterScreen() {
             </>
           )}
 
-          {/* The grid lives on Progress, which already draws every track at
-              once — there is no second version of it to keep in step. */}
+          {/* The days. Here rather than only on Progress: this is the screen
+              that answers "how am I doing across all of it", and the run of
+              days is most of that answer. Progress draws the same days the
+              other way round — one row per track rather than one square per
+              day — which is a different question, so it keeps its link. */}
+          <Text style={styles.sectionTitle}>Consistency</Text>
+          <Text style={styles.footnote}>
+            One square a day, split between the tracks that did something on it. The last ten
+            weeks; the whole year is on Progress.
+          </Text>
+          <View style={styles.card}>
+            <MasterHeatmap
+              days={days}
+              today={today}
+              weeks={10}
+              weekStartsOn={weekStartsOn}
+              isRest={isRest}
+            />
+            <View style={styles.legend}>
+              {sources.map((track) => (
+                <View key={track.meta.id} style={styles.legendItem}>
+                  <View style={[styles.legendSwatch, { backgroundColor: track.meta.color }]} />
+                  <Text style={styles.footnote} numberOfLines={1}>
+                    {track.meta.name}
+                  </Text>
+                </View>
+              ))}
+              {restDays.size > 0 && (
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendSwatch, styles.legendRest]}>
+                    <View style={[styles.legendDot, { backgroundColor: palette.subtleForeground }]} />
+                  </View>
+                  <Text style={styles.footnote}>day off everywhere</Text>
+                </View>
+              )}
+            </View>
+          </View>
+
           <Pressable
             accessibilityRole="link"
-            onPress={() => router.navigate("/progress")}
+            onPress={() => router.navigate("/progress?scope=all")}
             style={styles.linkRow}
           >
             <Ionicons name="grid-outline" size={15} color={palette.accent} />
             <Text style={[styles.linkLabel, { color: palette.accent }]}>
-              Every track&apos;s days, on Progress
+              The whole year, a row per track
             </Text>
           </Pressable>
         </>
@@ -490,6 +547,16 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
     },
     linkLabel: { ...TYPE.body, fontWeight: "600" },
+
+    legend: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.md, marginTop: SPACING.md },
+    legendItem: { flexDirection: "row", alignItems: "center", gap: 5, maxWidth: 150 },
+    legendSwatch: { width: 11, height: 11, borderRadius: 3 },
+    legendRest: {
+      backgroundColor: palette.surfaceMuted,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    legendDot: { width: 4, height: 4, borderRadius: 2 },
 
     muted: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },
     footnote: { color: palette.subtleForeground, ...TYPE.micro, lineHeight: 15 },
