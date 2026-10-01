@@ -3,7 +3,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { SyncResult, TrackState, Workspace } from "@/lib/types";
 import { createTrack, ensureStarterTrack, fetchWorkspace, updateWorkspace } from "@/lib/workspaceRepo";
-import { activeTrack, visibleTracks, withActiveTrack } from "@/lib/selectors";
+import { activeTrack, orderedTracks, visibleTracks, withActiveTrack } from "@/lib/selectors";
 import { applyDailyResetIfNeeded } from "@/lib/dailyReset";
 import { todayYMD } from "@/lib/dates";
 import { syncWithServer } from "@/lib/serverSync";
@@ -272,7 +272,9 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       .then(async (loaded) => {
         if (cancelled) return;
 
-        const visible = visibleTracks(loaded);
+        // Ordered, because the fallback below picks the first one and that
+        // should be the first track the user put there.
+        const visible = orderedTracks(loaded);
 
         // The active track may have been archived from another device since
         // this one last synced — fall back to the first visible track rather
