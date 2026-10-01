@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePathname, useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
+import { useMasterMode } from "../master/MasterMode";
 import { AppMenu } from "./AppMenu";
 import { SyncChip } from "./SyncChip";
 import { TimerChip } from "./TimerChip";
@@ -25,6 +26,7 @@ export function AppHeader({ title }: { title?: string }) {
   const styles = useMemo(() => makeStyles(palette), [palette]);
   const insets = useSafeAreaInsets();
   const { track } = useWorkspace();
+  const { master } = useMasterMode();
   const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -55,13 +57,21 @@ export function AppHeader({ title }: { title?: string }) {
             well be the control. */}
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Track: ${track?.meta.name ?? "none"}. Tap to switch or create a track.`}
+          accessibilityLabel={
+            master
+              ? "All tracks, read only. Tap to pick a single track."
+              : `Track: ${track?.meta.name ?? "none"}. Tap to switch or create a track.`
+          }
           onPress={() => router.push("/tracks")}
           style={styles.titleButton}
           hitSlop={8}
         >
-          <Text style={styles.title} numberOfLines={1}>
-            {title ?? track?.meta.name ?? "Horizon"}
+          {/* The name of what you are looking at, which in the all-tracks
+              mode is not a track. The layers mark rather than a colour dot:
+              there is no one colour to show. */}
+          {master && <Ionicons name="layers" size={15} color={palette.accent} />}
+          <Text style={[styles.title, master && { color: palette.accent }]} numberOfLines={1}>
+            {master ? "All tracks" : (title ?? track?.meta.name ?? "Horizon")}
           </Text>
           <Ionicons name="chevron-down" size={14} color={palette.subtleForeground} />
         </Pressable>

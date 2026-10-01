@@ -42,6 +42,8 @@ import Animated, {
 import { router } from "expo-router";
 import type { TrackState } from "@shared/types";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
+import { useMasterMode } from "../../master/MasterMode";
+import { MasterSpace } from "../../master/MasterSpace";
 import { Refreshable } from "../../components/Refreshable";
 import { PanelCard } from "../../panels/PanelCard";
 import { PanelBoundary } from "../../components/PanelBoundary";
@@ -64,6 +66,12 @@ const SLOT = ROW + GAP;
 const UNMEASURED = 10000;
 
 export default function SpaceScreen() {
+  // All tracks is the same tab, read-only, with every track folded in.
+  // Returned before anything else so the single-track hooks below do not
+  // run for a track nobody is looking at.
+  const { master } = useMasterMode();
+  if (master) return <MasterSpace />;
+
   const { track, today, editTrack } = useWorkspace();
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);

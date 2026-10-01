@@ -7,6 +7,58 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.94.0] - 2026-10-01
+
+### Changed
+- **All tracks on the phone is now a mode, not a screen.** It is the same four tabs you already
+  know — My Space, Today, Plan, Progress — read-only, with every track folded into each of them and
+  the information where that tab already puts it. It was one long standalone screen, which meant
+  learning a second layout to answer questions the first layout already had places for.
+  - **My Space** — the numbers across all of it, then the phases, deliverables, materials and
+    to-dos of every track.
+  - **Today** — what each track is asking of today, and what each has already put down. Nothing
+    ticks: there is nothing to tick into.
+  - **Plan** — the week, with each track's name for each day and the rotations it lands there.
+  - **Progress** — the days, with the same **One per track / All in one** toggle the website has.
+  - The switches that say which tracks are in the view are on every one of those tabs. With six
+    tracks "what am I looking at" is asked constantly, and an answer behind a tap is an answer you
+    stop checking.
+- **The phone's own Progress shows the open track and nothing else.** Its "This track / All tracks"
+  toggle is gone, the same change the website's consistency panel got — a view about every track is
+  a strange thing to find behind a switch inside one track's screen.
+
+### Fixed
+- **Picking the track you were already in left you stuck in all-tracks on the phone too.** Same
+  cause as the website's, same fix: choosing a track is how you leave the mode, including the one
+  already open.
+
+## [0.93.0] - 2026-10-01
+
+### Changed
+- **A track's consistency panel now shows that track and nothing else.** The "This track / All
+  tracks" toggle inside it is gone. There were three ways to look at the same days and two of them
+  were in the wrong place: a view about every track is a strange thing to find behind a switch
+  inside one track's panel.
+- **Both ways of seeing every track now live together**, in the all-tracks view where that question
+  belongs, as one toggle:
+  - **One per track** (the default) — a strip each, on the same calendar columns, so the same
+    Tuesday is the same column on every row and one track's summer reads against another's. It
+    answers "how is each of them going".
+  - **All in one** — every day in one square, divided into a band per track that did something on
+    it. It answers the other question, "did I do anything at all that day", which rows make you
+    scan a column for.
+  - By month / continuous applies to the combined grid only; a row per track is always a ribbon,
+    which is what makes the rows comparable. Switching a track off updates both.
+
+## [0.92.2] - 2026-10-01
+
+### Fixed
+- **Choosing the track you were already in did nothing.** From the all-tracks view it is how you go
+  back to that one track, and it was the only row in the list that did not respond: the menu
+  swallowed the click as a no-op, so nothing above it ever heard the choice. The menu reports every
+  choice now, and the caller decides what it costs — a switch writes, so the one case with no work
+  to do is skipped there instead.
+
 ## [0.92.1] - 2026-10-01
 
 ### Fixed

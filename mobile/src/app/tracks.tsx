@@ -39,6 +39,7 @@ import { dateForDay, dayForDate, formatDateYMD, isDateStr, todayYMD } from "@sha
 import { restWeekdays, trackStreak } from "@shared/restDays";
 import type { TrackState } from "@shared/types";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
+import { useMasterMode } from "../master/MasterMode";
 import { RADIUS, SPACING, TYPE, withAlpha, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { SwipeRow } from "../components/SwipeRow";
@@ -63,6 +64,7 @@ const UNMEASURED = 10000;
 
 export default function TracksScreen() {
   const { workspace, today, switchTrack, addTrack, editTrackById, reorderTracks, restoreWorkspace } = useWorkspace();
+  const { master, setMaster } = useMasterMode();
   const weekStartsOn = getSettings().weekStartsOn;
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
@@ -250,13 +252,16 @@ export default function TracksScreen() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="All tracks. A read-only view of every track at once."
-            onPress={() => router.push("/master")}
+            onPress={() => {
+              setMaster(true);
+              router.navigate("/");
+            }}
             style={styles.allTracks}
           >
-            <Ionicons name="layers-outline" size={18} color={palette.accent} />
+            <Ionicons name={master ? "layers" : "layers-outline"} size={18} color={palette.accent} />
             <View style={styles.text}>
               <Text style={styles.name}>All tracks</Text>
-              <Text style={styles.muted}>Every track at once · read only</Text>
+              <Text style={styles.muted}>Every tab, every track at once · read only</Text>
             </View>
             <Ionicons name="chevron-forward" size={16} color={palette.subtleForeground} />
           </Pressable>
@@ -286,6 +291,11 @@ export default function TracksScreen() {
             onBegin={beginDrag}
             onEndDrag={endDrag}
             onOpen={() => {
+              // Choosing a track is also how you leave the all-tracks mode —
+              // it is one list, and choosing from it should land you where
+              // you chose rather than beside it. True of the track already
+              // open, which is why this is not guarded on a change.
+              setMaster(false);
               switchTrack(track.meta.id);
               router.back();
             }}
