@@ -18,7 +18,7 @@ import { Link } from "expo-router";
 import type { StreakDay } from "@shared/stats";
 import type { CompletedItem } from "@shared/types";
 import { monthCalendar, streakStats, yearCalendar, yearsWithHistory } from "@shared/stats";
-import { visibleTracks } from "@shared/selectors";
+import { orderedTracks } from "@shared/selectors";
 import { completedItemTitle, rebuildStreakHistory } from "@shared/streak";
 import { isRestDate, restWeekdays, streakWithRest } from "@shared/restDays";
 import { formatDayMonthYear, parseYMD } from "@shared/dates";
@@ -66,7 +66,7 @@ export default function ProgressScreen() {
    */
   const [scope, setScope] = useState<"track" | "all">("track");
 
-  const tracks = useMemo(() => (workspace ? visibleTracks(workspace) : []), [workspace]);
+  const tracks = useMemo(() => (workspace ? orderedTracks(workspace) : []), [workspace]);
   /** The tracks the grid is drawn from. One, or all of them. */
   const sources = useMemo(
     () => (scope === "all" ? tracks : track ? [track] : []),

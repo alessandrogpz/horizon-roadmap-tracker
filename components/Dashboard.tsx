@@ -15,11 +15,11 @@ import {
 import { SortableContext, verticalListSortingStrategy, arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { LayoutGrid, LoaderCircle } from "lucide-react";
 import type { PanelColumns, Phase, TrackState, WeekDay, Workspace } from "@/lib/types";
-import { visibleTracks } from "@/lib/selectors";
+import { orderedTracks, visibleTracks } from "@/lib/selectors";
 import { daysSince } from "@/lib/dates";
 
 import { MODULES, defaultPanelColumns, homeColumnFor, resolveTrackLayout } from "@/lib/modules";
-import { recommendedPhaseId, removePhase, setCurrentPhase, setWeeklyRhythm, updatePhase, updateTrackIdentity } from "@/lib/trackActions";
+import { recommendedPhaseId, removePhase, reorderTracks, setCurrentPhase, setWeeklyRhythm, updatePhase, updateTrackIdentity } from "@/lib/trackActions";
 import { loadGoogleGisScript } from "@/lib/googleSignIn";
 import { useWorkspace, useWorkspaceActions } from "@/components/workspace/WorkspaceProvider";
 import { useAccount } from "@/components/useAccount";
@@ -208,7 +208,7 @@ export default function Dashboard() {
     if (!workspace || !track) return;
     const target = workspace.tracks[trackId ?? track.meta.id];
     if (!target) return;
-    const remaining = visibleTracks(workspace).filter((other) => other.meta.id !== target.meta.id);
+    const remaining = orderedTracks(workspace).filter((other) => other.meta.id !== target.meta.id);
     if (remaining.length === 0) return;
 
     const archived: TrackState = { ...target, meta: { ...target.meta, archived: true } };
@@ -219,6 +219,14 @@ export default function Dashboard() {
         workspace.activeTrackId === archived.meta.id ? remaining[0].meta.id : workspace.activeTrackId,
     };
     void commitWorkspace(next);
+  };
+
+  /** A new order for the track list. Saved immediately rather than debounced:
+   *  it is a discrete decision, and the menu it was made in is usually closed
+   *  a moment later. */
+  const handleReorderTracks = (orderedIds: string[]) => {
+    if (!workspace) return;
+    void commitWorkspace({ ...workspace, tracks: reorderTracks(workspace.tracks, orderedIds) });
   };
 
   if (status === "loading") return <FullScreenMessage>Loading your Horizon workspace...</FullScreenMessage>;
@@ -303,6 +311,7 @@ export default function Dashboard() {
             onNewTrack={async () => setCreatingTrack(true)}
             onEditTrack={(fields) => void commitTrack((prev) => updateTrackIdentity(prev, fields), "track identity")}
             onDeleteTrack={handleDeleteTrack}
+            onReorderTracks={handleReorderTracks}
             canDeleteTrack={visibleTracks(workspace).length > 1}
             moduleState={moduleState}
             onToggleModule={handleToggleModule}

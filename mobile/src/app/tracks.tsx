@@ -1,11 +1,36 @@
 // Switching between tracks. One goal per track is the idea the whole product
 // rests on, so this is the second screen rather than a setting.
+//
+// The list can also be put in an order, with the same gesture the panels on My
+// Space use and for the same reason: holding a card picks it up, every card
+// folds down to its own header so the whole list fits under one thumb, the held
+// one comes to the finger and the rest step aside as it passes. Letting go
+// drops it where it is — and *does not* open it, which is the one difference
+// from the panels. Holding something to move it and finding you have navigated
+// away is the worst outcome this screen has.
+//
+// The order is kept on the track (`meta.order`) rather than on the device, so
+// it syncs. That is the opposite of the panel order, which is per-device
+// because the phone has one column and the website has two — but "which of my
+// tracks comes first" is the same question everywhere.
 
-import { useCallback, useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, {
+  type AnimatedRef,
+  type SharedValue,
+  measure,
+  runOnJS,
+  useAnimatedRef,
+  useAnimatedReaction,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { router } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { visibleTracks } from "@shared/selectors";
+import { orderedTracks } from "@shared/selectors";
 import { seedTrackFromTemplate, TEMPLATE_LIST } from "@shared/templates";
 import { hiddenPanelsFor, trackKind, type TrackKind } from "@shared/trackKinds";
 import { PANELS } from "../panels/layout";
@@ -17,6 +42,7 @@ import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, TYPE, withAlpha, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { SwipeRow } from "../components/SwipeRow";
+import { settle, tap } from "../feedback/haptics";
 import { ConfirmSheet, type Confirmation } from "../components/ConfirmSheet";
 import { DatePicker, describeDate } from "../components/DatePicker";
 import { getSettings } from "@shared/settings";
@@ -25,13 +51,23 @@ import { firstFreeColor, TRACK_COLORS } from "@shared/trackColors";
 import { TrackHeatmap } from "../components/TrackHeatmap";
 import { Refreshable } from "../components/Refreshable";
 
+/** A card folded down to its header: a dot, a name, a line about its streak. */
+const ROW = 62;
+/** The gap `styles.content` puts between cards, needed as a number because the
+ *  drag has to do arithmetic with it. */
+const GAP = SPACING.md;
+const SLOT = ROW + GAP;
+/** Stands in for a card's open height until it has been measured: tall enough
+ *  to constrain nothing. */
+const UNMEASURED = 10000;
+
 export default function TracksScreen() {
-  const { workspace, today, switchTrack, addTrack, editTrackById, restoreWorkspace } = useWorkspace();
+  const { workspace, today, switchTrack, addTrack, editTrackById, reorderTracks, restoreWorkspace } = useWorkspace();
   const weekStartsOn = getSettings().weekStartsOn;
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
 
-  const tracks = workspace ? visibleTracks(workspace) : [];
+  const tracks = workspace ? orderedTracks(workspace) : [];
   /** The first colour nobody has taken. Two tracks in the same colour is
    *  allowed — six colours and no cap on tracks means it has to be — but it
    *  should not be what happens by default, because telling them apart in the
@@ -75,6 +111,84 @@ export default function TracksScreen() {
     },
     [editTrackById, switchTrack, tracks, workspace]
   );
+
+  /**
+   * The drag, in the same four shared values the panels use.
+   *
+   * `collapse` is how far through the fold everything is — 0 is the ordinary
+   * list, 1 is every card reduced to its header. `columnShift` is how far the
+   * whole folded list has to move so the held card's slot lands exactly where
+   * the card already is, under the finger: moving the list rather than the
+   * card is what keeps the two agreeing, because the card stays put and the
+   * gap opens around it.
+   */
+  const collapse = useSharedValue(0);
+  const held = useSharedValue(-1);
+  const target = useSharedValue(-1);
+  const dragY = useSharedValue(0);
+  const columnShift = useSharedValue(0);
+  const lockedHeight = useSharedValue(0);
+  /** Where every card sits, by id. Position and stepping-aside are both shared
+   *  values written in the same tick, so React's index never decides where a
+   *  card is — which is what stopped two of them landing on the same line for
+   *  a frame after a drop. */
+  const slots = useSharedValue<Record<string, number>>({});
+  const listRef = useAnimatedRef<View>();
+  const [dragging, setDragging] = useState(false);
+
+  const ids = tracks.map((track) => track.meta.id);
+  const idKey = ids.join("|");
+  useEffect(() => {
+    slots.value = Object.fromEntries(idKey.split("|").map((id, index) => [id, index]));
+  }, [idKey, slots]);
+
+  const move = useCallback(
+    (from: number, to: number) => {
+      const next = [...ids];
+      const [moved] = next.splice(from, 1);
+      if (!moved) return;
+      next.splice(Math.max(0, Math.min(next.length, to)), 0, moved);
+      // The slots move with the order, not after it.
+      slots.value = Object.fromEntries(next.map((id, i) => [id, i]));
+      reorderTracks(next);
+    },
+    [ids, reorderTracks, slots]
+  );
+
+  const beginDrag = useCallback(() => {
+    setDragging(true);
+    tap();
+  }, []);
+
+  const endDrag = useCallback(
+    (from: number, to: number) => {
+      if (to !== from && to >= 0) {
+        move(from, to);
+        settle();
+      }
+      held.value = -1;
+      target.value = -1;
+      dragY.value = 0;
+      // The shift deliberately stays where it is: the list's offset is
+      // `columnShift * collapse`, so letting collapse fall to zero unwinds it
+      // along the path it came in on and the card just dropped holds its
+      // place while the others open outward from it.
+      collapse.value = withTiming(0, { duration: 260 });
+      setDragging(false);
+    },
+    [collapse, dragY, held, move, target]
+  );
+
+  /** The list's own height while a card is held, and everything that is not a
+   *  card getting out of the way. Both copied from My Space, and both for the
+   *  same reasons: a list that gets shorter mid-drag drags the scroll position
+   *  with it, and a paragraph of explanation in the middle of a fold is just
+   *  something to read by accident. */
+  const column = useAnimatedStyle(() => ({
+    minHeight: collapse.value > 0 ? lockedHeight.value : 0,
+    transform: [{ translateY: columnShift.value * collapse.value }],
+  }));
+  const chrome = useAnimatedStyle(() => ({ opacity: 1 - collapse.value }));
 
   const chosenColour = newColour ?? suggestedColour;
 
@@ -124,94 +238,63 @@ export default function TracksScreen() {
   );
 
   return (
-    <Refreshable style={styles.screen} contentContainerStyle={styles.content}>
-      {tracks.map((track) => {
-        const active = track.meta.id === workspace?.activeTrackId;
-        const streak = trackStreak(track, today);
-        const colour = track.meta.color || palette.accent;
-        const canDelete = tracks.length > 1;
-        return (
-          <SwipeRow
+    // Scrolling is off while a card is in the hand: the page moving under a
+    // drag that is itself vertical would be two answers to one gesture.
+    <Refreshable style={styles.screen} contentContainerStyle={styles.content} scrollEnabled={!dragging}>
+      <Animated.View ref={listRef} style={[styles.stack, column]}>
+        {tracks.map((track, index) => (
+          <DraggableTrack
             key={track.meta.id}
-            right={
-              canDelete
-                ? {
-                    label: "Delete",
-                    icon: "trash-outline",
-                    colour: "#ef4444",
-                    // A swipe is a flick, not a considered tap, and a track
-                    // carries everything on it — so this one asks first, and
-                    // deliberately offers no undo afterwards. One decision per
-                    // intent: asking and then offering to take it back is two.
-                    onAct: () =>
-                      setConfirming({
-                        title: `Delete ${track.meta.name}?`,
-                        body: "Its phases, materials, notes and history go with it, on this phone and in your account.",
-                        verb: "Delete",
-                        onConfirm: () => remove(track.meta.id),
-                      }),
-                  }
-                : undefined
+            track={track}
+            index={index}
+            count={tracks.length}
+            active={track.meta.id === workspace?.activeTrackId}
+            canDelete={tracks.length > 1}
+            canReorder={tracks.length > 1}
+            dragging={dragging}
+            today={today}
+            weekStartsOn={weekStartsOn}
+            collapse={collapse}
+            held={held}
+            target={target}
+            dragY={dragY}
+            columnShift={columnShift}
+            lockedHeight={lockedHeight}
+            listRef={listRef}
+            onBegin={beginDrag}
+            onEndDrag={endDrag}
+            onOpen={() => {
+              switchTrack(track.meta.id);
+              router.back();
+            }}
+            onSettings={() => setSettingsFor(track.meta.id)}
+            onDelete={() =>
+              setConfirming({
+                title: `Delete ${track.meta.name}?`,
+                body: "Its phases, materials, notes and history go with it, on this phone and in your account.",
+                verb: "Delete",
+                onConfirm: () => remove(track.meta.id),
+              })
             }
-          >
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ selected: active }}
-              accessibilityHint={canDelete ? "Swipe right to delete" : undefined}
-              style={[styles.card, { borderColor: active ? colour : palette.cardBorder }]}
-              onPress={() => {
-                switchTrack(track.meta.id);
-                router.back();
-              }}
-              onLongPress={() => {
-                setSettingsFor(track.meta.id);
-              }}
-              delayLongPress={350}
-            >
-              {/* The track's colour, laid over the card rather than replacing
-                  its background: an rgba background would composite against
-                  the page and take the card's lift with it. Faint — the row
-                  has a heatmap in the same colour and the tint is only there
-                  so the card is recognisably that track's before you read
-                  anything on it. */}
-              <View
-                pointerEvents="none"
-                style={[
-                  StyleSheet.absoluteFill,
-                  { borderRadius: RADIUS.card, backgroundColor: withAlpha(colour, active ? 0.12 : 0.05) },
-                ]}
-              />
-              <View style={styles.head}>
-                <View style={[styles.dot, { backgroundColor: colour }]} />
-                <View style={styles.text}>
-                  <Text style={styles.name}>{track.meta.name}</Text>
-                  <Text style={styles.muted}>
-                    {streak > 0 ? `${streak} day${streak === 1 ? "" : "s"} in a row` : "no streak yet"}
-                    {active ? " · open" : ""}
-                  </Text>
-                </View>
-                {streak > 0 && (
-                  <View style={[styles.streak, { backgroundColor: withAlpha(colour, 0.16) }]}>
-                    <Ionicons name="flame" size={12} color={colour} />
-                    <Text style={[styles.streakCount, { color: colour }]}>{streak}</Text>
-                  </View>
-                )}
-              </View>
-
-              {/* A year of this track, in this track's colour. What the list
-                  is for is seeing which ones you are actually keeping up. */}
-              <TrackHeatmap
-                days={streakCalendar(track, today, weekStartsOn)}
-                colour={colour}
-                start={track.startDate}
-                rest={restWeekdays(track)}
-              />
-            </Pressable>
-          </SwipeRow>
-        );
-      })}
+            styles={styles}
+            palette={palette}
+          />
+        ))}
+      </Animated.View>
 
       {tracks.length === 0 && <Text style={styles.muted}>No tracks yet.</Text>}
+
+      {/* Everything that is not a track card gets out of the way while one is
+          held. The list folds around the thumb, and a form or a paragraph of
+          explanation sitting in the middle of it is something to press by
+          accident. */}
+      <Animated.View style={chrome} pointerEvents={dragging ? "none" : "auto"}>
+      {tracks.length > 1 && (
+        <Text style={styles.footnote}>
+          Hold a track to move it up or down the list. Swipe one left for its settings, right to
+          delete it.
+        </Text>
+      )}
 
       {settingsFor && (
         <TrackSettings
@@ -300,6 +383,8 @@ export default function TracksScreen() {
           <Text style={styles.panelLabel}>New track…</Text>
         </Pressable>
       )}
+      </Animated.View>
+
       <DatePicker
         open={picking !== null}
         title={picking === "new-end" ? "Should be done by" : "Starts on"}
@@ -311,6 +396,281 @@ export default function TracksScreen() {
 
       <ConfirmSheet confirmation={confirming} onClose={() => setConfirming(null)} />
     </Refreshable>
+  );
+}
+
+/**
+ * One track in the list, and the gesture that picks it up.
+ *
+ * A pan that only activates after the finger has been still for a moment,
+ * which is what lets it share the card with everything else: a tap opens the
+ * track, a sideways swipe reveals its settings or its delete, a drag scrolls
+ * the page, and only a hold reaches this. Because it is a pan rather than a
+ * long-press followed by a separate drag, the finger never has to lift —
+ * picking up and moving are one continuous gesture, which is the difference
+ * between reordering and entering a reordering mode.
+ *
+ * Two measurements make the fold work. `open` is what the card is when it is
+ * open, taken from a plain inner view that keeps its natural size whatever the
+ * animated wrapper is doing to it. `columnShift` is how far the list has to
+ * move so that the held card's folded slot lands where the finger already is.
+ * Without it the card collapses upward out of the hand.
+ */
+function DraggableTrack({
+  track,
+  index,
+  count,
+  active,
+  canDelete,
+  canReorder,
+  dragging,
+  today,
+  weekStartsOn,
+  collapse,
+  held,
+  target,
+  dragY,
+  columnShift,
+  lockedHeight,
+  listRef,
+  onBegin,
+  onEndDrag,
+  onOpen,
+  onSettings,
+  onDelete,
+  styles,
+  palette,
+}: {
+  track: TrackState;
+  index: number;
+  count: number;
+  active: boolean;
+  canDelete: boolean;
+  canReorder: boolean;
+  dragging: boolean;
+  today: string;
+  weekStartsOn: "sun" | "mon";
+  collapse: SharedValue<number>;
+  held: SharedValue<number>;
+  target: SharedValue<number>;
+  dragY: SharedValue<number>;
+  columnShift: SharedValue<number>;
+  lockedHeight: SharedValue<number>;
+  listRef: AnimatedRef<View>;
+  onBegin: () => void;
+  onEndDrag: (from: number, to: number) => void;
+  onOpen: () => void;
+  onSettings: () => void;
+  onDelete: () => void;
+  styles: ReturnType<typeof makeStyles>;
+  palette: Palette;
+}) {
+  const [open, setOpen] = useState<number | null>(null);
+  /** This card's own step out of the way, animated so the list parts rather
+   *  than snaps. */
+  const shift = useSharedValue(0);
+  /** Set by onEnd so onFinalize can tell a finished drag from a cancelled one
+   *  — a call arriving mid-drag must not leave the list folded. */
+  const ended = useSharedValue(false);
+  const streak = trackStreak(track, today);
+  const colour = track.meta.color || palette.accent;
+
+  useAnimatedReaction(
+    () => ({ h: held.value, t: target.value }),
+    ({ h, t }) => {
+      if (h < 0 || h === index || t < 0) {
+        shift.value = 0;
+        return;
+      }
+      const step = index > h && index <= t ? -SLOT : index < h && index >= t ? SLOT : 0;
+      shift.value = withTiming(step, { duration: 160 });
+    },
+    [index]
+  );
+
+  /**
+   * Opening the track, as a gesture rather than a plain press.
+   *
+   * A tap has to prove it is one: `maxDistance` is the whole point, because a
+   * finger that travelled the length of the screen scrolling and then lifted
+   * over a card is not pressing it, however much the up-and-down of it looks
+   * like a press to something that only counts touches.
+   */
+  const openTap = Gesture.Tap()
+    .maxDistance(10)
+    .maxDuration(400)
+    .onEnd((_event, success) => {
+      if (success) runOnJS(onOpen)();
+    });
+
+  const drag = Gesture.Pan()
+    .enabled(canReorder)
+    .activateAfterLongPress(300)
+    .onStart((event) => {
+      held.value = index;
+      target.value = index;
+      ended.value = false;
+
+      // Where this card's folded slot would land if the list folded in place,
+      // against where the finger actually is. The difference is what the list
+      // has to move so the two coincide. Measured rather than added up: the
+      // arithmetic version had to reproduce Yoga's layout exactly, and when it
+      // was off, the card left the finger at the fold.
+      const box = measure(listRef);
+      columnShift.value = box ? event.absoluteY - ROW / 2 - (box.pageY + index * SLOT) : 0;
+      lockedHeight.value = box ? box.height : 0;
+
+      collapse.value = withTiming(1, { duration: 240 });
+      runOnJS(onBegin)();
+    })
+    .onUpdate((event) => {
+      dragY.value = event.translationY;
+      // Slots travelled, not where the card has ended up. It sits under the
+      // finger, so it starts off the grid by however far down it was grabbed;
+      // measuring its position against the slots would make "up one" a
+      // different distance every time.
+      const next = Math.max(0, Math.min(count - 1, index + Math.round(dragY.value / SLOT)));
+      if (next !== target.value) {
+        target.value = next;
+        runOnJS(tap)();
+      }
+    })
+    .onEnd(() => {
+      ended.value = true;
+      const to = target.value;
+      // Settle into the slot before the order actually changes, so the card is
+      // already where it is going when the list catches up.
+      const landing = (to - index) * SLOT;
+      if (Math.abs(landing - dragY.value) < 1) {
+        dragY.value = landing;
+        runOnJS(onEndDrag)(index, to);
+        return;
+      }
+      dragY.value = withTiming(landing, { duration: 170 }, (finished) => {
+        if (finished) runOnJS(onEndDrag)(index, to);
+      });
+    })
+    .onFinalize(() => {
+      if (held.value === index && !ended.value) runOnJS(onEndDrag)(index, index);
+    });
+
+  const animated = useAnimatedStyle(() => {
+    // `maxHeight`, not `height`, so an unmeasured card is simply
+    // unconstrained rather than wrong.
+    const full = open ?? UNMEASURED;
+    const mine = held.value === index;
+    return {
+      maxHeight: full + (ROW - full) * collapse.value,
+      transform: [
+        { translateY: mine ? dragY.value : shift.value },
+        // Just enough lift to read as picked up rather than as a layout bug.
+        { scale: mine ? 1 + 0.03 * collapse.value : 1 },
+      ],
+      zIndex: mine ? 20 : 1,
+    };
+  }, [open, index]);
+
+  const body = useAnimatedStyle(() => ({ opacity: 1 - collapse.value }));
+  const ring = useAnimatedStyle(() => ({ opacity: held.value === index ? collapse.value : 0 }));
+
+  const card = (
+    <SwipeRow
+      left={{ label: "Settings", icon: "options-outline", colour: "#64748b", onAct: onSettings }}
+      right={
+        canDelete
+          ? {
+              label: "Delete",
+              icon: "trash-outline",
+              colour: "#ef4444",
+              // A swipe is a flick, not a considered tap, and a track carries
+              // everything on it — so this one asks first, and deliberately
+              // offers no undo afterwards. One decision per intent: asking and
+              // then offering to take it back is two.
+              onAct: onDelete,
+            }
+          : undefined
+      }
+    >
+      <View
+        accessible
+        accessibilityRole="button"
+        accessibilityState={{ selected: active }}
+        accessibilityLabel={`${track.meta.name}, ${streak > 0 ? `${streak} day${streak === 1 ? "" : "s"} in a row` : "no streak yet"}${active ? ", open" : ""}`}
+        accessibilityHint={
+          canReorder
+            ? "Hold to move it up or down the list. Swipe left for settings, right to delete."
+            : "Swipe left for settings."
+        }
+        style={[styles.card, { borderColor: active ? colour : palette.cardBorder }]}
+      >
+        {/* The track's colour, laid over the card rather than replacing
+            its background: an rgba background would composite against
+            the page and take the card's lift with it. Faint — the row
+            has a heatmap in the same colour and the tint is only there
+            so the card is recognisably that track's before you read
+            anything on it. */}
+        <View
+          pointerEvents="none"
+          style={[
+            StyleSheet.absoluteFill,
+            { borderRadius: RADIUS.card, backgroundColor: withAlpha(colour, active ? 0.12 : 0.05) },
+          ]}
+        />
+        <View style={styles.head}>
+          <View style={[styles.dot, { backgroundColor: colour }]} />
+          <View style={styles.text}>
+            <Text style={styles.name}>{track.meta.name}</Text>
+            <Text style={styles.muted}>
+              {streak > 0 ? `${streak} day${streak === 1 ? "" : "s"} in a row` : "no streak yet"}
+              {active ? " · open" : ""}
+            </Text>
+          </View>
+          {streak > 0 && (
+            <View style={[styles.streak, { backgroundColor: withAlpha(colour, 0.16) }]}>
+              <Ionicons name="flame" size={12} color={colour} />
+              <Text style={[styles.streakCount, { color: colour }]}>{streak}</Text>
+            </View>
+          )}
+        </View>
+
+        {/* A year of this track, in this track's colour. What the list
+            is for is seeing which ones you are actually keeping up. */}
+        <Animated.View style={body}>
+          <TrackHeatmap
+            days={streakCalendar(track, today, weekStartsOn)}
+            colour={colour}
+            start={track.startDate}
+            rest={restWeekdays(track)}
+          />
+        </Animated.View>
+      </View>
+    </SwipeRow>
+  );
+
+  const remember = (height: number) => {
+    if (open !== null && Math.abs(open - height) < 1) return;
+    setOpen(height);
+  };
+
+  return (
+    // Holding wins over tapping: once the drag has claimed the touch, letting
+    // go of it is a drop, not a press. This is the one place the gesture
+    // deliberately does *not* fall through to opening the track — holding
+    // something to move it and finding you have navigated away is the worst
+    // outcome this screen has.
+    <GestureDetector gesture={Gesture.Exclusive(drag, openTap)}>
+      <Animated.View style={[styles.slot, animated]}>
+        {/* Inside the clipped wrapper but unconstrained by it, so it keeps
+            reporting what the card *would* be if it were open. */}
+        <View
+          onLayout={(event) => remember(event.nativeEvent.layout.height)}
+          pointerEvents={dragging ? "none" : "auto"}
+        >
+          {card}
+        </View>
+        <Animated.View style={[styles.ring, ring, { borderColor: colour }]} pointerEvents="none" />
+      </Animated.View>
+    </GestureDetector>
   );
 }
 
@@ -516,6 +876,18 @@ function makeStyles(palette: Palette) {
       borderWidth: 1,
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
+    },
+    /** The cards, as one block the fold can move as a unit. */
+    stack: { gap: GAP },
+    slot: { overflow: "hidden", borderRadius: RADIUS.card },
+    ring: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      borderRadius: RADIUS.card,
+      borderWidth: 2,
     },
     head: { flexDirection: "row", alignItems: "center", gap: SPACING.md },
     streak: {

@@ -7,6 +7,40 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.87.0] - 2026-10-01
+
+### Added
+- **The track list can be put in an order**, on all three — website, PWA and phone. It used to sit
+  in the order the tracks were made in, for good, which is the one order nobody chose: the track you
+  open every morning ends up third because you happened to think of it third.
+  - **On the phone**, hold a card and the whole list folds down to its headers, the held one comes to
+    your finger and the rest step aside as it passes — the same gesture, and the same code, as
+    rearranging the panels on My Space. Letting go drops it where it is and *does not* open it:
+    holding something to move it and finding you have navigated away is the worst outcome this
+    screen has.
+  - **On the website and the PWA**, each row grew a handle. Mouse: grab the handle. Touch: hold the
+    row anywhere, the same as a dashboard panel.
+  - The order is kept on the track (`meta.order`) rather than on the device, so it syncs. That is
+    the opposite of the panel order, which is per-device because the phone has one column and the
+    website has two — but "which of my tracks comes first" is the same question everywhere. It is
+    written onto every visible track at once, so the list is ordered throughout or not at all; a
+    track made afterwards has no position and sorts last, which is where a new track belongs.
+  - Everything that shows a list of tracks follows it: the switcher, the phone's track screen, and
+    the stacked all-tracks consistency grid.
+
+### Changed
+- **The phone's track card: holding it now moves it, so its settings moved to a left swipe.** Delete
+  stays on the right. Two directions, two meanings, which is the same arrangement every other list
+  in the app uses.
+
+### Fixed
+- **The PWA's track menu scrolled the page behind it** instead of the list — most obviously with a
+  handful of tracks, where the menu was short enough not to scroll at all and every drag went
+  straight through to the dashboard. Three things together, because no one of them covers every
+  browser: `overscroll-contain` on the list, `overflow: hidden` on the document while the menu is
+  open, and a `touchmove` that did not start inside the menu refused outright, which is what Safari
+  on iOS needs. The page keeps its scroll position throughout.
+
 ## [0.86.0] - 2026-10-01
 
 ### Added

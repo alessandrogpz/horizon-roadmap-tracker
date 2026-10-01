@@ -195,6 +195,18 @@ export interface TrackMeta {
   /** Tombstone for future cross-device deletion support; a track missing on one
    *  side of a merge is never treated as deleted unless explicitly archived. */
   archived?: boolean;
+  /**
+   * Where this track sits in the list, lowest first.
+   *
+   * Unlike a panel's position, which is per-device because the phone has one
+   * column and the laptop has two, "which of my tracks comes first" is the
+   * same question everywhere — so this syncs. Absent until the list is first
+   * reordered, and then written onto *every* visible track at once, so the
+   * list is either ordered throughout or not at all and nothing has to
+   * reconcile a number against a creation date. A track made afterwards has
+   * none and sorts last, which is where a new track belongs.
+   */
+  order?: number;
 }
 
 /** One independently-configured recurring item rotation, e.g. a 10-week

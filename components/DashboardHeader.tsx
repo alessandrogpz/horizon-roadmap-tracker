@@ -5,7 +5,7 @@ import type { TrackState, Workspace } from "@/lib/types";
 import { daysSince, todayYMD } from "@/lib/dates";
 import { trackStreak } from "@/lib/restDays";
 import { phaseStats } from "@/lib/stats";
-import { visibleTracks } from "@/lib/selectors";
+import { orderedTracks } from "@/lib/selectors";
 import type { SyncStatus } from "@/components/workspace/WorkspaceProvider";
 import { Cloud, Flame } from "lucide-react";
 import HorizonMark from "@/components/HorizonMark";
@@ -35,6 +35,8 @@ interface DashboardHeaderProps {
   onEditTrack: (fields: { name: string; color: string; startDate: string; totalDays: number }) => void;
   /** With an id, that track; without one, the open one. */
   onDeleteTrack: (trackId?: string) => void;
+  /** Saves a new order for the track list. */
+  onReorderTracks: (orderedIds: string[]) => void;
   canDeleteTrack: boolean;
   moduleState: ModuleState[];
   onToggleModule: (id: string) => void;
@@ -154,7 +156,7 @@ function StatTile({
   );
 }
 
-export default function DashboardHeader({ data, workspace, syncStatus, syncError, syncTarget = "local", onSync, onSwitchTrack, onNewTrack, onEditTrack, onDeleteTrack, canDeleteTrack, moduleState, onToggleModule, onEditRhythm, onNewRotation, onReloadWorkspace }: DashboardHeaderProps) {
+export default function DashboardHeader({ data, workspace, syncStatus, syncError, syncTarget = "local", onSync, onSwitchTrack, onNewTrack, onEditTrack, onDeleteTrack, onReorderTracks, canDeleteTrack, moduleState, onToggleModule, onEditRhythm, onNewRotation, onReloadWorkspace }: DashboardHeaderProps) {
   const [showTrackSettings, setShowTrackSettings] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showInsights, setShowInsights] = useState(false);
@@ -216,11 +218,12 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
         <div className="flex items-center gap-1.5 min-w-0">
           <span className="text-muted-foreground hidden sm:inline">Track:</span>
           <TrackSwitcher
-            tracks={visibleTracks(workspace)}
+            tracks={orderedTracks(workspace)}
             activeTrackId={workspace.activeTrackId}
             onSwitch={onSwitchTrack}
             onNewTrack={() => void handleNewTrack()}
             onDelete={canDeleteTrack ? onDeleteTrack : undefined}
+            onReorder={onReorderTracks}
           />
         </div>
 
