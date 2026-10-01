@@ -229,9 +229,14 @@ export default function TrackSwitcher({
       armed={confirming === row.track.meta.id}
       canDelete={canDelete}
       canReorder={canReorder}
+      // Always reported, even for the track already open. Choosing the open
+      // track is still a choice — from the all-tracks view it is how you get
+      // back to that one track — and swallowing it here meant the only row in
+      // the list that did nothing was the one you were looking at. What that
+      // choice costs is the caller's to decide.
       onOpen={() => {
         close();
-        if (row.track.meta.id !== activeTrackId) onSwitch(row.track.meta.id);
+        onSwitch(row.track.meta.id);
       }}
       onArm={() => setConfirming(row.track.meta.id)}
       onDisarm={() => setConfirming((current) => (current === row.track.meta.id ? null : current))}

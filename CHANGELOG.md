@@ -7,6 +7,15 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.92.2] - 2026-10-01
+
+### Fixed
+- **Choosing the track you were already in did nothing.** From the all-tracks view it is how you go
+  back to that one track, and it was the only row in the list that did not respond: the menu
+  swallowed the click as a no-op, so nothing above it ever heard the choice. The menu reports every
+  choice now, and the caller decides what it costs — a switch writes, so the one case with no work
+  to do is skipped there instead.
+
 ## [0.92.1] - 2026-10-01
 
 ### Fixed
