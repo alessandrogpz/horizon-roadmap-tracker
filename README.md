@@ -56,6 +56,7 @@ no business logic.
 │   ├── gitStats.ts               # GitHub / local git stats, with caching
 │   ├── modules.ts                # Which dashboard modules exist
 │   ├── streak.ts                 # Streak calculation helpers
+│   ├── restDays.ts               # Which days a track takes off, and how a streak crosses them
 │   ├── dates.ts                  # Date and week utility functions
 │   └── types.ts                  # TypeScript interfaces
 ├── public/                       # Static assets & service worker
@@ -202,7 +203,7 @@ build and release workflow.
 
 *   **Weekly overview:** What each day of a track is for, and what that day actually holds — the rotation topics due that week, the day's own checklist, the gym plan for that kind of day. On the phone it is a calendar you can walk through, a week at a time or a month at a glance, so what a future week asks for is something you look up rather than work out.
 *   **Phases:** Interactive vertical timeline of a track's phases, their deadlines and what each one asks for.
-*   **Consistency:** A year of days, the shape everyone knows from a contributions graph, drawn in the track's own colour — four strengths of one hue, with the day the track began marked in white on a dark screen and black on a light one. With more than one track open, the same panel stacks every track's year on the same calendar columns, so "did I do *anything* yesterday" is one glance rather than three panels. On the phone the grid turns ninety degrees and runs down the screen, a week to a row, because that is the only way a day stays big enough to tap.
+*   **Consistency:** A year of days, the shape everyone knows from a contributions graph, drawn in the track's own colour — four strengths of one hue, with the day the track began marked in white on a dark screen and black on a light one. With more than one track open, the same panel stacks every track's year on the same calendar columns, so "did I do *anything* yesterday" is one glance rather than three panels. On the phone the grid turns ninety degrees and runs down the screen, a week to a row, because that is the only way a day stays big enough to tap. Days your week has off — any focus type marked with the moon in the weekly rhythm editor — carry a small dot instead of reading as a gap, and they bridge a streak rather than breaking it: a plan with Sunday off can still hold a run of forty days.
 *   **A colour per track:** Chosen when the track is created, and from then on the accent the whole app wears while that track is open — buttons, rings, links, and its own history. The track list is a list of years in those colours, which turns "which tracks do I have" into "which ones am I actually keeping up".
 *   **Deliverables:** Repository checklists, with live git statistics (branch, modified status, last commit message) pulled from local git repos or GitHub.
 *   **Gym plan:** The exercises a training day asks for, with sets and reps against each and a tick as you work through them. Which days it applies to comes from the track's weekly rhythm, so the plan and the week are never two answers to one question.

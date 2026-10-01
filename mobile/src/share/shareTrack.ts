@@ -10,7 +10,7 @@
 
 import { Share } from "react-native";
 import type { TrackState } from "@shared/types";
-import { currentStreakLength } from "@shared/streak";
+import { trackStreak } from "@shared/restDays";
 
 export interface ShareCounts {
   done: number;
@@ -22,7 +22,7 @@ export interface ShareCounts {
  *  an email client all understand text, and none of them need Horizon installed
  *  to make sense of it. */
 export function summaryFor(track: TrackState, today: string, { done, total }: ShareCounts): string {
-  const streak = currentStreakLength(track.streakHistory ?? [], today);
+  const streak = trackStreak(track, today);
   const parts = [
     track.meta.name,
     total ? `${done} of ${total} done today` : "nothing scheduled today",

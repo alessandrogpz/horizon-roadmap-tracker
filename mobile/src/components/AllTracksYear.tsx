@@ -17,7 +17,7 @@ import { useMemo, useRef } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { timelineStats, yearCalendar, type StreakDay } from "@shared/stats";
-import { currentStreakLength } from "@shared/streak";
+import { isRestDate, restWeekdays, trackStreak } from "@shared/restDays";
 import { parseYMD } from "@shared/dates";
 import type { TrackState } from "@shared/types";
 import { Ring } from "./Ring";
@@ -48,6 +48,9 @@ interface Row {
   weeks: StreakDay[][];
   pct: number;
   streak: number;
+  /** This row's own days off. Two tracks stacked here rarely rest on the same
+   *  day, so one shared answer would mark the wrong squares on one of them. */
+  rest: ReadonlySet<string>;
 }
 
 export function AllTracksYear({
@@ -84,7 +87,8 @@ export function AllTracksYear({
           colour: track.meta.color || palette.accent,
           weeks,
           pct: timelineStats(track).progressPct,
-          streak: currentStreakLength(track.streakHistory ?? [], today),
+          streak: trackStreak(track, today),
+          rest: restWeekdays(track),
         };
       }),
     [palette.accent, today, tracks, weekStartsOn, year]
@@ -165,26 +169,31 @@ export function AllTracksYear({
             <View key={row.track.meta.id} style={styles.strip}>
               {row.weeks.map((week, index) => (
                 <View key={index} style={styles.week}>
-                  {week.map((day, dayIndex) => (
-                    <View
-                      key={dayIndex}
-                      style={[
-                        styles.cell,
-                        {
-                          backgroundColor: day.date
-                            ? shadeOf(row.colour, day.count, palette.surfaceMuted)
-                            : "transparent",
-                        },
-                        // The same two marks the single-track grid uses: the
-                        // day it began, in the page's opposite so it survives
-                        // any track colour, and today, ringed.
-                        day.date && day.date === row.track.startDate && {
-                          backgroundColor: palette.foreground,
-                        },
-                        day.date === today && { borderWidth: 2, borderColor: palette.foreground },
-                      ]}
-                    />
-                  ))}
+                  {week.map((day, dayIndex) => {
+                    const began = Boolean(day.date) && day.date === row.track.startDate;
+                    const resting = day.count === 0 && !began && isRestDate(day.date, row.rest);
+                    return (
+                      <View
+                        key={dayIndex}
+                        style={[
+                          styles.cell,
+                          {
+                            backgroundColor: day.date
+                              ? shadeOf(row.colour, day.count, palette.surfaceMuted)
+                              : "transparent",
+                          },
+                          // The same marks the single-track grid uses: the
+                          // day it began, in the page's opposite so it survives
+                          // any track colour, and today, ringed.
+                          began && { backgroundColor: palette.foreground },
+                          day.date === today && { borderWidth: 2, borderColor: palette.foreground },
+                        ]}
+                      >
+                        {/* A day this track has off, which passed empty. */}
+                        {resting && <View style={[styles.restDot, { backgroundColor: row.colour }]} />}
+                      </View>
+                    );
+                  })}
                 </View>
               ))}
             </View>
@@ -236,6 +245,7 @@ function makeStyles(palette: Palette) {
     monthLabel: { position: "absolute", top: 0, color: palette.subtleForeground, ...TYPE.micro },
     strip: { height: ROW, marginBottom: ROW_GAP, flexDirection: "row", gap: GAP },
     week: { gap: GAP },
-    cell: { width: CELL, height: CELL, borderRadius: 2 },
+    cell: { width: CELL, height: CELL, borderRadius: 2, alignItems: "center", justifyContent: "center" },
+    restDot: { width: 4, height: 4, borderRadius: 2 },
   });
 }

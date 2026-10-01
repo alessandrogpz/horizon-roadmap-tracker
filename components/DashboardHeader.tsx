@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import type { TrackState, Workspace } from "@/lib/types";
 import { daysSince, todayYMD } from "@/lib/dates";
-import { currentStreakLength } from "@/lib/streak";
+import { trackStreak } from "@/lib/restDays";
 import { phaseStats } from "@/lib/stats";
 import { visibleTracks } from "@/lib/selectors";
 import type { SyncStatus } from "@/components/workspace/WorkspaceProvider";
@@ -191,7 +191,7 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
   // that the estimate was short, which estimates are.
   const overrunDays = Math.max(0, daysPassed - totalDays);
 
-  const streak = data.isSynced ? currentStreakLength(data.streakHistory, todayYMD()) : 0;
+  const streak = data.isSynced ? trackStreak(data, todayYMD()) : 0;
 
   const dotColor = syncStatus === "syncing"
     ? "bg-accent shadow-[0_0_8px_var(--accent)]"

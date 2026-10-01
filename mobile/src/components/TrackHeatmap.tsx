@@ -9,6 +9,7 @@
 import { useMemo, useState } from "react";
 import { StyleSheet, View, type LayoutChangeEvent } from "react-native";
 import type { StreakDay } from "@shared/stats";
+import { isRestDate } from "@shared/restDays";
 import { shadeOf, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
@@ -28,12 +29,16 @@ export function TrackHeatmap({
   days,
   colour,
   start,
+  rest,
 }: {
   days: StreakDay[];
   colour: string;
   /** The track's first day, marked the same way the Progress grid marks it:
    *  in the page's opposite, so it survives whichever colour the track is. */
   start?: string;
+  /** Weekday names the track has off. An empty day on one of them carries a
+   *  dot rather than reading as a day missed. */
+  rest?: ReadonlySet<string>;
 }) {
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
@@ -76,23 +81,42 @@ export function TrackHeatmap({
     <View style={[styles.grid, { gap, opacity: width > 0 ? 1 : 0 }]} onLayout={onLayout}>
       {weeks.map((week, index) => (
         <View key={index} style={{ gap }}>
-          {week.map((day, dayIndex) => (
-            <View
-              key={dayIndex}
-              style={{
-                width: dot,
-                height: dot,
-                borderRadius: Math.max(1, dot * 0.25),
-                // A padding cell is not a day with nothing in it, so it is not
-                // drawn at all rather than drawn as an empty one.
-                backgroundColor: !day.date
-                  ? "transparent"
-                  : day.date === start
-                    ? palette.foreground
-                    : shadeOf(colour, day.count, palette.surfaceMuted),
-              }}
-            />
-          ))}
+          {week.map((day, dayIndex) => {
+            // A day off that passed with nothing on it. Work done on a rest
+            // day is still work, so only empty ones are marked.
+            const resting =
+              Boolean(rest) && day.count === 0 && day.date !== start && isRestDate(day.date, rest!);
+            return (
+              <View
+                key={dayIndex}
+                style={{
+                  width: dot,
+                  height: dot,
+                  borderRadius: Math.max(1, dot * 0.25),
+                  alignItems: "center",
+                  justifyContent: "center",
+                  // A padding cell is not a day with nothing in it, so it is not
+                  // drawn at all rather than drawn as an empty one.
+                  backgroundColor: !day.date
+                    ? "transparent"
+                    : day.date === start
+                      ? palette.foreground
+                      : shadeOf(colour, day.count, palette.surfaceMuted),
+                }}
+              >
+                {resting && (
+                  <View
+                    style={{
+                      width: Math.max(1, dot * 0.4),
+                      height: Math.max(1, dot * 0.4),
+                      borderRadius: dot,
+                      backgroundColor: colour,
+                    }}
+                  />
+                )}
+              </View>
+            );
+          })}
         </View>
       ))}
     </View>

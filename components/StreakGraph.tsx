@@ -2,9 +2,9 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Activity, Check, ChevronLeft, ChevronRight, Flame, Layers, X } from "lucide-react";
-import type { CompletedItem, TrackState } from "@/lib/types";
+import type { CompletedItem, FocusType, TrackState, WeekDay } from "@/lib/types";
 import { parseYMD, todayYMD } from "@/lib/dates";
-import { currentStreakLength } from "@/lib/streak";
+import { isRestDate, restWeekdays, streakWithRest } from "@/lib/restDays";
 import { monthCalendar, yearCalendar, yearsWithHistory } from "@/lib/stats";
 import { useAppSettings } from "@/lib/useAppSettings";
 import AllTracksYear from "@/components/AllTracksYear";
@@ -46,11 +46,17 @@ export default function StreakGraph({
   completedItemsHistory = {},
   startDate,
   color,
+  weekSchedule,
+  focusTypes,
   tracks = [],
 }: {
   streakHistory?: string[];
   completedItemsHistory?: { [date: string]: CompletedItem[] };
   startDate?: string;
+  /** The track's week and the pool it is built from, so the grid can tell a
+   *  day deliberately taken off from a day missed. */
+  weekSchedule?: WeekDay[];
+  focusTypes?: Record<string, FocusType>;
   /** The open track's colour, for the key. The grid itself is painted through
    *  `--streak-1` … `--streak-4`, which the track's accent already rewrote. */
   color?: string;
@@ -106,7 +112,12 @@ export default function StreakGraph({
     [completedItemsHistory, startDate, today]
   );
 
-  const streak = useMemo(() => currentStreakLength(streakHistory, todayYMD()), [streakHistory]);
+  /** The weekdays this track has off. Memoised on the two fields it is built
+   *  from, so the cell memo below is not rebuilt on every render by a fresh
+   *  Set that holds the same thing. */
+  const rest = useMemo(() => restWeekdays({ weekSchedule, focusTypes }), [focusTypes, weekSchedule]);
+
+  const streak = useMemo(() => streakWithRest(streakHistory, todayYMD(), rest), [rest, streakHistory]);
   const totalActive = streakHistory.length;
 
   // How many updates a day needs to reach each shade.
@@ -133,13 +144,25 @@ export default function StreakGraph({
           })
           .join("\n• ")}`
       : "";
+    // A day the week has off, which passed with nothing on it. Below `today`
+    // in precedence, because a ring and a dot can be drawn together and the
+    // ring is the one that moves every day.
+    const resting = day.count === 0 && isRestDate(day.date, rest);
     return {
       id: day.date,
       level: levelFor(day.count),
-      mark: day.date === startDate ? "start" : day.date === today ? "today" : undefined,
+      mark:
+        day.date === startDate
+          ? "start"
+          : day.date === today
+            ? "today"
+            : resting
+              ? "rest"
+              : undefined,
       title:
         `${day.date}: ${day.count} update${day.count !== 1 ? "s" : ""}` +
         (day.date === startDate ? " — the day this track started" : "") +
+        (resting ? " — a day off" : "") +
         accomplishments,
     };
   };
@@ -158,7 +181,7 @@ export default function StreakGraph({
     // `cellFor` closes over the history and the dates, which are the deps that
     // matter; it is redefined every render and would defeat the memo.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [completedItemsHistory, days, startDate, today]);
+  }, [completedItemsHistory, days, rest, startDate, today]);
 
   /**
    * Both shapes open at the recent end, with today at the right.
@@ -326,6 +349,17 @@ export default function StreakGraph({
             <>
               <span className="ml-3 h-2.5 w-2.5 rounded-[2px]" style={{ backgroundColor: "var(--foreground)" }} />
               <span>started</span>
+            </>
+          )}
+          {rest.size > 0 && (
+            <>
+              <span
+                className="ml-3 flex h-2.5 w-2.5 items-center justify-center rounded-[2px]"
+                style={{ backgroundColor: "var(--streak-0)" }}
+              >
+                <span className="block h-1 w-1 rounded-full" style={{ backgroundColor: "var(--accent)" }} />
+              </span>
+              <span>day off</span>
             </>
           )}
           {color && <span className="sr-only">Drawn in this track&apos;s colour, {color}.</span>}

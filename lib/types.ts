@@ -75,6 +75,16 @@ export interface WeekDay {
 export interface FocusType {
   label: string;
   color: string;
+  /**
+   * A day deliberately taken off rather than a day missed.
+   *
+   * Rest days bridge a streak: they neither break it nor extend it (see
+   * lib/restDays.ts), and the consistency grid marks them with a dot rather
+   * than leaving them to read as a gap. Absent on every type written before
+   * the flag existed, which is why `isRestType` falls back to the two keys
+   * every template ships with — `free` and `rest`.
+   */
+  restDay?: boolean;
 }
 
 /** Per-date record of which task/revision ids were completed. */
