@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Flame,
   GitBranch,
+  ListTodo,
   Milestone,
   Moon,
 } from "lucide-react";
@@ -28,6 +29,9 @@ import {
   masterWeek,
 } from "@/lib/masterTrack";
 import { useAppSettings } from "@/lib/useAppSettings";
+import { parseTodos, todoNoteId, type TodoItem } from "@/lib/quickNotes";
+import { readNote } from "@/lib/notes";
+import { useWorkspace } from "@/components/workspace/WorkspaceProvider";
 import MasterGrid from "./MasterGrid";
 
 /**
@@ -472,6 +476,71 @@ export function MasterMaterialsPanel({ tracks }: { tracks: TrackState[] }) {
             <TrackChip name={track.name} color={track.color} />
           </span>
         ))}
+      </div>
+    </PanelShell>
+  );
+}
+
+// --- The to-do lists ---------------------------------------------------
+
+/**
+ * Everything still on your plate, from every track.
+ *
+ * The one panel here that has to go and fetch something: a track's to-do list
+ * is a note rather than a field on the track, so it is read from the notes
+ * table instead of coming out of the aggregation with everything else. Re-read
+ * when a sync lands, the same trigger the editable panel uses — these lists
+ * are exactly the kind of thing changed on another device.
+ *
+ * Done items are left out rather than struck through. A combined list is long
+ * enough already, and the question it answers is what is left.
+ */
+export function MasterTodoPanel({ tracks }: { tracks: TrackState[] }) {
+  const { workspace } = useWorkspace();
+  const syncStamp = workspace?.lastSyncTime ?? 0;
+  const [lists, setLists] = useState<{ track: TrackState["meta"]; items: TodoItem[] }[]>([]);
+
+  const ids = tracks.map((track) => track.meta.id).join("|");
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.all(
+      tracks.map(async (track) => ({
+        track: track.meta,
+        items: parseTodos(await readNote(todoNoteId(track.meta.id))).filter((item) => !item.done),
+      }))
+    ).then((read) => {
+      if (!cancelled) setLists(read.filter((entry) => entry.items.length > 0));
+    });
+    return () => {
+      cancelled = true;
+    };
+    // `tracks` is rebuilt every render by the filter above it; its ids are
+    // what actually decides what to read.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ids, syncStamp]);
+
+  const total = lists.reduce((sum, entry) => sum + entry.items.length, 0);
+
+  return (
+    <PanelShell
+      icon={<ListTodo size={14} strokeWidth={2.5} className="section-icon" />}
+      title="To-do"
+      trailing={total > 0 ? <span className="pr-16 font-mono text-[0.75rem] text-muted-foreground">{total}</span> : undefined}
+    >
+      {total === 0 && <Empty>Nothing left on the selected tracks.</Empty>}
+      <div className="flex flex-col gap-1.5">
+        {lists.flatMap((entry) =>
+          entry.items.map((item, index) => (
+            <span key={`${entry.track.id}-${index}`} className="flex items-center gap-2">
+              <span
+                className="h-3.5 w-3.5 shrink-0 rounded-[3px] border"
+                style={{ borderColor: "var(--card-border-hover)" }}
+              />
+              <span className="min-w-0 flex-1 truncate text-[0.85rem] text-foreground">{item.text}</span>
+              <TrackChip name={entry.track.name} color={entry.track.color} />
+            </span>
+          ))
+        )}
       </div>
     </PanelShell>
   );
