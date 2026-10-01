@@ -171,10 +171,19 @@ the view is open is `AppSettings.masterView`: a device preference, like the
 theme, because which track is active is data and syncs while which of the two
 ways of looking at it you last used is this browser's business.
 
-On the phone it is `mobile/src/app/master.tsx`, reached from the row above the
-track list. One column rather than two, and the consistency grid is *not*
-redrawn there: Progress already has an all-tracks mode, so the screen links to
-it rather than keeping a second copy of the same picture in step.
+On the phone it is a **mode, not a screen**: the same four tabs — My Space,
+Today, Plan, Progress — rendered read-only with every track folded in. The
+flag lives in `mobile/src/master/MasterMode.tsx` (a provider, because
+`@shared/settings` has no subscription a phone can use), each tab returns its
+`Master*` body before any single-track hook runs, and the shared furniture is
+in `MasterChrome.tsx`. It was one long standalone screen first, which meant
+learning a second layout to answer questions the first layout already had
+places for.
+
+A track's own consistency panel shows that track and nothing else, on both
+platforms. The two ways of seeing all of them — a strip per track, or every
+day in one divided square — are a toggle inside the all-tracks view, which is
+where that question belongs.
 
 `/roadmap?all=1` is the same idea for the roadmaps: an index down the side and
 one document at a time, because six roadmaps printed end to end is a document

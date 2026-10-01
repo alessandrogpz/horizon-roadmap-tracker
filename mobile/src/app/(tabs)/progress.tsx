@@ -14,21 +14,21 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { Link, useLocalSearchParams } from "expo-router";
+import { Link } from "expo-router";
 import type { StreakDay } from "@shared/stats";
 import type { CompletedItem } from "@shared/types";
 import { monthCalendar, streakStats, yearCalendar, yearsWithHistory } from "@shared/stats";
-import { orderedTracks } from "@shared/selectors";
 import { completedItemTitle, rebuildStreakHistory } from "@shared/streak";
 import { marksRestDay, restWeekdays, streakWithRest } from "@shared/restDays";
 import { formatDayMonthYear, parseYMD } from "@shared/dates";
 import { getSettings } from "@shared/settings";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
+import { useMasterMode } from "../../master/MasterMode";
+import { MasterProgress } from "../../master/MasterProgress";
 import { Refreshable } from "../../components/Refreshable";
 import { Segmented } from "../../components/Segmented";
 import { StatTile } from "../../components/StatTile";
-import { AllTracksYear } from "../../components/AllTracksYear";
-import { RADIUS, SPACING, TYPE, shadeOf, withAlpha, type Palette } from "../../theme";
+import { RADIUS, SPACING, TYPE, shadeOf, type Palette } from "../../theme";
 import { usePalette } from "../../theme/ThemeProvider";
 
 const CELL = 26;
@@ -46,6 +46,12 @@ const WEEKDAYS_SUN = ["S", "M", "T", "W", "T", "F", "S"];
 const WEEKDAYS_MON = ["M", "T", "W", "T", "F", "S", "S"];
 
 export default function ProgressScreen() {
+  // All tracks is the same tab, read-only, with every track folded in.
+  // Returned before anything else so the single-track hooks below do not
+  // run for a track nobody is looking at.
+  const { master } = useMasterMode();
+  if (master) return <MasterProgress />;
+
   const { workspace, track, today } = useWorkspace();
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
@@ -56,38 +62,15 @@ export default function ProgressScreen() {
   // so it is a toggle rather than a replacement.
   const [byMonth, setByMonth] = useState(true);
   /**
-   * Whose days these are: the open track's, or every track's at once.
+   * This screen shows the open track, and only it.
    *
-   * A person running three tracks has three grids and no way to ask the one
-   * question that spans them — did I do *anything* yesterday. The combined
-   * view answers it, and paints each day in the colour of whichever track put
-   * the most into it, so a month of one colour reads as a month where one
-   * thing crowded out the rest.
+   * It used to carry a "This track / All tracks" toggle that stacked every
+   * track's year. That is a view about every track, and a strange thing to
+   * find behind a switch inside one track's screen — it now lives in the
+   * all-tracks mode, which has a whole set of tabs for questions that span
+   * them, and can offer the two shapes that question actually has.
    */
-  const [scope, setScope] = useState<"track" | "all">("track");
-
-  /**
-   * Opened from the all-tracks screen, this lands already showing all of them.
-   *
-   * Without it the link went to a grid of whichever single track happened to
-   * be open, which is the opposite of what the screen it came from is about.
-   * Read once rather than watched: the toggle below is still the user's, and
-   * a param that kept re-asserting itself would fight them for it.
-   */
-  const askedFor = useLocalSearchParams<{ scope?: string }>().scope;
-  const landed = useRef(false);
-  useEffect(() => {
-    if (landed.current || askedFor !== "all") return;
-    landed.current = true;
-    setScope("all");
-  }, [askedFor]);
-
-  const tracks = useMemo(() => (workspace ? orderedTracks(workspace) : []), [workspace]);
-  /** The tracks the grid is drawn from. One, or all of them. */
-  const sources = useMemo(
-    () => (scope === "all" ? tracks : track ? [track] : []),
-    [scope, track, tracks]
-  );
+  const sources = useMemo(() => (track ? [track] : []), [track]);
 
   /** The days, merged. One track's history is used as it stands; several are
    *  concatenated, with each item told which track it came from — on a day
@@ -109,49 +92,19 @@ export default function ProgressScreen() {
     return out;
   }, [sources]);
 
-  /** The ink. One track's own colour throughout, or — across all of them —
-   *  the colour of whichever track did the most on that particular day. */
+  /** The ink: this track's own colour, everywhere. Still a function of the
+   *  date, because the call sites ask per cell and the shape should not
+   *  change just because the answer stopped varying. */
   const colourOf = useMemo(() => {
     const own = track?.meta.color || palette.accent;
-    if (sources.length <= 1) return () => own;
-    const leader: Record<string, { colour: string; count: number }> = {};
-    for (const source of sources) {
-      const colour = source.meta.color || palette.accent;
-      for (const [date, items] of Object.entries(source.completedItemsHistory ?? {})) {
-        const count = items?.length ?? 0;
-        if (count <= 0) continue;
-        const best = leader[date];
-        if (!best || count > best.count) leader[date] = { colour, count };
-      }
-    }
-    return (date: string) => leader[date]?.colour ?? own;
-  }, [palette.accent, sources, track]);
+    return (_date: string) => own;
+  }, [palette.accent, track]);
 
-  /**
-   * The weekdays the grid should treat as taken off.
-   *
-   * One track's own, or — across several — only the days *every* one of them
-   * has off. A Sunday that one track rests on and another works on is a day
-   * something was expected, so the combined grid should not excuse it.
-   */
-  const restDays = useMemo(() => {
-    if (sources.length === 0) return new Set<string>();
-    const sets = sources.map(restWeekdays);
-    return new Set([...sets[0]].filter((day) => sets.every((set) => set.has(day))));
-  }, [sources]);
+  /** The weekdays this track has off. */
+  const restDays = useMemo(() => (track ? restWeekdays(track) : new Set<string>()), [track]);
 
-  /** The first day there was anything to miss. Across several tracks that is
-   *  the earliest of their starts: an older track's days are not blanks on a
-   *  younger one's account. */
-  const firstDay = useMemo(
-    () =>
-      sources.reduce(
-        (earliest, source) =>
-          source.startDate && (!earliest || source.startDate < earliest) ? source.startDate : earliest,
-        ""
-      ),
-    [sources]
-  );
+  /** The first day there was anything to miss. */
+  const firstDay = track?.startDate ?? "";
 
   const weekStartsOn = getSettings().weekStartsOn;
   const [year, setYear] = useState(() => parseYMD(today).getFullYear());
@@ -256,20 +209,10 @@ export default function ProgressScreen() {
   }
 
   const labels = weekStartsOn === "mon" ? WEEKDAYS_MON : WEEKDAYS_SUN;
-  const shapeKey = `${byMonth ? "months" : "continuous"}-${year}-${scope}`;
-  /** The day the data starts. Across all tracks that is the oldest track's
-   *  first day, which is still the edge of the data and still worth finding. */
+  const shapeKey = `${byMonth ? "months" : "continuous"}-${year}`;
+  /** The day the data starts — the edge of the data, and worth finding. */
   const startMark = firstDay;
-  // The scale is drawn in the open track's colour, and in grey when several
-  // tracks are on screen: a red ladder under four rows, none of them red,
-  // reads as a fifth track rather than as a key. Grey rather than plain ink,
-  // so the top of the scale cannot be mistaken for the "started" mark sitting
-  // two swatches along from it.
-  const legendColour =
-    scope === "all" && tracks.length > 1 ? palette.mutedForeground : track.meta.color || palette.accent;
-  const canCombine = tracks.length > 1;
-  /** Several tracks at once, which is a different shape entirely. */
-  const combined = scope === "all" && tracks.length > 1;
+  const legendColour = track.meta.color || palette.accent;
 
   return (
     // The page itself does not scroll. Everything written — the three numbers,
@@ -309,18 +252,13 @@ export default function ProgressScreen() {
         />
       </View>
 
-      {/* By month or continuous is a choice about the *vertical* grid. The
-          many-track view has one shape — a strip per track — so the control
-          would be two dead buttons. */}
-      {!combined && (
-        <View style={styles.toggle}>
-          <Segmented
-            options={SHAPES}
-            value={byMonth ? "months" : "continuous"}
-            onChange={(shape) => setByMonth(shape === "months")}
-          />
-        </View>
-      )}
+      <View style={styles.toggle}>
+        <Segmented
+          options={SHAPES}
+          value={byMonth ? "months" : "continuous"}
+          onChange={(shape) => setByMonth(shape === "months")}
+        />
+      </View>
 
       <View style={styles.yearRow}>
         <YearStep
@@ -339,33 +277,6 @@ export default function ProgressScreen() {
           palette={palette}
         />
 
-        {/* Whose days these are, parked in the space the year arrows were
-            already leaving empty. Absolutely placed so the year stays centred
-            on the screen rather than being shunted left by a control that has
-            nothing to do with it. With one track there is nothing to combine,
-            so it is not there at all. */}
-        {canCombine && (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ selected: scope === "all" }}
-            accessibilityLabel={
-              scope === "all"
-                ? `Showing every track. Tap to show only ${track.meta.name}.`
-                : `Showing ${track.meta.name}. Tap to show every track.`
-            }
-            onPress={() => setScope(scope === "all" ? "track" : "all")}
-            style={[styles.scope, scope === "all" && { backgroundColor: withAlpha(palette.accent, 0.16) }]}
-          >
-            <Ionicons
-              name={scope === "all" ? "layers" : "flag-outline"}
-              size={13}
-              color={scope === "all" ? palette.accent : palette.subtleForeground}
-            />
-            <Text style={[styles.scopeLabel, scope === "all" && { color: palette.accent }]} numberOfLines={1}>
-              {scope === "all" ? "All tracks" : "This track"}
-            </Text>
-          </Pressable>
-        )}
       </View>
 
       {/* The weekday header belongs to the screen, not to each block: every
@@ -391,17 +302,15 @@ export default function ProgressScreen() {
           of what a consistency grid is for — and a fixed width left to sit at
           `flex-start` is a grid pushed into the left third of the screen with
           nothing beside it. */}
-      {!combined && (
-        <View style={[styles.chart, styles.weekdayHead]}>
-          <View style={styles.weekdayRow}>
-            {labels.map((label, index) => (
-              <Text key={index} style={styles.weekdayLabel} allowFontScaling={false}>
-                {label}
-              </Text>
-            ))}
-          </View>
+      <View style={[styles.chart, styles.weekdayHead]}>
+        <View style={styles.weekdayRow}>
+          {labels.map((label, index) => (
+            <Text key={index} style={styles.weekdayLabel} allowFontScaling={false}>
+              {label}
+            </Text>
+          ))}
         </View>
-      )}
+      </View>
 
       {/* The graph, and the only thing on this screen that scrolls. Pulling it
           down past the top still syncs, the same as every other screen. */}
@@ -415,21 +324,13 @@ export default function ProgressScreen() {
         // Jumped, not animated, and only once per year or shape: this is where
         // the graph *starts*, not somewhere it travels to while you watch.
         onContentSizeChange={() => {
-          // The sideways shape starts at its own top; only the vertical one
-          // opens at the recent end, because in that one the recent end is
-          // the bottom.
-          if (combined || landedOn.current === shapeKey) return;
+          if (landedOn.current === shapeKey) return;
           landedOn.current = shapeKey;
           gridRef.current?.scrollToEnd({ animated: false });
         }}
         style={styles.grid}
         contentContainerStyle={styles.gridContent}
       >
-        {combined ? (
-          <Animated.View key={shapeKey} entering={FadeIn.duration(240)}>
-            <AllTracksYear tracks={tracks} year={year} today={today} weekStartsOn={weekStartsOn} />
-          </Animated.View>
-        ) : (
         <View style={styles.chart}>
         {/* Keyed by shape and year, so changing either is a change you watch
             rather than one you find has happened. Only this one view animates:
@@ -519,9 +420,8 @@ export default function ProgressScreen() {
           ))}
         </Animated.View>
         </View>
-        )}
 
-        {!combined && weeks.length === 0 && (
+        {weeks.length === 0 && (
           <Text style={styles.muted}>Nothing recorded on this track yet.</Text>
         )}
       </Refreshable>
@@ -876,21 +776,6 @@ function makeStyles(palette: Palette) {
       backgroundColor: palette.surfaceMuted,
     },
     legendCell: { width: 12, height: 12, borderRadius: 3 },
-    scope: {
-      position: "absolute",
-      right: 0,
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 4,
-      maxWidth: 104,
-      paddingHorizontal: SPACING.sm,
-      paddingVertical: 5,
-      borderRadius: RADIUS.control,
-      borderWidth: 1,
-      borderColor: palette.cardBorder,
-      backgroundColor: palette.surfaceMuted,
-    },
-    scopeLabel: { color: palette.subtleForeground, ...TYPE.micro, fontWeight: "700", flexShrink: 1 },
     legendGap: { width: SPACING.md },
     legendLabel: { color: palette.subtleForeground, ...TYPE.micro, marginHorizontal: SPACING.xs },
     muted: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },

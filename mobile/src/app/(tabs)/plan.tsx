@@ -18,6 +18,8 @@ import { phaseStats, progressStats, timelineStats } from "@shared/stats";
 import { addPhase, removePhase, setCurrentPhase } from "@shared/trackActions";
 import { formatDayMonthYear } from "@shared/dates";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
+import { useMasterMode } from "../../master/MasterMode";
+import { MasterPlan } from "../../master/MasterPlan";
 import { useUndo } from "../../components/UndoBar";
 import { RADIUS, SPACING, TYPE, type Palette } from "../../theme";
 import { usePalette } from "../../theme/ThemeProvider";
@@ -27,6 +29,12 @@ import { Ring } from "../../components/Ring";
 import { StatTile } from "../../components/StatTile";
 
 export default function PhasesScreen() {
+  // All tracks is the same tab, read-only, with every track folded in.
+  // Returned before anything else so the single-track hooks below do not
+  // run for a track nobody is looking at.
+  const { master } = useMasterMode();
+  if (master) return <MasterPlan />;
+
   const { workspace, track, today, editTrack, restoreWorkspace } = useWorkspace();
   const palette = usePalette();
   const { editing, setEditing } = useEditMode();

@@ -337,9 +337,13 @@ export default function Dashboard() {
             onSwitchTrack={(trackId) => {
               // Picking a track is also how you leave the master view: it is
               // one list, and choosing from it should land you where you
-              // chose rather than beside it.
+              // chose rather than beside it. True of the track already open,
+              // which is why the switcher reports that one too.
               if (settings.masterView) updateSettings({ masterView: false });
-              void switchTrack(trackId);
+              // A switch writes — it runs the track's daily reset — so the
+              // one case that needs no work is skipped here rather than in
+              // the menu, which cannot know that.
+              if (trackId !== workspace.activeTrackId) void switchTrack(trackId);
             }}
             onNewTrack={async () => setCreatingTrack(true)}
             onEditTrack={(fields) => void commitTrack((prev) => updateTrackIdentity(prev, fields), "track identity")}
