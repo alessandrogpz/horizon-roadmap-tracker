@@ -11,7 +11,7 @@ import { hiddenPanelsFor, trackKind, type TrackKind } from "@shared/trackKinds";
 import { PANELS } from "../panels/layout";
 import { trackTotalDays, updateTrackIdentity } from "@shared/trackActions";
 import { dateForDay, dayForDate, formatDateYMD, isDateStr, todayYMD } from "@shared/dates";
-import { currentStreakLength } from "@shared/streak";
+import { restWeekdays, trackStreak } from "@shared/restDays";
 import type { TrackState } from "@shared/types";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, TYPE, withAlpha, type Palette } from "../theme";
@@ -127,7 +127,7 @@ export default function TracksScreen() {
     <Refreshable style={styles.screen} contentContainerStyle={styles.content}>
       {tracks.map((track) => {
         const active = track.meta.id === workspace?.activeTrackId;
-        const streak = currentStreakLength(track.streakHistory ?? [], today);
+        const streak = trackStreak(track, today);
         const colour = track.meta.color || palette.accent;
         const canDelete = tracks.length > 1;
         return (
@@ -204,6 +204,7 @@ export default function TracksScreen() {
                 days={streakCalendar(track, today, weekStartsOn)}
                 colour={colour}
                 start={track.startDate}
+                rest={restWeekdays(track)}
               />
             </Pressable>
           </SwipeRow>
