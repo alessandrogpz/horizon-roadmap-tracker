@@ -241,6 +241,28 @@ export default function TracksScreen() {
     // Scrolling is off while a card is in the hand: the page moving under a
     // drag that is itself vertical would be two answers to one gesture.
     <Refreshable style={styles.screen} contentContainerStyle={styles.content} scrollEnabled={!dragging}>
+      {/* The way to the view that spans all of them, above the list rather
+          than inside it: it is not a track, and a card in the row would make
+          it look like one you could hold and move. Only with more than one —
+          one track's all-tracks view is a worse copy of that track. */}
+      {tracks.length > 1 && (
+        <Animated.View style={chrome} pointerEvents={dragging ? "none" : "auto"}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="All tracks. A read-only view of every track at once."
+            onPress={() => router.push("/master")}
+            style={styles.allTracks}
+          >
+            <Ionicons name="layers-outline" size={18} color={palette.accent} />
+            <View style={styles.text}>
+              <Text style={styles.name}>All tracks</Text>
+              <Text style={styles.muted}>Every track at once · read only</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={palette.subtleForeground} />
+          </Pressable>
+        </Animated.View>
+      )}
+
       <Animated.View ref={listRef} style={[styles.stack, column]}>
         {tracks.map((track, index) => (
           <DraggableTrack
@@ -876,6 +898,17 @@ function makeStyles(palette: Palette) {
       borderWidth: 1,
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
+    },
+    allTracks: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: SPACING.md,
+      padding: SPACING.lg,
+      marginBottom: SPACING.md,
+      borderRadius: RADIUS.card,
+      borderWidth: 1,
+      borderColor: palette.cardBorder,
+      backgroundColor: palette.surfaceMuted,
     },
     /** The cards, as one block the fold can move as a unit. */
     stack: { gap: GAP },

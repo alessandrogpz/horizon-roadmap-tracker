@@ -7,6 +7,19 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.91.0] - 2026-10-01
+
+### Added
+- **All tracks on the phone**, from the row above your track list. The same aggregation the website
+  uses — the numbers, the week, every track's phases on one timeline, the deliverables and the
+  materials — running down one column in the order it would be read, since a phone has one column.
+  The same switches decide which tracks are in it, and the same read-only banner says what it is.
+- The stacked consistency grid is *linked* from that screen rather than redrawn on it: Progress has
+  had an all-tracks mode for several versions, and two copies of the same picture are two things to
+  keep in step.
+- Tapping a phase, or a roadmap, opens the track it belongs to — which is the only way anything in
+  this view gets changed.
+
 ## [0.90.0] - 2026-10-01
 
 ### Added
