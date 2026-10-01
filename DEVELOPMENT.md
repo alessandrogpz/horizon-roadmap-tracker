@@ -68,6 +68,7 @@ The Dexie (IndexedDB) database and Google Drive `database.json` used for daily p
 | What an edit does to a track | `lib/trackActions.ts` (materials, portfolio, phases, identity) and `lib/completions.ts` (checkboxes, streak) |
 | Pure workspace queries | `lib/selectors.ts` — `orderedTracks` is what any *list* of tracks renders from; `visibleTracks` only when the order cannot matter |
 | The order of the track list | `TrackMeta.order` + `reorderTracks` in `lib/trackActions.ts`. Synced, unlike the panel order: written onto every visible track at once so the list is ordered throughout or not at all |
+| Where the community lives | `lib/community.ts` — one invite link, used by the landing page, both footers and both Settings screens; an empty override hides every link to it |
 | The colours a track can wear | `lib/trackColors.ts` — the list, and why white and black are not on it |
 | Days a track takes off, and what they do to a streak | `lib/restDays.ts` — the flag, the fallback for data that predates it, and the bridging rule |
 | A track's colour at the grid's four strengths | `lib/colors.ts` (`shadeOf`, `withAlpha`, `lighten`) |
