@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Activity, Check, ChevronLeft, ChevronRight, Flame, Layers, X } from "lucide-react";
 import type { CompletedItem, FocusType, TrackState, WeekDay } from "@/lib/types";
 import { parseYMD, todayYMD } from "@/lib/dates";
-import { isRestDate, restWeekdays, streakWithRest } from "@/lib/restDays";
+import { marksRestDay, restWeekdays, streakWithRest } from "@/lib/restDays";
 import { monthCalendar, yearCalendar, yearsWithHistory } from "@/lib/stats";
 import { useAppSettings } from "@/lib/useAppSettings";
 import AllTracksYear from "@/components/AllTracksYear";
@@ -144,21 +144,17 @@ export default function StreakGraph({
           })
           .join("\n• ")}`
       : "";
-    // A day the week has off, which passed with nothing on it. Below `today`
-    // in precedence, because a ring and a dot can be drawn together and the
-    // ring is the one that moves every day.
-    const resting = day.count === 0 && isRestDate(day.date, rest);
+    // A day the week has off, which *passed* with nothing on it. Below
+    // `today` in precedence, because a ring and a dot can be drawn together
+    // and the ring is the one that moves every day.
+    const resting = day.count === 0 && marksRestDay(day.date, rest, today, startDate);
     return {
       id: day.date,
       level: levelFor(day.count),
-      mark:
-        day.date === startDate
-          ? "start"
-          : day.date === today
-            ? "today"
-            : resting
-              ? "rest"
-              : undefined,
+      mark: day.date === startDate ? "start" : day.date === today ? "today" : undefined,
+      // Alongside the mark rather than instead of it: today can be a day off,
+      // and when it is, the square wants the ring and the dot.
+      rest: resting,
       title:
         `${day.date}: ${day.count} update${day.count !== 1 ? "s" : ""}` +
         (day.date === startDate ? " — the day this track started" : "") +

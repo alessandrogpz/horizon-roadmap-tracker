@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import type { TrackState } from "@/lib/types";
 import { formatDayMonthYear, parseYMD, todayYMD } from "@/lib/dates";
-import { isRestDate } from "@/lib/restDays";
+import { marksRestDay } from "@/lib/restDays";
 import { yearsWithHistory } from "@/lib/stats";
 import {
   masterCalendar,
@@ -223,7 +223,13 @@ export function MasterConsistencyPanel({ tracks }: { tracks: TrackState[] }) {
   const [year, setYear] = useState(() => parseYMD(today).getFullYear());
 
   const rest = useMemo(() => masterRestWeekdays(tracks), [tracks]);
-  const isRest = useMemo(() => (date: string) => isRestDate(date, rest), [rest]);
+  // The earliest day any selected track existed for: before it, there was
+  // nothing to take off.
+  const earliest = useMemo(() => masterStart(tracks), [tracks]);
+  const isRest = useMemo(
+    () => (date: string) => marksRestDay(date, rest, today, earliest),
+    [earliest, rest, today]
+  );
   const days = useMemo(() => masterCalendar(tracks, year, today, settings.weekStartsOn), [settings.weekStartsOn, today, tracks, year]);
   const months = useMemo(() => masterMonths(tracks, year, today, settings.weekStartsOn), [settings.weekStartsOn, today, tracks, year]);
   const stats = useMemo(() => masterStreak(tracks, today), [today, tracks]);
