@@ -9,7 +9,7 @@
 import { useMemo, useState } from "react";
 import { StyleSheet, View, type LayoutChangeEvent } from "react-native";
 import type { StreakDay } from "@shared/stats";
-import { marksRestDay } from "@shared/restDays";
+import { marksRestDay, type RestOn } from "@shared/restDays";
 import { shadeOf, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
@@ -40,9 +40,10 @@ export function TrackHeatmap({
   /** What day it is, so a day off that has not happened yet is not marked as
    *  one. Without it nothing is marked. */
   today?: string;
-  /** Weekday names the track has off. An empty day on one of them that has
-   *  passed carries a dot rather than reading as a day missed. */
-  rest?: ReadonlySet<string>;
+  /** The track's days off, by date — the week it kept then, not the one it
+   *  keeps now. An empty day on one of them that has passed carries a dot
+   *  rather than reading as a day missed. */
+  rest?: RestOn;
 }) {
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);

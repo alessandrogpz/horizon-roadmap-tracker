@@ -19,7 +19,7 @@ import type { StreakDay } from "@shared/stats";
 import type { CompletedItem } from "@shared/types";
 import { monthCalendar, streakStats, yearCalendar, yearsWithHistory } from "@shared/stats";
 import { completedItemTitle, rebuildStreakHistory } from "@shared/streak";
-import { marksRestDay, restWeekdays, streakWithRest } from "@shared/restDays";
+import { anyRestDays, marksRestDay, restScheduleOf, streakWithRest } from "@shared/restDays";
 import { formatDayMonthYear, parseYMD } from "@shared/dates";
 import { getSettings } from "@shared/settings";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
@@ -100,8 +100,10 @@ export default function ProgressScreen() {
     return (_date: string) => own;
   }, [palette.accent, track]);
 
-  /** The weekdays this track has off. */
-  const restDays = useMemo(() => (track ? restWeekdays(track) : new Set<string>()), [track]);
+  /** This track's days off, by date — the week it kept then, not the one it
+   *  keeps now. */
+  const restDays = useMemo(() => restScheduleOf(track), [track]);
+  const hasRestDays = useMemo(() => anyRestDays(track), [track]);
 
   /** The first day there was anything to miss. */
   const firstDay = track?.startDate ?? "";
@@ -452,7 +454,7 @@ export default function ProgressScreen() {
             </>
           )}
 
-          {restDays.size > 0 && (
+          {hasRestDays && (
             <>
               <View style={styles.legendGap} />
               <View style={[styles.legendCell, styles.legendRest, { backgroundColor: palette.surfaceMuted }]}>

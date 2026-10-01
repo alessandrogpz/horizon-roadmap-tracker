@@ -207,16 +207,31 @@ Two things to know before changing any of it:
    with that fallback, so turning `free` into a working day survives a reload.
    Never guess from a label: a type called "Recovery" is a working day until
    somebody says otherwise.
-2. **A track stores the week it has now, not the week it had in March.** Moving
-   Sunday from Free to Study re-reads every past Sunday as a working day and
-   the streak changes. A dated history of the schedule would fix it, at the
-   cost of a field on every track, a merge rule and a migration — and when
-   someone reshapes their week, the new shape is usually the one they would
-   rather be judged by.
+2. **The week is dated, so changing it never rewrites the past.** A schedule
+   is a decision about what comes next, not a claim about what already
+   happened: turn Thursday from a day off into a working day and every
+   Thursday already taken off stays taken off — dot, streak and all — while
+   Thursdays from today onward are working days. `TrackState.restDaysFrom` is
+   the log, `setWeeklyRhythm` is the only thing that writes it, and
+   `restScheduleOf` turns it into the `RestOn` resolver everything else asks.
 
-Views that combine several tracks (the phone's all-tracks grid) use the days
-*every* track in scope has off — a day one of them was supposed to work on is
-not a day off. `streakStats` takes that set as an optional third argument.
+   Three rules about that log. It only grows when the *set of days off*
+   actually changes, so renaming or recolouring a focus type leaves it alone.
+   The first entry is seeded at the track's start with the set as it was
+   before the first recorded change — a track written before the log existed
+   still has a past that has to keep meaning what it meant, and "it has always
+   been what it is now" is the only answer available. And it is sorted on
+   read, because a merge between two devices can interleave entries.
+
+   **Anything that writes `weekSchedule` must go through `setWeeklyRhythm`.**
+   Writing it in place skips the dating, and the damage — a silently rewritten
+   past — does not show up until somebody looks at last month.
+
+Views that combine several tracks use the days *every* track in scope had off
+on that date (`masterRestOn`) — a day one of them was supposed to work on is
+not a day off, and two tracks can agree about Sunday in March and disagree
+about it in September. `streakStats` takes that resolver as an optional third
+argument.
 
 ## Type on the phone
 

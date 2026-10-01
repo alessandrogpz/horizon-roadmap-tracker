@@ -7,6 +7,36 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.95.0] - 2026-10-01
+
+### Fixed
+- **Changing the week no longer rewrites the past.** Turning Thursday from a day off into a working
+  day used to erase every Thursday you had already taken off — the dots went, and the streak they
+  were bridging went with them. A schedule is a decision about what comes next, not a claim about
+  what already happened.
+  - The week is **dated** now. Each track keeps a short log of when its days off changed
+    (`TrackState.restDaysFrom`), and every grid, streak and key asks what the week was *on that
+    day* rather than what it is today. Past days off keep their mark; days from the change onward
+    follow the new week. The same in reverse: making a day free from today does not sprinkle dots
+    through last spring.
+  - The log only grows when the set of days off actually changes, so renaming or recolouring a
+    focus type costs nothing. A track whose week never moves carries no log at all, and one written
+    before this reads as "it has always been what it is now" — which is what it already assumed.
+  - Views that combine several tracks ask the same question per date: two tracks can agree about
+    Sunday in March and disagree about it in September.
+  - Web and phone, every grid.
+
+### Changed
+- **The day editor now routes its changes through `setWeeklyRhythm`** like the rhythm editor does.
+  It wrote `weekSchedule` in place, which would have skipped the dating — and a silently rewritten
+  past is not the kind of bug that shows up until somebody looks at last month.
+
+### Notes
+- Retrofitting has one honest edge: the first entry a track records has to assume the week it has
+  now is the week it always had, because nothing recorded when it last changed. That is the answer
+  that *keeps* your existing marks, which is the point — but a change you made before this shipped
+  is dated to the track's start rather than to the day you made it.
+
 ## [0.94.0] - 2026-10-01
 
 ### Changed
