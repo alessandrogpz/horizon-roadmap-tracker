@@ -7,6 +7,15 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.87.1] - 2026-10-01
+
+### Changed
+- **The landing page's weekly plan now shows the "+ New Rotation" button**, drawn exactly as the app
+  draws it — same dashed outline, same size, same words. Without it the two rotation pills read as a
+  fixed pair rather than a list you add to, which understates the one feature that section is about.
+  Still a span rather than a button: the panel is a photograph, and a dotted outline that does
+  nothing when pressed is a worse lie than one that is plainly part of the picture.
+
 ## [0.87.0] - 2026-10-01
 
 ### Added
