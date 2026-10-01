@@ -37,6 +37,8 @@ import { DAYS_SHORT, formatDateYMD, formatDayMonthYear, getWeekNum, parseYMD } f
 import { computeRotationItemsForDay, isRotationItem } from "@shared/rotation";
 import { focusOfDay } from "@shared/gym";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
+import { useMasterMode } from "../../master/MasterMode";
+import { MasterToday } from "../../master/MasterToday";
 import { useUndo } from "../../components/UndoBar";
 import { tap } from "../../feedback/haptics";
 import { RADIUS, SPACING, TYPE, type Palette } from "../../theme";
@@ -102,6 +104,12 @@ function rowsFor(track: TrackState, dateStr: string): { focus: Row[]; revision: 
 }
 
 export default function TodayScreen() {
+  // All tracks is the same tab, read-only, with every track folded in.
+  // Returned before anything else so the single-track hooks below do not
+  // run for a track nobody is looking at.
+  const { master } = useMasterMode();
+  if (master) return <MasterToday />;
+
   const { workspace, track, today, loading, toggleItem, editTrack, restoreWorkspace } = useWorkspace();
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
