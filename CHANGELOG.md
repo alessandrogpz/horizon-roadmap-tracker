@@ -7,6 +7,24 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.93.0] - 2026-10-01
+
+### Changed
+- **A track's consistency panel now shows that track and nothing else.** The "This track / All
+  tracks" toggle inside it is gone. There were three ways to look at the same days and two of them
+  were in the wrong place: a view about every track is a strange thing to find behind a switch
+  inside one track's panel.
+- **Both ways of seeing every track now live together**, in the all-tracks view where that question
+  belongs, as one toggle:
+  - **One per track** (the default) — a strip each, on the same calendar columns, so the same
+    Tuesday is the same column on every row and one track's summer reads against another's. It
+    answers "how is each of them going".
+  - **All in one** — every day in one square, divided into a band per track that did something on
+    it. It answers the other question, "did I do anything at all that day", which rows make you
+    scan a column for.
+  - By month / continuous applies to the combined grid only; a row per track is always a ribbon,
+    which is what makes the rows comparable. Switching a track off updates both.
+
 ## [0.92.2] - 2026-10-01
 
 ### Fixed
