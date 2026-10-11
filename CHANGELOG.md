@@ -7,6 +7,20 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.98.0] - 2026-10-11
+
+### Changed
+- **A rotation waiting for a later phase no longer poses as this week's topic.** The pills above the
+  weekly plan listed every rotation on the track and showed each one's current item — but a rotation
+  scoped to phase 3 has a "current" item only in the arithmetic sense, since the cycle turns with
+  the week whether or not anything reads it. Nothing was putting that item on a day. Split a ten-week
+  cycle into one rotation per phase and the header would claim four topics were running at once,
+  which is the opposite of what scoping is for. A rotation that is not running is now drawn quietly
+  and names the phase it is waiting for instead of a topic, and stays clickable, because its pill is
+  the only way into it.
+- On the phone, the rhythm screen's rotation list says which phase each rotation belongs to, so a
+  list of them stops reading as a list of things all running at once.
+
 ## [0.97.0] - 2026-10-11
 
 ### Changed

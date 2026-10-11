@@ -5,7 +5,7 @@ import { CalendarDays } from "lucide-react";
 import type { TrackState, WeekDay } from "@/lib/types";
 import { getDateForDayName, getWeekNum } from "@/lib/dates";
 import { DEFAULT_WEEK_SCHEDULE, DEFAULT_FOCUS_TYPES } from "@/lib/constants";
-import { computeRotationItemsForDay, isRotationItem } from "@/lib/rotation";
+import { computeRotationItemsForDay, isRotationItem, runsInPhase } from "@/lib/rotation";
 import { isItemCompleted, setItemCompletion, type ItemKind } from "@/lib/completions";
 
 interface WeeklyPlanProps {
@@ -75,26 +75,44 @@ export default function WeeklyPlan({
             </div>
           </div>
 
-          {/* Bottom row: one pill per rotation, plus a button to add another */}
+          {/* Bottom row: one pill per rotation, plus a button to add another.
+
+              A rotation belonging to a later phase is drawn quietly and names
+              the phase it is waiting for instead of a topic. It does have a
+              "current" item in the arithmetic sense — the cycle turns with the
+              week whether or not anything reads it — but nothing is putting
+              that item on a day, and a pill that reads like this week's topic
+              when it is not is worse than no pill at all. It stays clickable,
+              because the only way into a rotation is through its pill. */}
           <div className="flex flex-wrap items-center gap-2">
             {rotations.map((rotation) => {
+              const running = runsInPhase(rotation, data.currentPhase);
               const len = rotation.items.length;
               const idx = len > 0 ? (((viewedWeekNum - rotation.startWeek) % len) + len) % len : 0;
               const current = data.isSynced ? (rotation.items[idx]?.title || "") : "(Placeholder)";
+              const phaseTitle = (data.phases || []).find((p) => p.id === rotation.phase)?.title;
               return (
                 <div
                   key={rotation.id}
                   onClick={() => { if (data.isSynced) onRotationClick(rotation.id); }}
-                  className={`inline-flex items-center gap-2 bg-accent/[0.08] border border-dashed border-accent/30 px-3 py-1.5 rounded-md transition-all duration-200 whitespace-nowrap ${
-                    data.isSynced ? "cursor-pointer hover:bg-accent/15 hover:border-accent/50" : "cursor-default"
-                  }`}
-                  title={data.isSynced ? "View full rotation cycle" : "Connect Google Drive to unlock"}
+                  className={`inline-flex items-center gap-2 border border-dashed px-3 py-1.5 rounded-md transition-all duration-200 whitespace-nowrap ${
+                    running ? "bg-accent/[0.08] border-accent/30" : "bg-surface-muted border-card-border opacity-70"
+                  } ${data.isSynced ? "cursor-pointer hover:bg-accent/15 hover:border-accent/50" : "cursor-default"}`}
+                  title={
+                    !data.isSynced
+                      ? "Connect Google Drive to unlock"
+                      : running
+                        ? "View full rotation cycle"
+                        : `Runs during ${phaseTitle ? `phase ${rotation.phase} — ${phaseTitle}` : `phase ${rotation.phase}`}`
+                  }
                 >
                   <span className="text-[0.7rem] text-muted-foreground uppercase tracking-[0.05em] font-semibold">
                     {rotation.label}:
                   </span>
-                  <span className="text-[0.85rem] text-accent font-bold font-mono">
-                    {current}
+                  <span
+                    className={`text-[0.85rem] font-bold font-mono ${running ? "text-accent" : "text-subtle-foreground"}`}
+                  >
+                    {running ? current : `Phase ${rotation.phase}`}
                   </span>
                 </div>
               );
