@@ -329,7 +329,7 @@ export function masterWeek(tracks: TrackState[], weekOffset: number): MasterWeek
       const day = (track.weekSchedule ?? []).find((entry) => entry.name === name);
       const type = day ? track.focusTypes?.[day.type] : undefined;
       const weekNum = track.startDate ? getWeekNum(track.startDate, parseYMD(date)) : 1;
-      const { revisions, focus } = computeRotationItemsForDay(track.rotations ?? [], weekNum, name);
+      const { revisions, focus } = computeRotationItemsForDay(track.rotations ?? [], weekNum, name, track.currentPhase);
       const byId = new Map((track.rotations ?? []).map((rotation) => [`rotation_${rotation.id}`, rotation.label]));
       return {
         track: track.meta,

@@ -189,6 +189,28 @@ where that question belongs.
 one document at a time, because six roadmaps printed end to end is a document
 nobody reads to the bottom of.
 
+## Rotations, and the phase they belong to
+
+A rotation's current item is `(weekNumber - startWeek) mod itemCount`, so it
+turns once a week and wraps. `RotationDef.phase` scopes it: absent means every
+phase (what every rotation did before, and the right default for a standing
+habit), a phase id means it only runs while the track is on that phase.
+
+Scoping exists because a cycle and a curriculum are different shapes. Ten
+topics on a twenty-four week track wrap at week ten, so phase three brings
+back what phase one already covered. Four short rotations, one per phase, say
+"work through these once and be done" — and without scoping all four would run
+at once, which is the problem, not the fix.
+
+**Every caller of `computeRotationItemsForDay` must pass the track's
+`currentPhase`.** The parameter is optional so that a caller with no phase to
+hand gets the old behaviour rather than silently nothing — which also means
+forgetting it is invisible. `grep -rn "computeRotationItemsForDay(" lib
+components mobile/src` should show a `currentPhase` argument on every call.
+
+Scoping decides *which* rotation runs, never how fast it turns: a three-item
+rotation across a six-week phase still comes round twice.
+
 ## Days a track takes off
 
 A focus type can be marked as a day off (`FocusType.restDay`), from the moon

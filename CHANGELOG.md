@@ -7,6 +7,20 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.96.0] - 2026-10-11
+
+### Added
+- **A rotation can belong to a phase.** Pick one under "Runs during" in the rotation editor, on the
+  website or the phone, and it only appears while the track is on that phase. Leave it on *Every
+  phase* and nothing changes — which is what every rotation written before this does.
+- The reason: a cycle and a curriculum are different shapes. Ten algorithm topics on a twenty-four
+  week track wrap at week ten, so phase three brings back what phase one already covered, and the
+  list never finishes. Four short rotations, one per phase, say "work through these once and be
+  done by the end" — and without scoping all four would run at once, which is the opposite of the
+  problem being solved.
+- Scoping decides *which* rotation runs, not how fast it turns: a three-item rotation across a
+  six-week phase still comes round twice.
+
 ## [0.95.1] - 2026-10-11
 
 ### Fixed

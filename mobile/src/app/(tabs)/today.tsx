@@ -78,7 +78,7 @@ function rowsFor(track: TrackState, dateStr: string): { focus: Row[]; revision: 
 
   const rotations = track.rotations ?? [];
   const weekNum = track.startDate ? getWeekNum(track.startDate, parseYMD(dateStr)) : 1;
-  const computed = rotations.length ? computeRotationItemsForDay(rotations, weekNum, dayKey) : { focus: [], revisions: [] };
+  const computed = rotations.length ? computeRotationItemsForDay(rotations, weekNum, dayKey, track.currentPhase) : { focus: [], revisions: [] };
 
   const focus = rotations.length ? [...computed.focus, ...storedFocus.filter((it) => !isRotationItem(it))] : storedFocus;
   const revision = rotations.length
