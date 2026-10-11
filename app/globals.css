@@ -651,48 +651,116 @@ select option:disabled {
 /* ===========================================================================
    Weekly plan grid
    =========================================================================== */
+/* Seven days, laid out for the room the panel actually has.
+
+   They used to be seven `1fr` columns at anything above phone width, which
+   divides whatever the panel has by seven however little that is. The panel
+   is a dashboard column, not the window: on a 1440-wide screen it is about
+   700 points, and on a 1024 one about 520 — so a day got 75, or 62. That is
+   narrower than its own focus-type tag, which overflowed and was clipped at
+   *both* ends ("ATTERN STUD"), and it left 45 points for a title, which broke
+   "Hash Map Patterns" over three lines. The week was unreadable on the very
+   screens a viewport query would have called roomy.
+
+   So the week asks the panel, not the window, and answers in three shapes:
+   stacked, four-and-three, or all seven across. */
+.week-grid-scroll {
+  /* The question is how wide *this* is. */
+  container-type: inline-size;
+  /* A safety valve, not the plan: no tier below overflows, and a week that
+     somehow ran out of room should not then scroll the page behind it. */
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+/* Four across and three below. A week in two rows is a calendar, which is a
+   shape people already read, and at the width of an ordinary dashboard column
+   it gives a day about 165 points — enough for the tag, and for a title on
+   one line. Four of them need 520 points to stay above the floor, which is
+   where the tier below starts. */
 .week-grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.4rem;
 }
 
-@media (max-width: 767px) {
-  .week-grid-scroll {
-    overflow-x: auto;
-    margin: 0 -0.5rem;
-    padding: 0 0.5rem;
-  }
+/* Enough room to put the whole week in a row. 124 points is the floor a day
+   needs before its tag starts truncating, and seven of those plus the gaps is
+   just under 900. */
+@container (min-width: 900px) {
   .week-grid {
-    grid-template-columns: repeat(7, minmax(140px, 1fr));
+    grid-template-columns: repeat(7, minmax(0, 1fr));
   }
 }
 
-/* ===========================================================================
-   Motion
-   =========================================================================== */
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-.animate-spin {
-  animation: spin 1s linear infinite;
-  display: inline-block;
-}
+/* A phone is not a narrow desktop.
 
-/* Panel entrance — a subtle staggered fade-up on first mount. Applied to the
-   inner content of SortablePanel (never the drag-transform node) so it can't
-   fight dnd-kit's live transform during a drag. */
-@keyframes panel-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.panel-in {
-  /* `backwards` (not `both`): apply the start frame during the stagger delay,
-     but retain NO transform after the animation ends. A lingering transform
-     would turn the panel into the containing block for its position:fixed
-     descendants (e.g. the notes drawer), breaking their layout. */
-  animation: panel-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+   Columns on a 375-wide screen are two-and-a-bit days of a seven-day week, so
+   reading it means dragging the week past the window while holding the rest
+   in your head. Narrow enough, and the week turns the other way up: one day
+   per row, each the full width of the panel, read top to bottom with the
+   scroll the page already has.
+
+   Everything that was cramped stops being cramped for the same reason — a row
+   has about 300 points instead of 62 — so the day, its date and what the day
+   is for sit on one line across the top instead of stacking three deep, the
+   tag fits, and a title lands on one line. The tap target grows rather than
+   shrinks, which was the complaint that started this. */
+@container (max-width: 519px) {
+  .week-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* 160 points of mostly-empty card per day is several screens of nothing. */
+  .day-card {
+    min-height: 0;
+  }
+
+  .day-card-head {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  /* Day and date keep each other company on the left; the tag goes right. */
+  .day-card-when {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: 0.4rem;
+    text-align: left;
+  }
+
+  .day-card-date {
+    margin-top: 0;
+  }
+
+  .day-card-tag {
+    justify-content: flex-end;
+  }
+
+  .day-card-label {
+    font-size: 0.6rem;
+  }
+
+  /* Legible at arm's length, and tall enough to hit with a thumb. */
+  .day-item-title {
+    font-size: 0.8rem;
+    -webkit-line-clamp: 3;
+  }
+
+  .day-item-row {
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
+  }
+
+  /* Left-aligned and no taller than its line, in a list that is read down. */
+  .day-card-empty {
+    flex: none;
+    justify-content: flex-start;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
