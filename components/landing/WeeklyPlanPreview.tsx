@@ -11,8 +11,9 @@ import { CalendarDays, Check } from "lucide-react";
  *
  * The day cards mirror `components/WeeklyPlan.tsx`'s DayCard — focus tag, the
  * two lists, today's highlight, dimmed future days — and it reuses the app's
- * own `.week-grid` classes, so it scrolls sideways on a phone exactly like the
- * real panel does.
+ * own `.week-grid` classes, so it reshapes itself for the room it has exactly
+ * like the real panel does: seven across, four-and-three, or one day per row
+ * on a phone.
  *
  * A picture of the panel, not a copy of it. The boxes were briefly real, and
  * a week plan whose checkboxes tick and then forget is the clearest way on
@@ -185,10 +186,10 @@ function ItemList({
       </span>
       <div className="mt-[0.15rem] flex flex-col gap-[0.15rem]">
         {items.map((item) => (
-          <div key={item.title} className="flex items-start gap-[0.3rem]">
+          <div key={item.title} className="day-item-row flex items-start gap-[0.3rem]">
             <Box done={item.done} />
             <span
-              className={`text-[0.72rem] leading-[1.3] ${
+              className={`day-item-title text-[0.72rem] leading-[1.3] ${
                 item.done
                   ? "text-subtle-foreground line-through"
                   : isToday
@@ -247,7 +248,7 @@ export default function WeeklyPlanPreview() {
           </div>
         </div>
 
-        {/* The seven day cards — same grid the app uses, so it scrolls on a phone */}
+        {/* The seven day cards — the app's own grid, so they stack on a phone */}
         <div className="week-grid-scroll">
           <div className="week-grid">
             {DAYS.map((day) => {
@@ -256,32 +257,34 @@ export default function WeeklyPlanPreview() {
               return (
                 <div
                   key={day.name}
-                  className={`flex min-h-[160px] flex-col gap-[0.35rem] overflow-hidden rounded-lg px-2 py-[0.6rem] ${
+                  className={`day-card flex min-h-[160px] flex-col gap-[0.35rem] overflow-hidden rounded-lg px-2 py-[0.6rem] ${
                     isToday
                       ? "border border-accent bg-accent/[0.06] shadow-[0_0_12px_rgba(14,165,233,0.15)]"
                       : "border border-card-border bg-input-bg"
                   } ${day.state === "future" ? "opacity-50" : ""}`}
                 >
-                  <div className="border-b border-card-border pb-1 text-center">
-                    <span
-                      className={`text-[0.7rem] uppercase tracking-[0.05em] ${
-                        isToday ? "font-bold text-foreground" : "font-semibold text-muted-foreground"
-                      }`}
-                    >
-                      {day.name}
-                    </span>
-                  </div>
+                  <div className="day-card-head flex flex-col gap-[0.3rem] border-b border-card-border pb-1">
+                    <div className="day-card-when text-center">
+                      <span
+                        className={`text-[0.7rem] uppercase tracking-[0.05em] ${
+                          isToday ? "font-bold text-foreground" : "font-semibold text-muted-foreground"
+                        }`}
+                      >
+                        {day.name}
+                      </span>
+                    </div>
 
-                  <div className="mb-[0.15rem] flex justify-center">
-                    <span
-                      className="whitespace-nowrap rounded-[3px] px-1.5 py-px text-[0.55rem] font-semibold uppercase tracking-[0.03em]"
-                      style={{
-                        color: day.color,
-                        background: `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.2)`,
-                      }}
-                    >
-                      {day.label}
-                    </span>
+                    <div className="day-card-tag flex min-w-0 justify-center">
+                      <span
+                        className="day-card-label max-w-full truncate rounded-[3px] px-1.5 py-px text-[0.55rem] font-semibold uppercase tracking-[0.03em]"
+                        style={{
+                          color: day.color,
+                          background: `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.2)`,
+                        }}
+                      >
+                        {day.label}
+                      </span>
+                    </div>
                   </div>
 
                   {day.lists.map((list) => (
