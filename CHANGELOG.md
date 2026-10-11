@@ -7,6 +7,18 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.95.1] - 2026-10-11
+
+### Fixed
+- **The weekly plan's tick boxes were too small to hit.** They were drawn at 18 points and then
+  scaled to 0.8 — and a transform shrinks the hit area along with the drawing, so the real target
+  was about fourteen points square. That is under half what a thumb needs and fiddly even with a
+  mouse. The box is drawn at its full size again, and the whole row is now the target: the title
+  beside it toggles the item too, which is where the eye goes anyway. A row is at least 27 points
+  tall, past the 24 the guidelines ask for, without widening the column.
+- The row swallows its own click, so ticking something off no longer risks opening the day editor
+  behind it.
+
 ## [0.95.0] - 2026-10-01
 
 ### Fixed
