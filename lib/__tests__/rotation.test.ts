@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeRotationItem, computeRotationItemsForDay, isRotationItem, rotationItemId, rotationsInPhase } from "../rotation";
+import { computeRotationItem, computeRotationItemsForDay, isRotationItem, rotationItemId, rotationsInPhase, runsInPhase } from "../rotation";
 import { DSA_PATTERN_WEEKS } from "../constants";
 import type { RotationDef } from "../types";
 
@@ -129,5 +129,38 @@ describe("rotations scoped to a phase", () => {
 
   it("leaves rotations written before scoping exactly as they were", () => {
     expect(computeRotationItemsForDay([readingRotation], 1, "Tue", 3).focus).toHaveLength(1);
+  });
+});
+
+describe("runsInPhase", () => {
+  const scoped = (phase?: number): RotationDef => ({
+    id: "r1",
+    label: "Weekly Algorithm",
+    items: [{ title: "Hash Map Patterns" }],
+    daysOfWeek: ["Tue"],
+    target: "revision",
+    startWeek: 1,
+    ...(phase === undefined ? {} : { phase }),
+  });
+
+  it("runs an unscoped rotation in any phase", () => {
+    expect(runsInPhase(scoped(), 1)).toBe(true);
+    expect(runsInPhase(scoped(), 4)).toBe(true);
+  });
+
+  it("runs a scoped rotation only in its own phase", () => {
+    expect(runsInPhase(scoped(2), 2)).toBe(true);
+    expect(runsInPhase(scoped(2), 1)).toBe(false);
+  });
+
+  it("runs everything when there is no phase to compare against", () => {
+    expect(runsInPhase(scoped(2), undefined)).toBe(true);
+  });
+
+  it("agrees with rotationsInPhase", () => {
+    const list = [scoped(), scoped(1), scoped(2)];
+    for (const phase of [1, 2, 3]) {
+      expect(rotationsInPhase(list, phase)).toEqual(list.filter((r) => runsInPhase(r, phase)));
+    }
   });
 });
