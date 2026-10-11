@@ -171,7 +171,7 @@ interface DayCardProps {
  * ticking something off is not a request to open anything.
  */
 const ITEM_ROW =
-  "-mx-1 flex cursor-pointer items-start gap-[0.4rem] rounded px-1 py-[0.25rem] transition-colors hover:bg-surface-hover";
+  "day-item-row -mx-1 flex cursor-pointer items-start gap-[0.4rem] rounded px-1 py-[0.25rem] transition-colors hover:bg-surface-hover";
 
 function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onDayClick, applyChange }: DayCardProps) {
   const isCurrentWeek = weekOffset === 0;
@@ -232,30 +232,38 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
   return (
     <div
       onClick={() => onDayClick(dayItem)}
-      className={`flex flex-col gap-[0.35rem] px-2 py-[0.6rem] rounded-lg cursor-pointer transition-all duration-200 min-h-[160px] overflow-hidden ${
+      className={`day-card flex flex-col gap-[0.35rem] px-2 py-[0.6rem] rounded-lg cursor-pointer transition-all duration-200 min-h-[160px] overflow-hidden ${
         isToday
           ? "bg-accent/[0.06] border border-accent shadow-[0_0_12px_rgba(14,165,233,0.15)]"
           : "bg-input-bg border border-card-border"
       } ${isFuture ? "opacity-50" : ""}`}
     >
-      {/* Day name + date */}
-      <div className="text-center pb-1 border-b border-card-border">
-        <span className={`text-[0.7rem] uppercase tracking-[0.05em] ${isToday ? "font-bold text-foreground" : "font-semibold text-muted-foreground"}`}>
-          {dayItem.name}
-        </span>
-        <div className="text-[0.55rem] text-subtle-foreground mt-px">
-          {data.isSynced ? dayDateStr.slice(5) : "MM-DD"}
+      {/* Which day this is, and what it is for.
+          Stacked and centred while a day is a column; one line across the top
+          of the row once a day is full-width, which is how a phone reads the
+          week. */}
+      <div className="day-card-head flex flex-col gap-[0.3rem] pb-1 border-b border-card-border">
+        <div className="day-card-when text-center">
+          <span className={`text-[0.7rem] uppercase tracking-[0.05em] ${isToday ? "font-bold text-foreground" : "font-semibold text-muted-foreground"}`}>
+            {dayItem.name}
+          </span>
+          <div className="day-card-date text-[0.55rem] text-subtle-foreground mt-px">
+            {data.isSynced ? dayDateStr.slice(5) : "MM-DD"}
+          </div>
         </div>
-      </div>
 
-      {/* Focus type tag */}
-      <div className="flex justify-center mb-[0.15rem]">
-        <span
-          className="text-[0.55rem] font-semibold px-1.5 py-px rounded-[3px] uppercase tracking-[0.03em] whitespace-nowrap"
-          style={data.isSynced ? { color: tag.text, background: tag.bg } : { color: "#71717a", background: "rgba(113, 113, 122, 0.12)" }}
-        >
-          {data.isSynced ? dayItem.label : "UN-ASSIGNED"}
-        </span>
+        <div className="day-card-tag flex min-w-0 justify-center">
+          {/* Truncates rather than overflowing. Centred and wider than its
+              card, it was clipped at both ends — "Pattern Study" arrived as
+              "ATTERN STUD", which reads as a glitch rather than a long word. */}
+          <span
+            title={data.isSynced ? dayItem.label : undefined}
+            className="day-card-label max-w-full truncate text-[0.55rem] font-semibold px-1.5 py-px rounded-[3px] uppercase tracking-[0.03em]"
+            style={data.isSynced ? { color: tag.text, background: tag.bg } : { color: "#71717a", background: "rgba(113, 113, 122, 0.12)" }}
+          >
+            {data.isSynced ? dayItem.label : "UN-ASSIGNED"}
+          </span>
+        </div>
       </div>
 
       {/* Revision section */}
@@ -278,7 +286,10 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
                       handleToggleItem("revision", { id: item.id, title: item.title, description: item.description }, e.target.checked)
                     }
                   />
-                  <span className={`text-[0.72rem] leading-[1.3] ${completed ? "text-subtle-foreground line-through" : isToday ? "text-foreground" : "text-muted-foreground"}`}>
+                  <span
+                    title={item.title}
+                    className={`day-item-title min-w-0 line-clamp-2 text-[0.72rem] leading-[1.3] ${completed ? "text-subtle-foreground line-through" : isToday ? "text-foreground" : "text-muted-foreground"}`}
+                  >
                     {item.title}
                   </span>
                 </label>
@@ -306,7 +317,10 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
                     onClick={(e: React.MouseEvent) => e.stopPropagation()}
                     onChange={(e) => handleToggleItem("focus", { id: task.id, title: task.title }, e.target.checked)}
                   />
-                  <span className={`text-[0.72rem] leading-[1.3] ${completed ? "text-subtle-foreground line-through" : isToday ? "text-foreground" : "text-muted-foreground"}`}>
+                  <span
+                    title={task.title}
+                    className={`day-item-title min-w-0 line-clamp-2 text-[0.72rem] leading-[1.3] ${completed ? "text-subtle-foreground line-through" : isToday ? "text-foreground" : "text-muted-foreground"}`}
+                  >
                     {task.title}
                   </span>
                 </label>
@@ -318,7 +332,7 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
 
       {/* Empty state */}
       {revisionItems.length === 0 && focusTasks.length === 0 && (
-        <div className="flex-1 flex items-center justify-center">
+        <div className="day-card-empty flex flex-1 items-center justify-center">
           <span className="text-[0.7rem] text-subtle-foreground italic">No tasks</span>
         </div>
       )}
