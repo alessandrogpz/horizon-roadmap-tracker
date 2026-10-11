@@ -142,15 +142,15 @@ export function MasterWeekPanel({
             return (
               <div
                 key={day.name}
-                className={`flex min-h-[150px] flex-col gap-2 overflow-hidden rounded-lg px-2 py-2.5 ${
+                className={`day-card flex min-h-[150px] flex-col gap-2 overflow-hidden rounded-lg px-2 py-2.5 ${
                   isToday ? "border border-accent bg-accent/[0.06]" : "border border-card-border bg-input-bg"
                 }`}
               >
-                <div className="border-b border-card-border pb-1 text-center">
+                <div className="day-card-head day-card-when border-b border-card-border pb-1 text-center">
                   <span className={`text-[0.7rem] uppercase tracking-[0.05em] ${isToday ? "font-bold text-foreground" : "font-semibold text-muted-foreground"}`}>
                     {day.name}
                   </span>
-                  <span className="block font-mono text-[0.58rem] text-subtle-foreground">{day.date.slice(5)}</span>
+                  <span className="day-card-date block font-mono text-[0.58rem] text-subtle-foreground">{day.date.slice(5)}</span>
                 </div>
 
                 {/* No colour dot beside the label: the label is already in
@@ -180,7 +180,7 @@ export function MasterWeekPanel({
                     {entry.rotations.map((rotation) => (
                       <span
                         key={`${rotation.label}-${rotation.title}`}
-                        className="break-words text-[0.66rem] leading-[1.3] text-muted-foreground"
+                        className="day-item-title break-words text-[0.66rem] leading-[1.3] text-muted-foreground"
                         title={`${entry.track.name} · ${rotation.label}: ${rotation.title}`}
                       >
                         {rotation.title}
