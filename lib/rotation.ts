@@ -36,17 +36,39 @@ export function computeRotationItem(
   return { id: rotationItemId(rotation), title: item.title, description: item.description, completed: false };
 }
 
-/** Computes every applicable rotation's item for `dayName` in week
- *  `weekNum`, split by target bucket (revision vs. focus). */
+/**
+ * The rotations that run during a given phase.
+ *
+ * A rotation with no `phase` runs in all of them — the shape every rotation
+ * had before scoping existed, and the right default for a standing habit.
+ * Passing no `currentPhase` asks the question the old code asked and gets
+ * every rotation back, so a caller with no phase to hand is never silently
+ * filtered down to nothing.
+ */
+export function rotationsInPhase(rotations: RotationDef[], currentPhase?: number): RotationDef[] {
+  if (currentPhase === undefined) return rotations;
+  return rotations.filter((rotation) => rotation.phase === undefined || rotation.phase === currentPhase);
+}
+
+/**
+ * Computes every applicable rotation's item for `dayName` in week
+ * `weekNum`, split by target bucket (revision vs. focus).
+ *
+ * `currentPhase` narrows it to the rotations belonging to the phase the track
+ * is on. The week number still drives the cycle within that phase, so a
+ * three-item rotation across a six-week phase comes round twice — scoping
+ * decides *which* rotation runs, not how fast it turns.
+ */
 export function computeRotationItemsForDay(
   rotations: RotationDef[],
   weekNum: number,
-  dayName: string
+  dayName: string,
+  currentPhase?: number
 ): { revisions: RevisionItem[]; focus: TaskItem[] } {
   const revisions: RevisionItem[] = [];
   const focus: TaskItem[] = [];
 
-  for (const rotation of rotations) {
+  for (const rotation of rotationsInPhase(rotations, currentPhase)) {
     const item = computeRotationItem(rotation, weekNum, dayName);
     if (!item) continue;
     if (rotation.target === "focus") {

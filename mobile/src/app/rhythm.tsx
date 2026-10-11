@@ -308,6 +308,56 @@ export default function RhythmScreen() {
             ))}
           </View>
 
+          {/* Which phase this belongs to. A cycle and a curriculum are
+              different shapes: ten topics on a twenty-four week track wrap
+              and repeat, so phase three brings back what phase one already
+              covered. Scoped, a short rotation per phase works through them
+              once and is finished by the end. */}
+          <Text style={styles.fieldLabel}>Runs during</Text>
+          <View style={styles.choices}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ selected: rotation.phase === undefined }}
+              onPress={() =>
+                editRotation(rotation.id, (r) => {
+                  // Deleted rather than set to undefined: an absent key means
+                  // every phase, and a stored undefined becomes null on the
+                  // way through the database.
+                  const { phase: _drop, ...rest } = r;
+                  void _drop;
+                  return rest;
+                })
+              }
+              style={[styles.choice, rotation.phase === undefined && { borderColor: palette.accent }]}
+            >
+              <Text style={[styles.choiceLabel, rotation.phase === undefined && { color: palette.foreground }]}>
+                Every phase
+              </Text>
+            </Pressable>
+            {(track?.phases ?? []).map((p) => {
+              const on = rotation.phase === p.id;
+              return (
+                <Pressable
+                  key={p.id}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: on }}
+                  accessibilityLabel={p.title}
+                  onPress={() => editRotation(rotation.id, (r) => ({ ...r, phase: p.id }))}
+                  style={[styles.choice, on && { borderColor: palette.accent }]}
+                >
+                  <Text style={[styles.choiceLabel, on && { color: palette.foreground }]} numberOfLines={1}>
+                    {p.title}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          <Text style={styles.muted}>
+            {rotation.phase === undefined
+              ? "Shows on its days whatever phase you are on."
+              : "Hidden until the track reaches that phase, and gone once it moves past."}
+          </Text>
+
           <Text style={styles.fieldLabel}>On these days</Text>
           <View style={styles.choices}>
             {WEEK.map((day) => {

@@ -83,6 +83,7 @@ const Rotation = z.strictObject({
   daysOfWeek: z.array(day).max(7),
   target: z.enum(["revision", "focus"]),
   startWeek: z.number().int().min(-100_000).max(100_000),
+  phase: z.number().int().min(0).max(10_000).optional(),
   explanation: text(200_000).optional(),
 });
 
