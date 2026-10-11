@@ -61,7 +61,7 @@ function planFor(track: TrackState, gym: GymLog, date: string): DayPlan {
   const rotations = track.rotations ?? [];
   const weekNum = track.startDate ? getWeekNum(track.startDate, parseYMD(date)) : 1;
   const computed = rotations.length
-    ? computeRotationItemsForDay(rotations, weekNum, dayKey)
+    ? computeRotationItemsForDay(rotations, weekNum, dayKey, track.currentPhase)
     : { focus: [], revisions: [] };
 
   // Stored rotation items are last week's answer, so they are dropped in

@@ -51,7 +51,7 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
   const rotations = data.rotations || [];
   const viewedWeekNum = getWeekNum(data.startDate, parseYMD(targetDateStr));
   const { revisions: rotationRevisions, focus: rotationFocus } = rotations.length > 0
-    ? computeRotationItemsForDay(rotations, viewedWeekNum, day.name)
+    ? computeRotationItemsForDay(rotations, viewedWeekNum, day.name, data.currentPhase)
     : { revisions: [], focus: [] };
   const manualRevisionItems = (data.dailyRevisionItems?.[day.name] || []).filter((it) => !isRotationItem(it));
   const manualFocusTasks = (data.dailyTasks?.[day.name] || []).filter((it) => !isRotationItem(it));
