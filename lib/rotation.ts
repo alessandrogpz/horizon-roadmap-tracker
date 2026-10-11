@@ -47,7 +47,18 @@ export function computeRotationItem(
  */
 export function rotationsInPhase(rotations: RotationDef[], currentPhase?: number): RotationDef[] {
   if (currentPhase === undefined) return rotations;
-  return rotations.filter((rotation) => rotation.phase === undefined || rotation.phase === currentPhase);
+  return rotations.filter((rotation) => runsInPhase(rotation, currentPhase));
+}
+
+/**
+ * Whether one rotation runs during `currentPhase`.
+ *
+ * The same question `rotationsInPhase` asks of a list, for the screens that
+ * show every rotation and have to say which of them is actually running —
+ * one predicate, so a pill and a day can never disagree about it.
+ */
+export function runsInPhase(rotation: RotationDef, currentPhase?: number): boolean {
+  return currentPhase === undefined || rotation.phase === undefined || rotation.phase === currentPhase;
 }
 
 /**
