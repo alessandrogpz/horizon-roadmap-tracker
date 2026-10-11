@@ -66,7 +66,7 @@ export function applyDailyResetIfNeeded(loadedData: TrackState, todayStr: string
     const ALL_WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
     ALL_WEEKDAYS.forEach((dayKey) => {
-      const { revisions, focus } = computeRotationItemsForDay(rotations, currentWeekNum, dayKey);
+      const { revisions, focus } = computeRotationItemsForDay(rotations, currentWeekNum, dayKey, loadedData.currentPhase);
 
       const manualRevisions = (resetDailyRevisionItems[dayKey] || []).filter((it) => !isRotationItem(it));
       resetDailyRevisionItems[dayKey] = [...revisions, ...manualRevisions];

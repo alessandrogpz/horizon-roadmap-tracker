@@ -38,6 +38,8 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
   );
   const [daysOfWeek, setDaysOfWeek] = useState<string[]>(existing?.daysOfWeek || []);
   const [target, setTarget] = useState<"revision" | "focus">(existing?.target || "revision");
+  /** Which phase this belongs to, or `undefined` for every phase. */
+  const [phase, setPhase] = useState<number | undefined>(existing?.phase);
   const [explanation, setExplanation] = useState(existing?.explanation || "");
 
   // The full-plan editor is a separate always-live autosave surface (like
@@ -57,6 +59,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
       setItems(existing.items.map((it) => ({ title: it.title, description: it.description || "" })));
       setDaysOfWeek(existing.daysOfWeek);
       setTarget(existing.target);
+      setPhase(existing.phase);
       setExplanation(existing.explanation || "");
     }
     setMode("edit");
@@ -95,6 +98,10 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
       items: cleanItems,
       daysOfWeek,
       target,
+      // Omitted rather than written as undefined: an absent key is "every
+      // phase", and a stored `undefined` becomes null on the way through the
+      // database.
+      ...(phase === undefined ? {} : { phase }),
       startWeek: existing?.startWeek ?? currentWeekNum,
       explanation: explanation.trim() || undefined,
     };
@@ -300,6 +307,48 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                   ))}
                 </div>
               </label>
+
+              {/* Which phase this belongs to. A cycle and a curriculum are
+                  different shapes: ten topics on a twenty-four week track
+                  wrap and repeat, so you meet the same ones in phase three
+                  that you met in phase one. Scoped, a short rotation per
+                  phase works through them once and is done by the end. */}
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[0.75rem] text-muted-foreground uppercase tracking-[0.05em] font-semibold">
+                  Runs during
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    onClick={() => setPhase(undefined)}
+                    className={`px-3 py-1.5 rounded-md text-[0.8rem] font-semibold cursor-pointer border transition-all duration-150 ${
+                      phase === undefined
+                        ? "bg-accent/15 border-accent text-accent"
+                        : "bg-surface-muted border-card-border text-muted-foreground hover:border-card-border-hover"
+                    }`}
+                  >
+                    Every phase
+                  </button>
+                  {(data.phases || []).map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => setPhase(p.id)}
+                      title={p.title}
+                      className={`max-w-[11rem] truncate px-3 py-1.5 rounded-md text-[0.8rem] font-semibold cursor-pointer border transition-all duration-150 ${
+                        phase === p.id
+                          ? "bg-accent/15 border-accent text-accent"
+                          : "bg-surface-muted border-card-border text-muted-foreground hover:border-card-border-hover"
+                      }`}
+                    >
+                      {p.title}
+                    </button>
+                  ))}
+                </div>
+                <span className="text-[0.7rem] leading-snug text-subtle-foreground">
+                  {phase === undefined
+                    ? "Shows on its days whatever phase you are on."
+                    : "Hidden until the track reaches that phase, and gone once it moves past."}
+                </span>
+              </div>
 
               <div className="flex flex-col gap-1.5">
                 <span className="text-[0.75rem] text-muted-foreground uppercase tracking-[0.05em] font-semibold">Days of Week</span>
