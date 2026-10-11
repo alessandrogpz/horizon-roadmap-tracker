@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeRotationItem, computeRotationItemsForDay, isRotationItem, rotationItemId } from "../rotation";
+import { computeRotationItem, computeRotationItemsForDay, isRotationItem, rotationItemId, rotationsInPhase } from "../rotation";
 import { DSA_PATTERN_WEEKS } from "../constants";
 import type { RotationDef } from "../types";
 
@@ -90,5 +90,44 @@ describe("isRotationItem / rotationItemId", () => {
   it("also recognizes the pre-multi-rotation legacy ids, so old synced data cleanly supersedes", () => {
     expect(isRotationItem({ id: "dsa_auto" })).toBe(true);
     expect(isRotationItem({ id: "math_revision" })).toBe(true);
+  });
+});
+
+describe("rotations scoped to a phase", () => {
+  const everyPhase: RotationDef = { ...readingRotation, id: "standing" };
+  const first: RotationDef = { ...readingRotation, id: "p1", label: "Phase one topics", phase: 1 };
+  const second: RotationDef = { ...readingRotation, id: "p2", label: "Phase two topics", phase: 2 };
+  const all = [everyPhase, first, second];
+
+  it("runs a rotation with no phase in every one", () => {
+    expect(rotationsInPhase(all, 1).map((r) => r.id)).toEqual(["standing", "p1"]);
+    expect(rotationsInPhase(all, 2).map((r) => r.id)).toEqual(["standing", "p2"]);
+    expect(rotationsInPhase(all, 7).map((r) => r.id)).toEqual(["standing"]);
+  });
+
+  it("returns everything when the caller has no phase to hand", () => {
+    // The question the old code asked. A caller without a phase must not be
+    // silently filtered down to nothing.
+    expect(rotationsInPhase(all).map((r) => r.id)).toEqual(["standing", "p1", "p2"]);
+  });
+
+  it("keeps a scoped rotation off the day until its phase is current", () => {
+    const onPhaseOne = computeRotationItemsForDay(all, 1, "Tue", 1);
+    const onPhaseTwo = computeRotationItemsForDay(all, 1, "Tue", 2);
+    expect(onPhaseOne.focus).toHaveLength(2); // the standing one, and phase one's
+    expect(onPhaseTwo.focus).toHaveLength(2); // the standing one, and phase two's
+    expect(onPhaseOne.focus.map((i) => i.id)).toContain(rotationItemId(first));
+    expect(onPhaseOne.focus.map((i) => i.id)).not.toContain(rotationItemId(second));
+  });
+
+  it("still turns the cycle on the week number inside its phase", () => {
+    // Scoping decides which rotation runs, not how fast it turns: three items
+    // across six weeks still come round twice.
+    const week = (n: number) => computeRotationItemsForDay([first], n, "Tue", 1).focus[0]?.title;
+    expect([1, 2, 3, 4].map(week)).toEqual(["Tolkien", "Isaac Asimov", "Ursula K. Le Guin", "Tolkien"]);
+  });
+
+  it("leaves rotations written before scoping exactly as they were", () => {
+    expect(computeRotationItemsForDay([readingRotation], 1, "Tue", 3).focus).toHaveLength(1);
   });
 });
