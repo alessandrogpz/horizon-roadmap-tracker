@@ -7,6 +7,27 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.97.0] - 2026-10-11
+
+### Changed
+- **The weekly overview now fits the room it has.** It was seven `1fr` columns at anything above
+  phone width, which divides whatever the panel has by seven however little that is — and the panel
+  is a dashboard column, not the window. On a 1440-wide screen that left a day 75 points, and on a
+  1024 one, 62: narrower than the day's own focus-type tag, which overflowed and was clipped at
+  *both* ends, so "Pattern Study" arrived as "ATTERN STUD". A title got 45 points and broke over
+  three lines. The week was at its least readable on the screens a viewport query calls roomy.
+- The week now asks the panel how much room it has, not the window, and answers in one of three
+  shapes: all seven across when they fit, four-and-three — a calendar, which is a shape people
+  already read — in an ordinary dashboard column, and one day per row when it is narrower than
+  that. Nothing is clipped and nothing scrolls sideways in any of them.
+- **A phone reads the week downwards.** Seven columns on a 375-wide screen showed two days and a
+  sliver of a third, so reading the week meant dragging it past the window while holding the rest
+  in your head. Each day is now a full-width row: the day, its date and what the day is for sit on
+  one line across the top instead of stacking three deep, titles land on one line at a readable
+  size, and the rows are taller to hit.
+- The same three shapes apply to the all-tracks week and to the panel pictured on the landing page,
+  which share the grid.
+
 ## [0.96.0] - 2026-10-11
 
 ### Added
