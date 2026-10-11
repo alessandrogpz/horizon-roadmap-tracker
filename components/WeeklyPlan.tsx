@@ -156,6 +156,23 @@ interface DayCardProps {
   applyChange: (updater: (previous: TrackState) => TrackState) => void;
 }
 
+/**
+ * One tickable line in a day card: the whole row, not just the box.
+ *
+ * The box was an 18-point checkbox scaled to 0.8, and a transform shrinks the
+ * hit area along with the drawing — so the target was about fourteen points,
+ * under half what a thumb needs and fiddly even with a mouse. It is drawn at
+ * its full size again, and the label around it makes the title part of the
+ * target, which is where the eye goes anyway. The padding takes the row past
+ * twenty-four points tall without widening the column, and the negative
+ * margin keeps the text aligned with the headings above it.
+ *
+ * The row swallows its click. The card behind it opens the day's editor, and
+ * ticking something off is not a request to open anything.
+ */
+const ITEM_ROW =
+  "-mx-1 flex cursor-pointer items-start gap-[0.4rem] rounded px-1 py-[0.25rem] transition-colors hover:bg-surface-hover";
+
 function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onDayClick, applyChange }: DayCardProps) {
   const isCurrentWeek = weekOffset === 0;
   const isToday = isCurrentWeek && idx === (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
@@ -251,10 +268,10 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
             {revisionItems.map((item, i) => {
               const completed = getItemCompleted(item.id, "revision");
               return (
-                <div key={item.id || i} className="flex items-start gap-[0.3rem]">
+                <label key={item.id || i} className={ITEM_ROW} onClick={(e) => e.stopPropagation()}>
                   <input
                     type="checkbox"
-                    className="checkbox-custom mt-0.5 scale-[0.8]"
+                    className="checkbox-custom mt-px shrink-0"
                     checked={completed}
                     onClick={(e: React.MouseEvent) => e.stopPropagation()}
                     onChange={(e) =>
@@ -264,7 +281,7 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
                   <span className={`text-[0.72rem] leading-[1.3] ${completed ? "text-subtle-foreground line-through" : isToday ? "text-foreground" : "text-muted-foreground"}`}>
                     {item.title}
                   </span>
-                </div>
+                </label>
               );
             })}
           </div>
@@ -281,10 +298,10 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
             {focusTasks.map((task, i) => {
               const completed = getItemCompleted(task.id, "focus");
               return (
-                <div key={task.id || i} className="flex items-center gap-[0.3rem]">
+                <label key={task.id || i} className={ITEM_ROW} onClick={(e) => e.stopPropagation()}>
                   <input
                     type="checkbox"
-                    className="checkbox-custom scale-[0.8]"
+                    className="checkbox-custom mt-px shrink-0"
                     checked={completed}
                     onClick={(e: React.MouseEvent) => e.stopPropagation()}
                     onChange={(e) => handleToggleItem("focus", { id: task.id, title: task.title }, e.target.checked)}
@@ -292,7 +309,7 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
                   <span className={`text-[0.72rem] leading-[1.3] ${completed ? "text-subtle-foreground line-through" : isToday ? "text-foreground" : "text-muted-foreground"}`}>
                     {task.title}
                   </span>
-                </div>
+                </label>
               );
             })}
           </div>
