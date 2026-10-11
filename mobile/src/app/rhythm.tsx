@@ -272,6 +272,9 @@ export default function RhythmScreen() {
               <Text style={styles.cardTitle}>
                 {rotation.label} · {rotation.target === "focus" ? "focus" : "revision"} ·{" "}
                 {rotation.daysOfWeek.length ? rotation.daysOfWeek.join(", ") : "no days yet"}
+                {/* Which phase it belongs to, where a list of rotations would
+                    otherwise look like a list of things all running at once. */}
+                {rotation.phase === undefined ? "" : ` · phase ${rotation.phase}`}
               </Text>
             )}
             {editing && (
