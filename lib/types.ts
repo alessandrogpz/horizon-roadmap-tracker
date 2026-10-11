@@ -224,6 +224,20 @@ export interface RotationDef {
   /** Which daily list the computed item is written into. */
   target: "revision" | "focus";
   startWeek: number;
+  /**
+   * The phase this rotation belongs to, by phase id. Absent means every
+   * phase, which is what every rotation written before this did and what a
+   * standing weekly habit wants.
+   *
+   * Scoping exists because a cycle and a curriculum are different shapes. Ten
+   * algorithm topics on a twenty-four week track wrap at week ten and start
+   * again, so you meet the same six topics in phase one that you meet in
+   * phase three — when what you wanted was to work through them once, a
+   * couple per phase, and be done by the end. Four short rotations, one per
+   * phase, say that; without scoping all four would run at once, which is the
+   * opposite of the problem being solved.
+   */
+  phase?: number;
   /** Free-form markdown — the reasoning/full plan behind this rotation,
    *  private to it and fully editable. Optional; shown at /roadmap?rotation=<id>. */
   explanation?: string;

@@ -187,7 +187,7 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
   // repeating this week's. Manually added items pass through as-is.
   const rotations = data.rotations || [];
   const { revisions: rotationRevisions, focus: rotationFocus } = rotations.length > 0
-    ? computeRotationItemsForDay(rotations, viewedWeekNum, dayKey)
+    ? computeRotationItemsForDay(rotations, viewedWeekNum, dayKey, data.currentPhase)
     : { revisions: [], focus: [] };
 
   const revisionItems = rotations.length > 0
