@@ -1,12 +1,45 @@
 "use client";
 
 import React from "react";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, ChevronDown } from "lucide-react";
 import type { TrackState, WeekDay } from "@/lib/types";
 import { getDateForDayName, getWeekNum } from "@/lib/dates";
 import { DEFAULT_WEEK_SCHEDULE, DEFAULT_FOCUS_TYPES } from "@/lib/constants";
 import { computeRotationItemsForDay, isRotationItem, runsInPhase } from "@/lib/rotation";
 import { isItemCompleted, setItemCompletion, type ItemKind } from "@/lib/completions";
+
+/**
+ * Whether the week is in its stacked, one-day-per-row shape.
+ *
+ * The layout is decided by a container query — the panel's width, not the
+ * window's — so the only honest way to ask is to measure the same element the
+ * query measures. The threshold itself comes from `--stacked-max` in
+ * globals.css, so the shape and the behaviour that depends on it read one
+ * number instead of two that can drift.
+ *
+ * Starts false, which is the shape a server render and a wide panel share; a
+ * phone corrects it on the first observation, before paint.
+ */
+function useStackedWeek(ref: React.RefObject<HTMLDivElement | null>): boolean {
+  const [stacked, setStacked] = React.useState(false);
+
+  React.useEffect(() => {
+    const element = ref.current;
+    if (!element || typeof ResizeObserver === "undefined") return;
+
+    const measure = () => {
+      const max = parseFloat(getComputedStyle(element).getPropertyValue("--stacked-max"));
+      setStacked(Number.isFinite(max) && element.clientWidth <= max);
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [ref]);
+
+  return stacked;
+}
 
 interface WeeklyPlanProps {
   data: TrackState;
@@ -38,6 +71,19 @@ export default function WeeklyPlan({
   const weekLabel = data.isSynced ? `Week ${viewedWeekNum}` : "Week --";
 
   const rotations = data.rotations || [];
+  const schedule = data.weekSchedule || DEFAULT_WEEK_SCHEDULE;
+  const todayName = schedule[dayOfWeek === 0 ? 6 : dayOfWeek - 1]?.name;
+
+  // Which days are open, when a day is something you open. Today starts open
+  // and the rest stay shut: in the stacked shape the week is read down, and
+  // the day you came to look at should not be the fourth screen of it. The
+  // set survives changing weeks on purpose — a day you opened stays open.
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  const stacked = useStackedWeek(scrollRef);
+  const [openDays, setOpenDays] = React.useState<string[]>(() => (todayName ? [todayName] : []));
+  const toggleDay = React.useCallback((name: string) => {
+    setOpenDays((previous) => (previous.includes(name) ? previous.filter((d) => d !== name) : [...previous, name]));
+  }, []);
 
   return (
     <div className="glass-panel border-l-4 border-accent-muted px-6 py-5">
@@ -129,10 +175,11 @@ export default function WeeklyPlan({
           </div>
         </div>
 
-        {/* 7-column grid (scrolls horizontally on small screens) */}
-        <div className="week-grid-scroll">
+        {/* Seven days in whichever shape the panel has room for: all seven
+            across, four-and-three, or one per row. See `.week-grid`. */}
+        <div className="week-grid-scroll" ref={scrollRef}>
           <div className="week-grid">
-            {(data.weekSchedule || DEFAULT_WEEK_SCHEDULE).map((dayItem, idx) => (
+            {schedule.map((dayItem, idx) => (
               <DayCard
                 key={dayItem.name}
                 dayItem={dayItem}
@@ -143,6 +190,9 @@ export default function WeeklyPlan({
                 viewedWeekNum={viewedWeekNum}
                 onDayClick={onDayClick}
                 applyChange={applyChange}
+                stacked={stacked}
+                open={!stacked || openDays.includes(dayItem.name)}
+                onToggle={() => toggleDay(dayItem.name)}
               />
             ))}
           </div>
@@ -172,6 +222,11 @@ interface DayCardProps {
   viewedWeekNum: number;
   onDayClick: (day: WeekDay) => void;
   applyChange: (updater: (previous: TrackState) => TrackState) => void;
+  /** Whether the week is one day per row, where a day can be opened and shut. */
+  stacked: boolean;
+  /** Always true in the grid shapes: a column has nothing to hide behind. */
+  open: boolean;
+  onToggle: () => void;
 }
 
 /**
@@ -191,7 +246,7 @@ interface DayCardProps {
 const ITEM_ROW =
   "day-item-row -mx-1 flex cursor-pointer items-start gap-[0.4rem] rounded px-1 py-[0.25rem] transition-colors hover:bg-surface-hover";
 
-function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onDayClick, applyChange }: DayCardProps) {
+function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onDayClick, applyChange, stacked, open, onToggle }: DayCardProps) {
   const isCurrentWeek = weekOffset === 0;
   const isToday = isCurrentWeek && idx === (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
   const dayKey = dayItem.name;
@@ -222,6 +277,11 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
 
   const getItemCompleted = (itemId: string, kind: ItemKind) => isItemCompleted(data, dayDateStr, kind, itemId);
 
+  const itemCount = revisionItems.length + focusTasks.length;
+  const doneCount =
+    revisionItems.filter((item) => getItemCompleted(item.id, "revision")).length +
+    focusTasks.filter((task) => getItemCompleted(task.id, "focus")).length;
+
   /** Completion is always recorded against this card's calendar date, so
    *  ticking a box on a past day lands on that day rather than today. The
    *  stored item's own flag is only synced for the live (today) card — on any
@@ -251,6 +311,8 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
     <div
       onClick={() => onDayClick(dayItem)}
       className={`day-card flex flex-col gap-[0.35rem] px-2 py-[0.6rem] rounded-lg cursor-pointer transition-all duration-200 min-h-[160px] overflow-hidden ${
+        open ? "" : "is-collapsed"
+      } ${
         isToday
           ? "bg-accent/[0.06] border border-accent shadow-[0_0_12px_rgba(14,165,233,0.15)]"
           : "bg-input-bg border border-card-border"
@@ -260,8 +322,36 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
           Stacked and centred while a day is a column; one line across the top
           of the row once a day is full-width, which is how a phone reads the
           week. */}
-      <div className="day-card-head flex flex-col gap-[0.3rem] pb-1 border-b border-card-border">
+      <div
+        className="day-card-head flex flex-col gap-[0.3rem] pb-1 border-b border-card-border"
+        {...(stacked
+          ? {
+              role: "button" as const,
+              tabIndex: 0,
+              "aria-expanded": open,
+              "aria-label": `${dayItem.name}, ${open ? "collapse" : "expand"}`,
+              onClick: (event: React.MouseEvent) => {
+                event.stopPropagation();
+                onToggle();
+              },
+              onKeyDown: (event: React.KeyboardEvent) => {
+                if (event.key !== "Enter" && event.key !== " ") return;
+                event.preventDefault();
+                event.stopPropagation();
+                onToggle();
+              },
+            }
+          : {})}
+      >
         <div className="day-card-when text-center">
+          {stacked && (
+            <ChevronDown
+              size={13}
+              strokeWidth={2.5}
+              aria-hidden="true"
+              className="day-card-chevron shrink-0 text-subtle-foreground"
+            />
+          )}
           <span className={`text-[0.7rem] uppercase tracking-[0.05em] ${isToday ? "font-bold text-foreground" : "font-semibold text-muted-foreground"}`}>
             {dayItem.name}
           </span>
@@ -270,7 +360,14 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
           </div>
         </div>
 
-        <div className="day-card-tag flex min-w-0 justify-center">
+        <div className="day-card-tag flex min-w-0 items-center justify-center gap-1.5">
+          {/* How much of a shut day is done, so the line is worth reading on
+              its own. Hidden while it is open, where the boxes say it better. */}
+          {stacked && !open && itemCount > 0 && (
+            <span className="shrink-0 font-mono text-[0.6rem] text-subtle-foreground">
+              {doneCount}/{itemCount}
+            </span>
+          )}
           {/* Truncates rather than overflowing. Centred and wider than its
               card, it was clipped at both ends — "Pattern Study" arrived as
               "ATTERN STUD", which reads as a glitch rather than a long word. */}
@@ -284,76 +381,80 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
         </div>
       </div>
 
-      {/* Revision section */}
-      {revisionItems.length > 0 && (
-        <div>
-          <span className="text-[0.55rem] text-accent font-bold font-mono tracking-[0.05em] uppercase">
-            Revision
-          </span>
-          <div className="flex flex-col gap-[0.15rem] mt-[0.15rem]">
-            {revisionItems.map((item, i) => {
-              const completed = getItemCompleted(item.id, "revision");
-              return (
-                <label key={item.id || i} className={ITEM_ROW} onClick={(e) => e.stopPropagation()}>
-                  <input
-                    type="checkbox"
-                    className="checkbox-custom mt-px shrink-0"
-                    checked={completed}
-                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                    onChange={(e) =>
-                      handleToggleItem("revision", { id: item.id, title: item.title, description: item.description }, e.target.checked)
-                    }
-                  />
-                  <span
-                    title={item.title}
-                    className={`day-item-title min-w-0 line-clamp-2 text-[0.72rem] leading-[1.3] ${completed ? "text-subtle-foreground line-through" : isToday ? "text-foreground" : "text-muted-foreground"}`}
-                  >
-                    {item.title}
-                  </span>
-                </label>
-              );
-            })}
+      {/* Everything a shut day hides. It grows, so "No tasks" still sits
+          in the middle of a column in the grid shapes. */}
+      <div className="day-card-body flex min-h-0 flex-1 flex-col gap-[0.35rem]">
+        {/* Revision section */}
+        {revisionItems.length > 0 && (
+          <div>
+            <span className="text-[0.55rem] text-accent font-bold font-mono tracking-[0.05em] uppercase">
+              Revision
+            </span>
+            <div className="flex flex-col gap-[0.15rem] mt-[0.15rem]">
+              {revisionItems.map((item, i) => {
+                const completed = getItemCompleted(item.id, "revision");
+                return (
+                  <label key={item.id || i} className={ITEM_ROW} onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      className="checkbox-custom mt-px shrink-0"
+                      checked={completed}
+                      onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                      onChange={(e) =>
+                        handleToggleItem("revision", { id: item.id, title: item.title, description: item.description }, e.target.checked)
+                      }
+                    />
+                    <span
+                      title={item.title}
+                      className={`day-item-title min-w-0 line-clamp-2 text-[0.72rem] leading-[1.3] ${completed ? "text-subtle-foreground line-through" : isToday ? "text-foreground" : "text-muted-foreground"}`}
+                    >
+                      {item.title}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Focus tasks section */}
-      {focusTasks.length > 0 && (
-        <div className="mt-[0.1rem]">
-          <span className="text-[0.55rem] text-accent font-bold font-mono tracking-[0.05em] uppercase">
-            Focus
-          </span>
-          <div className="flex flex-col gap-[0.15rem] mt-[0.15rem]">
-            {focusTasks.map((task, i) => {
-              const completed = getItemCompleted(task.id, "focus");
-              return (
-                <label key={task.id || i} className={ITEM_ROW} onClick={(e) => e.stopPropagation()}>
-                  <input
-                    type="checkbox"
-                    className="checkbox-custom mt-px shrink-0"
-                    checked={completed}
-                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                    onChange={(e) => handleToggleItem("focus", { id: task.id, title: task.title }, e.target.checked)}
-                  />
-                  <span
-                    title={task.title}
-                    className={`day-item-title min-w-0 line-clamp-2 text-[0.72rem] leading-[1.3] ${completed ? "text-subtle-foreground line-through" : isToday ? "text-foreground" : "text-muted-foreground"}`}
-                  >
-                    {task.title}
-                  </span>
-                </label>
-              );
-            })}
+        {/* Focus tasks section */}
+        {focusTasks.length > 0 && (
+          <div className="mt-[0.1rem]">
+            <span className="text-[0.55rem] text-accent font-bold font-mono tracking-[0.05em] uppercase">
+              Focus
+            </span>
+            <div className="flex flex-col gap-[0.15rem] mt-[0.15rem]">
+              {focusTasks.map((task, i) => {
+                const completed = getItemCompleted(task.id, "focus");
+                return (
+                  <label key={task.id || i} className={ITEM_ROW} onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      className="checkbox-custom mt-px shrink-0"
+                      checked={completed}
+                      onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                      onChange={(e) => handleToggleItem("focus", { id: task.id, title: task.title }, e.target.checked)}
+                    />
+                    <span
+                      title={task.title}
+                      className={`day-item-title min-w-0 line-clamp-2 text-[0.72rem] leading-[1.3] ${completed ? "text-subtle-foreground line-through" : isToday ? "text-foreground" : "text-muted-foreground"}`}
+                    >
+                      {task.title}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Empty state */}
-      {revisionItems.length === 0 && focusTasks.length === 0 && (
-        <div className="day-card-empty flex flex-1 items-center justify-center">
-          <span className="text-[0.7rem] text-subtle-foreground italic">No tasks</span>
-        </div>
-      )}
+        {/* Empty state */}
+        {revisionItems.length === 0 && focusTasks.length === 0 && (
+          <div className="day-card-empty flex flex-1 items-center justify-center">
+            <span className="text-[0.7rem] text-subtle-foreground italic">No tasks</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
