@@ -7,6 +7,21 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.99.0] - 2026-10-13
+
+### Changed
+- **A stacked week opens one day at a time.** One day per row reads well and costs a screen per day,
+  so a phone went from scrolling the week sideways to scrolling it downwards — seven days of it,
+  most of them already past or not yet arrived. A day you are not looking at is now a single line:
+  its name, its date, how much of it is done, and what the day is for. Tap the line to open it;
+  today starts open, because that is the day you came to look at, and more than one can be open at
+  once. The week fits on one screen again.
+- Only in the stacked shape. Four-and-three and seven-across show every day in full, as before —
+  a column has nothing to hide behind, and nothing there changed.
+- Tapping an open day's body still opens that day's editor, and ticking an item off still only ticks
+  it off. The threshold where this all switches lives once, in CSS (`--stacked-max`), and the
+  behaviour reads it from there rather than keeping a second copy that could drift.
+
 ## [0.98.0] - 2026-10-11
 
 ### Changed
