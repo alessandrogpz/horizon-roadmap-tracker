@@ -667,6 +667,11 @@ select option:disabled {
 .week-grid-scroll {
   /* The question is how wide *this* is. */
   container-type: inline-size;
+  /* The width below which the week stacks, published as a custom property
+     because a day's *behaviour* changes there too: stacked days collapse, and
+     WeeklyPlan reads this value rather than keeping a second copy of 519 that
+     could drift away from the container query that actually does the work. */
+  --stacked-max: 519px;
   /* A safety valve, not the plan: no tier below overflows, and a week that
      somehow ran out of room should not then scroll the page behind it. */
   overflow-x: auto;
@@ -761,12 +766,44 @@ select option:disabled {
     flex: none;
     justify-content: flex-start;
   }
+
+  /* A day you are not looking at is one line.
+
+     Seven open days is most of a phone screen each, so the week became a long
+     scroll through days that had already happened or had not arrived yet. Open
+     one by tapping its line; today starts open, because that is the day you
+     came to look at. The header keeps the day, the date, how much of it is
+     done and what it is for — enough to decide whether to open it. */
+  .day-card-head {
+    cursor: pointer;
+  }
+
+  .day-card.is-collapsed .day-card-head {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .day-card.is-collapsed .day-card-body {
+    display: none;
+  }
+
+  .day-card-chevron {
+    transition: transform 0.18s ease;
+  }
+
+  .day-card.is-collapsed .day-card-chevron {
+    transform: rotate(-90deg);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .panel-in,
   .checkbox-custom:checked {
     animation: none;
+  }
+
+  .day-card-chevron {
+    transition: none;
   }
 }
 
