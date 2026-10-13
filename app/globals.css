@@ -651,67 +651,59 @@ select option:disabled {
 /* ===========================================================================
    Weekly plan grid
    =========================================================================== */
-/* Seven days, laid out for the room the panel actually has.
+/* Seven days in one of two shapes: the week across, or the week down.
 
-   They used to be seven `1fr` columns at anything above phone width, which
-   divides whatever the panel has by seven however little that is. The panel
-   is a dashboard column, not the window: on a 1440-wide screen it is about
-   700 points, and on a 1024 one about 520 — so a day got 75, or 62. That is
-   narrower than its own focus-type tag, which overflowed and was clipped at
-   *both* ends ("ATTERN STUD"), and it left 45 points for a title, which broke
-   "Hash Map Patterns" over three lines. The week was unreadable on the very
-   screens a viewport query would have called roomy.
+   They used to be seven `1fr` columns at any width, which divides whatever the
+   panel has by seven however little that is. The panel is a dashboard column,
+   not the window: on a 1024-wide screen it is about 470 points, so a day got
+   62 — narrower than its own focus-type tag, which overflowed and was clipped
+   at both ends ("ATTERN STUD"), and left 19 points for a title beside its
+   tick box. The week was unreadable on screens a viewport query calls roomy.
 
-   So the week asks the panel, not the window, and answers in three shapes:
-   stacked, four-and-three, or all seven across. */
+   There was briefly a third shape in between, four days across and three
+   below. It fitted, and it read as a broken calendar rather than a week, so
+   it is gone. What is left is the week you know and the week stacked, and the
+   only question is which the panel has room for. */
 .week-grid-scroll {
   /* The question is how wide *this* is. */
   container-type: inline-size;
   /* The width below which the week stacks, published as a custom property
      because a day's *behaviour* changes there too: stacked days collapse, and
-     WeeklyPlan reads this value rather than keeping a second copy of 519 that
-     could drift away from the container query that actually does the work. */
-  --stacked-max: 519px;
+     WeeklyPlan reads this value rather than keeping a second copy of it that
+     could drift away from the container query that actually does the work.
+
+     627 is where seven columns stop working, derived rather than chosen: at
+     626 a day is 84 points, which leaves 42 beside the tick box — enough for
+     a two-line title and no less. Below that the week turns down the page
+     instead of being squeezed further. */
+  --stacked-max: 626px;
   /* A safety valve, not the plan: no tier below overflows, and a week that
      somehow ran out of room should not then scroll the page behind it. */
   overflow-x: auto;
   overscroll-behavior-x: contain;
 }
 
-/* Four across and three below. A week in two rows is a calendar, which is a
-   shape people already read, and at the width of an ordinary dashboard column
-   it gives a day about 165 points — enough for the tag, and for a title on
-   one line. Four of them need 520 points to stay above the floor, which is
-   where the tier below starts. */
+/* The week across: Monday to Sunday in a row, as wide as the panel allows. */
 .week-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 0.4rem;
 }
 
-/* Enough room to put the whole week in a row. 124 points is the floor a day
-   needs before its tag starts truncating, and seven of those plus the gaps is
-   just under 900. */
-@container (min-width: 900px) {
-  .week-grid {
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-  }
-}
+/* The week down the page.
 
-/* A phone is not a narrow desktop.
-
-   Columns on a 375-wide screen are two-and-a-bit days of a seven-day week, so
-   reading it means dragging the week past the window while holding the rest
-   in your head. Narrow enough, and the week turns the other way up: one day
-   per row, each the full width of the panel, read top to bottom with the
-   scroll the page already has.
+   Seven columns in a narrow panel are not seven days, they are seven slivers:
+   at 470 points a title gets 19 beside its box. So the week turns the other
+   way up — one day per row, each the full width of the panel, read top to
+   bottom with the scroll the page already has. This is the shape a phone is
+   always in, and a narrow dashboard column too.
 
    Everything that was cramped stops being cramped for the same reason — a row
    has about 300 points instead of 62 — so the day, its date and what the day
    is for sit on one line across the top instead of stacking three deep, the
    tag fits, and a title lands on one line. The tap target grows rather than
    shrinks, which was the complaint that started this. */
-@container (max-width: 519px) {
+@container (max-width: 626px) {
   .week-grid {
     grid-template-columns: 1fr;
   }
