@@ -7,6 +7,18 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.99.1] - 2026-10-13
+
+### Changed
+- **The week has two shapes again, not three.** Four days across and three below fitted the space, and
+  read as a broken calendar rather than a week — a weekend on its own row and an empty fourth cell.
+  It is gone. What is left is the week across, Monday to Sunday in a row, and the week down the page,
+  one day per row with the days you are not looking at shut.
+- Where it switches is derived rather than picked: seven columns need 627 points to leave a day 84,
+  which is 42 beside its tick box — enough for a two-line title and no less. An ordinary dashboard
+  column at 706 points gets the week across, at about 95 points a day; a narrow panel or a phone gets
+  the week down the page rather than seven slivers.
+
 ## [0.99.0] - 2026-10-13
 
 ### Changed
