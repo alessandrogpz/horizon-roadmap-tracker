@@ -1,12 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  addFocusType,
-  focusTypeKey,
-  recolorFocusType,
-  removeFocusType,
-  renameFocusType,
-  type FocusPool,
-} from "../focusTypes";
+import { addFocusType, focusOfDay, focusTypeKey, recolorFocusType, removeFocusType, renameFocusType, type FocusPool } from "../focusTypes";
 
 const pool = (): FocusPool => ({
   focusTypes: {
@@ -90,5 +83,24 @@ describe("recolorFocusType", () => {
     const next = recolorFocusType(pool(), "rest", "#ef4444");
     expect(next.focusTypes.rest).toEqual({ label: "Rest", color: "#ef4444" });
     expect(next.weekSchedule).toEqual(pool().weekSchedule);
+  });
+});
+
+describe("focusOfDay", () => {
+  // The track's own rhythm is the single answer to "what is Monday for".
+  // Everything that wants a day's type reads it here rather than keeping a
+  // second copy that could disagree.
+  const week = [
+    { name: "Mon", type: "push", label: "Push" },
+    { name: "Tue", type: "rest", label: "Rest" },
+  ];
+
+  it("reads the kind of day out of the week schedule", () => {
+    expect(focusOfDay(week, "Mon")).toEqual({ key: "push", label: "Push" });
+  });
+
+  it("is null for a day the rhythm says nothing about", () => {
+    expect(focusOfDay(week, "Sat")).toBeNull();
+    expect(focusOfDay(undefined, "Mon")).toBeNull();
   });
 });
