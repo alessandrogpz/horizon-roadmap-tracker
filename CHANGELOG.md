@@ -7,6 +7,19 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.101.0] - 2026-10-14
+
+### Changed
+- **Every item can carry a description.** Only one of the two stored lists had the field, which was
+  invisible while a day had two lists and absurd once it had one: the same checklist offered a
+  description box on some items and not others, and the items without it were the older ones. Both
+  lists hold the same shape now, so an item written months ago takes a note like any other. Nothing
+  was moved or rewritten to make that true.
+- **The phone's Weekly Overview is the week, and only the week.** It carried a line underneath
+  counting the day's gym plan — "Math: 0 of 1 exercises" — which reads as a progress line about the
+  day itself on a track that has nothing to do with training. The week strip stays; what today asks
+  of you is the Today tab, one tap away. The gym panel still shows the plan in full.
+
 ## [0.100.0] - 2026-10-14
 
 ### Changed
