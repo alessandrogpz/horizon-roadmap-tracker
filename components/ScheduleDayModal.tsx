@@ -6,7 +6,7 @@ import { setWeeklyRhythm } from "@/lib/trackActions";
 import type { TrackState, WeekDay } from "@/lib/types";
 import { getDateForDayName, getWeekNum, parseYMD, todayYMD } from "@/lib/dates";
 import { DEFAULT_WEEK_SCHEDULE, DEFAULT_FOCUS_TYPES } from "@/lib/constants";
-import { computeRotationItemsForDay, isRotationItem } from "@/lib/rotation";
+import { dayItems, NEW_ITEM_KIND } from "@/lib/dayItems";
 import {
   addDayItem,
   isItemCompleted,
@@ -33,8 +33,7 @@ const fieldInputClass = "bg-input-bg border border-card-border rounded-md text-f
 export default function ScheduleDayModal({ day, data, applyChange, onClose, weekOffset = 0 }: ScheduleDayModalProps) {
   const { flush } = useWorkspaceActions();
   const [showManager, setShowManager] = useState(false);
-  const [newRevision, setNewRevision] = useState({ title: "", description: "" });
-  const [newFocus, setNewFocus] = useState("");
+  const [newItem, setNewItem] = useState({ title: "", description: "" });
 
   const focusTypes = data.focusTypes || DEFAULT_FOCUS_TYPES;
   const currentDaySchedule = (data.weekSchedule || DEFAULT_WEEK_SCHEDULE).find((d) => d.name === day.name) || day;
@@ -43,18 +42,13 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
   const targetDateStr = getDateForDayName(day.name, weekOffset);
   const isTargetToday = targetDateStr === todayYMD();
 
-  // Rotation-managed items are recomputed live for the viewed week (same
-  // source as WeeklyPlan's display) rather than read from storage, so they
-  // always show the correct current item and can't be edited/deleted here —
-  // any edit made in this modal to a rotation item would otherwise be
-  // silently overwritten the next time the dashboard recomputes it.
-  const rotations = data.rotations || [];
+  // One list, from the same place the weekly plan and the phone read it.
+  // Rotation items in it are recomputed live for the viewed week rather than
+  // read from storage, so they always show the current topic and can't be
+  // edited or deleted here — an edit made to one would be silently overwritten
+  // the next time the day recomputes. The rotation's own editor changes those.
   const viewedWeekNum = getWeekNum(data.startDate, parseYMD(targetDateStr));
-  const { revisions: rotationRevisions, focus: rotationFocus } = rotations.length > 0
-    ? computeRotationItemsForDay(rotations, viewedWeekNum, day.name, data.currentPhase)
-    : { revisions: [], focus: [] };
-  const manualRevisionItems = (data.dailyRevisionItems?.[day.name] || []).filter((it) => !isRotationItem(it));
-  const manualFocusTasks = (data.dailyTasks?.[day.name] || []).filter((it) => !isRotationItem(it));
+  const items = dayItems(data, day.name, viewedWeekNum);
 
   /** Blur commits immediately rather than waiting out the debounce, so tabbing
    *  away from a field can never leave an edit in flight. */
@@ -82,16 +76,10 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
     );
   };
 
-  const addRevision = () => {
-    if (!newRevision.title.trim()) return;
-    applyChange((previous) => addDayItem(previous, day.name, "revision", newRevision));
-    setNewRevision({ title: "", description: "" });
-  };
-
-  const addFocus = () => {
-    if (!newFocus.trim()) return;
-    applyChange((previous) => addDayItem(previous, day.name, "focus", { title: newFocus }));
-    setNewFocus("");
+  const addItem = () => {
+    if (!newItem.title.trim()) return;
+    applyChange((previous) => addDayItem(previous, day.name, NEW_ITEM_KIND, newItem));
+    setNewItem({ title: "", description: "" });
   };
 
   return (
@@ -177,23 +165,51 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
 
         {/* Modal Content */}
         <div className="flex flex-col gap-4">
-          {/* Daily Revision and Focus Checklist Editors inside Modal */}
+          {/* One list. What the day is *about* is the focus type above; what
+              is on it is just a list of things, in the order they read on the
+              weekly plan. */}
           <div className="flex flex-col gap-5 max-h-[550px] overflow-y-auto pr-1">
-
-            {/* Revision Section */}
             <div className="flex flex-col gap-3">
               <strong className="text-accent text-xs font-mono tracking-[0.05em] uppercase">
-                {isTargetToday ? "TODAY'S " : ""}REVISION CHECKLIST:
+                {isTargetToday ? "TODAY'S " : ""}CHECKLIST:
               </strong>
+
               <div className="flex flex-col gap-2">
-                {/* Rotation-managed items: read-only here (checkbox only) —
-                    edit the rotation itself via its pill on the dashboard. */}
-                {rotationRevisions.map((item) => {
-                  const completed = isDone("revision", item.id);
+                {items.map((item) => {
+                  const completed = isDone(item.kind, item.id);
+
+                  // Written by a rotation: tickable, not editable.
+                  if (item.generated) {
+                    return (
+                      <div
+                        key={`${item.kind}:${item.id}`}
+                        className="flex flex-col gap-1 bg-accent/[0.04] px-3 py-[0.6rem] rounded-md border border-dashed border-accent/20"
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            className="checkbox-custom"
+                            checked={completed}
+                            onChange={(e) =>
+                              toggle(item.kind, { id: item.id, title: item.title, description: item.description }, e.target.checked, false)
+                            }
+                          />
+                          <span className={`flex-1 text-[0.85rem] font-semibold ${completed ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                            {item.title}
+                          </span>
+                          <span className="text-[0.65rem] text-accent/70 uppercase tracking-[0.05em] shrink-0">Rotation</span>
+                        </div>
+                        {item.description && (
+                          <span className="text-[0.8rem] text-muted-foreground ml-7">{item.description}</span>
+                        )}
+                      </div>
+                    );
+                  }
+
                   return (
                     <div
-                      key={item.id}
-                      className="flex flex-col gap-1 bg-accent/[0.04] px-3 py-[0.6rem] rounded-md border border-dashed border-accent/20"
+                      key={`${item.kind}:${item.id}`}
+                      className="flex flex-col gap-1.5 bg-input-bg px-3 py-[0.6rem] rounded-md border border-card-border"
                     >
                       <div className="flex items-center gap-3">
                         <input
@@ -201,204 +217,86 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
                           className="checkbox-custom"
                           checked={completed}
                           onChange={(e) =>
-                            toggle(
-                              "revision",
-                              { id: item.id, title: item.title, description: item.description },
-                              e.target.checked,
-                              false
-                            )
+                            toggle(item.kind, { id: item.id, title: item.title, description: item.description }, e.target.checked, true)
                           }
                         />
-                        <span className={`flex-1 text-[0.85rem] font-semibold ${completed ? "text-muted-foreground line-through" : "text-foreground"}`}>
-                          {item.title}
-                        </span>
-                        <span className="text-[0.65rem] text-accent/70 uppercase tracking-[0.05em] shrink-0">Rotation</span>
+                        <input
+                          type="text"
+                          value={item.title}
+                          onChange={(e) =>
+                            applyChange((previous) =>
+                              updateDayItem(previous, day.name, item.kind, item.id, { title: e.target.value })
+                            )
+                          }
+                          onBlur={persistOnBlur}
+                          placeholder="Item..."
+                          className="flex-1 bg-transparent border-none text-foreground font-[inherit] text-[0.85rem] font-semibold outline-none"
+                        />
+                        <button
+                          onClick={() =>
+                            applyChange((previous) =>
+                              removeDayItem(previous, {
+                                dateStr: targetDateStr,
+                                dayKey: day.name,
+                                kind: item.kind,
+                                id: item.id,
+                                title: item.title,
+                              })
+                            )
+                          }
+                          className="flex items-center bg-transparent border-none text-red-500 cursor-pointer"
+                          aria-label="Remove item"
+                        >
+                          <X size={14} strokeWidth={2} />
+                        </button>
                       </div>
-                      {item.description && (
-                        <span className="text-[0.8rem] text-muted-foreground ml-7">{item.description}</span>
+
+                      {/* Only where there is somewhere to put it: the older of
+                          the two stored lists has no description field, so an
+                          item written before this change keeps just its title
+                          rather than offering a box that would discard what
+                          you typed. Everything written now has one. */}
+                      {item.kind === "revision" && (
+                        <input
+                          type="text"
+                          value={item.description || ""}
+                          onChange={(e) =>
+                            applyChange((previous) =>
+                              updateDayItem(previous, day.name, item.kind, item.id, { description: e.target.value })
+                            )
+                          }
+                          onBlur={persistOnBlur}
+                          placeholder="Description (optional)..."
+                          className="bg-transparent border-none border-b border-dashed border-card-border text-muted-foreground font-[inherit] text-[0.8rem] outline-none py-px ml-7"
+                        />
                       )}
                     </div>
                   );
                 })}
 
-                {manualRevisionItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex flex-col gap-1.5 bg-input-bg px-3 py-[0.6rem] rounded-md border border-card-border"
-                  >
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        className="checkbox-custom"
-                        checked={isDone("revision", item.id)}
-                        onChange={(e) =>
-                          toggle(
-                            "revision",
-                            { id: item.id, title: item.title, description: item.description },
-                            e.target.checked,
-                            true
-                          )
-                        }
-                      />
-                      <input
-                        type="text"
-                        value={item.title}
-                        onChange={(e) =>
-                          applyChange((previous) =>
-                            updateDayItem(previous, day.name, "revision", item.id, { title: e.target.value })
-                          )
-                        }
-                        onBlur={persistOnBlur}
-                        placeholder="Revision topic..."
-                        className="flex-1 bg-transparent border-none text-foreground font-[inherit] text-[0.85rem] font-semibold outline-none"
-                      />
-                      <button
-                        onClick={() =>
-                          applyChange((previous) =>
-                            removeDayItem(previous, {
-                              dateStr: targetDateStr,
-                              dayKey: day.name,
-                              kind: "revision",
-                              id: item.id,
-                              title: item.title,
-                            })
-                          )
-                        }
-                        className="flex items-center bg-transparent border-none text-red-500 cursor-pointer"
-                        aria-label="Remove item"
-                      >
-                        <X size={14} strokeWidth={2} />
-                      </button>
-                    </div>
-
-                    {/* Description Field */}
-                    <input
-                      type="text"
-                      value={item.description || ""}
-                      onChange={(e) =>
-                        applyChange((previous) =>
-                          updateDayItem(previous, day.name, "revision", item.id, { description: e.target.value })
-                        )
-                      }
-                      onBlur={persistOnBlur}
-                      placeholder="Topic description (optional)..."
-                      className="bg-transparent border-none border-b border-dashed border-card-border text-muted-foreground font-[inherit] text-[0.8rem] outline-none py-px ml-7"
-                    />
-                  </div>
-                ))}
-
-                {/* Add revision item form */}
+                {/* Add an item */}
                 <div className="flex flex-col gap-1.5 bg-surface-muted p-[0.6rem] rounded-md border border-dashed border-card-border">
                   <input
                     type="text"
-                    value={newRevision.title}
-                    onChange={(e) => setNewRevision((prev) => ({ ...prev, title: e.target.value }))}
-                    onKeyDown={(e) => e.key === "Enter" && addRevision()}
-                    placeholder="New revision topic..."
+                    value={newItem.title}
+                    onChange={(e) => setNewItem((prev) => ({ ...prev, title: e.target.value }))}
+                    onKeyDown={(e) => e.key === "Enter" && addItem()}
+                    placeholder="Add an item..."
                     className={fieldInputClass}
                   />
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      value={newRevision.description}
-                      onChange={(e) => setNewRevision((prev) => ({ ...prev, description: e.target.value }))}
-                      onKeyDown={(e) => e.key === "Enter" && addRevision()}
-                      placeholder="Topic description (optional)..."
+                      value={newItem.description}
+                      onChange={(e) => setNewItem((prev) => ({ ...prev, description: e.target.value }))}
+                      onKeyDown={(e) => e.key === "Enter" && addItem()}
+                      placeholder="Description (optional)..."
                       className={`flex-1 ${fieldInputClass}`}
                     />
-                    <button onClick={addRevision} className="btn px-3 py-1.5 text-[0.8rem]">
+                    <button onClick={addItem} className="btn px-3 py-1.5 text-[0.8rem]">
                       + Add
                     </button>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            <hr className="border-none border-t border-card-border my-2" />
-
-            {/* Focus Section */}
-            <div className="flex flex-col gap-3">
-              <strong className="text-accent text-xs font-mono tracking-[0.05em] uppercase">
-                {isTargetToday ? "TODAY'S " : ""}FOCUS CHECKLIST:
-              </strong>
-              <div className="flex flex-col gap-2">
-                {/* Rotation-managed items: read-only here (checkbox only) —
-                    edit the rotation itself via its pill on the dashboard. */}
-                {rotationFocus.map((task) => {
-                  const completed = isDone("focus", task.id);
-                  return (
-                    <div
-                      key={task.id}
-                      className="flex items-center gap-3 bg-accent/[0.04] px-[0.6rem] py-1.5 rounded-md border border-dashed border-accent/20"
-                    >
-                      <input
-                        type="checkbox"
-                        className="checkbox-custom"
-                        checked={completed}
-                        onChange={(e) => toggle("focus", { id: task.id, title: task.title }, e.target.checked, false)}
-                      />
-                      <span className={`flex-1 text-[0.85rem] ${completed ? "text-muted-foreground line-through" : "text-foreground"}`}>
-                        {task.title}
-                      </span>
-                      <span className="text-[0.65rem] text-accent/70 uppercase tracking-[0.05em] shrink-0">Rotation</span>
-                    </div>
-                  );
-                })}
-
-                {manualFocusTasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className="flex items-center gap-3 bg-input-bg px-[0.6rem] py-1.5 rounded-md border border-card-border"
-                  >
-                    <input
-                      type="checkbox"
-                      className="checkbox-custom"
-                      checked={isDone("focus", task.id)}
-                      onChange={(e) => toggle("focus", { id: task.id, title: task.title }, e.target.checked, true)}
-                    />
-                    <input
-                      type="text"
-                      value={task.title}
-                      onChange={(e) =>
-                        applyChange((previous) => updateDayItem(previous, day.name, "focus", task.id, { title: e.target.value }))
-                      }
-                      onBlur={persistOnBlur}
-                      placeholder="Task description..."
-                      className="flex-1 bg-transparent border-none text-foreground font-[inherit] text-[0.85rem] outline-none"
-                    />
-                    <button
-                      onClick={() =>
-                        applyChange((previous) =>
-                          removeDayItem(previous, {
-                            dateStr: targetDateStr,
-                            dayKey: day.name,
-                            kind: "focus",
-                            id: task.id,
-                            title: task.title,
-                          })
-                        )
-                      }
-                      className="flex items-center bg-transparent border-none text-red-500 cursor-pointer"
-                      aria-label="Remove item"
-                    >
-                      <X size={14} strokeWidth={2} />
-                    </button>
-                  </div>
-                ))}
-
-                {/* Add task option inside modal */}
-                <div className="flex items-center gap-3 mt-2">
-                  <input
-                    type="text"
-                    value={newFocus}
-                    onChange={(e) => setNewFocus(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && addFocus()}
-                    placeholder="Add a focus item..."
-                    className="flex-1 bg-input-bg border border-card-border rounded-md px-3 py-2 text-foreground font-[inherit] text-[0.85rem] outline-none"
-                  />
-                  <button onClick={addFocus} className="btn px-4 py-2 text-[0.85rem]">
-                    + Add
-                  </button>
                 </div>
               </div>
             </div>
