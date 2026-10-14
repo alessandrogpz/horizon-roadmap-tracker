@@ -6,7 +6,6 @@ import {
   addExercise,
   addSet,
   addToPlan,
-  focusOfDay,
   gymNoteId,
   lastTime,
   parseGymLog,
@@ -20,6 +19,7 @@ import {
   volumeOf,
   type GymLog,
 } from "@/lib/gym";
+import { focusOfDay } from "@/lib/focusTypes";
 import { DAYS_SHORT, parseYMD, todayYMD } from "@/lib/dates";
 import { useQuickNote } from "@/components/useQuickNote";
 import { useWorkspace } from "@/components/workspace/WorkspaceProvider";

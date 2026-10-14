@@ -36,8 +36,6 @@ import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { useUndo } from "../components/UndoBar";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
-import { plannedFor } from "@shared/gym";
-import { useGymLog } from "../gym/useGymLog";
 import { EditHeader, useEditMode } from "../components/EditToggle";
 import { Refreshable } from "../components/Refreshable";
 import { RhythmCalendar } from "../components/RhythmCalendar";
@@ -58,7 +56,6 @@ export default function RhythmScreen() {
   const [newType, setNewType] = useState("");
   const { editing, setEditing } = useEditMode();
   const { offer } = useUndo();
-  const { log: gymLog } = useGymLog(track?.meta.id);
 
   /** Every focus-type edit is the same shape: take the pool, change it with a
    *  shared rule, write both halves back. The rules keep the week consistent —
@@ -150,15 +147,13 @@ export default function RhythmScreen() {
                 {/* If this kind of day has a gym plan, say how much of one — the
                     rhythm names the day and the plan fills it, and seeing both
                     here is the point of them being one idea. */}
-                {day && plannedFor(gymLog, day.type).length > 0 && (
-                  <Text style={styles.dayCount}>{plannedFor(gymLog, day.type).length} ex</Text>
-                )}
+
               </Pressable>
             );
           })}
         </View>
       ) : (
-        <RhythmCalendar track={track} gym={gymLog} />
+        <RhythmCalendar track={track} />
       )}
 
       {editing && <Text style={styles.sectionTitle}>What a day can be for</Text>}
@@ -499,7 +494,6 @@ function makeStyles(palette: Palette) {
     dayName: { color: palette.foreground, ...TYPE.micro, fontWeight: "700" },
     dayDot: { width: 8, height: 8, borderRadius: 4 },
     dayLabel: { color: palette.subtleForeground, ...TYPE.micro},
-    dayCount: { color: palette.accent, ...TYPE.micro, fontWeight: "700" },
     card: {
       gap: SPACING.sm,
       padding: SPACING.lg,

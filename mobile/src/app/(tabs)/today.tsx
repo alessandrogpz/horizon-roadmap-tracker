@@ -35,7 +35,7 @@ import {
 import { trackStreak } from "@shared/restDays";
 import { DAYS_SHORT, formatDateYMD, formatDayMonthYear, getWeekNum, parseYMD } from "@shared/dates";
 import { dayItems, NEW_ITEM_KIND } from "@shared/dayItems";
-import { focusOfDay } from "@shared/gym";
+import { focusOfDay } from "@shared/focusTypes";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
 import { useMasterMode } from "../../master/MasterMode";
 import { MasterToday } from "../../master/MasterToday";

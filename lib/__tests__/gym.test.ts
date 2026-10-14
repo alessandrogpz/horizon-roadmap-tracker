@@ -11,7 +11,6 @@ import {
   clearSession,
   doneCountOf,
   emptyGymLog,
-  focusOfDay,
   gymNoteId,
   lastTime,
   parseGymLog,
@@ -89,24 +88,6 @@ describe("parseGymLog", () => {
     // The nameless exercise goes; the bad set goes; the good set stays.
     expect(parsed.sessions["2026-09-21"].exercises).toHaveLength(1);
     expect(parsed.sessions["2026-09-21"].exercises[0].sets).toEqual([{ reps: 5, weight: 100 }]);
-  });
-});
-
-describe("focusOfDay", () => {
-  // The track's own rhythm is the single answer to "what is Monday for"; the
-  // gym reads it rather than keeping a second copy that could disagree.
-  const week = [
-    { name: "Mon", type: "push", label: "Push" },
-    { name: "Tue", type: "rest", label: "Rest" },
-  ];
-
-  it("reads the kind of day out of the week schedule", () => {
-    expect(focusOfDay(week, "Mon")).toEqual({ key: "push", label: "Push" });
-  });
-
-  it("is null for a day the rhythm says nothing about", () => {
-    expect(focusOfDay(week, "Sat")).toBeNull();
-    expect(focusOfDay(undefined, "Mon")).toBeNull();
   });
 });
 

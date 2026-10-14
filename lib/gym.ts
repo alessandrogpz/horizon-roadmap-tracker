@@ -26,7 +26,7 @@
 // A fitness track's focus types are Push, Pull, Legs, Rest; the plan below is
 // keyed by those same keys.
 
-import type { DateStr, DayKey } from "./types";
+import type { DateStr } from "./types";
 
 export interface GymSet {
   reps: number;
@@ -206,21 +206,6 @@ function parseExercises(raw: unknown): GymExercise[] {
 }
 
 export const serializeGymLog = (log: GymLog): string => JSON.stringify(log);
-
-/**
- * What kind of day this is, according to the track's own weekly rhythm.
- *
- * Takes the schedule rather than the log on purpose: the rhythm is the single
- * answer to "what is Monday for", shared by Today, the week overview and this.
- * A gym that kept its own copy would be a second answer that could disagree.
- */
-export function focusOfDay(
-  weekSchedule: { name: string; type: string; label: string }[] | undefined,
-  dayKey: DayKey
-): { key: string; label: string } | null {
-  const day = (weekSchedule ?? []).find((entry) => entry.name === dayKey);
-  return day ? { key: day.type, label: day.label } : null;
-}
 
 /** Three sets of ten: the shape most plans start from, and a better guess than
  *  nothing when an older note only recorded a name. */
