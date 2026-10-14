@@ -7,6 +7,18 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.102.2] - 2026-10-14
+
+### Changed
+- More internal tidying, still no change to what the apps do. The longest run of worked days was
+  computed by the same eight-line loop in two places — once for a track, once for every track at
+  once — which is two chances to disagree about what a run is. It lives beside the current streak
+  now, in `lib/restDays.ts`, with tests of its own.
+- Materials and portfolio projects each carried their own copy of the git-status effect, identical
+  down to the error message, including the part that matters: keying the fetch on the serialised
+  repo list rather than the array, so ticking a checkbox does not re-fetch every repo and burn the
+  GitHub API's hourly budget. Both use one `useGitStats` hook.
+
 ## [0.102.1] - 2026-10-14
 
 ### Changed
