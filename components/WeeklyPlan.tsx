@@ -6,6 +6,7 @@ import type { TrackState, WeekDay } from "@/lib/types";
 import { getDateForDayName, getWeekNum } from "@/lib/dates";
 import { DEFAULT_WEEK_SCHEDULE, DEFAULT_FOCUS_TYPES } from "@/lib/constants";
 import { runsInPhase } from "@/lib/rotation";
+import { withAlpha } from "@/lib/colors";
 import { dayItems } from "@/lib/dayItems";
 import { isItemCompleted, setItemCompletion, type ItemKind } from "@/lib/completions";
 
@@ -281,16 +282,12 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
     );
   };
 
+  // This day's own colour, rather than a map of every type's built seven times
+  // over. `withAlpha` also leaves a colour it cannot read alone, where hand-
+  // rolled hex slicing produced `rgba(NaN, NaN, NaN, 0.2)`.
   const focusTypes = data.focusTypes || DEFAULT_FOCUS_TYPES;
-  const tagColors: Record<string, { bg: string; text: string }> = {};
-  Object.entries(focusTypes).forEach(([key, val]) => {
-    const c = val.color || "#a1a1aa";
-    const r = parseInt(c.slice(1, 3), 16);
-    const g = parseInt(c.slice(3, 5), 16);
-    const b = parseInt(c.slice(5, 7), 16);
-    tagColors[key] = { bg: `rgba(${r}, ${g}, ${b}, 0.2)`, text: c };
-  });
-  const tag = tagColors[dayItem.type] || { bg: "rgba(113, 113, 122, 0.2)", text: "#a1a1aa" };
+  const tagColor = focusTypes[dayItem.type]?.color || "#a1a1aa";
+  const tag = { text: tagColor, bg: withAlpha(tagColor, 0.2) };
 
   return (
     <div
@@ -371,10 +368,10 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
       <div className="day-card-body flex min-h-0 flex-1 flex-col gap-[0.35rem]">
         {items.length > 0 && (
           <div className="flex flex-col gap-[0.15rem]">
-            {items.map((item, i) => {
+            {items.map((item) => {
               const completed = getItemCompleted(item.id, item.kind);
               return (
-                <label key={`${item.kind}:${item.id}` || i} className={ITEM_ROW} onClick={(e) => e.stopPropagation()}>
+                <label key={`${item.kind}:${item.id}`} className={ITEM_ROW} onClick={(e) => e.stopPropagation()}>
                   <input
                     type="checkbox"
                     className="checkbox-custom mt-px shrink-0"

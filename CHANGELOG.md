@@ -7,6 +7,21 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.102.1] - 2026-10-14
+
+### Changed
+- Internal tidying, no change to what the apps do. The stacked all-tracks year was built twice —
+  the website and the phone each had their own copy of the ruler it hangs on and of the logic that
+  decides where a month's name goes, byte for byte the same. Both now call `yearRuler`, and the
+  month names come from the one list that already existed.
+- The weekly plan built a colour map of every focus type for each of the seven day cards, by slicing
+  hex digits by hand. It asks `withAlpha` for the one colour it needs. That also stops a focus type
+  whose colour is not a hex triple — a CSS variable, a named colour — rendering as
+  `rgba(NaN, NaN, NaN, 0.2)`.
+- Removed: a gym helper nothing called, two copies of a one-line alias for `formatDateYMD`, a second
+  copy of the `~/` path resolver in the local-only API routes, and a key fallback that could never
+  run because the expression before it was always truthy.
+
 ## [0.102.0] - 2026-10-14
 
 ### Changed

@@ -21,6 +21,9 @@
 // (`npm run dev:lan`), someone on the LAN with a raw client can forge every
 // header. Only a firewall closes that.
 
+import os from "os";
+import path from "path";
+
 const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "[::1]"]);
 
 function parseUrl(value: string): URL | null {
@@ -52,4 +55,10 @@ export function localOnlyResponse(): Response {
     { error: "This endpoint is only available from localhost." },
     { status: 403 }
   );
+}
+
+/** A path a local tool may have written with a `~`. Only the leading `~/` is
+ *  expanded; anywhere else it is an ordinary character in a filename. */
+export function resolveHomePath(inputPath: string): string {
+  return inputPath.startsWith("~/") ? path.join(os.homedir(), inputPath.slice(2)) : inputPath;
 }

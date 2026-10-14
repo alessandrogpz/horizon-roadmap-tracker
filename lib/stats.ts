@@ -8,14 +8,12 @@ import { bridges, restScheduleOf, streakWithRest, type RestOn } from "./restDays
 import { dateForDay, dayForDate, daysSince, formatDateYMD, parseYMD } from "./dates";
 import { trackTotalDays, recommendedPhaseId } from "./trackActions";
 
-const asYMD = (d: Date) => formatDateYMD(d);
-
 /** Count of dates in `history` within the last `days` days ending at `todayStr`. */
 const activeWithin = (history: Set<string>, todayStr: string, days: number): number => {
   const cursor = parseYMD(todayStr);
   let count = 0;
   for (let i = 0; i < days; i += 1) {
-    if (history.has(asYMD(cursor))) count += 1;
+    if (history.has(formatDateYMD(cursor))) count += 1;
     cursor.setDate(cursor.getDate() - 1);
   }
   return count;
@@ -115,7 +113,7 @@ export function streakCalendar(
 
   const days: StreakDay[] = [];
   while (cursor <= today) {
-    const date = asYMD(cursor);
+    const date = formatDateYMD(cursor);
     days.push({ date, count: counts[date] || 0 });
     cursor.setDate(cursor.getDate() + 1);
   }
@@ -228,6 +226,47 @@ export function monthCalendar(
 }
 
 export const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/**
+ * The scale an all-tracks year is drawn against: a year of empty days, how
+ * many week-columns that is, and where each month's name belongs.
+ *
+ * Built from the calendar rather than from any track, because a row that began
+ * yesterday would name one month, place it at the far end, and be wrong above
+ * every other row. Both apps hang their stacked years on this, and they used
+ * to build it — and the month-label logic under it — a line at a time each.
+ */
+export function yearRuler(
+  year: number,
+  todayStr: string,
+  weekStartsOn: "sun" | "mon" = "sun"
+): { days: StreakDay[]; columns: number; marks: { month: number; column: number }[] } {
+  const days = yearCalendar({}, `${year}-01-01`, year, todayStr, weekStartsOn);
+  return { days, columns: Math.ceil(days.length / 7), marks: monthMarks(days) };
+}
+
+/**
+ * Where to write each month's name along a year of columns.
+ *
+ * One mark per month, at the column its first real day falls in, and dropped
+ * when it would land on top of the one before it — at this zoom a month is
+ * about four columns, and a three-letter name is wider than that only where a
+ * month is cut short by the start of the year or by today.
+ */
+function monthMarks(days: StreakDay[]): { month: number; column: number }[] {
+  const marks: { month: number; column: number }[] = [];
+  let seen = -1;
+  for (let column = 0; column * 7 < days.length; column += 1) {
+    const anchor = days.slice(column * 7, column * 7 + 7).find((day) => day.date);
+    if (!anchor) continue;
+    const month = parseYMD(anchor.date).getMonth();
+    if (month === seen) continue;
+    seen = month;
+    if (marks.length > 0 && column - marks[marks.length - 1].column < 3) continue;
+    marks.push({ month, column });
+  }
+  return marks;
+}
 
 /** The years a track has anything to show for, from its first to the one we
  *  are in — so a stepper cannot offer a 2019 the track never had. */
