@@ -25,7 +25,7 @@ import type { Material, Phase, PortfolioProject, TrackMeta, TrackState } from ".
 import { formatDateYMD, getDateForDayName, getWeekNum, parseYMD } from "./dates";
 import { monthCalendar, progressStats, timelineStats, yearCalendar, type MonthBlock, type StreakDay } from "./stats";
 import { computeRotationItemsForDay } from "./rotation";
-import { bridges, isRestType, restScheduleOf, restWeekdays, streakWithRest, type RestOn } from "./restDays";
+import { isRestType, longestStreakWithRest, restScheduleOf, restWeekdays, streakWithRest, type RestOn } from "./restDays";
 import { trackTotalDays } from "./trackActions";
 
 /** What a track contributed to one day. */
@@ -106,8 +106,6 @@ export interface MasterStreak {
   activeLast30: number;
   totalAccomplishments: number;
 }
-
-const asYMD = (d: Date) => formatDateYMD(d);
 
 /** The earliest day any of them began — the first day there was anything to
  *  miss. An older track's days are not blanks on a younger one's account. */
@@ -230,20 +228,13 @@ export function masterStreak(tracks: TrackState[], todayStr: string): MasterStre
   const history = masterHistory(tracks);
   const rest = masterRestOn(tracks);
 
-  let longest = 0;
-  let run = 0;
-  let previous: string | null = null;
-  for (const date of history) {
-    run = previous && bridges(previous, date, rest) ? run + 1 : 1;
-    longest = Math.max(longest, run);
-    previous = date;
-  }
+  const longest = longestStreakWithRest(history, rest);
 
   const set = new Set(history);
   const cursor = parseYMD(todayStr);
   let activeLast30 = 0;
   for (let i = 0; i < 30; i += 1) {
-    if (set.has(asYMD(cursor))) activeLast30 += 1;
+    if (set.has(formatDateYMD(cursor))) activeLast30 += 1;
     cursor.setDate(cursor.getDate() - 1);
   }
 

@@ -1,4 +1,5 @@
 import { CalendarDays, Check } from "lucide-react";
+import { withAlpha } from "@/lib/colors";
 
 /**
  * A replica of the Weekly Plan panel, showing a training week.
@@ -212,7 +213,6 @@ export default function WeeklyPlanPreview() {
           <div className="week-grid">
             {DAYS.map((day) => {
               const isToday = day.state === "today";
-              const rgb = [1, 3, 5].map((i) => parseInt(day.color.slice(i, i + 2), 16));
               return (
                 <div
                   key={day.name}
@@ -236,10 +236,7 @@ export default function WeeklyPlanPreview() {
                     <div className="day-card-tag flex min-w-0 justify-center">
                       <span
                         className="day-card-label max-w-full truncate rounded-[3px] px-1.5 py-px text-[0.55rem] font-semibold uppercase tracking-[0.03em]"
-                        style={{
-                          color: day.color,
-                          background: `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, 0.2)`,
-                        }}
+                        style={{ color: day.color, background: withAlpha(day.color, 0.2) }}
                       >
                         {day.label}
                       </span>

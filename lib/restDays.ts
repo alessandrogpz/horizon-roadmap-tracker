@@ -203,6 +203,27 @@ export function trackStreak(
 }
 
 /**
+ * The longest run of worked days there has ever been, stepping over days
+ * deliberately taken off.
+ *
+ * `history` must be ascending and without duplicates — both callers hold it
+ * that way already. Written out twice before this, once for a track and once
+ * for every track at once, which is two chances to disagree about what a run
+ * is.
+ */
+export function longestStreakWithRest(history: string[], restOn: RestOn): number {
+  let longest = 0;
+  let run = 0;
+  let previous: string | null = null;
+  for (const date of history) {
+    run = previous && bridges(previous, date, restOn) ? run + 1 : 1;
+    longest = Math.max(longest, run);
+    previous = date;
+  }
+  return longest;
+}
+
+/**
  * Whether two worked days are consecutive once rest days are stepped over.
  *
  * Used for the longest run, which has to apply the same rule as the current

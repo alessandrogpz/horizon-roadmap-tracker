@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { FolderGit2, X } from "lucide-react";
-import { fetchGitStats, parseGitSources, serializeGitSources } from "@/lib/gitStats";
-import type { GitStats, PortfolioProject } from "@/lib/types";
+import type { PortfolioProject } from "@/lib/types";
+import { useGitStats } from "@/components/useGitStats";
 
 interface PortfolioTrackerProps {
   portfolio: PortfolioProject[];
@@ -17,7 +17,6 @@ const inputClass = "w-full p-1 rounded bg-input-bg border border-card-border tex
 const labelClass = "block text-[0.7rem] text-muted-foreground mb-1 uppercase";
 
 export default function PortfolioTracker({ portfolio, onToggle, onAddProject, onEditProject, onDeleteProject }: PortfolioTrackerProps) {
-  const [gitStats, setGitStats] = useState<{ [id: string]: GitStats }>({});
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [newTitle, setNewTitle] = useState("");
@@ -30,23 +29,7 @@ export default function PortfolioTracker({ portfolio, onToggle, onAddProject, on
   // Keyed on the repo list, not the `portfolio` array — its identity changes on
   // every unrelated workspace edit, which re-fetched stats constantly.
   // repoUrl is injected by the legacy-local-paths migration from the authoritative ID map.
-  const gitSourceKey = serializeGitSources(
-    portfolio.map(proj => ({ id: proj.id, source: proj.repoUrl || proj.localPath || "" }))
-  );
-
-  useEffect(() => {
-    let cancelled = false;
-    parseGitSources(gitSourceKey).forEach(({ id, source }) => {
-      fetchGitStats(source)
-        .then(stats => {
-          if (!cancelled) setGitStats(prev => ({ ...prev, [id]: stats }));
-        })
-        .catch(err => console.error(`Error fetching git stats for ${source}:`, err));
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [gitSourceKey]);
+  const gitStats = useGitStats(portfolio.map(proj => ({ id: proj.id, source: proj.repoUrl || proj.localPath || "" })));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
