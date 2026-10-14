@@ -103,6 +103,17 @@ describe("addDayItem / updateDayItem", () => {
     expect(next.dailyRevisionItems.Mon[0].title).toBe("Vector spaces");
     expect(next.dailyRevisionItems.Mon[0].description).toBe("dot products");
   });
+
+  // A description used to be one list's privilege, so a day showing one list
+  // could offer the box on some items and silently discard what you typed on
+  // the others.
+  it("keeps a description on an item in either list", () => {
+    const added = addDayItem(track(), "Tue", "focus", { title: "C++ Book", description: "chapter 7" });
+    expect(added.dailyTasks.Tue.at(-1)).toMatchObject({ title: "C++ Book", description: "chapter 7" });
+
+    const edited = updateDayItem(added, "Tue", "focus", added.dailyTasks.Tue.at(-1)!.id, { description: "chapter 8" });
+    expect(edited.dailyTasks.Tue.at(-1)!.description).toBe("chapter 8");
+  });
 });
 
 describe("removeDayItem", () => {
