@@ -107,8 +107,6 @@ export interface MasterStreak {
   totalAccomplishments: number;
 }
 
-const asYMD = (d: Date) => formatDateYMD(d);
-
 /** The earliest day any of them began — the first day there was anything to
  *  miss. An older track's days are not blanks on a younger one's account. */
 export function masterStart(tracks: TrackState[]): string {
@@ -243,7 +241,7 @@ export function masterStreak(tracks: TrackState[], todayStr: string): MasterStre
   const cursor = parseYMD(todayStr);
   let activeLast30 = 0;
   for (let i = 0; i < 30; i += 1) {
-    if (set.has(asYMD(cursor))) activeLast30 += 1;
+    if (set.has(formatDateYMD(cursor))) activeLast30 += 1;
     cursor.setDate(cursor.getDate() - 1);
   }
 

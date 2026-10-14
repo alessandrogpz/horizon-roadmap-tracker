@@ -292,14 +292,6 @@ export function addExercise(log: GymLog, date: DateStr, name: string): GymLog {
   });
 }
 
-export function removeExercise(log: GymLog, date: DateStr, exerciseId: string): GymLog {
-  const session = sessionFor(log, date);
-  return withSession(log, date, {
-    ...session,
-    exercises: session.exercises.filter((exercise) => exercise.id !== exerciseId),
-  });
-}
-
 export function addSet(log: GymLog, date: DateStr, exerciseId: string, set: GymSet): GymLog {
   const session = sessionFor(log, date);
   return withSession(log, date, {

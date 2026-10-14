@@ -3,9 +3,8 @@
 import { useEffect, useMemo, useRef } from "react";
 import { Flame } from "lucide-react";
 import type { TrackState } from "@/lib/types";
-import { timelineStats, yearCalendar, type StreakDay } from "@/lib/stats";
+import { MONTH_NAMES, timelineStats, yearCalendar, yearRuler } from "@/lib/stats";
 import { restScheduleOf, trackStreak } from "@/lib/restDays";
-import { parseYMD } from "@/lib/dates";
 import TrackRing from "@/components/TrackRing";
 import TrackYearStrip from "@/components/TrackYearStrip";
 
@@ -26,7 +25,6 @@ import TrackYearStrip from "@/components/TrackYearStrip";
 const CELL = 11;
 const GAP = 3;
 const COLUMN = CELL + GAP;
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export default function AllTracksYear({
   tracks,
@@ -54,17 +52,9 @@ export default function AllTracksYear({
     [today, tracks, weekStartsOn, year]
   );
 
-  // The ruler the rows are hung on: the same year with every day counted as
-  // lived, so the columns and the month names come from the calendar rather
-  // than from whichever track happens to be first. Read off a track, a row
-  // that began yesterday would have named one month, placed it at the far end,
-  // and been wrong above every other row.
-  const ruler = useMemo(
-    () => yearCalendar({}, `${year}-01-01`, year, today, weekStartsOn),
-    [today, weekStartsOn, year]
-  );
-  const columns = Math.ceil(ruler.length / 7);
-  const marks = useMemo(() => monthMarks(ruler), [ruler]);
+  // The scale the rows are hung on. Shared with the phone, which draws the
+  // same stacked year — see `yearRuler`.
+  const { columns, marks } = useMemo(() => yearRuler(year, today, weekStartsOn), [today, weekStartsOn, year]);
 
   /**
    * Opened at the recent end.
@@ -121,7 +111,7 @@ export default function AllTracksYear({
           <div className="relative text-[0.65rem] text-subtle-foreground" style={{ height: 16 }}>
             {marks.map((mark) => (
               <span key={mark.month} className="absolute top-0" style={{ left: mark.column * COLUMN }}>
-                {MONTHS[mark.month]}
+                {MONTH_NAMES[mark.month]}
               </span>
             ))}
           </div>
@@ -153,22 +143,4 @@ export default function AllTracksYear({
       </div>
     </div>
   );
-}
-
-/** Which column each month starts in. A week belongs to the month of its first
- *  real day, which is the same rule the single-track grid bands by. */
-function monthMarks(days: StreakDay[]): { month: number; column: number }[] {
-  const marks: { month: number; column: number }[] = [];
-  let seen = -1;
-  for (let column = 0; column * 7 < days.length; column += 1) {
-    const anchor = days.slice(column * 7, column * 7 + 7).find((day) => day.date);
-    if (!anchor) continue;
-    const month = parseYMD(anchor.date).getMonth();
-    if (month === seen) continue;
-    seen = month;
-    // Skipped when the name would land on top of the one before it.
-    if (marks.length > 0 && column - marks[marks.length - 1].column < 3) continue;
-    marks.push({ month, column });
-  }
-  return marks;
 }

@@ -1,11 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import {
-  phaseStats,
-  progressStats,
-  streakCalendar,
-  streakStats,
-  timelineStats,
-} from "../stats";
+import { phaseStats, progressStats, streakCalendar, streakStats, timelineStats, yearRuler } from "../stats";
 import { setCurrentPhase } from "../trackActions";
 import type { Phase, TaskItem, TrackState } from "../types";
 
@@ -290,5 +284,38 @@ describe("progressStats", () => {
     const stats = progressStats(track({ portfolio: [{ id: "p1", title: "X", completed: true }] }));
     expect(stats.paceDelta).toBeCloseTo(stats.workPct - stats.timePct);
     expect(stats.paceDelta).toBeGreaterThan(0); // 100% of the only work, 8% of the time
+  });
+});
+
+describe("yearRuler", () => {
+  // The scale both apps hang a stacked year on. It is deliberately built from
+  // an empty history: read off a track instead, a row that began yesterday
+  // would name one month, put it at the far end, and be wrong above every
+  // other row.
+  it("covers the year in whole weeks", () => {
+    const { days, columns } = yearRuler(2026, "2026-12-31", "mon");
+    expect(days.length % 7).toBe(0);
+    expect(columns).toBe(days.length / 7);
+  });
+
+  it("names the months in order, once each", () => {
+    const { marks } = yearRuler(2026, "2026-12-31", "mon");
+    expect(marks.map((mark) => mark.month)).toEqual([...marks.map((mark) => mark.month)].sort((a, b) => a - b));
+    expect(new Set(marks.map((mark) => mark.month)).size).toBe(marks.length);
+    expect(marks[0].month).toBe(0);
+  });
+
+  it("never puts two names within three columns of each other", () => {
+    const { marks } = yearRuler(2026, "2026-12-31", "mon");
+    for (let i = 1; i < marks.length; i += 1) {
+      expect(marks[i].column - marks[i - 1].column).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it("stops at today rather than drawing the rest of the year", () => {
+    const short = yearRuler(2026, "2026-03-15", "mon");
+    const whole = yearRuler(2026, "2026-12-31", "mon");
+    expect(short.columns).toBeLessThan(whole.columns);
+    expect(short.marks.every((mark) => mark.month <= 2)).toBe(true);
   });
 });

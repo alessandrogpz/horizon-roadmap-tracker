@@ -3,17 +3,9 @@ import { execSync } from "child_process";
 import fs from "fs";
 import os from "os";
 import path from "path";
-import { isLocalRequest, localOnlyResponse } from "@/lib/server/localRequest";
+import { isLocalRequest, localOnlyResponse, resolveHomePath } from "@/lib/server/localRequest";
 
 export const dynamic = "force-dynamic";
-
-// Resolve paths beginning with ~ to the system user's home directory
-function resolveHomePath(inputPath: string): string {
-  if (inputPath.startsWith("~/")) {
-    return path.join(os.homedir(), inputPath.slice(2));
-  }
-  return inputPath;
-}
 
 export async function GET(req: NextRequest) {
   if (!isLocalRequest(req)) {
