@@ -34,7 +34,7 @@ import {
 } from "@shared/completions";
 import { trackStreak } from "@shared/restDays";
 import { DAYS_SHORT, formatDateYMD, formatDayMonthYear, getWeekNum, parseYMD } from "@shared/dates";
-import { computeRotationItemsForDay, isRotationItem } from "@shared/rotation";
+import { dayItems, NEW_ITEM_KIND } from "@shared/dayItems";
 import { focusOfDay } from "@shared/gym";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
 import { useMasterMode } from "../../master/MasterMode";
@@ -60,47 +60,21 @@ interface Row {
 }
 
 /**
- * Today's items: what the week's rhythm stores for this weekday, plus whatever
- * the track's rotations put there for *this* week.
- *
- * Rotations cycle — "Linear Algebra this week, OpenGL next" — so their items
- * are computed from the rotation's definition and the week number, never read
- * back from storage. A stored rotation item is last week's answer, which is why
- * they are filtered out before the computed ones are added. This is the rule
- * the website's weekly plan follows, from the same shared functions; a phone
- * showing a different revision topic from the laptop would be worse than a
- * phone showing none.
+ * Today's items, in one list — the same list, in the same order, that the
+ * website's weekly plan and its day editor show, because all three go through
+ * `dayItems`. A phone showing a different Tuesday from the laptop would be
+ * worse than a phone showing none.
  */
-function rowsFor(track: TrackState, dateStr: string): { focus: Row[]; revision: Row[] } {
+function rowsFor(track: TrackState, dateStr: string): Row[] {
   const dayKey = DAYS_SHORT[parseYMD(dateStr).getDay()];
-  const storedFocus = track.dailyTasks?.[dayKey] ?? [];
-  const storedRevision = track.dailyRevisionItems?.[dayKey] ?? [];
-
-  const rotations = track.rotations ?? [];
   const weekNum = track.startDate ? getWeekNum(track.startDate, parseYMD(dateStr)) : 1;
-  const computed = rotations.length ? computeRotationItemsForDay(rotations, weekNum, dayKey, track.currentPhase) : { focus: [], revisions: [] };
-
-  const focus = rotations.length ? [...computed.focus, ...storedFocus.filter((it) => !isRotationItem(it))] : storedFocus;
-  const revision = rotations.length
-    ? [...computed.revisions, ...storedRevision.filter((it) => !isRotationItem(it))]
-    : storedRevision;
-
-  const generated = new Set([...computed.focus, ...computed.revisions].map((item) => item.id));
-  return {
-    focus: focus.map((item) => ({
-      id: item.id,
-      title: item.title,
-      kind: "focus" as const,
-      generated: generated.has(item.id),
-    })),
-    revision: revision.map((item) => ({
-      id: item.id,
-      title: item.title,
-      description: item.description,
-      kind: "revision" as const,
-      generated: generated.has(item.id),
-    })),
-  };
+  return dayItems(track, dayKey, weekNum).map((item) => ({
+    id: item.id,
+    title: item.title,
+    description: item.description,
+    kind: item.kind,
+    generated: item.generated,
+  }));
 }
 
 export default function TodayScreen() {
@@ -134,7 +108,7 @@ export default function TodayScreen() {
     });
   }, []);
 
-  const rows = useMemo(() => (track ? rowsFor(track, viewing) : { focus: [], revision: [] }), [track, viewing]);
+  const rows = useMemo(() => (track ? rowsFor(track, viewing) : []), [track, viewing]);
 
   // A day's own items live under its weekday, not its date: "what Tuesdays are
   // for" rather than "what happened on the 24th". Adding one here adds it to
@@ -181,10 +155,8 @@ export default function TodayScreen() {
 
   const dayKey = DAYS_SHORT[parseYMD(viewing).getDay()] as DayKey;
   const onToday = viewing === today;
-  const done = [...rows.focus, ...rows.revision].filter((row) =>
-    isItemCompleted(track, viewing, row.kind, row.id)
-  ).length;
-  const total = rows.focus.length + rows.revision.length;
+  const done = rows.filter((row) => isItemCompleted(track, viewing, row.kind, row.id)).length;
+  const total = rows.length;
   /** What this weekday is for, per the track's rhythm. */
   const kind = focusOfDay(track?.weekSchedule, dayKey);
   // How the day is going and how long the run is, in one line under the date —
@@ -247,24 +219,19 @@ export default function TodayScreen() {
         <EditButton editing={editing} onChange={setEditing} what={`${dayKey}'s plan`} />
       </View>
 
-      {(["focus", "revision"] as const).map((kind) => (
-        <Section
-          key={kind}
-          title={kind === "focus" ? "Focus" : "Revision"}
-          kind={kind}
-          rows={kind === "focus" ? rows.focus : rows.revision}
-          track={track}
-          date={viewing}
-          toggle={toggleItem}
-          dayKey={dayKey}
-          editing={editing}
-          onAdd={(title) => addItem(kind, dayKey, title)}
-          onRename={(id, title) => renameItem(kind, dayKey, id, title)}
-          onRemove={(row) => deleteItem(row, dayKey, viewing)}
-          styles={styles}
-          palette={palette}
-        />
-      ))}
+      <Section
+        rows={rows}
+        track={track}
+        date={viewing}
+        toggle={toggleItem}
+        dayKey={dayKey}
+        editing={editing}
+        onAdd={(title) => addItem(NEW_ITEM_KIND, dayKey, title)}
+        onRename={(row, title) => renameItem(row.kind, dayKey, row.id, title)}
+        onRemove={(row) => deleteItem(row, dayKey, viewing)}
+        styles={styles}
+        palette={palette}
+      />
 
       <TodaysTodos
         trackId={track.meta.id}
@@ -312,8 +279,6 @@ export default function TodayScreen() {
  * change.
  */
 function Section({
-  title,
-  kind,
   rows,
   track,
   date,
@@ -326,8 +291,6 @@ function Section({
   styles,
   palette,
 }: {
-  title: string;
-  kind: ItemKind;
   rows: Row[];
   track: TrackState;
   /** The day being shown, which is not always today. */
@@ -335,9 +298,10 @@ function Section({
   /** Whether the screen is in edit mode. Ticking ignores it. */
   editing: boolean;
   toggle: (item: DayItemRef, completed: boolean) => void;
+  /** The weekday a stored item's completion is recorded against. */
   dayKey: string;
   onAdd: (title: string) => void;
-  onRename: (id: string, title: string) => void;
+  onRename: (row: Row, title: string) => void;
   onRemove: (row: Row) => void;
   styles: ReturnType<typeof makeStyles>;
   palette: Palette;
@@ -348,17 +312,15 @@ function Section({
 
   const save = (row: Row) => {
     const next = draft.trim();
-    if (next && next !== row.title) onRename(row.id, next);
+    if (next && next !== row.title) onRename(row, next);
     setRenaming(null);
   };
 
-  // A heading with nothing under it is furniture. While the day is being
-  // edited it stays, because it is the thing you add into.
+  // Nothing to show and nothing to add into.
   if (rows.length === 0 && !editing) return null;
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
 
       {rows.map((row) => {
         const completed = isItemCompleted(track, date, row.kind, row.id);
@@ -437,11 +399,11 @@ function Section({
           onAdd(text);
           setAdding("");
         }}
-        placeholder={kind === "focus" ? `Add to ${dayKey}'s focus…` : `Add something to revise…`}
+        placeholder={`Add to ${dayKey}…`}
         placeholderTextColor={palette.subtleForeground}
         returnKeyType="done"
         style={styles.addInput}
-        accessibilityLabel={`Add a ${kind} item to ${dayKey}`}
+        accessibilityLabel={`Add an item to ${dayKey}`}
       />
       )}
     </View>

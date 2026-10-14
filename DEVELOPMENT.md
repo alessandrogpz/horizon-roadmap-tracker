@@ -189,6 +189,36 @@ where that question belongs.
 one document at a time, because six roadmaps printed end to end is a document
 nobody reads to the bottom of.
 
+## A day holds one list
+
+A day used to carry two — "revision" and "focus" — and you had to pick one
+before you could write anything down. The split never survived contact with
+real tracks: a single focus list would hold a book, a tutorial and a project,
+which are three different kinds of work. Worse, "focus" already named a *day's*
+type here, the thing the tag shows (Math, Rendering, Reading). Two meanings,
+one word, on the same card. The day's type now says what the day is about, and
+the day keeps one plain list.
+
+**The two stored arrays are still there.** `dailyRevisionItems` and
+`dailyTasks` are what every device and the server already hold, and completion
+timestamps are keyed `r:` and `t:` by a `^[tr]:` regex in the server's schema
+(`lib/server/sync/schema.ts`). Collapsing them into one array is a migration
+with a sync protocol attached — server deployed before any client writes the
+new shape — not a change of labels, so the labels went first. `DayItem.kind` is
+how an item finds its way back to the array it lives in. No screen shows it.
+
+**Every screen that lists a day's items goes through `dayItems`**
+(`lib/dayItems.ts`): the weekly plan, the day editor and the phone's Today
+screen. That is what keeps a Tuesday the same Tuesday on all three, including
+the order items read in. `grep -rn "dailyRevisionItems\|dailyTasks" components
+mobile/src` should only find storage-level code, never a screen building its
+own list.
+
+New items are written with `NEW_ITEM_KIND`, which is the revision array,
+because that is the one whose stored shape has a description field — `TaskItem`
+has none, and its schema on the server is strict, so giving tasks a description
+is a server change before it is a client one.
+
 ## Rotations, and the phase they belong to
 
 A rotation's current item is `(weekNumber - startWeek) mod itemCount`, so it

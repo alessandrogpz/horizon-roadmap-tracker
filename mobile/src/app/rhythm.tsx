@@ -31,6 +31,7 @@ import {
 } from "@shared/focusTypes";
 import { isRestType } from "@shared/restDays";
 import { DAYS_SHORT } from "@shared/dates";
+import { NEW_ITEM_KIND } from "@shared/dayItems";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { useUndo } from "../components/UndoBar";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
@@ -270,7 +271,7 @@ export default function RhythmScreen() {
               />
             ) : (
               <Text style={styles.cardTitle}>
-                {rotation.label} · {rotation.target === "focus" ? "focus" : "revision"} ·{" "}
+                {rotation.label} ·{" "}
                 {rotation.daysOfWeek.length ? rotation.daysOfWeek.join(", ") : "no days yet"}
                 {/* Which phase it belongs to, where a list of rotations would
                     otherwise look like a list of things all running at once. */}
@@ -294,23 +295,6 @@ export default function RhythmScreen() {
 
           {editing && (
             <>
-          <Text style={styles.fieldLabel}>Feeds</Text>
-          <View style={styles.choices}>
-            {(["revision", "focus"] as const).map((target) => (
-              <Pressable
-                key={target}
-                accessibilityRole="button"
-                accessibilityState={{ selected: rotation.target === target }}
-                onPress={() => editRotation(rotation.id, (r) => ({ ...r, target }))}
-                style={[styles.choice, rotation.target === target && { borderColor: palette.accent }]}
-              >
-                <Text style={[styles.choiceLabel, rotation.target === target && { color: palette.foreground }]}>
-                  {target === "focus" ? "Focus" : "Revision"}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-
           {/* Which phase this belongs to. A cycle and a curriculum are
               different shapes: ten topics on a twenty-four week track wrap
               and repeat, so phase three brings back what phase one already
@@ -473,7 +457,9 @@ export default function RhythmScreen() {
                 label: "New rotation",
                 items: [],
                 daysOfWeek: [],
-                target: "revision",
+                // Nothing picks this any more: a day shows one list. New
+                // rotations take the list that can hold a description.
+                target: NEW_ITEM_KIND,
                 startWeek: 1,
               },
             ],
