@@ -25,7 +25,7 @@ import { PanelCard, Meter } from "./PanelCard";
 import { FITNESS_PANEL, STEPS_PANEL } from "./layout";
 import { usePedometer } from "../steps/usePedometer";
 import { useLiveSteps } from "../steps/useLiveSteps";
-import { focusOfDay, planComplete, plannedFor, sessionFor, setCountOf, volumeOf } from "@shared/gym";
+import { focusOfDay, plannedFor, sessionFor, setCountOf, volumeOf } from "@shared/gym";
 import { useGymLog } from "../gym/useGymLog";
 import { SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
@@ -81,14 +81,12 @@ export function PanelBody({ id, track, today }: { id: string } & PanelProps) {
 }
 
 /**
- * The week, as seven dots coloured by what each day is for, with today ringed —
- * and, underneath, what today actually asks of you.
+ * The week, as seven dots coloured by what each day is for, with today ringed.
  *
- * The second half is why this is a "weekly overview" rather than a study plan:
- * a day's contents come from wherever that kind of day keeps them. For an
- * ordinary track that is the day's checklist; for a training day it is the gym
- * plan. Both are the same question — what does the rhythm want today — and the
- * panel answers it without caring which.
+ * It used to carry a line underneath counting today's gym plan — "Math: 0 of 1
+ * exercises" — which read as a progress line about the day itself on a track
+ * that has nothing to do with training. A panel called the weekly overview
+ * shows the week; what today asks of you is the Today tab, one tap away.
  */
 function WeekPanel({ track, today }: PanelProps) {
   const palette = usePalette();
@@ -98,12 +96,6 @@ function WeekPanel({ track, today }: PanelProps) {
   // Dated, so the strip reads as *this* week rather than a week in general —
   // and so it agrees with the calendar it opens into.
   const monday = getMondayOfDateWeek(parseYMD(today));
-  const { log } = useGymLog(track.meta.id);
-
-  const focus = focusOfDay(track.weekSchedule, todayKey);
-  const planned = plannedFor(log, focus?.key);
-  const complete = planComplete(log, focus?.key, today);
-  const done = sessionFor(log, today).exercises.filter((exercise) => exercise.sets.length > 0).length;
 
   return (
     <>
@@ -134,22 +126,6 @@ function WeekPanel({ track, today }: PanelProps) {
         })}
       </View>
 
-      {/* Whether today's training is done — a tick, not a second copy of the
-          plan. The plan belongs to the gym panel; repeating it here would put
-          the same information in two places, which is how the week and the gym
-          came to disagree in the first place. */}
-      {planned.length > 0 && (
-        <View style={[styles.line, styles.plannedBlock]}>
-          <Ionicons
-            name={complete ? "checkmark-circle" : "ellipse-outline"}
-            size={15}
-            color={complete ? palette.success : palette.subtleForeground}
-          />
-          <Text style={styles.lineText}>
-            {focus?.label}: {complete ? "done" : `${done} of ${planned.length} exercises`}
-          </Text>
-        </View>
-      )}
     </>
   );
 }
@@ -428,7 +404,6 @@ function makeStyles(palette: Palette) {
     weekDot: { width: 16, height: 16, borderRadius: 8 },
     weekName: { color: palette.subtleForeground, ...TYPE.micro},
     weekDate: { color: palette.subtleForeground, ...TYPE.micro},
-    plannedBlock: { marginTop: SPACING.sm },
     exerciseRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm, paddingVertical: 3 },
     exerciseNumbers: { alignItems: "center", minWidth: 34 },
     numberValue: { color: palette.foreground, ...TYPE.label, fontWeight: "700" },

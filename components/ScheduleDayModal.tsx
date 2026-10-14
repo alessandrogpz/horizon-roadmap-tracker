@@ -251,25 +251,18 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
                         </button>
                       </div>
 
-                      {/* Only where there is somewhere to put it: the older of
-                          the two stored lists has no description field, so an
-                          item written before this change keeps just its title
-                          rather than offering a box that would discard what
-                          you typed. Everything written now has one. */}
-                      {item.kind === "revision" && (
-                        <input
-                          type="text"
-                          value={item.description || ""}
-                          onChange={(e) =>
-                            applyChange((previous) =>
-                              updateDayItem(previous, day.name, item.kind, item.id, { description: e.target.value })
-                            )
-                          }
-                          onBlur={persistOnBlur}
-                          placeholder="Description (optional)..."
-                          className="bg-transparent border-none border-b border-dashed border-card-border text-muted-foreground font-[inherit] text-[0.8rem] outline-none py-px ml-7"
-                        />
-                      )}
+                      <input
+                        type="text"
+                        value={item.description || ""}
+                        onChange={(e) =>
+                          applyChange((previous) =>
+                            updateDayItem(previous, day.name, item.kind, item.id, { description: e.target.value })
+                          )
+                        }
+                        onBlur={persistOnBlur}
+                        placeholder="Description (optional)..."
+                        className="bg-transparent border-none border-b border-dashed border-card-border text-muted-foreground font-[inherit] text-[0.8rem] outline-none py-px ml-7"
+                      />
                     </div>
                   );
                 })}

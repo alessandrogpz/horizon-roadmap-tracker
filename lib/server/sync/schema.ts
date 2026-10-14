@@ -32,8 +32,13 @@ const maxKeys = <T extends z.ZodType>(record: T, max: number) =>
 
 const byDate = <T extends z.ZodType>(value: T) => maxKeys(z.record(dateKey, value), 20_000);
 
-const TaskItem = z.strictObject({ id, title: text(2000), completed: z.boolean() });
-const RevisionItem = z.strictObject({ id, title: text(2000), completed: z.boolean(), description: text(10_000).optional() });
+// Both day lists hold the same shape: a description is no longer one list's
+// privilege (see TaskItem in lib/types.ts). Added here before any client could
+// write one — this schema and the web client ship in the same deploy, and the
+// phone has no field for it, so no device can send one to a server that would
+// refuse it.
+const TaskItem = z.strictObject({ id, title: text(2000), completed: z.boolean(), description: text(10_000).optional() });
+const RevisionItem = TaskItem;
 
 const DetailItem = z.strictObject({ item: text(2000), desc: text(10_000) });
 const Detail = z.union([z.array(DetailItem).max(200), text(50_000)]);
