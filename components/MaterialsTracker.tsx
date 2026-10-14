@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { BookOpen, Check, ChevronDown, X } from "lucide-react";
-import { fetchGitStats, parseGitSources, serializeGitSources } from "@/lib/gitStats";
 import { fetchNotes, saveNotes } from "@/lib/notes";
 import { renderMarkdownToHtml } from "@/lib/markdown";
-import type { GitStats, Material } from "@/lib/types";
+import type { Material } from "@/lib/types";
+import { useGitStats } from "@/components/useGitStats";
 import { categoriesFor, MATERIAL_STATUSES, MATERIAL_TYPES, searchUrlFor } from "@/lib/materialOptions";
 import Portal from "@/components/Portal";
 
@@ -69,7 +69,6 @@ export default function MaterialsTracker({
   const [editLocalPath, setEditLocalPath] = useState("");
 
   // Git stats state
-  const [gitStats, setGitStats] = useState<{ [id: string]: GitStats }>({});
 
   // Collapsed category groups
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(readCollapsedCategories()));
@@ -112,23 +111,7 @@ export default function MaterialsTracker({
   // checkbox and burned the GitHub API's 60-requests/hour budget.
   // repoUrl (injected by migration) is the primary source. Archived materials
   // don't show stats, so they don't spend any of that budget either.
-  const gitSourceKey = serializeGitSources(
-    activeMaterials.map(mat => ({ id: mat.id, source: mat.repoUrl || mat.localPath || "" }))
-  );
-
-  useEffect(() => {
-    let cancelled = false;
-    parseGitSources(gitSourceKey).forEach(({ id, source }) => {
-      fetchGitStats(source)
-        .then(stats => {
-          if (!cancelled) setGitStats(prev => ({ ...prev, [id]: stats }));
-        })
-        .catch(err => console.error(`Error fetching git stats for ${source}:`, err));
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [gitSourceKey]);
+  const gitStats = useGitStats(activeMaterials.map(mat => ({ id: mat.id, source: mat.repoUrl || mat.localPath || "" })));
 
   const statuses = MATERIAL_STATUSES;
   // Includes any category already in use, so editing a material can't silently

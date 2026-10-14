@@ -4,7 +4,7 @@
 
 import type { CompletedItem, Material, Phase, TrackState } from "./types";
 import { completedItemTitle } from "./streak";
-import { bridges, restScheduleOf, streakWithRest, type RestOn } from "./restDays";
+import { longestStreakWithRest, restScheduleOf, streakWithRest, type RestOn } from "./restDays";
 import { dateForDay, dayForDate, daysSince, formatDateYMD, parseYMD } from "./dates";
 import { trackTotalDays, recommendedPhaseId } from "./trackActions";
 
@@ -47,14 +47,7 @@ export function streakStats(
   const history = [...new Set(track.streakHistory || [])].sort();
   const set = new Set(history);
 
-  let longest = 0;
-  let run = 0;
-  let previous: string | null = null;
-  for (const date of history) {
-    run = previous && bridges(previous, date, rest) ? run + 1 : 1;
-    longest = Math.max(longest, run);
-    previous = date;
-  }
+  const longest = longestStreakWithRest(history, rest);
 
   const completedHistory = track.completedItemsHistory || {};
   const totalAccomplishments = Object.values(completedHistory).reduce(
