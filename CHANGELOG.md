@@ -7,6 +7,27 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.100.0] - 2026-10-14
+
+### Changed
+- **A day holds one list.** It used to carry two — Revision and Focus — and you had to pick one
+  before you could write anything down. The split never survived contact with a real track: a single
+  focus list would hold a book, a tutorial and a project, which are three different kinds of work.
+  And "focus" already named something else here — a *day's* type, the thing the tag shows (Math,
+  Rendering, Reading). Two meanings, one word, on the same card. What the day is about is the type
+  at the top, which you set and name yourself; what is on it is a plain list.
+- The day editor has one checklist and one place to add to it: "Add an item…" with an optional
+  description, in place of "New revision topic…" and "Add a focus item…". The weekly plan shows the
+  items with no headings over them, which also gives a stacked day two fewer lines. The phone's
+  Today screen is one list for the same reason, and its add box says "Add to Wed…" rather than
+  asking which list you meant.
+- A rotation no longer asks which list it feeds, on the website or the phone. It has a label, the
+  days it runs, the phase it belongs to and its items.
+- Nothing was reclassified and nothing moved: items written before this keep their place, their
+  ticks and their history, and sync keys are unchanged. The two arrays still exist underneath, where
+  only storage can see them — collapsing those is a migration with a sync protocol attached, and the
+  labels did not need to wait for it.
+
 ## [0.99.1] - 2026-10-13
 
 ### Changed

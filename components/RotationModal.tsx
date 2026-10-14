@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Check, X } from "lucide-react";
 import type { RotationDef, TrackState } from "@/lib/types";
+import { NEW_ITEM_KIND } from "@/lib/dayItems";
 import { getWeekNum } from "@/lib/dates";
 import { renderMarkdownToHtml } from "@/lib/markdown";
 
@@ -37,7 +38,15 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
     existing?.items.map((it) => ({ title: it.title, description: it.description || "" })) || [{ title: "", description: "" }]
   );
   const [daysOfWeek, setDaysOfWeek] = useState<string[]>(existing?.daysOfWeek || []);
-  const [target, setTarget] = useState<"revision" | "focus">(existing?.target || "revision");
+  /**
+   * Which of the two stored lists this rotation's items land in.
+   *
+   * A day shows one list now, so there is nothing to choose and nothing asks:
+   * an existing rotation keeps whichever it has always written to, and a new
+   * one takes the list that can hold a description, which rotation items have.
+   * Kept in the shape because every device and the server still store it.
+   */
+  const [target] = useState<"revision" | "focus">(existing?.target || NEW_ITEM_KIND);
   /** Which phase this belongs to, or `undefined` for every phase. */
   const [phase, setPhase] = useState<number | undefined>(existing?.phase);
   const [explanation, setExplanation] = useState(existing?.explanation || "");
@@ -58,7 +67,6 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
       setLabel(existing.label);
       setItems(existing.items.map((it) => ({ title: it.title, description: it.description || "" })));
       setDaysOfWeek(existing.daysOfWeek);
-      setTarget(existing.target);
       setPhase(existing.phase);
       setExplanation(existing.explanation || "");
     }
@@ -289,25 +297,6 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                 />
               </label>
 
-              <label className="flex flex-col gap-1.5">
-                <span className="text-[0.75rem] text-muted-foreground uppercase tracking-[0.05em] font-semibold">Target</span>
-                <div className="flex gap-2">
-                  {(["revision", "focus"] as const).map((t) => (
-                    <button
-                      key={t}
-                      onClick={() => setTarget(t)}
-                      className={`px-3 py-1.5 rounded-md text-[0.8rem] font-semibold capitalize cursor-pointer border transition-all duration-150 ${
-                        target === t
-                          ? "bg-accent/15 border-accent text-accent"
-                          : "bg-surface-muted border-card-border text-muted-foreground hover:border-card-border-hover"
-                      }`}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              </label>
-
               {/* Which phase this belongs to. A cycle and a curriculum are
                   different shapes: ten topics on a twenty-four week track
                   wrap and repeat, so you meet the same ones in phase three
@@ -457,7 +446,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                 {existing?.label}
               </h2>
               <p className="text-[0.85rem] text-muted-foreground m-0">
-                Currently on Week {currentWeekNum} of curriculum · shows on {existing?.daysOfWeek.join(", ")} · {existing?.target}
+                Currently on Week {currentWeekNum} of curriculum · shows on {existing?.daysOfWeek.join(", ")}
               </p>
             </div>
 
