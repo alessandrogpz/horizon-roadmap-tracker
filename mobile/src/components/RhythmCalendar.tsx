@@ -13,18 +13,19 @@
 // this app plans in; the month exists to find the week you want.
 //
 // Everything shown is derived, never stored twice: the day's kind comes from
-// the track's rhythm, its rotation topics from `computeRotationItemsForDay`,
-// its gym work from the plan for that kind of day, and what was actually done
-// from the completion history.
+// the track's rhythm, what is on it from `dayItems` — the same list Today and
+// the website build — and what was actually done from the completion history.
+// Gym work is not here. It is keyed by focus type, so a plan filed under
+// "math" surfaced on a graphics track's maths day; it belongs to the gym
+// panel, which is where it now stays.
 
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Animated, { FadeIn } from "react-native-reanimated";
 import type { TrackState } from "@shared/types";
-import type { GymLog } from "@shared/gym";
-import { focusOfDay, plannedFor } from "@shared/gym";
-import { computeRotationItemsForDay, isRotationItem } from "@shared/rotation";
+import { focusOfDay } from "@shared/focusTypes";
+import { dayItems } from "@shared/dayItems";
 import { DAYS_SHORT, formatDateYMD, getWeekNum, parseYMD, todayYMD } from "@shared/dates";
 import { getSettings } from "@shared/settings";
 import { tap } from "../feedback/haptics";
@@ -54,29 +55,13 @@ interface DayPlan {
   done: number;
 }
 
-function planFor(track: TrackState, gym: GymLog, date: string): DayPlan {
+function planFor(track: TrackState, date: string): DayPlan {
   const dayKey = DAYS_SHORT[parseYMD(date).getDay()];
   const focus = focusOfDay(track.weekSchedule, dayKey);
-
-  const rotations = track.rotations ?? [];
   const weekNum = track.startDate ? getWeekNum(track.startDate, parseYMD(date)) : 1;
-  const computed = rotations.length
-    ? computeRotationItemsForDay(rotations, weekNum, dayKey, track.currentPhase)
-    : { focus: [], revisions: [] };
-
-  // Stored rotation items are last week's answer, so they are dropped in
-  // favour of the computed ones — the same rule Today follows.
-  const stored = [
-    ...(track.dailyTasks?.[dayKey] ?? []),
-    ...(track.dailyRevisionItems?.[dayKey] ?? []),
-  ].filter((item) => !isRotationItem(item));
-
-  const items = [
-    ...computed.focus.map((item) => item.title),
-    ...computed.revisions.map((item) => item.title),
-    ...stored.map((item) => item.title),
-    ...plannedFor(gym, focus?.key).map((item) => item.name),
-  ];
+  // The same list Today and the website show, from the same function, rather
+  // than a fourth assembly of it that could drift.
+  const items = dayItems(track, dayKey, weekNum).map((item) => item.title);
 
   return {
     date,
@@ -88,7 +73,7 @@ function planFor(track: TrackState, gym: GymLog, date: string): DayPlan {
   };
 }
 
-export function RhythmCalendar({ track, gym }: { track: TrackState; gym: GymLog }) {
+export function RhythmCalendar({ track }: { track: TrackState }) {
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
 
@@ -131,7 +116,7 @@ export function RhythmCalendar({ track, gym }: { track: TrackState; gym: GymLog 
       return Array.from({ length: 7 }, (_, i) => {
         const date = new Date(start);
         date.setDate(start.getDate() + i);
-        return planFor(track, gym, formatDateYMD(date));
+        return planFor(track, formatDateYMD(date));
       });
     }
 
@@ -139,9 +124,9 @@ export function RhythmCalendar({ track, gym }: { track: TrackState; gym: GymLog 
     const first = new Date(at.getFullYear(), at.getMonth(), 1);
     const count = new Date(at.getFullYear(), at.getMonth() + 1, 0).getDate();
     return Array.from({ length: count }, (_, i) =>
-      planFor(track, gym, formatDateYMD(new Date(at.getFullYear(), at.getMonth(), i + 1)))
+      planFor(track, formatDateYMD(new Date(at.getFullYear(), at.getMonth(), i + 1)))
     );
-  }, [anchor, gym, scope, track, weekStart]);
+  }, [anchor, scope, track, weekStart]);
 
   const onCurrent =
     scope === "week"
