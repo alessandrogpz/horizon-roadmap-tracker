@@ -1,15 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  bridges,
-  fixedRest,
-  isRestDate,
-  isRestType,
-  marksRestDay,
-  restScheduleOf,
-  restWeekdays,
-  streakWithRest,
-  trackStreak,
-} from "../restDays";
+import { bridges, fixedRest, isRestDate, isRestType, longestStreakWithRest, marksRestDay, restScheduleOf, restWeekdays, streakWithRest, trackStreak } from "../restDays";
 import { setRestDay } from "../focusTypes";
 import { setWeeklyRhythm } from "../trackActions";
 import { streakStats } from "../stats";
@@ -315,5 +305,26 @@ describe("recording a change to the week", () => {
     const next = setWeeklyRhythm(base, week(["Mon"]), pool, "2026-10-01");
     expect(next.weekSchedule).toEqual(week(["Mon"]));
     expect(next.focusTypes).toEqual(pool);
+  });
+});
+
+describe("longestStreakWithRest", () => {
+  const none = fixedRest(new Set<string>());
+  const sundaysOff = fixedRest(new Set(["Sun"]));
+
+  it("is zero with nothing recorded", () => {
+    expect(longestStreakWithRest([], none)).toBe(0);
+  });
+
+  it("counts the longest unbroken run, not the last one", () => {
+    // 5th-8th is four; then a gap; then two.
+    const history = ["2026-01-05", "2026-01-06", "2026-01-07", "2026-01-08", "2026-01-20", "2026-01-21"];
+    expect(longestStreakWithRest(history, none)).toBe(4);
+  });
+
+  it("steps over a day deliberately taken off without counting it", () => {
+    // Sat 10th, Sun 11th off, Mon 12th: a run of two working days, bridged.
+    expect(longestStreakWithRest(["2026-01-10", "2026-01-12"], sundaysOff)).toBe(2);
+    expect(longestStreakWithRest(["2026-01-10", "2026-01-12"], none)).toBe(1);
   });
 });
