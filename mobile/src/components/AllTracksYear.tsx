@@ -16,7 +16,7 @@
 import { useMemo, useRef } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { timelineStats, yearCalendar, type StreakDay } from "@shared/stats";
+import { MONTH_NAMES, timelineStats, yearCalendar, yearRuler, type StreakDay } from "@shared/stats";
 import { marksRestDay, restScheduleOf, trackStreak, type RestOn } from "@shared/restDays";
 import { parseYMD } from "@shared/dates";
 import type { TrackState } from "@shared/types";
@@ -39,8 +39,6 @@ const ROW_GAP = SPACING.md;
 const LABELS = 16;
 /** The pinned column: a ring, a name, a streak. */
 const HEAD = 108;
-
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 interface Row {
   track: TrackState;
@@ -94,17 +92,9 @@ export function AllTracksYear({
     [palette.accent, today, tracks, weekStartsOn, year]
   );
 
-  // The ruler the rows are hung on: the same year with every day counted as
-  // lived, so the columns and the month names come from the calendar rather
-  // than from whichever track happens to be first. Read off a track, a row
-  // that began yesterday would have named one month and placed it at the far
-  // end, and every label above every other row would have been wrong.
-  const ruler = useMemo(
-    () => yearCalendar({}, `${year}-01-01`, year, today, weekStartsOn),
-    [today, weekStartsOn, year]
-  );
-  const columns = Math.ceil(ruler.length / 7);
-  const marks = useMemo(() => monthMarks(ruler), [ruler]);
+  // The scale the rows are hung on. Shared with the website, which draws the
+  // same stacked year — see `yearRuler`.
+  const { columns, marks } = useMemo(() => yearRuler(year, today, weekStartsOn), [today, weekStartsOn, year]);
   const width = columns * COLUMN;
 
   if (columns === 0 || rows.length === 0) return null;
@@ -160,7 +150,7 @@ export function AllTracksYear({
                 style={[styles.monthLabel, { left: mark.column * COLUMN }]}
                 allowFontScaling={false}
               >
-                {MONTHS[mark.month]}
+                {MONTH_NAMES[mark.month]}
               </Text>
             ))}
           </View>
@@ -205,26 +195,6 @@ export function AllTracksYear({
       </ScrollView>
     </View>
   );
-}
-
-/** Which column each month starts in. A week belongs to the month of its first
- *  real day, which is the same rule the single-track grid bands by. */
-function monthMarks(days: StreakDay[]): { month: number; column: number }[] {
-  const marks: { month: number; column: number }[] = [];
-  let seen = -1;
-  for (let column = 0; column * 7 < days.length; column += 1) {
-    const anchor = days.slice(column * 7, column * 7 + 7).find((day) => day.date);
-    if (!anchor) continue;
-    const month = parseYMD(anchor.date).getMonth();
-    if (month === seen) continue;
-    seen = month;
-    // Skipped when the name would land on top of the one before it — at this
-    // zoom a month is four columns, and three characters is wider than that
-    // only where a month is cut short by the start of the year or by today.
-    if (marks.length > 0 && column - marks[marks.length - 1].column < 3) continue;
-    marks.push({ month, column });
-  }
-  return marks;
 }
 
 function makeStyles(palette: Palette) {
