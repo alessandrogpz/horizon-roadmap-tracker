@@ -7,6 +7,20 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.102.0] - 2026-10-14
+
+### Changed
+- **The gym keeps to itself.** Its plans are keyed by focus type — the same keys a week is built
+  from — so a plan filed under `math` was indistinguishable from a maths day's plan, and every
+  screen asking "what is planned for this kind of day" found it. The phone's week strip showed an
+  exercise count under such a day, and its rhythm calendar folded planned exercise names in among
+  the day's own items. Both are gone. A gym log is read by the gym panel and nothing else now.
+- `focusOfDay` moved from `lib/gym.ts` to `lib/focusTypes.ts`. It answers "what is this weekday
+  for" by reading the week's own schedule and was never gym logic; living there made every screen
+  that wanted a day's type import from the gym module.
+- The phone's rhythm calendar builds a day's list with `dayItems`, like every other screen, instead
+  of assembling its own fourth copy.
+
 ## [0.101.0] - 2026-10-14
 
 ### Changed

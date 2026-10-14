@@ -13,7 +13,7 @@
 // Both platforms call these now, so a type renamed on a laptop and one renamed
 // on a phone leave the week in the same state.
 
-import type { FocusType, WeekDay } from "./types";
+import type { DayKey, FocusType, WeekDay } from "./types";
 
 export interface FocusPool {
   focusTypes: Record<string, FocusType>;
@@ -91,4 +91,21 @@ export function removeFocusType(pool: FocusPool, key: string): FocusPool {
       day.type === key ? { ...day, type: fallbackType, label: fallbackLabel } : day
     ),
   };
+}
+
+/**
+ * What a given weekday is for, as the track's rhythm has it.
+ *
+ * It lived in `lib/gym.ts` until a training day was the only thing that asked
+ * the question. It is not gym logic — it reads `weekSchedule` and nothing else
+ * — and leaving it there made every screen that wanted a day's type import
+ * from the gym module, which made the gym look entangled with the rest of the
+ * app when the only thing shared was this.
+ */
+export function focusOfDay(
+  weekSchedule: { name: string; type: string; label: string }[] | undefined,
+  dayKey: DayKey
+): { key: string; label: string } | null {
+  const day = (weekSchedule ?? []).find((entry) => entry.name === dayKey);
+  return day ? { key: day.type, label: day.label } : null;
 }
