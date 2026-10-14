@@ -189,6 +189,22 @@ where that question belongs.
 one document at a time, because six roadmaps printed end to end is a document
 nobody reads to the bottom of.
 
+## The gym keeps to itself
+
+A gym log is a note (`gym-<trackId>`), not part of the track, so it never
+touches a day's items, completions, streaks or history. What it *is* keyed by
+is focus types — the same keys a week is built from — so a plan filed under
+`math` is indistinguishable from a maths day's plan, and anything asking "what
+is planned for this day's type" finds it. That is how `Math: 0 of 1 exercises`
+came to sit under a graphics track's weekly overview.
+
+Gym data is now read only by the gym panel itself (`components/GymTracker.tsx`
+on the website, the `FITNESS_PANEL` case and `/gym` on the phone).
+`grep -rn "@shared/gym\|@/lib/gym\|useGymLog" lib components app mobile/src`
+outside those files should come back empty. `focusOfDay` used to live in
+`lib/gym.ts` and is not gym logic — it reads `weekSchedule` — so it moved to
+`lib/focusTypes.ts`, which is what made that grep meaningful.
+
 ## A day holds one list
 
 A day used to carry two — "revision" and "focus" — and you had to pick one
@@ -208,8 +224,8 @@ new shape — not a change of labels, so the labels went first. `DayItem.kind` i
 how an item finds its way back to the array it lives in. No screen shows it.
 
 **Every screen that lists a day's items goes through `dayItems`**
-(`lib/dayItems.ts`): the weekly plan, the day editor and the phone's Today
-screen. That is what keeps a Tuesday the same Tuesday on all three, including
+(`lib/dayItems.ts`): the weekly plan, the day editor, the phone's Today screen
+and its rhythm calendar. That is what keeps a Tuesday the same Tuesday on all three, including
 the order items read in. `grep -rn "dailyRevisionItems\|dailyTasks" components
 mobile/src` should only find storage-level code, never a screen building its
 own list.
