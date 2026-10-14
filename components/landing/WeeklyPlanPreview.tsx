@@ -10,7 +10,7 @@ import { CalendarDays, Check } from "lucide-react";
  * what a push day is, and what it means for the emphasis to move on next week.
  *
  * The day cards mirror `components/WeeklyPlan.tsx`'s DayCard — focus tag, the
- * two lists, today's highlight, dimmed future days — and it reuses the app's
+ * day's list, today's highlight, dimmed future days — and it reuses the app's
  * own `.week-grid` classes, so it reshapes itself for the room it has exactly
  * like the real panel does: seven across, four-and-three, or one day per row
  * on a phone.
@@ -26,10 +26,9 @@ interface PreviewDay {
   /** Focus type label and colour, as configured on the track. */
   label: string;
   color: string;
-  /** The two lists a day carries. Their headings are the track's own words —
-   *  a study track calls them Revision and Focus, a training one Warm-up and
-   *  Session — so they travel with the data rather than being hard-coded. */
-  lists: { heading: string; items: { title: string; done: boolean }[] }[];
+  /** What is on the day. One list: what the day is *about* is the focus type
+   *  above it, so nothing here has to be filed under a heading first. */
+  items: { title: string; done: boolean }[];
   state: "past" | "today" | "future";
 }
 
@@ -44,16 +43,11 @@ const DAYS: PreviewDay[] = [
     name: "Mon",
     label: "Push",
     color: PUSH,
-    lists: [
-      { heading: "Warm-up", items: [{ title: "Shoulder mobility", done: true }] },
-      {
-        heading: "Session",
-        items: [
-          { title: "Bench press", done: true },
-          { title: "Overhead press", done: true },
-          { title: "Triceps", done: true },
-        ],
-      },
+    items: [
+      { title: "Shoulder mobility", done: true },
+      { title: "Bench press", done: true },
+      { title: "Overhead press", done: true },
+      { title: "Triceps", done: true },
     ],
     state: "past",
   },
@@ -61,16 +55,11 @@ const DAYS: PreviewDay[] = [
     name: "Tue",
     label: "Pull",
     color: PULL,
-    lists: [
-      { heading: "Warm-up", items: [{ title: "Band pull-aparts", done: true }] },
-      {
-        heading: "Session",
-        items: [
-          { title: "Deadlift", done: true },
-          { title: "Barbell row", done: true },
-          { title: "Curls", done: false },
-        ],
-      },
+    items: [
+      { title: "Band pull-aparts", done: true },
+      { title: "Deadlift", done: true },
+      { title: "Barbell row", done: true },
+      { title: "Curls", done: false },
     ],
     state: "past",
   },
@@ -78,16 +67,11 @@ const DAYS: PreviewDay[] = [
     name: "Wed",
     label: "Legs",
     color: LEGS,
-    lists: [
-      { heading: "Warm-up", items: [{ title: "Hip mobility", done: true }] },
-      {
-        heading: "Session",
-        items: [
-          { title: "Front squat", done: true },
-          { title: "Walking lunges", done: true },
-          { title: "Calves", done: true },
-        ],
-      },
+    items: [
+      { title: "Hip mobility", done: true },
+      { title: "Front squat", done: true },
+      { title: "Walking lunges", done: true },
+      { title: "Calves", done: true },
     ],
     state: "past",
   },
@@ -95,16 +79,11 @@ const DAYS: PreviewDay[] = [
     name: "Thu",
     label: "Push",
     color: PUSH,
-    lists: [
-      { heading: "Warm-up", items: [{ title: "Shoulder mobility", done: true }] },
-      {
-        heading: "Session",
-        items: [
-          { title: "Incline press", done: true },
-          { title: "Dips", done: false },
-          { title: "Lateral raises", done: false },
-        ],
-      },
+    items: [
+      { title: "Shoulder mobility", done: true },
+      { title: "Incline press", done: true },
+      { title: "Dips", done: false },
+      { title: "Lateral raises", done: false },
     ],
     state: "today",
   },
@@ -112,16 +91,11 @@ const DAYS: PreviewDay[] = [
     name: "Fri",
     label: "Pull",
     color: PULL,
-    lists: [
-      { heading: "Warm-up", items: [{ title: "Band pull-aparts", done: false }] },
-      {
-        heading: "Session",
-        items: [
-          { title: "Pull-ups", done: false },
-          { title: "Cable row", done: false },
-          { title: "Face pulls", done: false },
-        ],
-      },
+    items: [
+      { title: "Band pull-aparts", done: false },
+      { title: "Pull-ups", done: false },
+      { title: "Cable row", done: false },
+      { title: "Face pulls", done: false },
     ],
     state: "future",
   },
@@ -129,15 +103,10 @@ const DAYS: PreviewDay[] = [
     name: "Sat",
     label: "Conditioning",
     color: CARDIO,
-    lists: [
-      { heading: "Warm-up", items: [{ title: "Easy jog, 10 min", done: false }] },
-      {
-        heading: "Session",
-        items: [
-          { title: "5km at tempo", done: false },
-          { title: "Core circuit", done: false },
-        ],
-      },
+    items: [
+      { title: "Easy jog, 10 min", done: false },
+      { title: "5km at tempo", done: false },
+      { title: "Core circuit", done: false },
     ],
     state: "future",
   },
@@ -145,14 +114,9 @@ const DAYS: PreviewDay[] = [
     name: "Sun",
     label: "Rest",
     color: REST,
-    lists: [
-      {
-        heading: "Session",
-        items: [
-          { title: "Long walk", done: false },
-          { title: "Stretch, 15 min", done: false },
-        ],
-      },
+    items: [
+      { title: "Long walk", done: false },
+      { title: "Stretch, 15 min", done: false },
     ],
     state: "future",
   },
@@ -171,20 +135,15 @@ function Box({ done }: { done: boolean }) {
 }
 
 function ItemList({
-  heading,
   items,
   isToday,
 }: {
-  heading: string;
   items: { title: string; done: boolean }[];
   isToday: boolean;
 }) {
   return (
     <div>
-      <span className="font-mono text-[0.55rem] font-bold uppercase tracking-[0.05em] text-accent">
-        {heading}
-      </span>
-      <div className="mt-[0.15rem] flex flex-col gap-[0.15rem]">
+      <div className="flex flex-col gap-[0.15rem]">
         {items.map((item) => (
           <div key={item.title} className="day-item-row flex items-start gap-[0.3rem]">
             <Box done={item.done} />
@@ -287,9 +246,7 @@ export default function WeeklyPlanPreview() {
                     </div>
                   </div>
 
-                  {day.lists.map((list) => (
-                    <ItemList key={list.heading} heading={list.heading} items={list.items} isToday={isToday} />
-                  ))}
+                  <ItemList items={day.items} isToday={isToday} />
                 </div>
               );
             })}

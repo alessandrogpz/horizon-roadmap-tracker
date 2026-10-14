@@ -5,7 +5,8 @@ import { CalendarDays, ChevronDown } from "lucide-react";
 import type { TrackState, WeekDay } from "@/lib/types";
 import { getDateForDayName, getWeekNum } from "@/lib/dates";
 import { DEFAULT_WEEK_SCHEDULE, DEFAULT_FOCUS_TYPES } from "@/lib/constants";
-import { computeRotationItemsForDay, isRotationItem, runsInPhase } from "@/lib/rotation";
+import { runsInPhase } from "@/lib/rotation";
+import { dayItems } from "@/lib/dayItems";
 import { isItemCompleted, setItemCompletion, type ItemKind } from "@/lib/completions";
 
 /**
@@ -251,24 +252,10 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
   const isToday = isCurrentWeek && idx === (dayOfWeek === 0 ? 6 : dayOfWeek - 1);
   const dayKey = dayItem.name;
   const dayDateStr = getDateForDayName(dayKey, weekOffset);
-  const storedRevisionItems = data.dailyRevisionItems?.[dayKey] || [];
-  const storedFocusTasks = data.dailyTasks?.[dayKey] || [];
 
-  // Rotation-sourced items reflect whichever week is actually currently
-  // active in storage — recompute them for the week being *viewed* so
-  // navigating weeks previews the correct upcoming/past content instead of
-  // repeating this week's. Manually added items pass through as-is.
-  const rotations = data.rotations || [];
-  const { revisions: rotationRevisions, focus: rotationFocus } = rotations.length > 0
-    ? computeRotationItemsForDay(rotations, viewedWeekNum, dayKey, data.currentPhase)
-    : { revisions: [], focus: [] };
-
-  const revisionItems = rotations.length > 0
-    ? [...rotationRevisions, ...storedRevisionItems.filter((it) => !isRotationItem(it))]
-    : storedRevisionItems;
-  const focusTasks = rotations.length > 0
-    ? [...rotationFocus, ...storedFocusTasks.filter((it) => !isRotationItem(it))]
-    : storedFocusTasks;
+  // One list, computed for the week being *viewed* so navigating weeks
+  // previews the right content rather than repeating this week's.
+  const items = dayItems(data, dayKey, viewedWeekNum);
 
   const todayDate = new Date();
   todayDate.setHours(0, 0, 0, 0);
@@ -277,10 +264,8 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
 
   const getItemCompleted = (itemId: string, kind: ItemKind) => isItemCompleted(data, dayDateStr, kind, itemId);
 
-  const itemCount = revisionItems.length + focusTasks.length;
-  const doneCount =
-    revisionItems.filter((item) => getItemCompleted(item.id, "revision")).length +
-    focusTasks.filter((task) => getItemCompleted(task.id, "focus")).length;
+  const itemCount = items.length;
+  const doneCount = items.filter((item) => getItemCompleted(item.id, item.kind)).length;
 
   /** Completion is always recorded against this card's calendar date, so
    *  ticking a box on a past day lands on that day rather than today. The
@@ -384,72 +369,34 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
       {/* Everything a shut day hides. It grows, so "No tasks" still sits
           in the middle of a column in the grid shapes. */}
       <div className="day-card-body flex min-h-0 flex-1 flex-col gap-[0.35rem]">
-        {/* Revision section */}
-        {revisionItems.length > 0 && (
-          <div>
-            <span className="text-[0.55rem] text-accent font-bold font-mono tracking-[0.05em] uppercase">
-              Revision
-            </span>
-            <div className="flex flex-col gap-[0.15rem] mt-[0.15rem]">
-              {revisionItems.map((item, i) => {
-                const completed = getItemCompleted(item.id, "revision");
-                return (
-                  <label key={item.id || i} className={ITEM_ROW} onClick={(e) => e.stopPropagation()}>
-                    <input
-                      type="checkbox"
-                      className="checkbox-custom mt-px shrink-0"
-                      checked={completed}
-                      onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                      onChange={(e) =>
-                        handleToggleItem("revision", { id: item.id, title: item.title, description: item.description }, e.target.checked)
-                      }
-                    />
-                    <span
-                      title={item.title}
-                      className={`day-item-title min-w-0 line-clamp-2 text-[0.72rem] leading-[1.3] ${completed ? "text-subtle-foreground line-through" : isToday ? "text-foreground" : "text-muted-foreground"}`}
-                    >
-                      {item.title}
-                    </span>
-                  </label>
-                );
-              })}
-            </div>
+        {items.length > 0 && (
+          <div className="flex flex-col gap-[0.15rem]">
+            {items.map((item, i) => {
+              const completed = getItemCompleted(item.id, item.kind);
+              return (
+                <label key={`${item.kind}:${item.id}` || i} className={ITEM_ROW} onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    className="checkbox-custom mt-px shrink-0"
+                    checked={completed}
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                    onChange={(e) =>
+                      handleToggleItem(item.kind, { id: item.id, title: item.title, description: item.description }, e.target.checked)
+                    }
+                  />
+                  <span
+                    title={item.title}
+                    className={`day-item-title min-w-0 line-clamp-2 text-[0.72rem] leading-[1.3] ${completed ? "text-subtle-foreground line-through" : isToday ? "text-foreground" : "text-muted-foreground"}`}
+                  >
+                    {item.title}
+                  </span>
+                </label>
+              );
+            })}
           </div>
         )}
 
-        {/* Focus tasks section */}
-        {focusTasks.length > 0 && (
-          <div className="mt-[0.1rem]">
-            <span className="text-[0.55rem] text-accent font-bold font-mono tracking-[0.05em] uppercase">
-              Focus
-            </span>
-            <div className="flex flex-col gap-[0.15rem] mt-[0.15rem]">
-              {focusTasks.map((task, i) => {
-                const completed = getItemCompleted(task.id, "focus");
-                return (
-                  <label key={task.id || i} className={ITEM_ROW} onClick={(e) => e.stopPropagation()}>
-                    <input
-                      type="checkbox"
-                      className="checkbox-custom mt-px shrink-0"
-                      checked={completed}
-                      onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                      onChange={(e) => handleToggleItem("focus", { id: task.id, title: task.title }, e.target.checked)}
-                    />
-                    <span
-                      title={task.title}
-                      className={`day-item-title min-w-0 line-clamp-2 text-[0.72rem] leading-[1.3] ${completed ? "text-subtle-foreground line-through" : isToday ? "text-foreground" : "text-muted-foreground"}`}
-                    >
-                      {task.title}
-                    </span>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Empty state */}
-        {revisionItems.length === 0 && focusTasks.length === 0 && (
+        {items.length === 0 && (
           <div className="day-card-empty flex flex-1 items-center justify-center">
             <span className="text-[0.7rem] text-subtle-foreground italic">No tasks</span>
           </div>
