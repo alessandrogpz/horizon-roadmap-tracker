@@ -134,7 +134,7 @@ export function addDayItem(
     return { ...track, dailyRevisionItems: { ...byDay, [dayKey]: [...(byDay[dayKey] || []), item] } };
   }
 
-  const item: TaskItem = { id: `task_${Date.now()}`, title, completed: false };
+  const item: TaskItem = { id: `task_${Date.now()}`, title, description: fields.description?.trim() || "", completed: false };
   const byDay = track.dailyTasks || {};
   return { ...track, dailyTasks: { ...byDay, [dayKey]: [...(byDay[dayKey] || []), item] } };
 }
@@ -153,8 +153,7 @@ export function updateDayItem(
     return { ...track, dailyRevisionItems: { ...byDay, [dayKey]: next } };
   }
   const byDay = track.dailyTasks || {};
-  // Focus tasks carry no description; ignore it rather than storing a dead field.
-  const next = (byDay[dayKey] || []).map((it) => (it.id === id ? { ...it, title: fields.title ?? it.title } : it));
+  const next = (byDay[dayKey] || []).map((it) => (it.id === id ? { ...it, ...fields } : it));
   return { ...track, dailyTasks: { ...byDay, [dayKey]: next } };
 }
 

@@ -75,12 +75,14 @@ export function dayItems(track: TrackState, dayKey: DayKey, weekNum: number): Da
     ...computed.focus.map((item) => ({
       id: item.id,
       title: item.title,
+      description: item.description,
       kind: "focus" as const,
       generated: true,
     })),
     ...manual(storedTasks).map((item) => ({
       id: item.id,
       title: item.title,
+      description: item.description,
       kind: "focus" as const,
       generated: false,
     })),
@@ -90,9 +92,7 @@ export function dayItems(track: TrackState, dayKey: DayKey, weekNum: number): Da
 /**
  * Where a newly written item goes.
  *
- * The revision array, because it is the one that can hold a description —
- * `TaskItem` has no such field, and the server's schema for it is strict, so
- * giving tasks one is a server change before it is a client change. Nothing
- * about this is visible: both arrays render as the same list.
+ * Either array would now do — both hold the same shape — so this is just a
+ * choice, kept in one place so every screen makes the same one.
  */
 export const NEW_ITEM_KIND: ItemKind = "revision";

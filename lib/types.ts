@@ -5,11 +5,21 @@ export interface TaskItem {
   id: string;
   title: string;
   completed: boolean;
-}
-
-export interface RevisionItem extends TaskItem {
+  /**
+   * The note under an item's title.
+   *
+   * Only the other of the two stored lists used to have one, which meant a day
+   * showing one list could offer the box for some of its items and not others
+   * — and the ones without it would silently discard what you typed. Both
+   * lists carry it now. Absent on everything written before, which reads the
+   * same as empty.
+   */
   description?: string;
 }
+
+/** Kept as a name for what a day's revision list holds. Identical to
+ *  `TaskItem` since descriptions stopped being one list's privilege. */
+export type RevisionItem = TaskItem;
 
 export interface PhaseDetailItem {
   item: string;
