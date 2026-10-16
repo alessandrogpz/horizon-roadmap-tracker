@@ -20,6 +20,7 @@ import {
   notepadNoteId,
   parseTodos,
   removeTodo,
+  renameTodo,
   serializeTodos,
   todoNoteId,
   toggleTodo,
@@ -42,6 +43,9 @@ export default function NotesScreen() {
   const [notepad, setNotepad] = useState("");
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [draft, setDraft] = useState("");
+  // Which item is being reworded, and what it says so far. Hold a to-do to
+  // open it — the same gesture the Today screen's checklists use.
+  const [editing, setEditing] = useState<{ index: number; text: string } | null>(null);
   const [loaded, setLoaded] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -123,13 +127,41 @@ export default function NotesScreen() {
           />
         </View>
 
-        {todos.map((item, index) => (
+        {todos.map((item, index) =>
+          editing?.index === index ? (
+            <View key={`${index}-${item.text}`} style={styles.todoRow}>
+              <TextInput
+                value={editing.text}
+                onChangeText={(text) => setEditing({ index, text })}
+                onSubmitEditing={() => {
+                  commitTodos(renameTodo(todos, index, editing.text));
+                  setEditing(null);
+                }}
+                autoFocus
+                returnKeyType="done"
+                style={[styles.input, { flex: 1 }]}
+                accessibilityLabel={`Rename ${item.text}`}
+              />
+              <Pressable
+                accessibilityRole="button"
+                hitSlop={8}
+                onPress={() => {
+                  commitTodos(renameTodo(todos, index, editing.text));
+                  setEditing(null);
+                }}
+              >
+                <Text style={styles.saveEdit}>Save</Text>
+              </Pressable>
+            </View>
+          ) : (
           <View key={`${index}-${item.text}`} style={styles.todoRow}>
             <Pressable
               accessibilityRole="checkbox"
               accessibilityState={{ checked: item.done }}
               accessibilityLabel={item.text}
+              accessibilityHint="Hold to reword"
               onPress={() => commitTodos(toggleTodo(todos, index))}
+              onLongPress={() => setEditing({ index, text: item.text })}
               style={styles.todoTap}
             >
               <View style={[styles.checkbox, item.done && { backgroundColor: palette.success, borderColor: palette.success }]}>
@@ -146,7 +178,8 @@ export default function NotesScreen() {
               <Text style={styles.remove}>×</Text>
             </Pressable>
           </View>
-        ))}
+          )
+        )}
 
         {loaded && todos.length === 0 && <Text style={styles.muted}>Nothing on the list.</Text>}
 
@@ -227,6 +260,7 @@ function makeStyles(palette: Palette) {
     todoText: { flex: 1, color: palette.foreground, ...TYPE.subhead},
     todoDone: { color: palette.mutedForeground, textDecorationLine: "line-through" },
     remove: { color: palette.subtleForeground, ...TYPE.figure, paddingHorizontal: SPACING.sm },
+    saveEdit: { color: palette.accent, ...TYPE.subhead, paddingHorizontal: SPACING.sm },
     notepad: {
       minHeight: 200,
       padding: SPACING.md,
