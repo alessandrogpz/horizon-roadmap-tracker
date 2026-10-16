@@ -48,4 +48,19 @@ export const toggleTodo = (items: TodoItem[], index: number): TodoItem[] =>
 export const removeTodo = (items: TodoItem[], index: number): TodoItem[] =>
   items.filter((_, i) => i !== index);
 
+/**
+ * Changes what an item says, keeping whether it is done.
+ *
+ * Blank text leaves the item alone rather than emptying it: a line with no
+ * text is not a to-do, `serializeTodos` would write a bare "- [ ]", and
+ * `parseTodos` would drop it on the next read — so the item would vanish from
+ * a rename, which is not what anybody means by one. Deleting is its own
+ * button.
+ */
+export const renameTodo = (items: TodoItem[], index: number, text: string): TodoItem[] => {
+  const trimmed = text.trim();
+  if (!trimmed) return items;
+  return items.map((item, i) => (i === index ? { ...item, text: trimmed } : item));
+};
+
 export const clearDoneTodos = (items: TodoItem[]): TodoItem[] => items.filter((item) => !item.done);

@@ -14,7 +14,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { addTodo, parseTodos, serializeTodos, todoNoteId, toggleTodo, type TodoItem } from "@shared/quickNotes";
+import {
+  addTodo,
+  parseTodos,
+  renameTodo,
+  serializeTodos,
+  todoNoteId,
+  toggleTodo,
+  type TodoItem,
+} from "@shared/quickNotes";
 import { loadNotes, saveNote } from "../storage/db";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
@@ -37,6 +45,10 @@ export function TodaysTodos({
 
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [draft, setDraft] = useState("");
+  // Rewording sits behind the screen's edit switch, like adding does; ticking
+  // stays in front of it. Named for the action, because `editing` is already
+  // the switch itself.
+  const [reword, setReword] = useState<{ index: number; text: string } | null>(null);
   const noteId = todoNoteId(trackId);
 
   useEffect(() => {
@@ -77,21 +89,50 @@ export function TodaysTodos({
 
       {open && (
         <>
-          {todos.map((item, index) => (
-            <Pressable
-              key={`${index}-${item.text}`}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: item.done }}
-              accessibilityLabel={item.text}
-              onPress={() => commit(toggleTodo(todos, index))}
-              style={styles.row}
-            >
-              <View style={[styles.box, item.done && { backgroundColor: palette.success, borderColor: palette.success }]}>
-                {item.done && <Text style={styles.tick}>✓</Text>}
+          {todos.map((item, index) =>
+            reword?.index === index ? (
+              <View key={`${index}-${item.text}`} style={styles.row}>
+                <TextInput
+                  value={reword.text}
+                  onChangeText={(text) => setReword({ index, text })}
+                  onSubmitEditing={() => {
+                    commit(renameTodo(todos, index, reword.text));
+                    setReword(null);
+                  }}
+                  autoFocus
+                  returnKeyType="done"
+                  style={[styles.input, { flex: 1, marginTop: 0 }]}
+                  accessibilityLabel={`Rename ${item.text}`}
+                />
+                <Pressable
+                  accessibilityRole="button"
+                  hitSlop={8}
+                  onPress={() => {
+                    commit(renameTodo(todos, index, reword.text));
+                    setReword(null);
+                  }}
+                >
+                  <Text style={styles.saveEdit}>Save</Text>
+                </Pressable>
               </View>
-              <Text style={[styles.text, item.done && styles.done]}>{item.text}</Text>
-            </Pressable>
-          ))}
+            ) : (
+              <Pressable
+                key={`${index}-${item.text}`}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: item.done }}
+                accessibilityLabel={item.text}
+                accessibilityHint={editing ? "Hold to reword" : undefined}
+                onPress={() => commit(toggleTodo(todos, index))}
+                onLongPress={editing ? () => setReword({ index, text: item.text }) : undefined}
+                style={styles.row}
+              >
+                <View style={[styles.box, item.done && { backgroundColor: palette.success, borderColor: palette.success }]}>
+                  {item.done && <Text style={styles.tick}>✓</Text>}
+                </View>
+                <Text style={[styles.text, item.done && styles.done]}>{item.text}</Text>
+              </Pressable>
+            )
+          )}
 
           {todos.length === 0 && <Text style={styles.muted}>Nothing on the list.</Text>}
 
@@ -142,6 +183,7 @@ function makeStyles(palette: Palette) {
     tick: { color: "#fff", ...TYPE.caption, fontWeight: "800" },
     text: { flex: 1, color: palette.foreground, ...TYPE.body},
     done: { color: palette.mutedForeground, textDecorationLine: "line-through" },
+    saveEdit: { color: palette.accent, ...TYPE.subhead, paddingHorizontal: SPACING.sm },
     input: {
       marginTop: SPACING.xs,
       paddingHorizontal: SPACING.md,

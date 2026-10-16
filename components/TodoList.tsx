@@ -7,21 +7,35 @@ import {
   clearDoneTodos,
   parseTodos,
   removeTodo,
+  renameTodo,
   serializeTodos,
   toggleTodo,
   type TodoItem,
 } from "@/lib/quickNotes";
 import { useQuickNote } from "@/components/useQuickNote";
 
-/** A plain to-do list: add, tick, delete. One per track; `noteId` comes from
- *  todoNoteId() in lib/quickNotes.ts. */
+/** A plain to-do list: add, tick, rename, delete. One per track; `noteId`
+ *  comes from todoNoteId() in lib/quickNotes.ts. */
 export default function TodoList({ noteId }: { noteId: string }) {
   const { content, update } = useQuickNote(noteId, 0);
   const [draft, setDraft] = useState("");
+  // Which item is open for editing, and what it currently says. Held by index
+  // because that is what the list is keyed by; it is cleared on every commit,
+  // so an edit can never be left pointing at a row that has moved.
+  const [editing, setEditing] = useState<{ index: number; text: string } | null>(null);
 
   const items = parseTodos(content ?? "");
   const doneCount = items.filter((item) => item.done).length;
-  const commit = (next: TodoItem[]) => update(serializeTodos(next));
+  const commit = (next: TodoItem[]) => {
+    setEditing(null);
+    update(serializeTodos(next));
+  };
+
+  /** Blank text is a cancel rather than a delete — see `renameTodo`. */
+  const saveEdit = () => {
+    if (!editing) return;
+    commit(renameTodo(items, editing.index, editing.text));
+  };
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,9 +92,30 @@ export default function TodoList({ noteId }: { noteId: string }) {
                 aria-label={`Mark "${item.text}" ${item.done ? "not done" : "done"}`}
                 className="h-3.5 w-3.5 shrink-0 cursor-pointer accent-[var(--accent)]"
               />
-              <span className={`flex-1 min-w-0 break-words text-[0.85rem] ${item.done ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                {item.text}
-              </span>
+              {editing?.index === index ? (
+                <input
+                  type="text"
+                  value={editing.text}
+                  autoFocus
+                  onChange={(e) => setEditing({ index, text: e.target.value })}
+                  onBlur={saveEdit}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") saveEdit();
+                    if (e.key === "Escape") setEditing(null);
+                  }}
+                  aria-label={`Edit "${item.text}"`}
+                  className="flex-1 min-w-0 rounded border border-accent bg-input-bg px-1 py-0.5 font-[inherit] text-[0.85rem] text-foreground outline-none"
+                />
+              ) : (
+                <button
+                  onClick={() => setEditing({ index, text: item.text })}
+                  title="Click to edit"
+                  aria-label={`Edit "${item.text}"`}
+                  className={`flex-1 min-w-0 cursor-text break-words border-none bg-transparent p-0 text-left font-[inherit] text-[0.85rem] ${item.done ? "text-muted-foreground line-through" : "text-foreground"}`}
+                >
+                  {item.text}
+                </button>
+              )}
               <button
                 onClick={() => commit(removeTodo(items, index))}
                 aria-label={`Delete "${item.text}"`}

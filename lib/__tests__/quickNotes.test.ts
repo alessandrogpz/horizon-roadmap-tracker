@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { addTodo, clearDoneTodos, notepadNoteId, parseTodos, removeTodo, serializeTodos, todoNoteId, toggleTodo } from "../quickNotes";
+import { addTodo, clearDoneTodos, notepadNoteId, parseTodos, removeTodo, renameTodo, serializeTodos, todoNoteId, toggleTodo } from "../quickNotes";
 
 describe("quick note ids", () => {
   it("gives every track its own notepad and to-do list, distinct from each other", () => {
@@ -54,5 +54,38 @@ describe("to-do list edits", () => {
 
   it("clears only the finished items", () => {
     expect(clearDoneTodos(list).map((i) => i.text)).toEqual(["a", "c"]);
+  });
+});
+
+describe("renameTodo", () => {
+  const items = [
+    { text: "Buy milk", done: false },
+    { text: "Call the bank", done: true },
+  ];
+
+  it("changes the text and nothing else", () => {
+    expect(renameTodo(items, 0, "Buy oat milk")).toEqual([
+      { text: "Buy oat milk", done: false },
+      { text: "Call the bank", done: true },
+    ]);
+  });
+
+  it("keeps a renamed item ticked", () => {
+    expect(renameTodo(items, 1, "Call the bank back")[1]).toEqual({ text: "Call the bank back", done: true });
+  });
+
+  it("trims, like adding does", () => {
+    expect(renameTodo(items, 0, "  Buy bread  ")[0].text).toBe("Buy bread");
+  });
+
+  // An empty rename would serialize to a bare "- [ ]" and be dropped on the
+  // next read, so the item would disappear instead of being renamed.
+  it("leaves the list alone when the new text is blank", () => {
+    expect(renameTodo(items, 0, "   ")).toBe(items);
+  });
+
+  it("survives a round trip through the stored markdown", () => {
+    const renamed = renameTodo(items, 1, "Call the bank back");
+    expect(parseTodos(serializeTodos(renamed))).toEqual(renamed);
   });
 });

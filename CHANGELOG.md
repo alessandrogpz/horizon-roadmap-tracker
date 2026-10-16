@@ -7,6 +7,18 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.103.0] - 2026-10-16
+
+### Added
+- **A to-do can be reworded.** Once an item was written there was no way to change it — only tick it
+  or delete it and type the whole thing again. On the website, click the text to edit it: Enter or
+  clicking away saves, Escape abandons the change. On the phone, hold a to-do, on the Notes screen
+  or in the list under Today, and it opens with a Save beside it. Rewording keeps whether the item
+  is ticked.
+- Blank text cancels rather than empties: an item with no text is not a to-do, and because the list
+  is stored as a markdown checklist it would simply vanish on the next read. Deleting stays its own
+  button.
+
 ## [0.102.2] - 2026-10-14
 
 ### Changed
