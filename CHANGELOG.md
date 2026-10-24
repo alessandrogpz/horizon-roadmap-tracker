@@ -7,6 +7,19 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.103.2] - 2026-10-24
+
+### Fixed
+- **CI is green again.** The "Types, lint, tests, build, dependencies" job runs
+  `npm audit --audit-level=high`, which counts *development* dependencies too — so clearing the
+  advisories that could reach production in 0.103.1 left it still failing, on `vite` and
+  `source-map-js` inside the vitest toolchain. It failed in about 25 seconds because the audit is
+  the fourth step, long before anything is built, which is why the emails said "build" but no build
+  had run. The toolchain is updated (vitest 5.0.2 → 5.0.5, vite 8.3.2 → 8.3.5) and the audit now
+  reports zero vulnerabilities at any level.
+- Only the lockfile moved: no declared dependency range changed, and nothing here ships to either
+  app.
+
 ## [0.103.1] - 2026-10-24
 
 ### Security
