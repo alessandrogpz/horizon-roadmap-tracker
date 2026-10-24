@@ -7,6 +7,27 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.103.1] - 2026-10-24
+
+### Security
+- **Next.js 16.3.5 → 16.4.3**, clearing the critical advisory that has been failing the audit step in
+  CI. Its two halves are an RCE in `next/og`'s `ImageResponse` and a Draft Mode leak through a
+  pending `use cache` — neither reachable here, since the app uses no `next/og`, no `ImageResponse`,
+  no `draftMode` and no `use cache`. Patched anyway: an unreachable path today is one refactor away
+  from reachable.
+- **zod 4.6.5 → 4.6.7.** This one is worth more than its "high" rating suggests: zod validates every
+  sync payload from every device, which is the app's main untrusted input, and the advisory is
+  memory exhaustion on oversized constrained collections. The 2 MB cap `readJsonBody` applies before
+  zod ever sees a request already limited it; the fix removes the rest.
+- Nothing with a production path is left. The four remaining advisories are all in the vitest
+  toolchain, which never ships.
+
+### Fixed
+- Two date tests asserted that a week is 604,800,000 milliseconds. True except when the clocks
+  change, which they do this Sunday — so the suite failed today on dates that were correct. They
+  compare calendar days now, and one of them crosses a daylight saving boundary on purpose so the
+  behaviour is pinned in March and October rather than discovered there.
+
 ## [0.103.0] - 2026-10-16
 
 ### Added
