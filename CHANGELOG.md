@@ -7,6 +7,21 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.103.3] - 2026-10-24
+
+### Security
+- **The phone's own dependency tree, which CI never looks at.** The audit step runs at the repo root,
+  so it only ever sees the website's packages; `mobile/` has its own `package-lock.json` and had 16
+  advisories of its own, one of them critical. Safe fixes take it to 10 and critical to zero:
+  `shell-quote` (critical, command injection — reached only through react-devtools, which does not
+  ship), `source-map-js` (the Metro bundler) and `markdown-it` 15.0.2 → 15.0.3, which *does* ship:
+  it renders the roadmap and a rotation's plan. That advisory needs `html` enabled and the app
+  leaves it off, so the path was not reachable; patched regardless.
+- The 10 left are Expo's own chain — `@expo/cli`, `expo-updates`, `node-forge`, `expo-router`,
+  `google-signin`. **Do not run `npm audit fix --force` on `mobile/`**: npm's idea of a fix is
+  `expo@44.0.6`, four years and thirteen SDKs backwards, and `expo-router@58` from `59`. These clear
+  when Expo ships an SDK with the patched versions, not before.
+
 ## [0.103.2] - 2026-10-24
 
 ### Fixed
