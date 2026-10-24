@@ -38,18 +38,43 @@ describe("getWeekNum", () => {
 });
 
 describe("getDateForDayName", () => {
+  /**
+   * Days apart on the calendar, which is the thing these tests mean.
+   *
+   * They used to subtract one timestamp from another and expect a whole
+   * number of 24-hour days, which is only true of a week with no daylight
+   * saving change in it. On the week of 19 October 2026 the clocks go back,
+   * so two local midnights seven days apart are 169 hours apart and the test
+   * failed — on the dates being right. It would have failed twice a year,
+   * every year, and passed every other day.
+   */
+  const daysBetween = (from: string, to: string): number => {
+    const cursor = parseYMD(from);
+    let days = 0;
+    while (formatDateYMD(cursor) < to) {
+      cursor.setDate(cursor.getDate() + 1);
+      days += 1;
+    }
+    return days;
+  };
+
   it("returns dates within the requested week", () => {
-    const mon = parseYMD(getDateForDayName("Mon", 0));
-    const sun = parseYMD(getDateForDayName("Sun", 0));
-    expect(mon.getDay()).toBe(1);
-    expect(sun.getDay()).toBe(0);
-    expect(sun.getTime() - mon.getTime()).toBe(6 * 24 * 60 * 60 * 1000);
+    const mon = getDateForDayName("Mon", 0);
+    const sun = getDateForDayName("Sun", 0);
+    expect(parseYMD(mon).getDay()).toBe(1);
+    expect(parseYMD(sun).getDay()).toBe(0);
+    expect(daysBetween(mon, sun)).toBe(6);
   });
 
   it("shifts by exactly seven days per week offset", () => {
-    const thisMon = parseYMD(getDateForDayName("Mon", 0));
-    const nextMon = parseYMD(getDateForDayName("Mon", 1));
-    expect(nextMon.getTime() - thisMon.getTime()).toBe(7 * 24 * 60 * 60 * 1000);
+    expect(daysBetween(getDateForDayName("Mon", 0), getDateForDayName("Mon", 1))).toBe(7);
+  });
+
+  // The failure above was a Sunday-to-Monday clock change. Pin the behaviour
+  // that matters across one directly, rather than waiting for October.
+  it("counts calendar days across a daylight saving change", () => {
+    expect(daysBetween("2026-10-19", "2026-10-26")).toBe(7);
+    expect(daysBetween("2026-03-23", "2026-03-30")).toBe(7);
   });
 });
 
