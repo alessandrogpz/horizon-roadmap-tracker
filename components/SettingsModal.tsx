@@ -424,9 +424,9 @@ export default function SettingsModal({
         </Row>
 
         {/* ── Danger zone ────────────────────────────────────────────── */}
-        <div className="mt-2 flex flex-col gap-3 rounded-[var(--radius-inner)] border border-red-500/30 bg-red-500/[0.05] px-4 py-3">
+        <div className="mt-2 flex flex-col gap-3 rounded-[var(--radius-inner)] border border-danger/30 bg-danger/[0.05] px-4 py-3">
           <div className="flex gap-2.5">
-            <AlertTriangle size={16} strokeWidth={2} className="mt-0.5 shrink-0 text-red-400" />
+            <AlertTriangle size={16} strokeWidth={2} className="mt-0.5 shrink-0 text-danger" />
             <div className="flex flex-col gap-0.5">
               <span className="text-[0.95rem] font-semibold text-foreground">Delete local data</span>
               <span className="text-[0.8rem] leading-snug text-muted-foreground">
@@ -440,7 +440,7 @@ export default function SettingsModal({
               <>
                 <button
                   onClick={doWipe}
-                  className="cursor-pointer rounded-[var(--radius-control)] border border-red-500/40 bg-red-500/15 px-3 py-1.5 text-[0.8rem] font-semibold text-red-400"
+                  className="cursor-pointer rounded-[var(--radius-control)] border border-danger/40 bg-danger/15 px-3 py-1.5 text-[0.8rem] font-semibold text-danger"
                 >
                   Yes, delete everything
                 </button>
@@ -451,7 +451,7 @@ export default function SettingsModal({
             ) : (
               <button
                 onClick={() => setConfirmWipe(true)}
-                className="cursor-pointer rounded-[var(--radius-control)] border border-red-500/30 bg-transparent px-3 py-1.5 text-[0.8rem] text-red-400 transition-colors hover:bg-red-500/10"
+                className="cursor-pointer rounded-[var(--radius-control)] border border-danger/30 bg-transparent px-3 py-1.5 text-[0.8rem] text-danger transition-colors hover:bg-danger/10"
               >
                 Delete local data…
               </button>
@@ -459,7 +459,7 @@ export default function SettingsModal({
           </div>
         </div>
 
-        {error && <p className="m-0 pt-2 text-[0.8rem] text-red-400">{error}</p>}
+        {error && <p className="m-0 pt-2 text-[0.8rem] text-danger">{error}</p>}
       </div>
     </div>
   );

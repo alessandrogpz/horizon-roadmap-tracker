@@ -263,7 +263,7 @@ export default function Dashboard() {
       <div className="flex h-screen flex-col items-center justify-center p-8 bg-background text-foreground font-mono text-center">
         <h2 className="text-warning mb-4 uppercase tracking-[0.05em] text-2xl font-bold">Initialization Failed</h2>
         <p className="text-muted-foreground text-[0.95rem] mb-6">Your local workspace could not be opened.</p>
-        <div className="p-4 bg-card rounded-md border border-card-border text-red-400 mb-6 max-w-[500px] break-all">
+        <div className="p-4 bg-card rounded-md border border-card-border text-danger mb-6 max-w-[500px] break-all">
           {error || "No data was returned by the local database."}
         </div>
         <button className="btn" onClick={() => window.location.reload()}>Retry Connection</button>

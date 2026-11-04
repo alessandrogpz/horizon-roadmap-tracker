@@ -385,7 +385,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                         />
                         <button
                           onClick={() => removeItem(idx)}
-                          className="flex items-center text-red-400 cursor-pointer bg-transparent border-none px-1"
+                          className="flex items-center text-danger cursor-pointer bg-transparent border-none px-1"
                           title="Remove item"
                         >
                           <X size={14} strokeWidth={2} />
@@ -487,10 +487,10 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
             <div className="flex justify-between items-center border-t border-card-border pt-4 shrink-0">
               {confirmingDelete ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-[0.8rem] text-red-400">Delete this rotation?</span>
+                  <span className="text-[0.8rem] text-danger">Delete this rotation?</span>
                   <button
                     onClick={handleDelete}
-                    className="btn px-3 py-1.5 text-[0.8rem] !bg-red-500/15 !text-red-400 !border-red-500/40"
+                    className="btn px-3 py-1.5 text-[0.8rem] !bg-danger/15 !text-danger !border-danger/40"
                   >
                     Confirm
                   </button>
@@ -504,7 +504,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
               ) : (
                 <button
                   onClick={() => setConfirmingDelete(true)}
-                  className="btn px-4 py-2 text-[0.8rem] !bg-transparent !text-red-400 !border-red-400/20 hover:!border-red-400/50"
+                  className="btn px-4 py-2 text-[0.8rem] !bg-transparent !text-danger !border-danger/20 hover:!border-danger/50"
                 >
                   Delete Rotation
                 </button>
