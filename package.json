@@ -1,6 +1,6 @@
 {
   "name": "horizon-roadmap-tracker",
-  "version": "0.107.0",
+  "version": "0.107.1",
   "private": true,
   "engines": {
     "node": ">=24"
@@ -49,5 +49,10 @@
     "tsx": "^4.23.13",
     "typescript": "^5.9.3",
     "vitest": "^5.0.1"
+  },
+  "overrides": {
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.1"
+    }
   }
 }

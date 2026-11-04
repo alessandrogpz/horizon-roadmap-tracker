@@ -7,6 +7,33 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.107.1] - 2026-11-04
+
+### Security
+- **27 dependency advisories down to 10, and the 10 that remain are two packages with no fix to
+  apply.** The website's 8 all came from one `minimatch` inside `@typescript-eslint`; npm's offered
+  fix was a *downgrade* of `eslint-config-next` from 16 to 15, which would have unpinned it from
+  Next 16, so it is an override to `minimatch@^11` instead. The website now reports zero.
+- The phone went 19 → 10 through overrides on `node-forge`, `minimatch` and `glob`, and on `zod`,
+  which `@expo/cli` pulls at a version with a memory-exhaustion advisory. Four Expo packages that
+  had drifted behind their own SDK 57 patch releases came up to them, which is also what took
+  `expo-doctor` from 19/21 to 20/21.
+- What is left is two root causes, neither reachable on a phone. `deepmerge` has **no patched
+  release at all** — 4.3.1 is both the latest and the flagged version — and it sits inside
+  `@expo/config`, which runs at build time. The three highs are all one chain:
+  `decode-uri-component` under `query-string` under `expo-router`.
+- **That last chain cannot be fixed by an override, and the attempt would have shipped a broken
+  app.** The patched `decode-uri-component@0.5.1` is ESM-only, while `query-string@7` is CommonJS
+  and calls `require('decode-uri-component')` as a function — so the override resolves to a module
+  namespace and every URL parse throws. It typechecks and it bundles; it only fails at runtime, on
+  the phone, in routing. Clearing it properly means `expo-router` 58, which drops `query-string`
+  altogether, and that is an SDK major and a new native build rather than an update.
+- Also worth recording, because it cost a bundle: this project's `metro.config.js` sets
+  `resolver.disableHierarchicalLookup: true`, so Metro only resolves **hoisted** packages. Adding
+  and then removing an override left `decode-uri-component` nested under `query-string`, where node
+  still found it and Metro did not. `npm dedupe` does not undo it; the fix is deleting
+  `node_modules` and installing again.
+
 ## [0.107.0] - 2026-11-04
 
 ### Fixed
