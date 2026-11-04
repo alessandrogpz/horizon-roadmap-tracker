@@ -295,7 +295,7 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
       {masterOpen && masterTracks ? (
         <MasterStats tracks={masterTracks} />
       ) : (
-      <div className="flex items-stretch gap-3 flex-wrap">
+      <div className="grid grid-cols-2 items-stretch gap-3 sm:flex sm:flex-wrap">
         <StatTile
           label="Current Streak"
           icon={<Flame size={20} strokeWidth={2} className="text-warning shrink-0" />}
@@ -307,8 +307,13 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
           </div>
         </StatTile>
 
+        <StatTile label="Phase Day" onClick={() => setOpenStat("phase")}>
+          <span className="text-[1.6rem] font-bold font-mono text-foreground leading-none">{daysInPhase}</span>
+        </StatTile>
+
         <StatTile
           label="Timeline"
+          className="col-span-2 sm:col-span-1"
           onClick={() => setOpenStat("timeline")}
           icon={
             <div className="relative shrink-0 grid place-items-center" style={{ width: 60, height: 60 }}>
@@ -327,14 +332,10 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
           </div>
         </StatTile>
 
-        <StatTile label="Phase Day" onClick={() => setOpenStat("phase")}>
-          <span className="text-[1.6rem] font-bold font-mono text-foreground leading-none">{daysInPhase}</span>
-        </StatTile>
-
         <button
           onClick={() => setOpenStat("progress")}
           title="Progress — click for detail"
-          className="flex items-center gap-2.5 rounded-[10px] border border-card-border bg-card/60 px-4 py-3 flex-1 min-w-[200px] text-left cursor-pointer transition-colors duration-200 hover:border-card-border-hover hover:bg-surface-hover focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_var(--ring)]"
+          className="col-span-2 sm:col-span-1 flex items-center gap-2.5 rounded-[10px] border border-card-border bg-card/60 px-4 py-3 sm:flex-1 sm:min-w-[200px] text-left cursor-pointer transition-colors duration-200 hover:border-card-border-hover hover:bg-surface-hover focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_var(--ring)]"
         >
           <Cloud size={18} strokeWidth={2} className="text-muted-foreground shrink-0" />
           <div className="flex flex-col flex-1 gap-1.5">
