@@ -61,7 +61,7 @@ function RoadmapEditor() {
       </div>
 
       {locked && (
-        <div className="glass-panel p-12 text-center rounded-lg !border !border-dashed !border-red-500/30 !bg-red-500/[0.02]">
+        <div className="glass-panel text-center rounded-lg [--panel-pad:3rem] !border !border-dashed !border-red-500/30 !bg-red-500/[0.02]">
           <h2 className="text-[1.1rem] font-semibold text-red-400 mb-2">Roadmap Locked</h2>
           <p className="text-muted-foreground text-[0.95rem] max-w-[450px] mx-auto mb-6">
             Please connect your Google Drive account on the main dashboard to unlock your roadmap.
