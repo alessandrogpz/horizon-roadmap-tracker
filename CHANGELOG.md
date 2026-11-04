@@ -7,6 +7,19 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.106.1] - 2026-11-04
+
+### Fixed
+- **The four stat tiles arranged themselves by accident on a phone.** Content-sized tiles in a
+  flex-wrap meant the streak sat alone with half a row empty beside it, then two tiles of unequal
+  width, then the progress bar — four rows, two of them half used. Two columns now: the streak and
+  the phase day pair, and the two that carry a ring or a bar take the row. Three rows, nothing
+  stranded.
+- Making that work meant moving the phase day up beside the streak in the markup rather than
+  reaching for `grid-flow-dense`, so the reading order a screen reader and the keyboard follow is
+  still the order the eye sees. The visible consequence above `sm`, where all four fit on one row,
+  is that the two bare numbers now sit together and the ring and the bar follow them.
+
 ## [0.106.0] - 2026-11-04
 
 ### Fixed
