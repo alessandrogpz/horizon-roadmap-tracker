@@ -70,7 +70,7 @@ export default function NewTrackModal({
     <div onClick={onClose} className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[1000] p-4">
       <div
         onClick={(e) => e.stopPropagation()}
-        className="glass-panel max-h-[90vh] max-w-[460px] w-full flex flex-col gap-5 overflow-y-auto p-8 border border-accent-muted relative rounded-lg"
+        className="glass-panel panel-roomy max-h-[90vh] max-w-[460px] w-full flex flex-col gap-5 overflow-y-auto p-8 border border-accent-muted relative rounded-lg"
       >
         <button
           onClick={onClose}

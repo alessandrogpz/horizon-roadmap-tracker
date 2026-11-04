@@ -213,7 +213,7 @@ export default function PhaseDetailModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="glass-panel max-w-[600px] w-full max-h-[90vh] overflow-y-auto flex flex-col gap-6 p-8 border border-accent-muted relative shadow-[0_20px_25px_-5px_rgba(0,0,0,0.5),0_10px_10px_-5px_rgba(0,0,0,0.4)]"
+        className="glass-panel panel-roomy max-w-[600px] w-full max-h-[90vh] overflow-y-auto flex flex-col gap-6 border border-accent-muted relative shadow-[0_20px_25px_-5px_rgba(0,0,0,0.5),0_10px_10px_-5px_rgba(0,0,0,0.4)]"
       >
         {/* Close Button */}
         <button
