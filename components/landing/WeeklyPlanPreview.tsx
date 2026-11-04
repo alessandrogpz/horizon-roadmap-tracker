@@ -168,7 +168,7 @@ function ItemList({
 
 export default function WeeklyPlanPreview() {
   return (
-    <div aria-hidden="true" className="glass-panel select-none border-l-4 border-accent-muted">
+    <div aria-hidden="true" className="glass-panel select-none">
       <div className="flex flex-col gap-3">
         {/* Header — title, the week the plan is showing, and the rotation pill */}
         <div className="flex flex-col gap-3 border-b border-card-border pb-3">
