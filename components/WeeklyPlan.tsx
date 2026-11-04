@@ -88,16 +88,20 @@ export default function WeeklyPlan({
   }, []);
 
   return (
-    <div className="glass-panel border-l-4 border-accent-muted px-6 py-5">
+    <div className="glass-panel px-6 py-5">
       <div className="flex flex-col gap-3">
         {/* Header */}
         <div className="flex flex-col gap-3 pb-3 border-b border-card-border">
           {/* Top Row: Title and Navigation */}
           <div className="flex items-center gap-4">
-            <h3 className="text-[1.1rem] font-semibold text-foreground m-0 whitespace-nowrap inline-flex items-center gap-2">
+            {/* h2, like every other panel heading: this sits directly under the
+                page's h1, and an h3 there skips a level for a screen reader
+                walking the outline. The size comes from the class, so nothing
+                about it looks different. */}
+            <h2 className="text-[1.1rem] font-semibold text-foreground m-0 whitespace-nowrap inline-flex items-center gap-2">
               <CalendarDays size={16} strokeWidth={2.5} className="text-muted-foreground" />
               Weekly Overview
-            </h3>
+            </h2>
 
             {/* Week Navigation Pill */}
             <div className="flex items-center gap-1.5 bg-surface-muted px-2 py-1 rounded-md border border-card-border shrink-0">

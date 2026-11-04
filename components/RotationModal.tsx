@@ -243,6 +243,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                   <textarea
                     value={planContent}
                     onChange={(e) => handlePlanChange(e.target.value)}
+                    aria-label="Rotation plan, in Markdown"
                     placeholder="Write this rotation's full plan using Markdown..."
                     className="notes-editor-textarea px-8 py-6"
                   />

@@ -135,6 +135,7 @@ export default function PomodoroTimer() {
                 const val = Number(e.target.value) || 0;
                 updateDuration(val);
               }}
+              aria-label="Session length in minutes"
               className="w-[55px] bg-input-bg border border-card-border rounded-md px-2 py-1 text-foreground font-mono text-[0.85rem] text-center outline-none"
             />
             <span className="text-[0.85rem] text-muted-foreground font-mono">min</span>

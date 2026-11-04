@@ -12,8 +12,15 @@
   --foreground: #e7e7ea;
   /* Secondary/label text — one token instead of scattered zinc-400/500. */
   --muted-foreground: #8b8b94;
-  /* Even quieter — placeholders, disabled, timestamps (was zinc-600/700). */
-  --subtle-foreground: #5c5c65;
+  /* Even quieter — placeholders, disabled, timestamps (was zinc-600/700).
+     Not quieter than 4.5:1 though: this tier carries real text, including the
+     date and the done-count on every day card, and at #5c5c65 it read 2.87
+     against a card and failed AA. Picked against the *lightest* surface this
+     tier lands on — a day card inside the weekly grid composites to
+     rgb(23, 23, 27) — because that is the worst case; against the page itself
+     it reads 5.04. Still dimmer than --muted-foreground (5.29 there), so the
+     two tiers remain distinguishable. */
+  --subtle-foreground: #808086;
 
   --accent: #0ea5e9;
   --accent-hover: #38bdf8;
@@ -75,7 +82,7 @@
   --background: #fbfbfc;
   --foreground: #0a0a0b;
   --muted-foreground: #5a5a63;
-  --subtle-foreground: #9a9aa3;
+  --subtle-foreground: #707077;
 
   --accent: #0284c7;
   --accent-hover: #0ea5e9;
@@ -242,6 +249,17 @@ select option:disabled {
   background: var(--accent);
   color: #00121c;
   box-shadow: 0 6px 18px -8px var(--accent);
+}
+
+/* Keyboard focus, everywhere.
+   `.btn` and the custom checkbox carried the app's own ring and everything
+   else fell back to the browser's default outline — visible, so never a
+   failure, but a different shape and colour on most of the controls in the
+   app. One ring, from one token. Only `:focus-visible`, so a mouse click
+   still does not draw it. */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }
 
 .btn:focus-visible,
