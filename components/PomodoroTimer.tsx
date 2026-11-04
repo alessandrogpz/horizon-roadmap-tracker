@@ -98,7 +98,7 @@ export default function PomodoroTimer() {
     `bg-surface-muted border border-card-border rounded px-2 py-1 text-[0.8rem] font-mono ${active ? "text-subtle-foreground cursor-not-allowed" : "text-foreground cursor-pointer"}`;
 
   return (
-    <div className="glass-panel p-6 flex flex-col gap-4">
+    <div className="glass-panel flex flex-col gap-4">
       <h2 className="section-title">
         <Timer size={14} strokeWidth={2.5} className="section-icon" />
         Timer

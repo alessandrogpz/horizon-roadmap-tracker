@@ -18,7 +18,7 @@ interface PhaseTrackerProps {
 
 export default function PhaseTracker({ phases, currentPhase, startDate, roadmapEnabled, onPhaseClick, onAddPhase }: PhaseTrackerProps) {
   return (
-    <div className="glass-panel p-6 flex flex-col gap-6">
+    <div className="glass-panel flex flex-col gap-6">
       <div className="flex justify-between items-center gap-2 flex-wrap">
         <h2 className="section-title !mb-0">
           <Milestone size={14} strokeWidth={2.5} className="section-icon" />
