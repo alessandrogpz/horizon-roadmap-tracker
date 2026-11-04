@@ -28,6 +28,7 @@ import {
 import { shadeOf } from "@/lib/colors";
 import { parseYMD } from "@/lib/dates";
 import { PREVIEW_TRACK, PREVIEW_TODAY, PREVIEW_WEEKS } from "./phoneData";
+import { trackInkVariables } from "@/lib/trackAccent";
 
 const ACCENT = PREVIEW_TRACK.color;
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -93,7 +94,9 @@ function Tile({
   return (
     <div className="flex flex-1 flex-col gap-1 rounded-lg border border-card-border bg-card px-2 py-2">
       <span className="flex items-center gap-1 text-[0.5rem] font-bold uppercase tracking-[0.08em] text-muted-foreground">
-        <span style={{ color: tint ?? ACCENT }}>{icon}</span>
+        <span className="track-ink" style={trackInkVariables(tint ?? ACCENT) as React.CSSProperties}>
+          {icon}
+        </span>
         {label}
       </span>
       <span className="flex items-baseline gap-1">
@@ -200,7 +203,10 @@ export function MySpaceScreen() {
       {/* Weekly overview, open */}
       <div className="flex flex-col gap-2 rounded-xl border border-card-border bg-card p-2.5">
         <span className="flex items-center gap-1.5 text-[0.62rem] font-bold text-foreground">
-          <span className="flex h-4 w-4 items-center justify-center rounded" style={{ background: "rgba(14,165,233,0.16)", color: "#0ea5e9" }}>
+          <span
+            className="track-ink flex h-4 w-4 items-center justify-center rounded"
+            style={{ ...trackInkVariables("#0ea5e9"), background: "rgba(14,165,233,0.16)" } as React.CSSProperties}
+          >
             <Calendar size={9} strokeWidth={2.5} />
           </span>
           Weekly Overview
@@ -232,7 +238,7 @@ export function MySpaceScreen() {
           Phases
         </span>
         <div className="flex items-baseline gap-2">
-          <span className="text-[1.5rem] font-bold leading-none" style={{ color: ACCENT }}>
+          <span className="track-ink text-[1.5rem] font-bold leading-none" style={trackInkVariables(ACCENT) as React.CSSProperties}>
             {Math.round(PREVIEW_TRACK.pct)}%
           </span>
           <span className="flex flex-col">
@@ -251,12 +257,15 @@ export function MySpaceScreen() {
           key={panel.title}
           className="flex items-center gap-1.5 rounded-xl border border-card-border bg-card p-2.5 text-[0.62rem] font-bold text-foreground"
         >
-          <span className="flex h-4 w-4 items-center justify-center rounded" style={{ background: `${panel.tint}28`, color: panel.tint }}>
+          <span
+            className="track-ink flex h-4 w-4 items-center justify-center rounded"
+            style={{ ...trackInkVariables(panel.tint), background: `${panel.tint}28` } as React.CSSProperties}
+          >
             <panel.icon size={9} strokeWidth={2.5} />
           </span>
           {panel.title}
           {panel.title === "Consistency" && (
-            <span className="ml-auto text-[0.62rem] font-bold" style={{ color: "#22c55e" }}>
+            <span className="track-ink ml-auto text-[0.62rem] font-bold" style={trackInkVariables("#22c55e") as React.CSSProperties}>
               {PREVIEW_TRACK.streak} days
             </span>
           )}
@@ -299,17 +308,20 @@ export function WorkoutScreen() {
             style={{ background: row.done ? `${ACCENT}1f` : "transparent" }}
           >
             <span className="font-bold text-muted-foreground">{row.set}</span>
-            <span className="font-mono text-subtle-foreground">{row.previous}</span>
+            {/* A tier up from subtle: these rows carry a 12% wash of the accent
+                when the set is done, and the quietest tier does not survive it. */}
+            <span className="font-mono text-muted-foreground">{row.previous}</span>
             <span className="rounded border border-card-border bg-input-bg py-0.5 text-center font-mono text-foreground">{row.kg}</span>
             <span className="rounded border border-card-border bg-input-bg py-0.5 text-center font-mono text-foreground">{row.reps}</span>
             <CheckCircle2
               size={13}
               strokeWidth={2.5}
-              style={{ color: row.done ? ACCENT : "var(--subtle-foreground)" }}
+              className={row.done ? "track-ink" : "text-subtle-foreground"}
+              style={trackInkVariables(ACCENT) as React.CSSProperties}
             />
           </div>
         ))}
-        <span className="text-[0.55rem] font-semibold" style={{ color: ACCENT }}>
+        <span className="track-ink text-[0.55rem] font-semibold" style={trackInkVariables(ACCENT) as React.CSSProperties}>
           + Add set
         </span>
       </div>

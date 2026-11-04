@@ -27,6 +27,7 @@ import { restScheduleOf, trackStreak, type RestOn } from "@/lib/restDays";
 import { todayYMD } from "@/lib/dates";
 import { useAppSettings } from "@/lib/useAppSettings";
 import TrackYearStrip from "@/components/TrackYearStrip";
+import { trackInkVariables } from "@/lib/trackAccent";
 
 interface TrackSwitcherProps {
   tracks: TrackState[];
@@ -392,8 +393,8 @@ function TrackRow({
           <span className="flex-1 truncate text-[0.85rem] font-semibold text-foreground">{row.track.meta.name}</span>
           {row.streak > 0 && (
             <span
-              className="inline-flex items-center gap-1 rounded px-1.5 py-px text-[0.65rem] font-bold"
-              style={{ color: row.color, backgroundColor: "var(--surface-hover)" }}
+              className="track-ink inline-flex items-center gap-1 rounded px-1.5 py-px text-[0.65rem] font-bold"
+              style={{ ...trackInkVariables(row.color), backgroundColor: "var(--surface-hover)" } as React.CSSProperties}
             >
               <Flame size={9} strokeWidth={2.5} />
               {row.streak}
@@ -425,8 +426,8 @@ function TrackRow({
             aria-label={armed ? `Confirm deleting ${row.track.meta.name}` : `Delete ${row.track.meta.name}`}
             className={`flex h-6 items-center gap-1 rounded-[var(--radius-control)] border px-1.5 text-[0.65rem] font-semibold transition-colors cursor-pointer ${
               armed
-                ? "border-red-500/50 bg-red-500/15 text-red-400"
-                : "border-transparent bg-transparent text-subtle-foreground hover:border-card-border hover:bg-surface-hover hover:text-red-400"
+                ? "border-danger/50 bg-danger/15 text-danger"
+                : "border-transparent bg-transparent text-subtle-foreground hover:border-card-border hover:bg-surface-hover hover:text-danger"
             }`}
           >
             <Trash2 size={12} strokeWidth={2} />

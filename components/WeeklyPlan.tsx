@@ -9,6 +9,7 @@ import { runsInPhase } from "@/lib/rotation";
 import { withAlpha } from "@/lib/colors";
 import { dayItems } from "@/lib/dayItems";
 import { isItemCompleted, setItemCompletion, type ItemKind } from "@/lib/completions";
+import { trackInkVariables } from "@/lib/trackAccent";
 
 /**
  * Whether the week is in its stacked, one-day-per-row shape.
@@ -291,7 +292,12 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
   // rolled hex slicing produced `rgba(NaN, NaN, NaN, 0.2)`.
   const focusTypes = data.focusTypes || DEFAULT_FOCUS_TYPES;
   const tagColor = focusTypes[dayItem.type]?.color || "#a1a1aa";
-  const tag = { text: tagColor, bg: withAlpha(tagColor, 0.2) };
+  // The wash keeps the focus type's own colour; the label is read, so it takes
+  // the readable step of that colour for whichever theme is on. The defaults
+  // are pastels picked on a dark screen — #a78bfa reads 2.42 on white — and a
+  // type's colour is the user's to choose, so this cannot be solved by picking
+  // better defaults.
+  const tag = { ink: trackInkVariables(tagColor), bg: withAlpha(tagColor, 0.2) };
 
   return (
     <div
@@ -359,8 +365,14 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
               "ATTERN STUD", which reads as a glitch rather than a long word. */}
           <span
             title={data.isSynced ? dayItem.label : undefined}
-            className="day-card-label max-w-full truncate text-[0.65rem] font-semibold px-1.5 py-px rounded-[3px] uppercase tracking-[0.03em]"
-            style={data.isSynced ? { color: tag.text, background: tag.bg } : { color: "#71717a", background: "rgba(113, 113, 122, 0.12)" }}
+            className={`day-card-label max-w-full truncate text-[0.65rem] font-semibold px-1.5 py-px rounded-[3px] uppercase tracking-[0.03em] ${
+              data.isSynced ? "track-ink" : "text-subtle-foreground"
+            }`}
+            style={
+              data.isSynced
+                ? ({ ...tag.ink, background: tag.bg } as React.CSSProperties)
+                : { background: "rgba(113, 113, 122, 0.12)" }
+            }
           >
             {data.isSynced ? dayItem.label : "UN-ASSIGNED"}
           </span>

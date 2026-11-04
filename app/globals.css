@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/* A track's own colour used as text rather than as a fill. Both values are
+   put on the element by `trackInkVariables`, already moved far enough along
+   the hue to be read on each theme's surface; the cascade picks. Declared here
+   rather than passed as a colour so the caller can be a server component. */
+.track-ink { color: var(--ink-dark); }
+:root[data-theme="light"] .track-ink { color: var(--ink-light); }
+
 /* ===========================================================================
    Design tokens — premium-minimal, shadcn/Vercel-flavored.
    A clear elevation ladder replaces the old flat single-plane look:
@@ -18,17 +25,29 @@
      against a card and failed AA. Picked against the *lightest* surface this
      tier lands on — a day card inside the weekly grid composites to
      rgb(23, 23, 27) — because that is the worst case; against the page itself
-     it reads 5.04. Still dimmer than --muted-foreground (5.29 there), so the
-     two tiers remain distinguishable. */
-  --subtle-foreground: #808086;
+     it reads 5.24. Still dimmer than --muted-foreground (5.29 there), so the
+     two tiers remain distinguishable.
 
-  --accent: #0ea5e9;
-  --accent-hover: #38bdf8;
+     Raised a step from #808086 once the accent followed the track: the open
+     day card is a 6% wash of the accent, and under the brightest track colours
+     that lifts the surface enough to take the date on it to 4.43. Measured
+     against the worst of the six, this reads 4.61 there. */
+  --subtle-foreground: #838388;
+
+  /* Each of these falls back to its own value and is overridden by the open
+     track's, which `components/TrackAccent.tsx` writes onto <html> as a
+     *pair* — one adapted for each theme. The pair is the point: a single
+     inline value would sit above both theme blocks, so neither could correct
+     it, and the six track colours were all picked on a dark screen. Letting
+     the cascade choose means the right one is already in place on the frame
+     the theme flips, with nothing subscribed and nothing to re-render. */
+  --accent: var(--track-accent-dark, #0ea5e9);
+  --accent-hover: var(--track-accent-hover-dark, #38bdf8);
   /* Quieter accent tier for structural borders (modals, panel accents) —
      keeps the saturated --accent reserved for interactive/status signals. */
-  --accent-muted: rgba(14, 165, 233, 0.35);
+  --accent-muted: var(--track-accent-muted-dark, rgba(14, 165, 233, 0.35));
   /* Focus ring — shadcn signature; used on inputs/buttons via :focus-visible. */
-  --ring: rgba(14, 165, 233, 0.45);
+  --ring: var(--track-ring-dark, rgba(14, 165, 233, 0.45));
 
   /* Elevation ladder */
   --card-bg: #101014;
@@ -41,15 +60,21 @@
   /* Accent system — each color owns one job so they stop competing:
        accent (cyan)  = interactive / primary / status
        success (green)= achievement / streak
-       warning (amber)= attention / suggestions */
+       warning (amber)= attention / suggestions
+       danger (red)   = destructive action, and only that
+
+     Danger was the one role with no token: sixty-three literal `red-400` and
+     `red-500` classes across the app, two different reds doing one job. The
+     value matches the phone's `danger`, so "delete" is the same red in both. */
   --success: #10b981;
   --warning: #f59e0b;
+  --danger: #f87171;
 
   --streak-0: #17171b;
-  --streak-1: #0b5747;
-  --streak-2: #068466;
-  --streak-3: #10b981;
-  --streak-4: #4ade80;
+  --streak-1: var(--track-streak-1-dark, #0b5747);
+  --streak-2: var(--track-streak-2-dark, #068466);
+  --streak-3: var(--track-streak-3-dark, #10b981);
+  --streak-4: var(--track-streak-4-dark, #4ade80);
 
   /* Depth primitives */
   --highlight-top: inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -84,10 +109,18 @@
   --muted-foreground: #5a5a63;
   --subtle-foreground: #707077;
 
-  --accent: #0284c7;
-  --accent-hover: #0ea5e9;
-  --accent-muted: rgba(2, 132, 199, 0.28);
-  --ring: rgba(2, 132, 199, 0.4);
+  /* Composed for white, not inherited from the dark theme. Measured on the
+     light card: the old accent read 4.10 as text, and success, warning and
+     danger were never remapped at all — 2.54, 2.15 and 2.77, all of them
+     below even the 3:1 a control needs. Same hue families, darker steps. */
+  --accent: var(--track-accent-light, #0369a1);
+  --accent-hover: var(--track-accent-hover-light, #025684);
+  --accent-muted: var(--track-accent-muted-light, rgba(3, 105, 161, 0.28));
+  --ring: var(--track-ring-light, rgba(3, 105, 161, 0.4));
+
+  --success: #047857;
+  --warning: #b45309;
+  --danger: #dc2626;
 
   --card-bg: #ffffff;
   --card-border: rgba(0, 0, 0, 0.08);
@@ -97,10 +130,10 @@
   --input-bg: rgba(0, 0, 0, 0.03);
 
   --streak-0: #ebedf0;
-  --streak-1: #9be9a8;
-  --streak-2: #40c463;
-  --streak-3: #30a14e;
-  --streak-4: #216e39;
+  --streak-1: var(--track-streak-1-light, #9be9a8);
+  --streak-2: var(--track-streak-2-light, #40c463);
+  --streak-3: var(--track-streak-3-light, #30a14e);
+  --streak-4: var(--track-streak-4-light, #216e39);
 
   --highlight-top: inset 0 1px 0 rgba(255, 255, 255, 0.9);
   --shadow-panel: 0 1px 2px rgba(0, 0, 0, 0.05), 0 10px 24px -16px rgba(0, 0, 0, 0.18);
@@ -130,6 +163,7 @@
   --color-ring: var(--ring);
   --color-success: var(--success);
   --color-warning: var(--warning);
+  --color-danger: var(--danger);
   /* Body copy is sans; font-mono stays JetBrains Mono for data/numeric/code-like
      elements (dates, progress counters, streak grid, git stats, pattern names) —
      the codebase already applies font-mono deliberately on exactly those. */
@@ -275,7 +309,11 @@ select option:disabled {
 
 .btn:hover {
   background: var(--accent);
-  color: #00121c;
+  /* The page's own background, which is the colour that is always furthest
+     from the accent: near-black under a bright dark-mode accent, near-white
+     under the deep one light mode composes. It was a fixed #00121c, which was
+     right in dark and gave 3.21 on the light theme's CTA. */
+  color: var(--background);
   box-shadow: 0 6px 18px -8px var(--accent);
 }
 
@@ -315,14 +353,14 @@ select option:disabled {
 /* Filled by default rather than filling on hover — the one primary action. */
 .btn-solid {
   background: var(--accent);
-  color: #00121c;
+  color: var(--background);
   font-weight: 600;
 }
 
 .btn-solid:hover {
   background: var(--accent-hover);
   border-color: var(--accent-hover);
-  color: #00121c;
+  color: var(--background);
 }
 
 .checkbox-custom {
@@ -660,7 +698,10 @@ h1, h2, h3, .type-title, .type-heading, .type-display-sm {
 .notes-tab-btn.active {
   color: var(--accent);
   border-bottom-color: var(--accent);
-  background: rgba(14, 165, 233, 0.05);
+  /* The accent's own wash. This was a literal rgba(14, 165, 233, …) — the sky
+     the accent used to be — so an open track's tab kept a blue tint under
+     green text. */
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
 }
 
 .notes-content-area {

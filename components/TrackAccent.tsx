@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { lighten, shadeOf, withAlpha } from "@/lib/colors";
+import { trackAccentVariables } from "@/lib/trackAccent";
 
 /**
  * The open track's colour, applied to the whole page.
@@ -17,10 +17,14 @@ import { lighten, shadeOf, withAlpha } from "@/lib/colors";
  * which belongs to the page and not to the track — and in light mode it is the
  * only one of the five that has to stay readable against white.
  *
- * Written on `<html>`, above the theme's own `[data-theme]` block, so the
- * cascade puts it on top of both themes without either needing to know.
+ * What goes onto `<html>` is a *pair* of values per variable, one per theme,
+ * which `globals.css` then chooses between. An inline style sits above both
+ * `[data-theme]` blocks, so a single value would be a colour neither theme
+ * could correct — and all six track colours were picked on a dark screen, five
+ * of them landing under even 3:1 on white. Writing both and letting the
+ * cascade pick means the theme can flip with nothing subscribed to it.
  */
-const VARIABLES = ["--accent", "--accent-hover", "--accent-muted", "--ring", "--streak-1", "--streak-2", "--streak-3", "--streak-4"];
+const VARIABLES = Object.keys(trackAccentVariables("#000000"));
 
 export default function TrackAccent({ color }: { color?: string }) {
   useEffect(() => {
@@ -30,16 +34,8 @@ export default function TrackAccent({ color }: { color?: string }) {
       return;
     }
 
-    root.style.setProperty("--accent", color);
-    root.style.setProperty("--accent-hover", lighten(color, 0.22));
-    root.style.setProperty("--accent-muted", withAlpha(color, 0.35));
-    root.style.setProperty("--ring", withAlpha(color, 0.45));
-    // `transparent` as the empty step, because these four are only ever used
-    // for days that have something on them; the empty one keeps its own
-    // variable, set by the theme.
-    [1, 2, 3, 4].forEach((step) => {
-      root.style.setProperty(`--streak-${step}`, shadeOf(color, step, "transparent"));
-    });
+    const variables = trackAccentVariables(color);
+    Object.entries(variables).forEach(([name, value]) => root.style.setProperty(name, value));
 
     return () => VARIABLES.forEach((name) => root.style.removeProperty(name));
   }, [color]);

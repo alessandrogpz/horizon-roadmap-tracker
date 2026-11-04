@@ -7,6 +7,7 @@ import { MONTH_NAMES, timelineStats, yearCalendar, yearRuler } from "@/lib/stats
 import { restScheduleOf, trackStreak } from "@/lib/restDays";
 import TrackRing from "@/components/TrackRing";
 import TrackYearStrip from "@/components/TrackYearStrip";
+import { trackInkVariables } from "@/lib/trackAccent";
 
 /**
  * Every track's year at once: one strip per track, stacked.
@@ -94,8 +95,8 @@ export default function AllTracksYear({
               </span>
               {row.streak > 0 && (
                 <span
-                  className="inline-flex items-center gap-1 self-start rounded px-1.5 py-px text-[0.65rem] font-bold"
-                  style={{ color: row.color, background: "var(--surface-hover)" }}
+                  className="track-ink inline-flex items-center gap-1 self-start rounded px-1.5 py-px text-[0.65rem] font-bold"
+                  style={{ ...trackInkVariables(row.color), background: "var(--surface-hover)" } as React.CSSProperties}
                 >
                   <Flame size={9} strokeWidth={2.5} />
                   {row.streak}
