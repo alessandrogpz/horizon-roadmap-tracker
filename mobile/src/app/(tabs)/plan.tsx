@@ -83,7 +83,10 @@ export default function PhasesScreen() {
           unit={overrun ? "days" : `/ ${timeline.totalDays} days`}
           leading={
             <Ring pct={timeline.progressPct} tint={overrun ? palette.subtleForeground : palette.accent}>
-              <Text style={styles.ringPct} allowFontScaling={false}>
+              {/* Scales with the reader's text size, but not past the ring it
+                  sits inside — a cap, rather than opting out of Dynamic Type
+                  for the one number this card is about. */}
+              <Text style={styles.ringPct} maxFontSizeMultiplier={1.4}>
                 {Math.round(timeline.progressPct)}%
               </Text>
             </Ring>
