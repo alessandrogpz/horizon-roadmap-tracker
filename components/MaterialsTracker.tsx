@@ -732,6 +732,7 @@ export default function MaterialsTracker({
         <div className="notes-content-area">
           {notesTab === "write" ? (
             <textarea
+              aria-label="Material notes, in Markdown"
               className="notes-editor-textarea"
               placeholder="Write your study notes here using Markdown...&#10;&#10;Use # for title&#10;Use ## for sections&#10;Use - for list items&#10;Use `code` for inline code"
               value={notesContent}

@@ -133,6 +133,7 @@ export default function PortfolioTracker({ portfolio, onToggle, onAddProject, on
                   className="checkbox-custom"
                   checked={proj.completed}
                   onChange={() => onToggle(proj.id)}
+                  aria-label={`Mark "${proj.title}" ${proj.completed ? "not done" : "done"}`}
                 />
                 <div className="flex-1 flex flex-col">
                   <span className={`text-[0.95rem] font-medium transition-colors duration-200 ${proj.completed ? "text-muted-foreground line-through" : "text-foreground"}`}>

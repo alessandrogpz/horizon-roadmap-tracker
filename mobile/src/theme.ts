@@ -27,7 +27,10 @@ export const DARK: Palette = {
   background: "#0a0a0c",
   foreground: "#e7e7ea",
   mutedForeground: "#8b8b94",
-  subtleForeground: "#6b6b74",
+  // 4.54:1 on surfaceMuted over the card (#18181c), which is the lightest
+  // surface this tier lands on and so the worst case; 4.85 on the card
+  // itself. #6b6b74 read 3.60 and failed AA for the small labels it carries.
+  subtleForeground: "#808088",
   accent: "#0ea5e9",
   card: "#101014",
   cardBorder: "rgba(255, 255, 255, 0.08)",
