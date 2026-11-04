@@ -207,7 +207,7 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
   const dotColor = syncStatus === "syncing"
     ? "bg-accent shadow-[0_0_8px_var(--accent)]"
     : syncStatus === "error"
-      ? "bg-red-500 shadow-[0_0_8px_#ef4444]"
+      ? "bg-danger shadow-[0_0_8px_#ef4444]"
       : workspace.hasUnsyncedChanges
         ? "bg-yellow-500 shadow-[0_0_8px_#eab308]"
         : "bg-emerald-500 shadow-[0_0_8px_#10b981]";

@@ -346,7 +346,7 @@ export default function InsightsModal({ onClose, onOpenTrack }: { onClose: () =>
           </>
         )}
 
-        {error && <p className="m-0 text-[0.8rem] text-red-400">{error}</p>}
+        {error && <p className="m-0 text-[0.8rem] text-danger">{error}</p>}
       </div>
     </div>
   );
