@@ -7,6 +7,42 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.107.0] - 2026-11-04
+
+### Fixed
+- **The light theme was never really composed — an open track overwrote it.** `TrackAccent` writes
+  the track's colour onto `<html>` as an inline style, which sits above both `[data-theme]` blocks,
+  so whatever light mode declared for `--accent` never applied. And all six track colours were
+  picked on a dark screen: on white, sky read 2.77, green 2.28, amber 2.15 — five of the six below
+  even the 3:1 a control needs, for a colour that is the ticked box, the link and the number on a
+  stat.
+- The accent is now written as a *pair*, one value per theme, and the cascade picks. Each one is the
+  track's own colour walked down its own hue until it clears contrast on the surface it lands on, so
+  a track stays the colour the person chose and stays legible. Dark is untouched except slate, which
+  was the one colour too dim there. The theme can flip with nothing subscribed to it.
+- The same fix covers focus-type badges, whose defaults are pastels: "Math" in `#a78bfa` read 2.42
+  on white. The wash behind a badge keeps the raw colour — that is what tells two types apart — and
+  only the text moves.
+- Solving against the bare card was not enough, and that was the subtle part: the accent is nearly
+  always written on a tint of *itself*, which pulls the background toward the text rather than away.
+  Contrast is now solved against the washed surface, and against each theme's genuinely worst one —
+  the darkest in light, where ink is dark, and the lightest in dark.
+- `.btn-solid` put near-black text on the accent fill, which is right under a bright dark-mode
+  accent and gave 3.21 on the light theme's "Open the app". It takes the page's own background now,
+  which is always the colour furthest from the accent.
+- `.notes-tab-btn.active` still washed itself in a literal `rgba(14, 165, 233, …)` — the sky the
+  accent used to be — so an open track showed green text on a blue tint.
+- `--subtle-foreground` rose a step in both apps. It was solved against a bare card, and the open
+  day card carries a 6% wash of the accent that lifts it enough to take the date on it to 4.43.
+- Measured across the dashboard and the landing page, in both themes: no text below its WCAG
+  threshold. It was 15 on the light landing page alone.
+
+### Added
+- `readableOn`, `contrastRatio`, `darken` and `flatten` in the shared `lib/colors.ts`, so the phone
+  solves this the same way the website does rather than growing a second answer, and 17 tests
+  pinning the guarantee — including that darkening preserves hue exactly, which is why a track
+  survives being made readable.
+
 ## [0.106.1] - 2026-11-04
 
 ### Fixed

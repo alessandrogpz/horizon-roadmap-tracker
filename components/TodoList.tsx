@@ -119,7 +119,7 @@ export default function TodoList({ noteId }: { noteId: string }) {
               <button
                 onClick={() => commit(removeTodo(items, index))}
                 aria-label={`Delete "${item.text}"`}
-                className="shrink-0 bg-transparent border-none p-0.5 cursor-pointer text-muted-foreground opacity-40 group-hover:opacity-100 focus:opacity-100 hover:text-red-500 transition-opacity"
+                className="shrink-0 bg-transparent border-none p-0.5 cursor-pointer text-muted-foreground opacity-40 group-hover:opacity-100 focus:opacity-100 hover:text-danger transition-opacity"
               >
                 <X size={13} strokeWidth={2.5} />
               </button>

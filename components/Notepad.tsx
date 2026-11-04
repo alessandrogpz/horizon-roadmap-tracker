@@ -16,7 +16,7 @@ export default function Notepad({ noteId }: { noteId: string }) {
           <NotebookPen size={14} strokeWidth={2.5} className="section-icon" />
           Notepad
         </h2>
-        <span className={`text-[0.7rem] font-mono inline-flex items-center gap-1 ${saveState === "error" ? "text-red-500" : "text-muted-foreground"}`}>
+        <span className={`text-[0.7rem] font-mono inline-flex items-center gap-1 ${saveState === "error" ? "text-danger" : "text-muted-foreground"}`}>
           {saveState === "saving" && "Saving…"}
           {saveState === "saved" && (<><Check size={12} strokeWidth={2.5} /> Saved</>)}
           {saveState === "error" && "Couldn't save"}

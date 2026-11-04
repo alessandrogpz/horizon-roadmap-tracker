@@ -12,6 +12,7 @@
  * throughout — `aria-hidden`, no handlers, no client JS.
  */
 import { CheckCircle, Flame, LayoutGrid, Map } from "lucide-react";
+import { trackInkVariables } from "@/lib/trackAccent";
 
 const TABS = [
   { id: "space", label: "My Space", icon: LayoutGrid },
@@ -59,18 +60,15 @@ export default function PhoneFrame({
               {TABS.map((entry) => {
                 const on = entry.id === tab;
                 return (
-                  <span key={entry.id} className="flex flex-1 flex-col items-center gap-1 py-0.5">
-                    <entry.icon
-                      size={14}
-                      strokeWidth={on ? 2.6 : 2}
-                      style={{ color: on ? (accent ?? "var(--accent)") : "var(--subtle-foreground)" }}
-                    />
-                    <span
-                      className="text-[0.48rem] font-semibold"
-                      style={{ color: on ? (accent ?? "var(--accent)") : "var(--subtle-foreground)" }}
-                    >
-                      {entry.label}
-                    </span>
+                  <span
+                    key={entry.id}
+                    className={`flex flex-1 flex-col items-center gap-1 py-0.5 ${
+                      on ? "track-ink" : "text-subtle-foreground"
+                    }`}
+                    style={accent ? (trackInkVariables(accent) as React.CSSProperties) : undefined}
+                  >
+                    <entry.icon size={14} strokeWidth={on ? 2.6 : 2} />
+                    <span className="text-[0.48rem] font-semibold">{entry.label}</span>
                   </span>
                 );
               })}

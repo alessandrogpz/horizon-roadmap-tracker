@@ -12,7 +12,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import type { TrackState } from "@shared/types";
 import { RADIUS, SPACING, TYPE, withAlpha, type Palette } from "../theme";
-import { usePalette } from "../theme/ThemeProvider";
+import { usePalette, useInk } from "../theme/ThemeProvider";
 import { useMasterMode } from "./MasterMode";
 
 /** Says once, at the top, what is true of everything below it. Repeating it
@@ -76,10 +76,13 @@ export function TrackPicker({ tracks }: { tracks: TrackState[] }) {
  *  look alike is a list you cannot read. */
 export function TrackChip({ name, colour }: { name: string; colour: string }) {
   const palette = usePalette();
+  const ink = useInk();
   const styles = useMemo(() => makeStyles(palette), [palette]);
   return (
+    // The wash keeps the track's own colour; the name is read, so it takes the
+    // readable step of that same colour instead.
     <View style={[styles.trackChip, { backgroundColor: withAlpha(colour, 0.16) }]}>
-      <Text style={[styles.trackChipLabel, { color: colour }]} numberOfLines={1}>
+      <Text style={[styles.trackChipLabel, { color: ink(colour) }]} numberOfLines={1}>
         {name}
       </Text>
     </View>

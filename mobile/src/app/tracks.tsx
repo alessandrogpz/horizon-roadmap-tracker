@@ -41,7 +41,7 @@ import type { TrackState } from "@shared/types";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { useMasterMode } from "../master/MasterMode";
 import { RADIUS, SPACING, TYPE, withAlpha, type Palette } from "../theme";
-import { usePalette } from "../theme/ThemeProvider";
+import { usePalette, useInk } from "../theme/ThemeProvider";
 import { SwipeRow } from "../components/SwipeRow";
 import { settle, tap } from "../feedback/haptics";
 import { ConfirmSheet, type Confirmation } from "../components/ConfirmSheet";
@@ -506,6 +506,7 @@ function DraggableTrack({
   const ended = useSharedValue(false);
   const streak = trackStreak(track, today);
   const colour = track.meta.color || palette.accent;
+  const ink = useInk();
 
   useAnimatedReaction(
     () => ({ h: held.value, t: target.value }),
@@ -659,8 +660,8 @@ function DraggableTrack({
           </View>
           {streak > 0 && (
             <View style={[styles.streak, { backgroundColor: withAlpha(colour, 0.16) }]}>
-              <Ionicons name="flame" size={12} color={colour} />
-              <Text style={[styles.streakCount, { color: colour }]}>{streak}</Text>
+              <Ionicons name="flame" size={12} color={ink(colour)} />
+              <Text style={[styles.streakCount, { color: ink(colour) }]}>{streak}</Text>
             </View>
           )}
         </View>

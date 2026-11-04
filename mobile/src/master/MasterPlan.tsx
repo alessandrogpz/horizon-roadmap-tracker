@@ -12,7 +12,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { masterWeek } from "@shared/masterTrack";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { Refreshable } from "../components/Refreshable";
-import { usePalette } from "../theme/ThemeProvider";
+import { usePalette, useInk } from "../theme/ThemeProvider";
 import { NothingSelected, ReadOnlyBand, TrackPicker } from "./MasterChrome";
 import { makeMasterStyles } from "./styles";
 import { useMasterSources } from "./useMasterSources";
@@ -21,6 +21,7 @@ const DAY_CARD = 136;
 
 export function MasterPlan() {
   const palette = usePalette();
+  const ink = useInk();
   const styles = useMemo(() => makeMasterStyles(palette), [palette]);
   const own = useMemo(() => makeStyles(palette), [palette]);
   const { tracks, sources, today } = useMasterSources();
@@ -70,7 +71,7 @@ export function MasterPlan() {
                   {day.entries.map((entry) => (
                     <View key={entry.track.id} style={own.dayEntry}>
                       <View style={own.dayEntryHead}>
-                        <Text style={[own.dayFocus, { color: entry.track.color }]} numberOfLines={2}>
+                        <Text style={[own.dayFocus, { color: ink(entry.track.color) }]} numberOfLines={2}>
                           {entry.label}
                         </Text>
                         {entry.rest && (

@@ -35,6 +35,7 @@ import { readNote } from "@/lib/notes";
 import { useWorkspace } from "@/components/workspace/WorkspaceProvider";
 import AllTracksYear from "@/components/AllTracksYear";
 import MasterGrid from "./MasterGrid";
+import { trackInkVariables } from "@/lib/trackAccent";
 
 /**
  * The master view's panels: the same shapes the dashboard draws for one track,
@@ -162,8 +163,8 @@ export function MasterWeekPanel({
                   <div key={entry.track.id} className="flex min-w-0 flex-col gap-0.5">
                     <span className="flex items-start gap-1">
                       <span
-                        className="min-w-0 flex-1 break-words text-[0.65rem] font-semibold uppercase leading-[1.25] tracking-[0.02em]"
-                        style={{ color: entry.track.color }}
+                        className="track-ink min-w-0 flex-1 break-words text-[0.65rem] font-semibold uppercase leading-[1.25] tracking-[0.02em]"
+                        style={trackInkVariables(entry.track.color) as React.CSSProperties}
                         title={`${entry.track.name}: ${entry.label}`}
                       >
                         {entry.label}
