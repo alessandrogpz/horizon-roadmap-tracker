@@ -5,6 +5,8 @@
 // of what does and doesn't cross the platform boundary: logic travels, styling
 // does not (MOBILE_PLAN.md §3).
 
+import { PixelRatio } from "react-native";
+
 /** The five shades a day can take in the consistency grid, from "nothing" to
  *  "a lot", matching the web app's `--streak-0` … `--streak-4`. */
 export type StreakShades = readonly [string, string, string, string, string];
@@ -74,7 +76,30 @@ export const SPACING = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 } as const;
  * which quietly turned every muted 13pt explanation semi-bold because the role
  * that fitted its size was the one meant for control labels. Weight belongs to
  * the individual style: two texts can be the same size and mean differently.
+ *
+ * Line height is left out for a different and sharper reason. React Native's
+ * `lineHeight` is absolute points, and it does *not* grow when the reader turns
+ * their text size up — so a role carrying a fixed one would clip its own text
+ * at large Dynamic Type settings, which is exactly the accessibility this app
+ * has been fixing. Left unset, the platform derives the leading from the
+ * scaled font, which is the behaviour we want. Where a style genuinely needs
+ * to control leading, use `leading()` below rather than a bare number.
  */
+/**
+ * Line height for a role, in points, that still tracks the reader's text size.
+ *
+ * `ratio` is the multiple of the font size you want — about 1.3 for a heading,
+ * 1.45 for reading text, a little more for small text on a dark surface. The
+ * reader's own scale is folded in, because a hard `lineHeight: 18` under a
+ * 200% text setting is a clipped line.
+ *
+ * Read at call time rather than stored, so a style built inside `makeStyles`
+ * picks up the current setting on the next render.
+ */
+export function leading(fontSize: number, ratio: number): number {
+  return Math.round(fontSize * ratio * PixelRatio.getFontScale());
+}
+
 export const TYPE = {
   /** The timer's clock. One thing in the app is this big, on purpose. */
   display: { fontSize: 72 },

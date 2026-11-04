@@ -36,7 +36,7 @@ export default function MasterStats({ tracks }: { tracks: TrackState[] }) {
     <div className="flex flex-wrap items-stretch gap-3">
       <Tile label="Current Streak" icon={<Flame size={20} strokeWidth={2} className="shrink-0 text-warning" />}>
         <div className="flex items-baseline gap-1.5">
-          <span className="font-mono text-[1.5rem] font-bold leading-none text-foreground">{streak.current}</span>
+          <span className="font-mono text-[1.6rem] font-bold leading-none text-foreground">{streak.current}</span>
           <span className="text-[0.8rem] text-muted-foreground">{streak.current === 1 ? "day" : "days"}</span>
         </div>
       </Tile>
@@ -46,14 +46,14 @@ export default function MasterStats({ tracks }: { tracks: TrackState[] }) {
         icon={
           <div className="relative grid shrink-0 place-items-center" style={{ width: 60, height: 60 }}>
             <Ring pct={progress.timePct} />
-            <span className="absolute inset-0 grid place-items-center font-mono text-[0.6rem] font-semibold text-accent">
+            <span className="absolute inset-0 grid place-items-center font-mono text-[0.65rem] font-semibold text-accent">
               {Math.round(Math.min(100, progress.timePct))}%
             </span>
           </div>
         }
       >
         <div className="flex items-baseline gap-1.5">
-          <span className="font-mono text-[1.5rem] font-bold leading-none text-foreground">{progress.count}</span>
+          <span className="font-mono text-[1.6rem] font-bold leading-none text-foreground">{progress.count}</span>
           <span className="text-[0.8rem] text-muted-foreground">
             track{progress.count === 1 ? "" : "s"} · {progress.totalDays} days planned
           </span>
@@ -62,7 +62,7 @@ export default function MasterStats({ tracks }: { tracks: TrackState[] }) {
 
       <Tile label="Active Days" icon={<Activity size={20} strokeWidth={2} className="shrink-0 text-accent" />}>
         <div className="flex items-baseline gap-1.5">
-          <span className="font-mono text-[1.5rem] font-bold leading-none text-foreground">{streak.activeDays}</span>
+          <span className="font-mono text-[1.6rem] font-bold leading-none text-foreground">{streak.activeDays}</span>
           <span className="text-[0.8rem] text-muted-foreground">{streak.activeLast30} in the last 30</span>
         </div>
       </Tile>

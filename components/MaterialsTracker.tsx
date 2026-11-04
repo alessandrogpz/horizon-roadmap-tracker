@@ -503,18 +503,18 @@ export default function MaterialsTracker({
                         {mat.link ? (
                           <div
                             onClick={() => onOpenLink(mat.link)}
-                            className="link-title font-semibold text-[0.9rem] inline-block"
+                            className="link-title font-semibold text-[0.95rem] inline-block"
                             title={`Open ${mat.link}`}
                           >
                             {mat.title}
                           </div>
                         ) : (
-                          <div className="font-semibold text-[0.9rem] text-foreground">
+                          <div className="font-semibold text-[0.95rem] text-foreground">
                             {mat.title}
                           </div>
                         )}
                         {mat.author && (
-                          <div className="text-[0.75rem] text-muted-foreground mt-0.5">{mat.author}</div>
+                          <div className="text-[0.8rem] text-muted-foreground mt-0.5">{mat.author}</div>
                         )}
                         <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-[0.65rem] text-accent uppercase tracking-[0.05em] font-mono">
@@ -642,9 +642,9 @@ export default function MaterialsTracker({
                   className={`flex justify-between items-start gap-4 px-4 py-3 ${idx === archivedMaterials.length - 1 ? "" : "border-b border-card-border"}`}
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-[0.9rem] text-muted-foreground">{mat.title}</div>
+                    <div className="font-semibold text-[0.95rem] text-muted-foreground">{mat.title}</div>
                     {mat.author && (
-                      <div className="text-[0.75rem] text-muted-foreground mt-0.5">{mat.author}</div>
+                      <div className="text-[0.8rem] text-muted-foreground mt-0.5">{mat.author}</div>
                     )}
                     <div className="text-[0.65rem] text-muted-foreground uppercase tracking-[0.05em] font-mono mt-0.5">
                       {mat.type} · {mat.category || "Other"} · {mat.status}
