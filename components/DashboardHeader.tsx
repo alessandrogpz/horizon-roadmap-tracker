@@ -302,7 +302,7 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
           onClick={() => setOpenStat("streak")}
         >
           <div className="flex items-baseline gap-1.5">
-            <CountUp value={streak} className="text-[1.5rem] font-bold font-mono text-foreground leading-none" />
+            <CountUp value={streak} className="text-[1.6rem] font-bold font-mono text-foreground leading-none" />
             <span className="text-[0.8rem] text-muted-foreground">{streak === 1 ? "day" : "days"}</span>
           </div>
         </StatTile>
@@ -313,14 +313,14 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
           icon={
             <div className="relative shrink-0 grid place-items-center" style={{ width: 60, height: 60 }}>
               <ProgressRing pct={progressPct} />
-              <span className="absolute inset-0 grid place-items-center text-[0.6rem] font-mono font-semibold text-accent">
+              <span className="absolute inset-0 grid place-items-center text-[0.65rem] font-mono font-semibold text-accent">
                 {Math.round(Math.min(100, progressPct))}%
               </span>
             </div>
           }
         >
           <div className="flex items-baseline gap-1.5">
-            <span className="text-[1.5rem] font-bold font-mono text-foreground leading-none">{daysPassed}</span>
+            <span className="text-[1.6rem] font-bold font-mono text-foreground leading-none">{daysPassed}</span>
             <span className="text-[0.8rem] text-muted-foreground">
               {overrunDays > 0 ? `days · ${overrunDays} past plan` : `/ ${totalDays} days`}
             </span>
@@ -328,7 +328,7 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
         </StatTile>
 
         <StatTile label="Phase Day" onClick={() => setOpenStat("phase")}>
-          <span className="text-[1.5rem] font-bold font-mono text-foreground leading-none">{daysInPhase}</span>
+          <span className="text-[1.6rem] font-bold font-mono text-foreground leading-none">{daysInPhase}</span>
         </StatTile>
 
         <button

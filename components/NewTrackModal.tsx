@@ -111,7 +111,7 @@ export default function NewTrackModal({
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="bg-input-bg border border-card-border rounded-md text-foreground text-[0.9rem] outline-none px-3 py-2 font-[inherit] w-full"
+              className="bg-input-bg border border-card-border rounded-md text-foreground text-[0.95rem] outline-none px-3 py-2 font-[inherit] w-full"
             />
           </div>
           <div className="flex-1 flex flex-col gap-1.5">
@@ -124,14 +124,14 @@ export default function NewTrackModal({
               min={startDate}
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="bg-input-bg border border-card-border rounded-md text-foreground text-[0.9rem] outline-none px-3 py-2 font-[inherit] w-full"
+              className="bg-input-bg border border-card-border rounded-md text-foreground text-[0.95rem] outline-none px-3 py-2 font-[inherit] w-full"
             />
           </div>
         </div>
 
         <div className="flex flex-col gap-2">
           <label className="text-[0.8rem] text-muted-foreground">What it is about</label>
-          <p className="text-[0.75rem] text-subtle-foreground -mt-1">
+          <p className="text-[0.8rem] text-subtle-foreground -mt-1">
             This only decides which modules the track opens with. Every module stays available to
             every track, so nothing is locked away by choosing here.
           </p>
@@ -147,7 +147,7 @@ export default function NewTrackModal({
               <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: color }} />
               <span className="flex flex-col gap-0.5">
                 <span className="text-[0.85rem] font-semibold text-foreground">{template.label}</span>
-                <span className="text-[0.75rem] text-muted-foreground">{template.description}</span>
+                <span className="text-[0.8rem] text-muted-foreground">{template.description}</span>
               </span>
             </button>
           ))}

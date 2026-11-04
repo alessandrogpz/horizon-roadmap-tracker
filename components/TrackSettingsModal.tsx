@@ -83,7 +83,7 @@ export default function TrackSettingsModal({ name, color, startDate, totalDays, 
               type="date"
               value={draftStartDate}
               onChange={(e) => setDraftStartDate(e.target.value)}
-              className="bg-input-bg border border-card-border rounded-md text-foreground text-[0.9rem] outline-none px-3 py-2 font-[inherit] w-full"
+              className="bg-input-bg border border-card-border rounded-md text-foreground text-[0.95rem] outline-none px-3 py-2 font-[inherit] w-full"
             />
           </div>
           <div className="flex-1 flex flex-col gap-1.5">
@@ -100,11 +100,11 @@ export default function TrackSettingsModal({ name, color, startDate, totalDays, 
                 const days = dayForDate(draftStartDate, e.target.value);
                 if (Number.isFinite(days) && days >= 1) setDraftTotalDays(days);
               }}
-              className="bg-input-bg border border-card-border rounded-md text-foreground text-[0.9rem] outline-none px-3 py-2 font-[inherit] w-full"
+              className="bg-input-bg border border-card-border rounded-md text-foreground text-[0.95rem] outline-none px-3 py-2 font-[inherit] w-full"
             />
           </div>
         </div>
-        <p className="text-[0.75rem] text-muted-foreground -mt-3">
+        <p className="text-[0.8rem] text-muted-foreground -mt-3">
           {draftTotalDays} day{draftTotalDays === 1 ? "" : "s"}.{" "}
           Moving the end date rescales your phase timeline proportionally.
         </p>
@@ -137,7 +137,7 @@ export default function TrackSettingsModal({ name, color, startDate, totalDays, 
               Delete Track
             </button>
           ) : (
-            <span className="text-[0.75rem] text-subtle-foreground" title="You need at least one track">
+            <span className="text-[0.8rem] text-subtle-foreground" title="You need at least one track">
               Can&apos;t delete your only track
             </span>
           )}
