@@ -44,7 +44,7 @@ export default class PanelErrorBoundary extends React.Component<Props, State> {
           This module hit an error, so it&apos;s been isolated. The rest of your dashboard is unaffected and your data
           is untouched.
         </p>
-        <code className="text-[0.7rem] text-red-400 font-mono break-all">{error.message}</code>
+        <code className="text-[0.7rem] text-danger font-mono break-all">{error.message}</code>
         <button
           onClick={() => this.setState({ error: null })}
           className="btn px-3 py-1.5 text-[0.8rem] self-start !bg-transparent !text-muted-foreground !border-card-border hover:!text-foreground"

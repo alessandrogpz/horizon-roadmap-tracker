@@ -73,7 +73,7 @@ function EditableDetailSection({
               />
               <button
                 onClick={() => onChange(items.filter((_, i) => i !== idx))}
-                className="flex items-center bg-transparent border-none text-red-500 cursor-pointer"
+                className="flex items-center bg-transparent border-none text-danger cursor-pointer"
                 aria-label="Remove"
               >
                 <X size={14} strokeWidth={2} />
@@ -155,7 +155,7 @@ function PhaseEndDateEditor({
         {phase.recommendedByDay !== undefined && (
           <button
             onClick={() => handle("")}
-            className="text-[0.8rem] text-muted-foreground hover:text-red-400 bg-transparent border-none cursor-pointer underline"
+            className="text-[0.8rem] text-muted-foreground hover:text-danger bg-transparent border-none cursor-pointer underline"
           >
             Clear
           </button>
@@ -272,7 +272,7 @@ export default function PhaseDetailModal({
                       onChange={(e) => updateTask(task.id, { title: e.target.value })}
                       className="flex-1 bg-transparent border-none text-foreground text-[0.85rem] outline-none"
                     />
-                    <button onClick={() => removeTask(task.id)} className="flex items-center bg-transparent border-none text-red-500 cursor-pointer" aria-label="Remove task">
+                    <button onClick={() => removeTask(task.id)} className="flex items-center bg-transparent border-none text-danger cursor-pointer" aria-label="Remove task">
                       <X size={14} strokeWidth={2} />
                     </button>
                   </div>
@@ -303,13 +303,13 @@ export default function PhaseDetailModal({
             <div className="flex justify-between items-center mt-2 border-t border-card-border pt-4">
               {confirmingDelete ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-[0.8rem] text-red-400">Delete this phase?</span>
+                  <span className="text-[0.8rem] text-danger">Delete this phase?</span>
                   <button
                     onClick={() => {
                       onDelete(phase.id);
                       onClose();
                     }}
-                    className="btn px-3 py-1.5 text-[0.8rem] !bg-red-500/15 !text-red-400 !border-red-500/40"
+                    className="btn px-3 py-1.5 text-[0.8rem] !bg-danger/15 !text-danger !border-danger/40"
                   >
                     Confirm
                   </button>
@@ -325,7 +325,7 @@ export default function PhaseDetailModal({
                   {canDelete && (
                     <button
                       onClick={() => setConfirmingDelete(true)}
-                      className="text-red-500 bg-transparent border-none cursor-pointer text-[0.8rem]"
+                      className="text-danger bg-transparent border-none cursor-pointer text-[0.8rem]"
                     >
                       Delete Phase
                     </button>

@@ -18,7 +18,7 @@ import {
 import HorizonMark from "@/components/HorizonMark";
 import StreakGrid, { type StreakCell } from "@/components/StreakGrid";
 import TrackYearStrip from "@/components/TrackYearStrip";
-import { lighten, shadeOf, withAlpha } from "@/lib/colors";
+import { withAlpha } from "@/lib/colors";
 import {
   PREVIEW_TODAY,
   PREVIEW_TODAY_INDEX,
@@ -27,6 +27,7 @@ import {
   PREVIEW_WEEK_DATES,
   type PreviewTrack,
 } from "./phoneData";
+import { trackAccentVariables, trackInkVariables } from "@/lib/trackAccent";
 
 /**
  * The dashboard, small and still — with exactly one thing in it that works.
@@ -97,15 +98,7 @@ export default function AppPreview() {
       // section of the page is making. `--streak-0`, the colour of a day with
       // nothing on it, belongs to the page and is deliberately left alone.
       style={
-        {
-          "--accent": accent,
-          "--accent-hover": lighten(accent, 0.22),
-          "--accent-muted": withAlpha(accent, 0.35),
-          "--streak-1": shadeOf(accent, 1, "transparent"),
-          "--streak-2": shadeOf(accent, 2, "transparent"),
-          "--streak-3": shadeOf(accent, 3, "transparent"),
-          "--streak-4": shadeOf(accent, 4, "transparent"),
-        } as React.CSSProperties
+        trackAccentVariables(accent) as React.CSSProperties
       }
       className="glass-panel landing-preview select-none text-[0.68rem] leading-snug sm:text-[0.72rem]"
     >
@@ -157,7 +150,10 @@ export default function AppPreview() {
                     <span className="relative flex items-center gap-1.5">
                       <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: option.color }} />
                       <span className="min-w-0 flex-1 truncate font-semibold text-foreground">{option.name}</span>
-                      <span className="inline-flex shrink-0 items-center gap-0.5 font-mono text-[0.58rem] font-bold" style={{ color: option.color }}>
+                      <span
+                        className="track-ink inline-flex shrink-0 items-center gap-0.5 font-mono text-[0.58rem] font-bold"
+                        style={trackInkVariables(option.color) as React.CSSProperties}
+                      >
                         <Flame size={8} strokeWidth={3} />
                         {option.streak}
                       </span>
@@ -241,7 +237,7 @@ export default function AppPreview() {
                     <div
                       key={name}
                       className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-[5px] border px-0.5 py-1 ${
-                        today ? "border-accent-muted bg-accent/[0.10]" : "border-transparent"
+                        today ? "border-accent-muted bg-accent/[0.06]" : "border-transparent"
                       }`}
                     >
                       <span className={`text-[0.58rem] font-semibold ${today ? "text-foreground" : "text-subtle-foreground"}`}>
@@ -249,11 +245,15 @@ export default function AppPreview() {
                       </span>
                       <span className="font-mono text-[0.5rem] text-subtle-foreground">{PREVIEW_WEEK_DATES[index]}</span>
                       <span
-                        className="w-full truncate rounded-[3px] px-1 py-px text-center text-[0.5rem] font-semibold"
-                        style={{
-                          background: index > 4 ? "var(--surface-hover)" : withAlpha(accent, 0.16),
-                          color: index > 4 ? "var(--subtle-foreground)" : accent,
-                        }}
+                        className={`w-full truncate rounded-[3px] px-1 py-px text-center text-[0.5rem] font-semibold ${
+                          index > 4 ? "text-muted-foreground" : "track-ink"
+                        }`}
+                        style={
+                          {
+                            ...trackInkVariables(accent),
+                            background: index > 4 ? "var(--surface-hover)" : withAlpha(accent, 0.16),
+                          } as React.CSSProperties
+                        }
                       >
                         {track.focus[index]}
                       </span>

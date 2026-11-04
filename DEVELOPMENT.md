@@ -73,6 +73,7 @@ The Dexie (IndexedDB) database and Google Drive `database.json` used for daily p
 | The colours a track can wear | `lib/trackColors.ts` — the list, and why white and black are not on it |
 | Days a track takes off, and what they do to a streak | `lib/restDays.ts` — the flag, the fallback for data that predates it, and the bridging rule |
 | A track's colour at the grid's four strengths | `lib/colors.ts` (`shadeOf`, `withAlpha`, `lighten`) |
+| Making a track's colour readable on a theme | `lib/colors.ts` (`readableOn`, `contrastRatio`, `darken`, `flatten`) + `lib/trackAccent.ts` — the accent and ink variables, written per theme because an inline value would sit above both |
 | Demo tracks (`test1`/`test2`/`test3`) | `lib/demoTracks.ts`, offered from Settings on both platforms |
 | App state + persistence timing | `components/workspace/WorkspaceProvider.tsx` |
 | Which dashboard modules exist | `lib/modules.ts` (data) + `components/panels/registry.tsx` (icon + panel) |

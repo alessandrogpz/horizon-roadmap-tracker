@@ -2,6 +2,7 @@ import { Flame } from "lucide-react";
 import TrackRing from "@/components/TrackRing";
 import TrackYearStrip from "@/components/TrackYearStrip";
 import { PREVIEW_TODAY, PREVIEW_TRACKS } from "./phoneData";
+import { trackInkVariables } from "@/lib/trackAccent";
 
 /**
  * Three tracks, three colours, one calendar year.
@@ -33,8 +34,8 @@ export default function TrackStackPreview() {
               <span className="flex min-w-0 flex-col gap-1">
                 <span className="text-[0.72rem] font-semibold leading-tight text-foreground">{track.name}</span>
                 <span
-                  className="inline-flex items-center gap-1 self-start rounded px-1.5 py-px text-[0.6rem] font-bold"
-                  style={{ color: track.color, background: "var(--surface-hover)" }}
+                  className="track-ink inline-flex items-center gap-1 self-start rounded px-1.5 py-px text-[0.6rem] font-bold"
+                  style={{ ...trackInkVariables(track.color), background: "var(--surface-hover)" } as React.CSSProperties}
                 >
                   <Flame size={9} strokeWidth={2.5} />
                   {track.streak}

@@ -1,5 +1,6 @@
 import { CalendarDays, Check } from "lucide-react";
 import { withAlpha } from "@/lib/colors";
+import { trackInkVariables } from "@/lib/trackAccent";
 
 /**
  * A replica of the Weekly Plan panel, showing a training week.
@@ -235,8 +236,8 @@ export default function WeeklyPlanPreview() {
 
                     <div className="day-card-tag flex min-w-0 justify-center">
                       <span
-                        className="day-card-label max-w-full truncate rounded-[3px] px-1.5 py-px text-[0.55rem] font-semibold uppercase tracking-[0.03em]"
-                        style={{ color: day.color, background: withAlpha(day.color, 0.2) }}
+                        className="track-ink day-card-label max-w-full truncate rounded-[3px] px-1.5 py-px text-[0.55rem] font-semibold uppercase tracking-[0.03em]"
+                        style={{ ...trackInkVariables(day.color), background: withAlpha(day.color, 0.2) } as React.CSSProperties}
                       >
                         {day.label}
                       </span>

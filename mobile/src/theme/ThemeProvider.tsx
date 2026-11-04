@@ -9,6 +9,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useColorScheme } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { readableOn } from "@shared/colors";
 import { DARK, LIGHT, type Palette } from "../theme";
 
 const KEY = "horizon-theme";
@@ -44,6 +45,25 @@ const ThemeContext = createContext<ThemeValue | null>(null);
 
 export function usePalette(): Palette {
   return useTheme().palette;
+}
+
+/**
+ * A track's colour as *ink* — text, rather than a fill.
+ *
+ * A track's colour does two jobs and only one of them is this. As a fill — the
+ * dot beside a name, the wash behind a chip, a ticked box — it stays exactly
+ * the colour the person picked, because that is what tells two tracks apart,
+ * and a solid shape beside its own label is not being read. As ink it is text,
+ * small and usually bold: a streak count, a focus label, a chip's name. That
+ * has to clear 4.5 against the surface, and on the light palette's white card
+ * five of the six track colours do not.
+ *
+ * Returns a function because most callers are mapping over tracks, where a
+ * hook per row is not available.
+ */
+export function useInk(): (color: string) => string {
+  const { palette } = useTheme();
+  return useCallback((color: string) => readableOn(color, palette.accentSurface), [palette.accentSurface]);
 }
 
 export function useTheme(): ThemeValue {
@@ -83,8 +103,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<ThemeValue>(() => {
     const base = resolved === "light" ? LIGHT : DARK;
+    // The six track colours were chosen on a dark screen, and the accent is
+    // text as often as it is a fill — the ticked box, the ring on Plan, the
+    // link. On the light palette's white card five of the six read below 3:1.
+    // `readableOn` walks the colour down its own hue until it clears 4.5, so
+    // the track keeps its identity and the screen stays readable; a colour
+    // that already passes comes back untouched, which is every one of them in
+    // dark but slate.
+    const tracked = accent ? readableOn(accent, base.accentSurface) : null;
     return {
-      palette: accent ? { ...base, accent } : base,
+      palette: tracked ? { ...base, accent: tracked } : base,
       preference,
       resolved,
       setPreference,

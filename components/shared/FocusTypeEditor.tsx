@@ -84,7 +84,7 @@ export default function FocusTypeEditor({ focusTypes, weekSchedule, onChange }: 
               onClick={() => apply(removeFocusType(pool, key))}
               disabled={Object.keys(focusTypes).length <= 1}
               className={`bg-transparent border-none text-[0.8rem] px-0.5 ${
-                Object.keys(focusTypes).length <= 1 ? "text-subtle-foreground cursor-not-allowed" : "text-red-500 cursor-pointer"
+                Object.keys(focusTypes).length <= 1 ? "text-subtle-foreground cursor-not-allowed" : "text-danger cursor-pointer"
               }`}
               title="Delete Focus Type"
             >
