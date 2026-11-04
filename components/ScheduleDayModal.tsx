@@ -244,7 +244,7 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
                               })
                             )
                           }
-                          className="flex items-center bg-transparent border-none text-red-500 cursor-pointer"
+                          className="flex items-center bg-transparent border-none text-danger cursor-pointer"
                           aria-label="Remove item"
                         >
                           <X size={14} strokeWidth={2} />

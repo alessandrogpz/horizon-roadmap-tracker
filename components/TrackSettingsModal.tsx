@@ -112,13 +112,13 @@ export default function TrackSettingsModal({ name, color, startDate, totalDays, 
         <div className="border-t border-card-border pt-4 flex justify-between items-center">
           {confirmingDelete ? (
             <div className="flex items-center gap-2">
-              <span className="text-[0.8rem] text-red-400">Delete this track?</span>
+              <span className="text-[0.8rem] text-danger">Delete this track?</span>
               <button
                 onClick={() => {
                   onDelete();
                   onClose();
                 }}
-                className="btn px-3 py-1.5 text-[0.8rem] !bg-red-500/15 !text-red-400 !border-red-500/40"
+                className="btn px-3 py-1.5 text-[0.8rem] !bg-danger/15 !text-danger !border-danger/40"
               >
                 Confirm
               </button>
@@ -132,7 +132,7 @@ export default function TrackSettingsModal({ name, color, startDate, totalDays, 
           ) : canDelete ? (
             <button
               onClick={() => setConfirmingDelete(true)}
-              className="text-red-500 bg-transparent border-none cursor-pointer text-[0.8rem]"
+              className="text-danger bg-transparent border-none cursor-pointer text-[0.8rem]"
             >
               Delete Track
             </button>

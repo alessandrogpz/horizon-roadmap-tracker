@@ -161,7 +161,7 @@ export default function PortfolioTracker({ portfolio, onToggle, onAddProject, on
                 </div>
                 <div className="flex items-center gap-2 text-xs shrink-0">
                   <button onClick={() => startEdit(proj)} className="text-accent bg-transparent border-none cursor-pointer">Edit</button>
-                  <button onClick={() => onDeleteProject(proj.id)} className="text-red-500 bg-transparent border-none cursor-pointer flex items-center" aria-label="Delete project"><X size={14} strokeWidth={2} /></button>
+                  <button onClick={() => onDeleteProject(proj.id)} className="text-danger bg-transparent border-none cursor-pointer flex items-center" aria-label="Delete project"><X size={14} strokeWidth={2} /></button>
                 </div>
               </>
             )}

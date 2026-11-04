@@ -22,7 +22,7 @@ export default function Error({
         <p className="text-muted-foreground text-[0.95rem] mb-6 leading-normal">
           A client-side rendering or hydration error occurred while building the dashboard.
         </p>
-        <div className="p-4 bg-black rounded-md text-left text-[0.8rem] text-red-400 overflow-x-auto mb-8 border border-card-border">
+        <div className="p-4 bg-black rounded-md text-left text-[0.8rem] text-danger overflow-x-auto mb-8 border border-card-border">
           <strong>Error:</strong> {error.message || String(error)}
           {error.digest && <div className="text-muted-foreground mt-2">Digest: {error.digest}</div>}
         </div>

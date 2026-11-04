@@ -17,6 +17,12 @@ export interface Palette {
   mutedForeground: string;
   subtleForeground: string;
   accent: string;
+  /** The surface an accent actually has to be read on: the worst one, not the
+   *  typical. Which end is "worst" flips with the appearance — light-mode ink
+   *  is dark and loses most on the *darkest* surface, dark-mode ink is light
+   *  and loses most on the *lightest* — so this is the card under its deepest
+   *  wash in light, and the card plus the washes that stack on it in dark. */
+  accentSurface: string;
   card: string;
   cardBorder: string;
   surfaceMuted: string;
@@ -29,11 +35,14 @@ export const DARK: Palette = {
   background: "#0a0a0c",
   foreground: "#e7e7ea",
   mutedForeground: "#8b8b94",
-  // 4.54:1 on surfaceMuted over the card (#18181c), which is the lightest
-  // surface this tier lands on and so the worst case; 4.85 on the card
-  // itself. #6b6b74 read 3.60 and failed AA for the small labels it carries.
-  subtleForeground: "#808088",
+  // 4.61:1 on the worst surface this tier lands on — a day card carrying a 6%
+  // wash of the open track's accent, under the brightest of the six track
+  // colours — and 4.87 on the card itself. #6b6b74 read 3.60 and failed AA for
+  // the small labels it carries; #808088 cleared the bare card but not the
+  // tinted one. Matches the website's `--subtle-foreground`.
+  subtleForeground: "#838388",
   accent: "#0ea5e9",
+  accentSurface: "#18181c",
   card: "#101014",
   cardBorder: "rgba(255, 255, 255, 0.08)",
   surfaceMuted: "rgba(255, 255, 255, 0.035)",
@@ -46,12 +55,20 @@ export const LIGHT: Palette = {
   background: "#fbfbfc",
   foreground: "#0a0a0b",
   mutedForeground: "#5a5a63",
-  subtleForeground: "#74747d",
-  accent: "#0284c7",
+  // 4.59 on the darkest surface this tier lands on (#f7f7f7, the muted wash
+  // over the card); #74747d cleared the bare white card at 4.63 and read 4.32
+  // there. Matches the website's `--subtle-foreground`.
+  subtleForeground: "#707077",
+  /* Composed against white rather than carried over from dark. The accent read
+     4.10 as text and success 3.77 — under the 4.5 a label needs — so both drop
+     a step in the same hue family. Danger was already right. These match the
+     website's light theme, which is the point of keeping one palette. */
+  accent: "#0369a1",
+  accentSurface: "#f7f7f7",
   card: "#ffffff",
   cardBorder: "rgba(0, 0, 0, 0.1)",
   surfaceMuted: "rgba(0, 0, 0, 0.03)",
-  success: "#059669",
+  success: "#047857",
   danger: "#dc2626",
   streak: ["#ebedf0", "#9be9a8", "#40c463", "#30a14e", "#216e39"],
 };

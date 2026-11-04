@@ -98,7 +98,7 @@ export default function GymTracker() {
           >
             <div className="flex items-center gap-2">
               {complete ? (
-                <Check size={15} className="shrink-0 text-green-500" />
+                <Check size={15} className="shrink-0 text-success" />
               ) : (
                 <Circle size={15} className="shrink-0 text-subtle-foreground" />
               )}
@@ -121,7 +121,7 @@ export default function GymTracker() {
 
               <button
                 onClick={() => change((l) => removeFromPlan(l, focus.key, item.name))}
-                className="text-subtle-foreground hover:text-red-500"
+                className="text-subtle-foreground hover:text-danger"
                 aria-label={`Remove ${item.name} from the plan`}
                 title="Remove from the plan"
               >

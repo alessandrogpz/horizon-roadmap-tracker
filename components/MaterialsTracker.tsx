@@ -467,7 +467,7 @@ export default function MaterialsTracker({
                         <button
                           type="button"
                           onClick={() => onDeleteMaterial(mat.id)}
-                          className="bg-red-500/10 text-red-500 border border-red-500/30 rounded px-2 py-1 text-xs cursor-pointer"
+                          className="bg-danger/10 text-danger border border-danger/30 rounded px-2 py-1 text-xs cursor-pointer"
                         >
                           Delete
                         </button>
@@ -697,7 +697,7 @@ export default function MaterialsTracker({
             </h3>
           </div>
           <div className="flex items-center gap-4 shrink-0">
-            <span className={`text-[0.7rem] font-mono inline-flex items-center gap-1 ${notesStatus === "error" ? "text-red-500" : "text-muted-foreground"}`}>
+            <span className={`text-[0.7rem] font-mono inline-flex items-center gap-1 ${notesStatus === "error" ? "text-danger" : "text-muted-foreground"}`}>
               {notesStatus === "loading" && "Loading..."}
               {notesStatus === "saving" && "Saving..."}
               {notesStatus === "saved" && (<><Check size={12} strokeWidth={2.5} /> Saved</>)}
