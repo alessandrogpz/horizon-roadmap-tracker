@@ -203,7 +203,7 @@ export default function InsightsModal({ onClose, onOpenTrack }: { onClose: () =>
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="glass-panel relative flex max-h-[90vh] w-full max-w-[760px] flex-col gap-4 overflow-y-auto border-accent-muted"
+        className="glass-panel panel-roomy relative flex max-h-[90vh] w-full max-w-[760px] flex-col gap-4 overflow-y-auto border-accent-muted"
       >
         <button
           onClick={onClose}

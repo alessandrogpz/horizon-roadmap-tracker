@@ -39,7 +39,7 @@ export default function TrackSettingsModal({ name, color, startDate, totalDays, 
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="glass-panel max-w-[420px] w-full flex flex-col gap-5 p-8 border border-accent-muted relative rounded-lg"
+        className="glass-panel panel-roomy max-w-[420px] w-full flex flex-col gap-5 border border-accent-muted relative rounded-lg"
       >
         <button
           onClick={onClose}

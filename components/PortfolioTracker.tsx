@@ -52,7 +52,7 @@ export default function PortfolioTracker({ portfolio, onToggle, onAddProject, on
   };
 
   return (
-    <div className="glass-panel p-6 flex flex-col gap-4">
+    <div className="glass-panel flex flex-col gap-4">
       <div className="flex justify-between items-center border-b border-card-border pb-3">
         <h2 className="section-title !mb-0">
           <FolderGit2 size={14} strokeWidth={2.5} className="section-icon" />

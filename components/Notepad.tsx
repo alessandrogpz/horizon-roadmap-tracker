@@ -10,7 +10,7 @@ export default function Notepad({ noteId }: { noteId: string }) {
   const { content, update, flush, saveState } = useQuickNote(noteId, 800);
 
   return (
-    <div className="glass-panel p-6 flex flex-col gap-3">
+    <div className="glass-panel flex flex-col gap-3">
       <div className="flex justify-between items-center border-b border-card-border pb-3">
         <h2 className="section-title !mb-0">
           <NotebookPen size={14} strokeWidth={2.5} className="section-icon" />

@@ -7,6 +7,23 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.106.0] - 2026-11-04
+
+### Fixed
+- **Every panel in the app rendered at one density, whatever its code asked for.** `.glass-panel`
+  sets its padding outside Tailwind's layers, so a utility could never reach it: five dialogs asked
+  for `p-8`, the roadmap's empty state for `p-12`, the weekly plan for `py-5`, and all of them
+  silently came out at 1.5rem. One density for a dense dashboard panel and for a dialog holding a
+  form is not a decision anybody made — it was a cascade accident.
+- Density is a named role now: the default for panels, `.panel-roomy` (2rem) for dialogs, and
+  `.panel-flush` for a panel whose child draws its own edges. Every dialog shares one value instead
+  of some asking for 2rem and others taking whatever they got, and on a phone roomy steps back to
+  1.5rem, because 2rem a side is a sixth of a 390-point screen spent on margin.
+- The dead utilities are gone rather than left to imply control they never had.
+- On the phone, the panel error boundary was the one component off the spacing scale — raw 16, 8 and
+  12 where `SPACING` exists. Its colours stay literal, and now say why: it has to render when the
+  tree above it has failed, possibly the theme provider itself, so it cannot call a hook.
+
 ## [0.105.0] - 2026-11-04
 
 ### Changed
