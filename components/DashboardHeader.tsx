@@ -222,7 +222,7 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
           <HorizonMark className="h-[0.85em] w-auto text-accent" /> Horizon
         </h1>
 
-        <span className="text-card-border hidden sm:inline">|</span>
+        <span aria-hidden="true" className="text-card-border hidden sm:inline">|</span>
 
         <div className="flex items-center gap-1.5 min-w-0">
           <span className="text-muted-foreground hidden sm:inline">Track:</span>
@@ -238,7 +238,7 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
           />
         </div>
 
-        <span className="text-card-border hidden sm:inline">|</span>
+        <span aria-hidden="true" className="text-card-border hidden sm:inline">|</span>
 
         {/* Sync status, clickable to sync. Stays in the bar on purpose: a
             status indicator hidden inside a menu stops being one. */}
@@ -267,7 +267,7 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
                   ? "Unsynced (Click to Sync)"
                   : "Synced with account")}
           </span>
-          <span className="text-card-border hidden sm:inline">•</span>
+          <span aria-hidden="true" className="text-card-border hidden sm:inline">•</span>
           <span className="hidden sm:inline">
             <LastSyncedLabel timestamp={workspace.lastSyncTime} />
           </span>

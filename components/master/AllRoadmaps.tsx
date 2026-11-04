@@ -95,12 +95,18 @@ export default function AllRoadmaps() {
 
           {current && (
             <div className="glass-panel block min-w-0">
-              <div
-                className="flex items-center justify-between gap-3 border-b border-card-border px-6 py-3"
-                style={{ borderLeft: `3px solid ${current.track.color || "var(--accent)"}` }}
-              >
-                <span className="min-w-0 truncate text-[0.95rem] font-semibold text-foreground">
-                  {current.track.name}
+              <div className="flex items-center justify-between gap-3 border-b border-card-border px-6 py-3">
+                <span className="flex min-w-0 items-center gap-2">
+                  {/* The track's colour, as a dot on its name rather than a
+                      stripe down the side of the card. Same information, and
+                      it sits with the thing it identifies. */}
+                  <span
+                    className="h-2 w-2 shrink-0 rounded-full"
+                    style={{ background: current.track.color || "var(--accent)" }}
+                  />
+                  <span className="min-w-0 truncate text-[0.95rem] font-semibold text-foreground">
+                    {current.track.name}
+                  </span>
                 </span>
                 <span className="shrink-0 font-mono text-[0.7rem] text-subtle-foreground">
                   {current.content.trim().split(/\s+/).length} words

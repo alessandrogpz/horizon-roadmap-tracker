@@ -455,7 +455,6 @@ export function MasterPhasesPanel({ tracks }: { tracks: TrackState[] }) {
           <div
             key={`${window.track.id}-${window.phase.id}`}
             className="flex flex-col gap-1 rounded-md border border-card-border bg-input-bg px-3 py-2"
-            style={{ borderLeft: `3px solid ${window.track.color}` }}
           >
             <span className="flex flex-wrap items-center gap-2">
               <TrackChip name={window.track.name} color={window.track.color} />
