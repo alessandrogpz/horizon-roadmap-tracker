@@ -129,6 +129,29 @@ in.
   changes. Components that need the raw colour — the grids — read
   `track.meta.color` and pass it to `shadeOf`.
 
+**The colour is adapted to the theme before it is used, and this is the part
+that is easy to undo by accident.** The six were picked on a dark screen; on
+white, five of them fail even the 3:1 a control needs. `lib/trackAccent.ts`
+emits every variable as a *pair* — `--track-accent-light` and
+`--track-accent-dark` — and `globals.css` chooses between them, because an
+inline style on `<html>` sits above both `[data-theme]` blocks and so a single
+value is one neither theme can correct. `readableOn` walks the colour down its
+own hue until it clears contrast; darkening scales every channel by the same
+factor, so the hue is preserved exactly and the track still reads as itself.
+
+Two things that caused wrong answers here, both worth keeping in mind:
+
+- The accent is usually written on a **tint of itself**, which moves the
+  background *toward* the text and costs contrast. Solving against the bare
+  card says a badge passes when the screen gives 4.29.
+- **Which surface is "worst" flips with the theme.** Light-mode ink is dark and
+  loses most on the *darkest* surface; dark-mode ink is light and loses most on
+  the *lightest*.
+
+As fill — a dot, a wash, a ticked box — the colour stays exactly as chosen;
+that is what tells two tracks apart. Only ink moves. `.track-ink` on the web
+and `useInk()` on the phone are how a text site asks for the moved version.
+
 `--streak-0`, the colour of a day with nothing on it, is deliberately left to
 the theme. It belongs to the page, not to the track, and in light mode it is
 the only one of the five that has to stay readable against white.
