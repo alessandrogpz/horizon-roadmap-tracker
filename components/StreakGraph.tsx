@@ -222,7 +222,7 @@ export default function StreakGraph({
           <Activity size={14} strokeWidth={2.5} className="section-icon" />
           Consistency
         </h2>
-        <div className="flex items-center gap-3 text-[0.75rem] font-mono">
+        <div className="flex items-center gap-3 text-[0.8rem] font-mono">
           <span className="inline-flex items-center gap-1 text-warning font-semibold">
             <Flame size={13} strokeWidth={2} />
             {streak} day{streak === 1 ? "" : "s"}
@@ -245,7 +245,7 @@ export default function StreakGraph({
                   key={shape.value}
                   onClick={() => setByMonth(shape.value === "months")}
                   aria-pressed={on}
-                  className={`cursor-pointer rounded-[calc(var(--radius-control)-2px)] px-2.5 py-1 text-[0.72rem] font-semibold transition-colors ${
+                  className={`cursor-pointer rounded-[calc(var(--radius-control)-2px)] px-2.5 py-1 text-[0.7rem] font-semibold transition-colors ${
                     on ? "bg-card text-foreground" : "bg-transparent text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -261,7 +261,7 @@ export default function StreakGraph({
             disabled={year <= years.first}
             onClick={() => setYear(year - 1)}
           />
-          <span className="min-w-[3.2rem] text-center font-mono text-[0.78rem] font-bold text-foreground">{year}</span>
+          <span className="min-w-[3.2rem] text-center font-mono text-[0.8rem] font-bold text-foreground">{year}</span>
           <YearStep
             direction={1}
             disabled={year >= years.last}
@@ -281,7 +281,7 @@ export default function StreakGraph({
           <div className="flex w-max gap-5">
             {months.map((month) => (
               <div key={month.key} className="flex flex-col gap-1.5">
-                <span className="text-[0.68rem] font-semibold text-muted-foreground">{month.label}</span>
+                <span className="text-[0.7rem] font-semibold text-muted-foreground">{month.label}</span>
                 {/* Each block starts on the weekday its 1st fell on, which is
                     what makes a month recognisable as that month. */}
                 <StreakGrid
@@ -302,7 +302,7 @@ export default function StreakGraph({
       {/* The key. Four strengths of the track's own colour, and the day it
           began in the page's opposite — which is why the colours a track can
           wear stop short of white and black. */}
-      <div className="flex items-center gap-1.5 text-[0.68rem] text-subtle-foreground">
+      <div className="flex items-center gap-1.5 text-[0.7rem] text-subtle-foreground">
           <span>Less</span>
           {[0, 1, 2, 3, 4].map((level) => (
             <span
