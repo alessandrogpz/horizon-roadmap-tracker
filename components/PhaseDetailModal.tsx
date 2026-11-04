@@ -95,7 +95,7 @@ function EditableDetailSection({
       </div>
       <button
         onClick={() => onChange([...items, { item: "", desc: "" }])}
-        className="text-accent bg-transparent border-none cursor-pointer text-[0.75rem] font-mono underline mt-2"
+        className="text-accent bg-transparent border-none cursor-pointer text-[0.8rem] font-mono underline mt-2"
       >
         + Add
       </button>
@@ -149,13 +149,13 @@ function PhaseEndDateEditor({
           onChange={(e) => handle(e.target.value)}
           className="bg-input-bg border border-card-border rounded-md px-2.5 py-1.5 text-foreground text-[0.85rem] outline-none"
         />
-        <span className="text-[0.75rem] font-mono text-muted-foreground">
+        <span className="text-[0.8rem] font-mono text-muted-foreground">
           {phase.recommendedByDay !== undefined ? `day ${phase.recommendedByDay}` : "no deadline set"}
         </span>
         {phase.recommendedByDay !== undefined && (
           <button
             onClick={() => handle("")}
-            className="text-[0.75rem] text-muted-foreground hover:text-red-400 bg-transparent border-none cursor-pointer underline"
+            className="text-[0.8rem] text-muted-foreground hover:text-red-400 bg-transparent border-none cursor-pointer underline"
           >
             Clear
           </button>
@@ -233,7 +233,7 @@ export default function PhaseDetailModal({
                   type="text"
                   value={phase.title}
                   onChange={(e) => onChange({ ...phase, title: e.target.value })}
-                  className="flex-1 bg-transparent border-none text-[1.4rem] font-bold text-accent outline-none"
+                  className="flex-1 bg-transparent border-none text-[1.3rem] font-bold text-accent outline-none"
                 />
                 {isActive ? (
                   <span className="text-xs bg-success/15 text-success px-2 py-0.5 rounded font-semibold shrink-0">
@@ -245,7 +245,7 @@ export default function PhaseDetailModal({
                 value={phase.description}
                 onChange={(e) => onChange({ ...phase, description: e.target.value })}
                 placeholder="What is this phase about?"
-                className="bg-transparent border-none border-b border-dashed border-card-border text-muted-foreground text-[0.9rem] outline-none pb-1.5 resize-none"
+                className="bg-transparent border-none border-b border-dashed border-card-border text-muted-foreground text-[0.95rem] outline-none pb-1.5 resize-none"
                 rows={2}
               />
             </div>
@@ -342,14 +342,14 @@ export default function PhaseDetailModal({
             {/* Modal Header (read-only) */}
             <div className="pr-8">
               <div className="flex items-center gap-4">
-                <h2 className="text-[1.4rem] font-bold text-accent m-0">{phase.title}</h2>
+                <h2 className="text-[1.3rem] font-bold text-accent m-0">{phase.title}</h2>
                 {isActive ? (
                   <span className="text-xs bg-success/15 text-success px-2 py-0.5 rounded font-semibold shrink-0">
                     ACTIVE FOCUS
                   </span>
                 ) : null}
               </div>
-              <p className="text-muted-foreground text-[0.9rem] mt-1">{phase.description}</p>
+              <p className="text-muted-foreground text-[0.95rem] mt-1">{phase.description}</p>
               {endsOn && (
                 <p className="text-[0.7rem] font-mono text-muted-foreground/60 mt-1 m-0">
                   Ends {endsOn}<span className="opacity-70"> · day {phase.recommendedByDay}</span>

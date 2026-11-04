@@ -341,7 +341,7 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
           <span className={`text-[0.7rem] uppercase tracking-[0.05em] ${isToday ? "font-bold text-foreground" : "font-semibold text-muted-foreground"}`}>
             {dayItem.name}
           </span>
-          <div className="day-card-date text-[0.55rem] text-subtle-foreground mt-px">
+          <div className="day-card-date text-[0.65rem] text-subtle-foreground mt-px">
             {data.isSynced ? dayDateStr.slice(5) : "MM-DD"}
           </div>
         </div>
@@ -350,7 +350,7 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
           {/* How much of a shut day is done, so the line is worth reading on
               its own. Hidden while it is open, where the boxes say it better. */}
           {stacked && !open && itemCount > 0 && (
-            <span className="shrink-0 font-mono text-[0.6rem] text-subtle-foreground">
+            <span className="shrink-0 font-mono text-[0.65rem] text-subtle-foreground">
               {doneCount}/{itemCount}
             </span>
           )}
@@ -359,7 +359,7 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
               "ATTERN STUD", which reads as a glitch rather than a long word. */}
           <span
             title={data.isSynced ? dayItem.label : undefined}
-            className="day-card-label max-w-full truncate text-[0.55rem] font-semibold px-1.5 py-px rounded-[3px] uppercase tracking-[0.03em]"
+            className="day-card-label max-w-full truncate text-[0.65rem] font-semibold px-1.5 py-px rounded-[3px] uppercase tracking-[0.03em]"
             style={data.isSynced ? { color: tag.text, background: tag.bg } : { color: "#71717a", background: "rgba(113, 113, 122, 0.12)" }}
           >
             {data.isSynced ? dayItem.label : "UN-ASSIGNED"}
@@ -387,7 +387,7 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
                   />
                   <span
                     title={item.title}
-                    className={`day-item-title min-w-0 line-clamp-2 text-[0.72rem] leading-[1.3] ${completed ? "text-subtle-foreground line-through" : isToday ? "text-foreground" : "text-muted-foreground"}`}
+                    className={`day-item-title min-w-0 line-clamp-2 text-[0.7rem] leading-[1.3] ${completed ? "text-subtle-foreground line-through" : isToday ? "text-foreground" : "text-muted-foreground"}`}
                   >
                     {item.title}
                   </span>

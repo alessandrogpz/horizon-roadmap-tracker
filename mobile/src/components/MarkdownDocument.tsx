@@ -18,7 +18,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import Markdown from "react-native-markdown-display";
-import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
+import { leading, RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { Refreshable } from "./Refreshable";
 
@@ -119,13 +119,13 @@ function makeStyles(palette: Palette) {
     },
     buttonLabel: { color: palette.foreground, ...TYPE.label, fontWeight: "600" },
     content: { padding: SPACING.lg },
-    reading: { color: palette.foreground, ...TYPE.body, lineHeight: 22 },
+    reading: { color: palette.foreground, ...TYPE.body, lineHeight: leading(TYPE.body.fontSize, 1.55) },
     editor: {
       flex: 1,
       padding: SPACING.lg,
       color: palette.foreground,
       ...TYPE.body,
-      lineHeight: 21,
+      lineHeight: leading(TYPE.body.fontSize, 1.5),
     },
     muted: { color: palette.mutedForeground, ...TYPE.label},
   });
@@ -135,7 +135,7 @@ function makeStyles(palette: Palette) {
  *  reads like the rest of the app rather than like a web page from 2005. */
 function markdownStyles(palette: Palette) {
   return {
-    body: { color: palette.foreground, ...TYPE.subhead, lineHeight: 23 },
+    body: { color: palette.foreground, ...TYPE.subhead, lineHeight: leading(TYPE.subhead.fontSize, 1.55) },
     heading1: { color: palette.foreground, ...TYPE.figure, fontWeight: "700" as const, marginTop: SPACING.lg, marginBottom: SPACING.sm },
     heading2: { color: palette.foreground, ...TYPE.heading, fontWeight: "700" as const, marginTop: SPACING.lg, marginBottom: SPACING.xs },
     heading3: { color: palette.foreground, ...TYPE.heading, fontWeight: "600" as const, marginTop: SPACING.md },

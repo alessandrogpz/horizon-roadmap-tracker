@@ -103,7 +103,7 @@ export default function GymTracker() {
                 <Circle size={15} className="shrink-0 text-subtle-foreground" />
               )}
               <span
-                className={`flex-1 text-[0.9rem] ${complete ? "text-muted-foreground line-through" : "text-foreground"}`}
+                className={`flex-1 text-[0.95rem] ${complete ? "text-muted-foreground line-through" : "text-foreground"}`}
               >
                 {item.name}
               </span>
@@ -130,7 +130,7 @@ export default function GymTracker() {
             </div>
 
             <div className="flex items-center gap-2 pl-[23px]">
-              <span className="font-mono text-[0.75rem] text-muted-foreground">
+              <span className="font-mono text-[0.8rem] text-muted-foreground">
                 {done}/{item.sets} done
               </span>
 
@@ -148,7 +148,7 @@ export default function GymTracker() {
                     return id ? addSet(withExercise, today, id, { reps: item.reps }) : withExercise;
                   })
                 }
-                className="rounded border border-card-border px-2 py-0.5 text-[0.75rem] text-foreground hover:border-accent"
+                className="rounded border border-card-border px-2 py-0.5 text-[0.8rem] text-foreground hover:border-accent"
               >
                 Log a set
               </button>
@@ -156,14 +156,14 @@ export default function GymTracker() {
               {logged && logged.sets.length > 0 && (
                 <button
                   onClick={() => change((l) => removeSet(l, today, logged.id, logged.sets.length - 1))}
-                  className="text-[0.75rem] text-subtle-foreground hover:text-foreground"
+                  className="text-[0.8rem] text-subtle-foreground hover:text-foreground"
                 >
                   Undo last
                 </button>
               )}
 
               {previous && (
-                <span className="ml-auto text-[0.72rem] text-subtle-foreground">
+                <span className="ml-auto text-[0.7rem] text-subtle-foreground">
                   last {previous.date.slice(5)}:{" "}
                   {previous.sets.map((set) => `${set.reps}${set.weight ? `×${set.weight}` : ""}`).join(", ")}
                 </span>
@@ -230,7 +230,7 @@ function Stepper({
       >
         <Minus size={11} />
       </button>
-      <span className="min-w-[2.6rem] text-center font-mono text-[0.72rem] text-foreground">
+      <span className="min-w-[2.6rem] text-center font-mono text-[0.7rem] text-foreground">
         {value} {unit}
       </span>
       <button

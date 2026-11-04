@@ -294,7 +294,7 @@ export default function TrackSwitcher({
             >
               <Layers size={13} strokeWidth={2.5} className="shrink-0" />
               <span className="flex-1">All tracks</span>
-              <span className="inline-flex items-center gap-1 text-[0.62rem] font-semibold uppercase tracking-[0.05em] text-subtle-foreground">
+              <span className="inline-flex items-center gap-1 text-[0.65rem] font-semibold uppercase tracking-[0.05em] text-subtle-foreground">
                 <Lock size={9} strokeWidth={2.5} />
                 Read only
               </span>
@@ -423,7 +423,7 @@ function TrackRow({
             onBlur={onDisarm}
             title={armed ? "Tap again to delete" : `Delete ${row.track.meta.name}`}
             aria-label={armed ? `Confirm deleting ${row.track.meta.name}` : `Delete ${row.track.meta.name}`}
-            className={`flex h-6 items-center gap-1 rounded-[var(--radius-control)] border px-1.5 text-[0.62rem] font-semibold transition-colors cursor-pointer ${
+            className={`flex h-6 items-center gap-1 rounded-[var(--radius-control)] border px-1.5 text-[0.65rem] font-semibold transition-colors cursor-pointer ${
               armed
                 ? "border-red-500/50 bg-red-500/15 text-red-400"
                 : "border-transparent bg-transparent text-subtle-foreground hover:border-card-border hover:bg-surface-hover hover:text-red-400"

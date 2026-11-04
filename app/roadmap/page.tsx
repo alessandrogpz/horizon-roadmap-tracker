@@ -62,8 +62,8 @@ function RoadmapEditor() {
 
       {locked && (
         <div className="glass-panel p-12 text-center rounded-lg !border !border-dashed !border-red-500/30 !bg-red-500/[0.02]">
-          <h2 className="text-[1.2rem] font-semibold text-red-400 mb-2">Roadmap Locked</h2>
-          <p className="text-muted-foreground text-[0.9rem] max-w-[450px] mx-auto mb-6">
+          <h2 className="text-[1.1rem] font-semibold text-red-400 mb-2">Roadmap Locked</h2>
+          <p className="text-muted-foreground text-[0.95rem] max-w-[450px] mx-auto mb-6">
             Please connect your Google Drive account on the main dashboard to unlock your roadmap.
           </p>
           <Link
@@ -117,7 +117,7 @@ function RoadmapEditor() {
             />
           ) : (
             <div className="px-10 py-16 text-center">
-              <p className="text-muted-foreground text-[0.9rem] mb-4">You haven&apos;t written a roadmap for this track yet.</p>
+              <p className="text-muted-foreground text-[0.95rem] mb-4">You haven&apos;t written a roadmap for this track yet.</p>
               <button onClick={() => setTab("write")} className="btn px-5 py-2 text-[0.85rem]">
                 Start Writing
               </button>

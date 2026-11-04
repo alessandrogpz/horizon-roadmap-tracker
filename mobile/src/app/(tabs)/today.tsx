@@ -41,7 +41,7 @@ import { useMasterMode } from "../../master/MasterMode";
 import { MasterToday } from "../../master/MasterToday";
 import { useUndo } from "../../components/UndoBar";
 import { tap } from "../../feedback/haptics";
-import { RADIUS, SPACING, TYPE, type Palette } from "../../theme";
+import { leading, RADIUS, SPACING, TYPE, type Palette } from "../../theme";
 import { usePalette } from "../../theme/ThemeProvider";
 import { EditButton, useEditMode } from "../../components/EditToggle";
 import { TodaysTodos } from "../../components/TodaysTodos";
@@ -436,7 +436,7 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.surfaceMuted,
     },
-    dayStepLabel: { color: palette.foreground, ...TYPE.title, lineHeight: 24 },
+    dayStepLabel: { color: palette.foreground, ...TYPE.title, lineHeight: leading(TYPE.title.fontSize, 1.2) },
     dayLabelWrap: { flex: 1, alignItems: "center" },
     dayLabel: { color: palette.foreground, ...TYPE.body, fontWeight: "600" },
     dayHint: { color: palette.subtleForeground, ...TYPE.micro},
@@ -510,9 +510,9 @@ function makeStyles(palette: Palette) {
     },
     tick: { color: "#fff", ...TYPE.label, fontWeight: "800" },
     rowText: { flex: 1, gap: 3 },
-    rowTitle: { color: palette.foreground, ...TYPE.subhead, lineHeight: 20 },
+    rowTitle: { color: palette.foreground, ...TYPE.subhead, lineHeight: leading(TYPE.subhead.fontSize, 1.35) },
     rowTitleDone: { color: palette.mutedForeground, textDecorationLine: "line-through" },
-    rowDescription: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },
-    empty: { color: palette.mutedForeground, ...TYPE.body, lineHeight: 20 },
+    rowDescription: { color: palette.mutedForeground, ...TYPE.label, lineHeight: leading(TYPE.label.fontSize, 1.4) },
+    empty: { color: palette.mutedForeground, ...TYPE.body, lineHeight: leading(TYPE.body.fontSize, 1.45) },
   });
 }

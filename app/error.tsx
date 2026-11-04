@@ -19,7 +19,7 @@ export default function Error({
         <h2 className="text-warning mb-4 uppercase tracking-[0.05em] text-2xl font-bold">
           Workspace Error
         </h2>
-        <p className="text-muted-foreground text-[0.9rem] mb-6 leading-normal">
+        <p className="text-muted-foreground text-[0.95rem] mb-6 leading-normal">
           A client-side rendering or hydration error occurred while building the dashboard.
         </p>
         <div className="p-4 bg-black rounded-md text-left text-[0.8rem] text-red-400 overflow-x-auto mb-8 border border-card-border">
