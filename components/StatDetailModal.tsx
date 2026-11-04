@@ -349,7 +349,7 @@ export default function StatDetailModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="glass-panel relative flex max-h-[90vh] w-full max-w-[620px] flex-col gap-5 overflow-y-auto border-accent-muted"
+        className="glass-panel panel-roomy relative flex max-h-[90vh] w-full max-w-[620px] flex-col gap-5 overflow-y-auto border-accent-muted"
       >
         <button
           onClick={onClose}

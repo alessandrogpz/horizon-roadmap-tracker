@@ -189,7 +189,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`glass-panel w-full max-h-[90vh] flex flex-col gap-6 p-8 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.5)] border border-accent-muted relative rounded-lg overflow-hidden ${
+        className={`glass-panel panel-roomy w-full max-h-[90vh] flex flex-col gap-6 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.5)] border border-accent-muted relative rounded-lg overflow-hidden ${
           mode === "plan" ? "max-w-[900px] h-[80vh]" : "max-w-[600px]"
         }`}
       >
@@ -212,7 +212,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
               </p>
             </div>
 
-            <div className="glass-panel !p-0 !border-card-border flex-1 min-h-0 flex flex-col overflow-hidden">
+            <div className="glass-panel panel-flush !border-card-border flex-1 min-h-0 flex flex-col overflow-hidden">
               <div className="flex items-center justify-between border-b border-card-border px-6 pt-4 shrink-0">
                 <div className="flex gap-1">
                   <button

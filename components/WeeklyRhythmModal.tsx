@@ -34,7 +34,7 @@ export default function WeeklyRhythmModal({ weekSchedule, focusTypes, onSave, on
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="glass-panel max-w-[560px] w-full max-h-[90vh] overflow-y-auto flex flex-col gap-5 p-8 border border-accent-muted relative rounded-lg"
+        className="glass-panel panel-roomy max-w-[560px] w-full max-h-[90vh] overflow-y-auto flex flex-col gap-5 border border-accent-muted relative rounded-lg"
       >
         <button
           onClick={onClose}

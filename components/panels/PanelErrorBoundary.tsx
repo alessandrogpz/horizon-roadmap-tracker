@@ -35,7 +35,7 @@ export default class PanelErrorBoundary extends React.Component<Props, State> {
     if (!error) return this.props.children;
 
     return (
-      <div className="glass-panel p-6 flex flex-col gap-3 border-l-4 !border-l-warning">
+      <div className="glass-panel flex flex-col gap-3 border-l-4 !border-l-warning">
         <h2 className="section-title !mb-0">
           <TriangleAlert size={14} strokeWidth={2.5} className="section-icon !text-warning" />
           {this.props.label} unavailable
