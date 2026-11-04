@@ -59,7 +59,7 @@ export default function GymTracker() {
   // Every panel brings its own card; SortablePanel is transparent chrome that
   // only adds the hover controls. Without this the gym floated on the column
   // with no bounding box while its neighbours had one.
-  const shell = "glass-panel p-6 flex flex-col gap-3";
+  const shell = "glass-panel flex flex-col gap-3";
 
   if (!focus) {
     return (

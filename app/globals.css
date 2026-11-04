@@ -175,14 +175,42 @@ body {
 /* ===========================================================================
    Surfaces
    =========================================================================== */
+/* Panel density is a role, not a utility.
+   This class lives outside Tailwind's layers, so `p-8` on a panel never
+   reached it: five modals asked for 2rem, the roadmap's empty state for 3rem,
+   the weekly plan for 20px of vertical, and every one of them silently
+   rendered at 1.5rem. One density for a dense dashboard panel and for a modal
+   holding a form is not a decision anybody made. The variable makes the
+   exceptions sayable, and `.panel-roomy` / `.panel-flush` below name the two
+   that exist rather than leaving each caller to pick a number. */
 .glass-panel {
   position: relative;
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-card);
-  padding: 1.5rem;
+  padding: var(--panel-pad, 1.5rem);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
   box-shadow: var(--highlight-top), var(--shadow-panel);
+}
+
+/* A focused surface: a dialog holding a form wants more air than a panel
+   holding a list, which is what each of those modals was asking for. */
+.panel-roomy {
+  --panel-pad: 2rem;
+}
+
+/* On a phone that 2rem is a sixth of the screen's width spent on margin, and
+   the form inside is the thing that needs the room. The dialog keeps its
+   breathing space where there is space to breathe. */
+@media (max-width: 480px) {
+  .panel-roomy {
+    --panel-pad: 1.5rem;
+  }
+}
+
+/* A panel whose child draws its own edges — an editor pane, a preview. */
+.panel-flush {
+  --panel-pad: 0;
 }
 
 .glass-panel:hover {

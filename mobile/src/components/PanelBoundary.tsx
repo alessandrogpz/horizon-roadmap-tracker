@@ -13,7 +13,7 @@
 
 import { Component, type ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { TYPE } from "../theme";
+import { RADIUS, SPACING, TYPE } from "../theme";
 
 interface Props {
   /** Named so the message can say which panel, rather than "something". */
@@ -66,14 +66,18 @@ export class PanelBoundary extends Component<Props, State> {
 const styles = StyleSheet.create({
   card: {
     gap: 6,
-    padding: 16,
-    borderRadius: 14,
+    padding: SPACING.lg,
+    borderRadius: RADIUS.card,
     borderWidth: 1,
     borderColor: "rgba(248, 113, 113, 0.35)",
     backgroundColor: "rgba(248, 113, 113, 0.06)",
   },
+  // Colours stay literal here, unlike the spacing. The palette comes from a
+  // hook, and this component has to render when the tree above it has already
+  // failed — possibly the provider itself. Spacing and radius are plain
+  // constants, so they carry no such risk.
   title: { color: "#f87171", ...TYPE.body, fontWeight: "700" },
   body: { color: "#9ca3af", ...TYPE.caption, lineHeight: 17 },
-  retry: { alignSelf: "flex-start", paddingVertical: 8, paddingHorizontal: 12, minHeight: 44, justifyContent: "center" },
+  retry: { alignSelf: "flex-start", paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md, minHeight: 44, justifyContent: "center" },
   retryLabel: { color: "#f87171", ...TYPE.label, fontWeight: "600" },
 });

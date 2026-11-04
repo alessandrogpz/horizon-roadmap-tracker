@@ -88,7 +88,7 @@ export default function WeeklyPlan({
   }, []);
 
   return (
-    <div className="glass-panel px-6 py-5">
+    <div className="glass-panel">
       <div className="flex flex-col gap-3">
         {/* Header */}
         <div className="flex flex-col gap-3 pb-3 border-b border-card-border">
