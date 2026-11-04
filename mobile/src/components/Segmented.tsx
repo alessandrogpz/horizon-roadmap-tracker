@@ -107,7 +107,7 @@ function Label({
   }));
 
   return (
-    <Animated.Text style={[labelStyles.label, animated]} numberOfLines={1} allowFontScaling={false}>
+    <Animated.Text style={[labelStyles.label, animated]} numberOfLines={1} maxFontSizeMultiplier={1.3}>
       {text}
     </Animated.Text>
   );

@@ -7,6 +7,38 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.104.0] - 2026-11-04
+
+### Fixed
+- **Small text now meets WCAG AA.** The quietest text tier carried real content — the date and the
+  done-count on every day card, the label on a rotation waiting for a later phase — and read 2.87:1
+  in dark and 2.61:1 in light, against a 4.5 requirement. Both themes and the phone's palette are
+  retuned against the *lightest* surface the tier lands on, which is the worst case, so those three
+  now read 4.85 / 4.60 / 4.70. The tier stays dimmer than the one above it, so the hierarchy is
+  unchanged.
+- **Four controls had no name for a screen reader**: the timer's session length, both deliverable
+  checkboxes, and the two Markdown editors, which offered a placeholder where a label belongs.
+- **One keyboard focus ring, from the app's own token.** Buttons and checkboxes used `--ring`;
+  everything else fell back to the browser's default outline — always visible, so never a failure,
+  but a different shape on most of the app.
+- The weekly plan's heading was an `h3` sitting directly under the page's `h1`, skipping a level for
+  anyone navigating by headings. It is an `h2` like every other panel, and looks identical.
+- The `|` and `•` in the header are decoration and are now hidden from assistive tech rather than
+  announced between every item.
+
+### Changed
+- Dropped the accent stripe down the left edge of the weekly plan and of the all-tracks rows — the
+  single most recognisable tell of a generated interface, and in both places redundant: the panel has
+  a heading, and the row already carries a chip with the track's name and colour. Where the stripe
+  was the only colour cue, on the roadmap header, it became a dot beside the name, which keeps the
+  information and puts it next to what it identifies. The blockquote rule and the two warning banners
+  keep theirs: one is ordinary typography, the other is what makes a warning read as a warning.
+- On the phone, the timeline ring's percentage and the segmented control's labels scale with the
+  reader's text size again, capped so they cannot outgrow the shapes they sit in, rather than opting
+  out of Dynamic Type entirely.
+- ESLint ignores `.claude/**`. Vendored agent skills are somebody else's source, and linting them
+  fails `npm run lint` — a CI step — the moment that folder is committed.
+
 ## [0.103.3] - 2026-10-24
 
 ### Security

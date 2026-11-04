@@ -14,6 +14,10 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // The Expo app is a separate package with its own toolchain (MOBILE_PLAN.md).
     "mobile/**",
+    // Agent skills vendored into the repo: somebody else's source, shipped with
+    // its own bundled assets. Linting it says nothing about this app, and it
+    // fails `npm run lint` — a CI step — the moment the folder is committed.
+    ".claude/**",
   ]),
 ]);
 
