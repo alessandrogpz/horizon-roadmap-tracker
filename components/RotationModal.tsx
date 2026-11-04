@@ -204,7 +204,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
         {mode === "plan" && existing ? (
           <>
             <div className="pr-8 shrink-0">
-              <h2 className="text-[1.4rem] font-bold text-foreground mb-1">
+              <h2 className="text-[1.3rem] font-bold text-foreground mb-1">
                 {existing.label}: Full Plan
               </h2>
               <p className="text-[0.85rem] text-muted-foreground m-0">
@@ -254,7 +254,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                   />
                 ) : (
                   <div className="px-8 py-16 text-center">
-                    <p className="text-muted-foreground text-[0.9rem] mb-4">You haven&apos;t written a plan for this rotation yet.</p>
+                    <p className="text-muted-foreground text-[0.95rem] mb-4">You haven&apos;t written a plan for this rotation yet.</p>
                     <button onClick={() => setPlanTab("write")} className="btn px-5 py-2 text-[0.85rem]">
                       Start Writing
                     </button>
@@ -278,7 +278,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
         ) : mode === "edit" ? (
           <>
             <div className="pr-8 shrink-0">
-              <h2 className="text-[1.4rem] font-bold text-foreground mb-1">
+              <h2 className="text-[1.3rem] font-bold text-foreground mb-1">
                 {isNew ? "New Rotation" : "Edit Rotation"}
               </h2>
               <p className="text-[0.85rem] text-muted-foreground m-0">
@@ -288,7 +288,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
 
             <div className="flex flex-col gap-4 flex-1 min-h-0 overflow-y-auto pr-1">
               <label className="flex flex-col gap-1.5">
-                <span className="text-[0.75rem] text-muted-foreground uppercase tracking-[0.05em] font-semibold">Label</span>
+                <span className="text-[0.8rem] text-muted-foreground uppercase tracking-[0.05em] font-semibold">Label</span>
                 <input
                   type="text"
                   value={label}
@@ -304,7 +304,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                   that you met in phase one. Scoped, a short rotation per
                   phase works through them once and is done by the end. */}
               <div className="flex flex-col gap-1.5">
-                <span className="text-[0.75rem] text-muted-foreground uppercase tracking-[0.05em] font-semibold">
+                <span className="text-[0.8rem] text-muted-foreground uppercase tracking-[0.05em] font-semibold">
                   Runs during
                 </span>
                 <div className="flex flex-wrap gap-1.5">
@@ -341,13 +341,13 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <span className="text-[0.75rem] text-muted-foreground uppercase tracking-[0.05em] font-semibold">Days of Week</span>
+                <span className="text-[0.8rem] text-muted-foreground uppercase tracking-[0.05em] font-semibold">Days of Week</span>
                 <div className="flex flex-wrap gap-1.5">
                   {ALL_DAYS.map((day) => (
                     <button
                       key={day}
                       onClick={() => toggleDay(day)}
-                      className={`w-11 py-1.5 rounded-md text-[0.75rem] font-semibold cursor-pointer border transition-all duration-150 ${
+                      className={`w-11 py-1.5 rounded-md text-[0.8rem] font-semibold cursor-pointer border transition-all duration-150 ${
                         daysOfWeek.includes(day)
                           ? "bg-accent/15 border-accent text-accent"
                           : "bg-surface-muted border-card-border text-muted-foreground hover:border-card-border-hover"
@@ -361,12 +361,12 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
 
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[0.75rem] text-muted-foreground uppercase tracking-[0.05em] font-semibold">
+                  <span className="text-[0.8rem] text-muted-foreground uppercase tracking-[0.05em] font-semibold">
                     Items (cycles weekly, in order)
                   </span>
                   <button
                     onClick={() => setItems((prev) => [...prev, { title: "", description: "" }])}
-                    className="text-[0.75rem] text-accent cursor-pointer bg-transparent border-none"
+                    className="text-[0.8rem] text-accent cursor-pointer bg-transparent border-none"
                   >
                     + Add Item
                   </button>
@@ -396,7 +396,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                         value={item.description}
                         onChange={(e) => updateItem(idx, "description", e.target.value)}
                         placeholder="Description (optional)"
-                        className="ml-7 bg-transparent border-b border-card-border px-1 py-1 text-[0.75rem] text-muted-foreground focus:outline-none focus:border-accent"
+                        className="ml-7 bg-transparent border-b border-card-border px-1 py-1 text-[0.8rem] text-muted-foreground focus:outline-none focus:border-accent"
                       />
                     </div>
                   ))}
@@ -404,7 +404,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
               </div>
 
               <label className="flex flex-col gap-1.5">
-                <span className="text-[0.75rem] text-muted-foreground uppercase tracking-[0.05em] font-semibold">
+                <span className="text-[0.8rem] text-muted-foreground uppercase tracking-[0.05em] font-semibold">
                   Explanation (optional)
                 </span>
                 <textarea
@@ -443,7 +443,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
               <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold uppercase font-mono tracking-[0.05em]">
                 {len}-Week Cycle
               </span>
-              <h2 className="text-[1.4rem] font-bold text-foreground mt-2 mb-1">
+              <h2 className="text-[1.3rem] font-bold text-foreground mt-2 mb-1">
                 {existing?.label}
               </h2>
               <p className="text-[0.85rem] text-muted-foreground m-0">

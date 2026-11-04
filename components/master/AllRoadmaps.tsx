@@ -47,7 +47,7 @@ export default function AllRoadmaps() {
         <h1 className="m-0 flex items-center gap-2 text-2xl font-bold">
           <span className="text-accent">&gt;_</span> All roadmaps
           <span
-            className="inline-flex items-center gap-1 rounded-[var(--radius-control)] border border-card-border bg-surface-muted px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.05em] text-subtle-foreground"
+            className="inline-flex items-center gap-1 rounded-[var(--radius-control)] border border-card-border bg-surface-muted px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-[0.05em] text-subtle-foreground"
             title="Open a track to edit its roadmap."
           >
             <Lock size={10} strokeWidth={2.5} />

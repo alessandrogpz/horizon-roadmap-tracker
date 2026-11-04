@@ -89,7 +89,7 @@ export default function AllTracksYear({
               title={`${row.track.meta.name}: ${Math.round(row.pct)}% through its timeline`}
             />
             <div className="min-w-0 flex flex-col gap-1">
-              <span className="text-[0.75rem] font-semibold text-foreground leading-tight line-clamp-2">
+              <span className="text-[0.8rem] font-semibold text-foreground leading-tight line-clamp-2">
                 {row.track.meta.name}
               </span>
               {row.streak > 0 && (

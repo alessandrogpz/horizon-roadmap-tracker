@@ -54,8 +54,8 @@ function Row({
       <div className="flex gap-2.5">
         {icon && <span className="mt-0.5 text-muted-foreground">{icon}</span>}
         <div className="flex flex-col gap-0.5">
-          <span className="text-[0.9rem] font-semibold text-foreground">{title}</span>
-          {hint && <span className="text-[0.78rem] leading-snug text-muted-foreground">{hint}</span>}
+          <span className="text-[0.95rem] font-semibold text-foreground">{title}</span>
+          {hint && <span className="text-[0.8rem] leading-snug text-muted-foreground">{hint}</span>}
         </div>
       </div>
       {children && <div className="flex shrink-0 items-center gap-2">{children}</div>}
@@ -78,7 +78,7 @@ function Segmented<T extends string>({
         <button
           key={option.value}
           onClick={() => onChange(option.value)}
-          className={`flex cursor-pointer items-center gap-1.5 rounded-[5px] px-2.5 py-1 text-[0.78rem] transition-colors ${
+          className={`flex cursor-pointer items-center gap-1.5 rounded-[5px] px-2.5 py-1 text-[0.8rem] transition-colors ${
             option.value === value
               ? "bg-accent/15 text-accent font-semibold"
               : "text-muted-foreground hover:text-foreground"
@@ -96,7 +96,7 @@ const selectClass =
   "rounded-[var(--radius-control)] border border-card-border bg-input-bg px-2.5 py-1.5 text-[0.8rem] text-foreground outline-none focus-visible:shadow-[0_0_0_3px_var(--ring)]";
 
 const quietButton =
-  "rounded-[var(--radius-control)] border border-card-border bg-surface-muted px-3 py-1.5 text-[0.78rem] text-foreground cursor-pointer transition-colors hover:border-card-border-hover hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-50";
+  "rounded-[var(--radius-control)] border border-card-border bg-surface-muted px-3 py-1.5 text-[0.8rem] text-foreground cursor-pointer transition-colors hover:border-card-border-hover hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-50";
 
 export default function SettingsModal({
   onClose,
@@ -428,8 +428,8 @@ export default function SettingsModal({
           <div className="flex gap-2.5">
             <AlertTriangle size={16} strokeWidth={2} className="mt-0.5 shrink-0 text-red-400" />
             <div className="flex flex-col gap-0.5">
-              <span className="text-[0.9rem] font-semibold text-foreground">Delete local data</span>
-              <span className="text-[0.78rem] leading-snug text-muted-foreground">
+              <span className="text-[0.95rem] font-semibold text-foreground">Delete local data</span>
+              <span className="text-[0.8rem] leading-snug text-muted-foreground">
                 Clears every track, note and credential from this browser, and signs it out.
                 Anything already synced stays in your Drive; this device just forgets it.
               </span>
@@ -440,7 +440,7 @@ export default function SettingsModal({
               <>
                 <button
                   onClick={doWipe}
-                  className="cursor-pointer rounded-[var(--radius-control)] border border-red-500/40 bg-red-500/15 px-3 py-1.5 text-[0.78rem] font-semibold text-red-400"
+                  className="cursor-pointer rounded-[var(--radius-control)] border border-red-500/40 bg-red-500/15 px-3 py-1.5 text-[0.8rem] font-semibold text-red-400"
                 >
                   Yes, delete everything
                 </button>
@@ -451,7 +451,7 @@ export default function SettingsModal({
             ) : (
               <button
                 onClick={() => setConfirmWipe(true)}
-                className="cursor-pointer rounded-[var(--radius-control)] border border-red-500/30 bg-transparent px-3 py-1.5 text-[0.78rem] text-red-400 transition-colors hover:bg-red-500/10"
+                className="cursor-pointer rounded-[var(--radius-control)] border border-red-500/30 bg-transparent px-3 py-1.5 text-[0.8rem] text-red-400 transition-colors hover:bg-red-500/10"
               >
                 Delete local data…
               </button>

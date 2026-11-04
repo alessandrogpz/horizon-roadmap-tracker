@@ -7,6 +7,34 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.105.0] - 2026-11-04
+
+### Changed
+- **The web had forty font sizes; it now has ten.** 0.78, 0.8 and 0.82rem all did the same job, six
+  values sat between 0.45 and 0.58rem — 7 to 9 points, under anything readable — and ten more
+  crowded between 1.08 and 1.7. Sizes a third of a pixel apart cannot carry different meanings. The
+  ten that remain are drawn from the values that already dominated, so the app looks like itself,
+  and they are named for their job — display, figure, title, heading, subhead, body, label, caption,
+  micro, eyebrow — which is deliberately the same vocabulary the phone's `TYPE` already used. Two
+  apps, one word for "the subhead".
+- Line height is part of each role rather than an afterthought: tight for display sizes, which are
+  read as shapes, looser for small text on a dark surface, which needs the air.
+- **The notes and roadmap panes are read, not scanned**, so they get a reading size (1rem against the
+  dashboard's 0.85) with the leading to match and a 68-character measure. Past about 75 characters
+  the eye loses its place on the way back to the next line. The cap only bites on a wide panel.
+- Headings balance their line breaks and body copy avoids a stranded last word, where the browser
+  supports it.
+
+### Fixed
+- The smallest text in the app was 7.2 points. Everything below the micro role came up to it, which
+  is the same reason the date on a day card is legible now rather than merely present.
+- **On the phone, a hard-coded line height is an accessibility bug**, not a style: React Native's
+  `lineHeight` is absolute points and does not grow when the reader turns their text size up, so
+  text clips. The role scale deliberately carries no line height, which is now written down in it,
+  and a `leading()` helper folds the reader's scale in for the places that genuinely need to set it.
+  The daily screens use it. At the default text size nothing moves; at 200% the lines no longer
+  collide.
+
 ## [0.104.0] - 2026-11-04
 
 ### Fixed

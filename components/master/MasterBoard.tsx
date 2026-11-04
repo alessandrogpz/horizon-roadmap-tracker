@@ -114,7 +114,7 @@ function TrackPicker({
           All tracks
         </h2>
         <span
-          className="inline-flex items-center gap-1 rounded-[var(--radius-control)] border border-card-border bg-surface-muted px-2 py-0.5 text-[0.68rem] font-semibold uppercase tracking-[0.05em] text-subtle-foreground"
+          className="inline-flex items-center gap-1 rounded-[var(--radius-control)] border border-card-border bg-surface-muted px-2 py-0.5 text-[0.7rem] font-semibold uppercase tracking-[0.05em] text-subtle-foreground"
           title="Nothing in this view can be edited. Open a track to change it."
         >
           <Lock size={10} strokeWidth={2.5} />
@@ -124,7 +124,7 @@ function TrackPicker({
         {roadmaps > 0 && (
           <Link
             href="/roadmap?all=1"
-            className="ml-auto inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-card-border bg-surface-muted px-2.5 py-1 text-[0.75rem] font-semibold text-muted-foreground transition-colors hover:text-foreground"
+            className="ml-auto inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-card-border bg-surface-muted px-2.5 py-1 text-[0.8rem] font-semibold text-muted-foreground transition-colors hover:text-foreground"
           >
             <ScrollText size={13} strokeWidth={2} />
             All {roadmaps} roadmap{roadmaps === 1 ? "" : "s"}
@@ -164,12 +164,12 @@ function TrackPicker({
 
       <button
         onClick={() => setShowHelp((v) => !v)}
-        className="w-fit cursor-pointer border-none bg-transparent p-0 text-left text-[0.72rem] text-subtle-foreground underline"
+        className="w-fit cursor-pointer border-none bg-transparent p-0 text-left text-[0.7rem] text-subtle-foreground underline"
       >
         {showHelp ? "Hide" : "What is this?"}
       </button>
       {showHelp && (
-        <p className="m-0 max-w-2xl text-[0.78rem] leading-relaxed text-muted-foreground">
+        <p className="m-0 max-w-2xl text-[0.8rem] leading-relaxed text-muted-foreground">
           Every track you have, in one board. The week shows what each one asks of each day, the
           grid puts every track&apos;s days in one square — divided, not blended, so you can still
           see whose is whose — and the lists, phases and numbers run across all of them. Progress is

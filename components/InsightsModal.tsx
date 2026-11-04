@@ -85,7 +85,7 @@ function Columns({ title, data }: { title: string; data: { label: string; value:
       </figcaption>
 
       {asTable ? (
-        <table className="w-full text-[0.75rem]">
+        <table className="w-full text-[0.8rem]">
           <tbody>
             {data.map((d) => (
               <tr key={d.label} className="border-b border-card-border last:border-b-0">
@@ -256,7 +256,7 @@ export default function InsightsModal({ onClose, onOpenTrack }: { onClose: () =>
                 <span className="text-[0.85rem] font-semibold text-foreground">{t.name}</span>
                 {[...t.materials.map((m) => `${m.title}${m.author ? ` · ${m.author}` : ""}`), ...t.phases.map((p) => `Phase: ${p.title}`)].map(
                   (line) => (
-                    <span key={line} className="text-[0.78rem] text-muted-foreground">
+                    <span key={line} className="text-[0.8rem] text-muted-foreground">
                       {line}
                     </span>
                   )
@@ -317,7 +317,7 @@ export default function InsightsModal({ onClose, onOpenTrack }: { onClose: () =>
 
             <div className="flex flex-col gap-1">
               <span className="text-[0.8rem] font-semibold text-foreground">By track</span>
-              <table className="w-full text-[0.78rem]">
+              <table className="w-full text-[0.8rem]">
                 <thead>
                   <tr className="text-left text-[0.7rem] uppercase tracking-[0.06em] text-muted-foreground">
                     <th className="py-1 font-semibold">Track</th>

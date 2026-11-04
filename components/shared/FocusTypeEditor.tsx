@@ -114,7 +114,7 @@ export default function FocusTypeEditor({ focusTypes, weekSchedule, onChange }: 
         </button>
       </div>
 
-      <p className="m-0 text-[0.68rem] leading-relaxed text-subtle-foreground">
+      <p className="m-0 text-[0.7rem] leading-relaxed text-subtle-foreground">
         The moon marks a kind of day you take off on purpose. Those days bridge a streak rather
         than breaking it, and show in the consistency grid as a dot.
       </p>
