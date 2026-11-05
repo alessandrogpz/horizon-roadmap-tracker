@@ -7,7 +7,7 @@
 // days, so "week 12" is a different week for each of them.
 
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { masterWeek } from "@shared/masterTrack";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
@@ -16,6 +16,7 @@ import { usePalette, useInk } from "../theme/ThemeProvider";
 import { NothingSelected, ReadOnlyBand, TrackPicker } from "./MasterChrome";
 import { makeMasterStyles } from "./styles";
 import { useMasterSources } from "./useMasterSources";
+import { Tappable } from "../components/Tappable";
 
 const DAY_CARD = 136;
 
@@ -51,13 +52,13 @@ export function MasterPlan() {
             </Text>
             <Step direction={1} onPress={() => setWeekOffset(weekOffset + 1)} palette={palette} own={own} />
             {weekOffset !== 0 && (
-              <Pressable
+              <Tappable
                 accessibilityRole="button"
                 onPress={() => setWeekOffset(0)}
                 style={[own.todayButton, { backgroundColor: palette.accent }]}
               >
                 <Text style={own.todayLabel}>Today</Text>
-              </Pressable>
+              </Tappable>
             )}
           </View>
 
@@ -116,7 +117,7 @@ function Step({
   own: ReturnType<typeof makeStyles>;
 }) {
   return (
-    <Pressable
+    <Tappable
       accessibilityRole="button"
       accessibilityLabel={direction === -1 ? "Previous week" : "Next week"}
       onPress={onPress}
@@ -128,7 +129,7 @@ function Step({
         size={16}
         color={palette.foreground}
       />
-    </Pressable>
+    </Tappable>
   );
 }
 

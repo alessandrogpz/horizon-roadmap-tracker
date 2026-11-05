@@ -12,8 +12,9 @@
 // otherwise stays out of the way.
 
 import { Component, type ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { RADIUS, SPACING, TYPE } from "../theme";
+import { Tappable } from "./Tappable";
 
 interface Props {
   /** Named so the message can say which panel, rather than "something". */
@@ -48,14 +49,14 @@ export class PanelBoundary extends Component<Props, State> {
           The rest of this screen is fine. If it keeps happening, the panel can be removed from
           Arrange.
         </Text>
-        <Pressable
+        <Tappable
           accessibilityRole="button"
           onPress={() => this.setState({ failed: false })}
           style={styles.retry}
           hitSlop={8}
         >
           <Text style={styles.retryLabel}>Try again</Text>
-        </Pressable>
+        </Tappable>
       </View>
     );
   }

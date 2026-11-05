@@ -9,12 +9,13 @@
 // a timer nobody started is furniture.
 
 import { useMemo } from "react";
-import { Pressable, StyleSheet, Text } from "react-native";
+import { StyleSheet, Text } from "react-native";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { formatRemaining, useTimer } from "../timer/TimerProvider";
 import { HEADER_CONTROL, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { Tappable } from "./Tappable";
 
 export function TimerChip() {
   const palette = usePalette();
@@ -27,7 +28,7 @@ export function TimerChip() {
   const tone = finished ? palette.success : paused ? palette.mutedForeground : palette.accent;
 
   return (
-    <Pressable
+    <Tappable
       accessibilityRole="button"
       accessibilityLabel={
         finished
@@ -42,7 +43,7 @@ export function TimerChip() {
       <Text style={[styles.label, { color: tone }]}>
         {finished ? "done" : formatRemaining(remaining)}
       </Text>
-    </Pressable>
+    </Tappable>
   );
 }
 

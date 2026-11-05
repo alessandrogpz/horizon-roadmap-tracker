@@ -156,7 +156,11 @@ export default function TopBarMenu({
 
       {open && (
         <div
-          className={`!absolute ${alignRight ? "right-0" : "left-0"} glass-surface z-50 mt-2 flex max-h-[75vh] w-[260px] max-w-[calc(100vw-1rem)] flex-col overflow-y-auto p-1.5`}
+          className={`popover-in !absolute ${alignRight ? "right-0" : "left-0"} glass-surface z-50 mt-2 flex max-h-[75vh] w-[260px] max-w-[calc(100vw-1rem)] flex-col overflow-y-auto p-1.5`}
+          // The menu grows out of the button that opened it, which means out
+          // of whichever corner it just aligned itself to — the same decision
+          // `alignRight` already made for the position.
+          style={{ "--popover-origin": alignRight ? "top right" : "top left" } as React.CSSProperties}
           role="menu"
         >
           <div className="flex items-center justify-between gap-2 px-2.5 pb-1 pt-1.5">

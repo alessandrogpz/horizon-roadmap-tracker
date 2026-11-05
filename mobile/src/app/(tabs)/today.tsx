@@ -18,7 +18,7 @@
 // does.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Refreshable } from "../../components/Refreshable";
 import { Link } from "expo-router";
@@ -47,6 +47,7 @@ import { usePalette } from "../../theme/ThemeProvider";
 import { EditButton, useEditMode } from "../../components/EditToggle";
 import { TodaysTodos } from "../../components/TodaysTodos";
 import { setTodosOpen, todosOpen } from "../../storage/deviceSettings";
+import { Tappable } from "../../components/Tappable";
 
 interface Row {
   id: string;
@@ -173,16 +174,16 @@ export default function TodayScreen() {
       keyboardShouldPersistTaps="handled"
     >
       <View style={styles.dayBar}>
-        <Pressable
+        <Tappable
           accessibilityRole="button"
           accessibilityLabel="The day before"
           onPress={() => step(-1)}
           style={styles.dayStep}
         >
           <Text style={styles.dayStepLabel}>‹</Text>
-        </Pressable>
+        </Tappable>
 
-        <Pressable
+        <Tappable
           accessibilityRole="button"
           accessibilityLabel={onToday ? "Today" : "Back to today"}
           onPress={() => setViewing(today)}
@@ -202,16 +203,16 @@ export default function TodayScreen() {
               : "Tap to come back to today"}
           </Text>
           {onToday && <Text style={styles.dayHint}>{summary}</Text>}
-        </Pressable>
+        </Tappable>
 
-        <Pressable
+        <Tappable
           accessibilityRole="button"
           accessibilityLabel="The day after"
           onPress={() => step(1)}
           style={styles.dayStep}
         >
           <Text style={styles.dayStepLabel}>›</Text>
-        </Pressable>
+        </Tappable>
       </View>
 
       {/* Ticking is never behind the switch — it is the thing this screen is
@@ -253,14 +254,14 @@ export default function TodayScreen() {
           <Text style={styles.muted}>
             Whatever you add here becomes part of every {dayKey} on this track.
           </Text>
-          <Pressable
+          <Tappable
             accessibilityRole="button"
             onPress={() => setEditing(true)}
             style={styles.primaryButton}
           >
             <Ionicons name="add" size={16} color={palette.background} />
             <Text style={styles.primaryLabel}>Plan this day</Text>
-          </Pressable>
+          </Tappable>
         </View>
       )}
     </Refreshable>
@@ -337,10 +338,10 @@ function Section({
                 style={styles.editInput}
                 accessibilityLabel={`Rename ${row.title}`}
               />
-              <Pressable accessibilityRole="button" onPress={() => save(row)} style={styles.rowAction}>
+              <Tappable accessibilityRole="button" onPress={() => save(row)} style={styles.rowAction}>
                 <Text style={styles.rowActionLabel}>Save</Text>
-              </Pressable>
-              <Pressable
+              </Tappable>
+              <Tappable
                 accessibilityRole="button"
                 accessibilityLabel={`Remove ${row.title}`}
                 onPress={() => {
@@ -350,13 +351,13 @@ function Section({
                 style={styles.rowAction}
               >
                 <Text style={[styles.rowActionLabel, { color: palette.danger }]}>Remove</Text>
-              </Pressable>
+              </Tappable>
             </View>
           );
         }
 
         return (
-          <Pressable
+          <Tappable
             key={`${row.kind}:${row.id}`}
             style={styles.row}
             accessibilityRole="checkbox"
@@ -386,7 +387,7 @@ function Section({
               <Text style={[styles.rowTitle, completed && styles.rowTitleDone]}>{row.title}</Text>
               {row.description ? <Text style={styles.rowDescription}>{row.description}</Text> : null}
             </View>
-          </Pressable>
+          </Tappable>
         );
       })}
 

@@ -76,7 +76,7 @@ export default function MasterStats({ tracks }: { tracks: TrackState[] }) {
           </span>
           <div className="h-1.5 overflow-hidden rounded-full bg-surface-hover">
             <div
-              className="h-full rounded-full bg-accent transition-[width] duration-500"
+              className="h-full rounded-full bg-accent transition-[width] duration-[280ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
               style={{ width: `${Math.min(100, progress.workPct)}%` }}
             />
           </div>

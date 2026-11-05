@@ -18,6 +18,7 @@ import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { shareTrack } from "../share/shareTrack";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { Tappable } from "./Tappable";
 
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -71,7 +72,7 @@ export function AppMenu({ open, onClose }: { open: boolean; onClose: () => void 
         <View style={styles.sheet}>
           <View style={styles.grabber} />
           <ScrollView contentContainerStyle={styles.content}>
-            <Pressable
+            <Tappable
               accessibilityRole="button"
               style={[styles.syncCard, { borderColor: tone }]}
               onPress={() => void sync()}
@@ -102,14 +103,14 @@ export function AppMenu({ open, onClose }: { open: boolean; onClose: () => void 
                     : message || `Last synced ${describeLastSync(lastSyncedAt)}`}
                 </Text>
               </View>
-            </Pressable>
+            </Tappable>
 
             <Text style={styles.sectionTitle}>This track</Text>
 
             {/* Sharing left Today, where it was an odd thing to meet every
                 morning. It belongs with the other occasional actions. */}
             {track && (
-              <Pressable
+              <Tappable
                 accessibilityRole="button"
                 style={styles.row}
                 onPress={() => {
@@ -122,21 +123,21 @@ export function AppMenu({ open, onClose }: { open: boolean; onClose: () => void 
                 </View>
                 <Text style={styles.tileLabel}>Share progress</Text>
                 <Ionicons name="chevron-forward" size={17} color={palette.subtleForeground} />
-              </Pressable>
+              </Tappable>
             )}
             {MANAGE.map((tile) => (
-              <Pressable key={tile.go} accessibilityRole="button" style={styles.row} onPress={() => go(tile.go)}>
+              <Tappable key={tile.go} accessibilityRole="button" style={styles.row} onPress={() => go(tile.go)}>
                 <View style={[styles.iconSquare, { backgroundColor: `${tile.tint}22` }]}>
                   <Ionicons name={tile.icon} size={19} color={tile.tint} />
                 </View>
                 <Text style={styles.tileLabel}>{tile.label}</Text>
                 <Ionicons name="chevron-forward" size={17} color={palette.subtleForeground} />
-              </Pressable>
+              </Tappable>
             ))}
 
-            <Pressable accessibilityRole="button" style={styles.close} onPress={onClose}>
+            <Tappable accessibilityRole="button" style={styles.close} onPress={onClose}>
               <Text style={styles.closeLabel}>Close</Text>
-            </Pressable>
+            </Tappable>
           </ScrollView>
         </View>
       </View>

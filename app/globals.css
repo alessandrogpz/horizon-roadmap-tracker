@@ -147,6 +147,46 @@
 /* Expose the design tokens as Tailwind color utilities
    (bg-card, text-accent, border-card-border, text-success, ...) */
 @theme inline {
+  /* -------------------------------------------------------------------------
+     Motion.
+
+     Three curves, named for the job, because the file had been using the
+     browser's built-in `ease` nearly everywhere plus two hand-written
+     `cubic-bezier(0.16, 1, 0.3, 1)`s that nothing else referenced. The
+     built-ins are deliberately weak — they are the average of every possible
+     easing, which is the same reason an un-art-directed layout looks like
+     every other layout.
+
+     Declared in `@theme` rather than in `:root`, and this matters. Tailwind v4
+     ships its own `--ease-out` and `--ease-in-out`, and they are what the
+     `ease-out` and `ease-in-out` *utilities* compile to. Writing these in
+     `:root` left two definitions of each name in the stylesheet: ours won for
+     the hand-written CSS below (unlayered beats `@layer theme`) and Tailwind's
+     weaker curve stayed behind the utility, so `transition ease-out` in a
+     className and `var(--ease-out)` in this file would have meant two
+     different curves. In `@theme` there is one definition, and the override is
+     a decision rather than a collision.
+
+     `--ease-out` is for anything arriving or answering a press: it starts at
+     full speed, so the first frame already moves and the interface reads as
+     having heard you. Everything the user initiates uses it.
+
+     `--ease-in-out` is for something already on screen travelling to a new
+     place — it accelerates and decelerates, which is how a physical thing
+     moves.
+
+     `--ease-drawer` is Ionic's iOS drawer curve: almost all of the motion
+     happens in the first third, so a panel half the width of the screen still
+     feels like it snapped rather than slid. Not a Tailwind key, so it also
+     gains an `ease-drawer` utility.
+
+     Tailwind's `--ease-in` is left exactly as it is, because nothing should
+     use it. It starts slow, which delays movement at the moment the eye is on
+     it; a 300ms ease-in dropdown *feels* slower than a 300ms ease-out one. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-muted-foreground: var(--muted-foreground);
@@ -238,8 +278,10 @@ body {
   --panel-pad: 0;
 }
 
-.glass-panel:hover {
-  border-color: var(--card-border-hover);
+@media (hover: hover) and (pointer: fine) {
+  .glass-panel:hover {
+    border-color: var(--card-border-hover);
+  }
 }
 
 /* True glass for overlapping surfaces (modals, popovers) — translucent card
@@ -294,17 +336,69 @@ select option:disabled {
   cursor: pointer;
   font-weight: 500;
   font-family: inherit;
-  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease,
+    box-shadow 0.18s ease, transform 0.14s var(--ease-out);
 }
 
-.btn:hover {
-  background: var(--accent);
-  /* The page's own background, which is the colour that is always furthest
-     from the accent: near-black under a bright dark-mode accent, near-white
-     under the deep one light mode composes. It was a fixed #00121c, which was
-     right in dark and gave 3.21 on the light theme's CTA. */
-  color: var(--background);
-  box-shadow: 0 6px 18px -8px var(--accent);
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover {
+    background: var(--accent);
+    /* The page's own background, which is the colour that is always furthest
+       from the accent: near-black under a bright dark-mode accent, near-white
+       under the deep one light mode composes. It was a fixed #00121c, which
+       was right in dark and gave 3.21 on the light theme's CTA. */
+    color: var(--background);
+    box-shadow: 0 6px 18px -8px var(--accent);
+  }
+}
+
+/* ===========================================================================
+   Press feedback
+   ===========================================================================
+   Every control in the app answered the pointer and none of them answered the
+   finger or the click itself. A hover state is a promise that something will
+   happen; the press is the interface saying it heard you, and without it a
+   tap on a phone — where there is no hover at all — produced no response
+   until the work it started finished.
+
+   Three percent, over 140ms, out-eased. Small enough that nobody will name
+   it, which is the point: you notice its absence as the app feeling dead
+   under the thumb, not its presence as an animation.
+
+   Not gated behind `(hover: hover)`, unlike the hover rules above: touch is
+   exactly where this matters most.
+
+   `.no-press` is the opt-out for anything whose own transform is already
+   doing a job — a dragged panel, a rotating chevron.
+
+   `.btn` is absent from the first rule on purpose: it declares the same
+   transition itself, above, alongside its colour transitions. Listing it
+   here as well would win on order and replace that whole list with this
+   one line, taking the background and colour fades with it. */
+button,
+[role="button"],
+.press {
+  transition: transform 0.14s var(--ease-out);
+}
+
+.btn:active,
+button:not(:disabled):active,
+[role="button"]:not([aria-disabled="true"]):active,
+.press:active {
+  transform: scale(0.97);
+}
+
+.no-press:active {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn:active,
+  button:not(:disabled):active,
+  [role="button"]:not([aria-disabled="true"]):active,
+  .press:active {
+    transform: none;
+  }
 }
 
 /* Keyboard focus, everywhere.
@@ -347,10 +441,12 @@ select option:disabled {
   font-weight: 600;
 }
 
-.btn-solid:hover {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
-  color: var(--background);
+@media (hover: hover) and (pointer: fine) {
+  .btn-solid:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    color: var(--background);
+  }
 }
 
 .checkbox-custom {
@@ -364,11 +460,19 @@ select option:disabled {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.14s var(--ease-out);
 }
 
-.checkbox-custom:hover {
-  border-color: var(--success);
+@media (hover: hover) and (pointer: fine) {
+  .checkbox-custom:hover {
+    border-color: var(--success);
+  }
+}
+
+/* The box gives under the press like every other control. Declared before
+   `:checked`, whose pop animation takes the transform over for 240ms. */
+.checkbox-custom:active {
+  transform: scale(0.94);
 }
 
 .checkbox-custom:checked {
@@ -389,6 +493,97 @@ select option:disabled {
   0% { transform: scale(1); }
   45% { transform: scale(1.22); }
   100% { transform: scale(1); }
+}
+
+/* ===========================================================================
+   Panel entrance
+   ===========================================================================
+   The dashboard's panels arrive one after another rather than all at once.
+   `SortablePanel` has been setting a 60ms-per-panel `animation-delay` since
+   0.2.0 and the keyframes it referred to were deleted by accident in 0.97.0,
+   so for thirteen versions the delay was being applied to no animation and
+   every panel simply appeared. Restored, with the two notes that made it
+   work in the first place:
+
+   `backwards`, not `both`: the start frame applies during the stagger delay,
+   but NO transform is retained afterwards. A lingering transform would make
+   the panel the containing block for its `position: fixed` descendants, and
+   one of them is the notes drawer — which would then be laid out inside a
+   dashboard card instead of against the window.
+
+   Applied to SortablePanel's inner wrapper, never the node dnd-kit puts its
+   live drag transform on, and skipped entirely while dragging so a reorder
+   does not replay the fade. */
+@keyframes panel-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.panel-in {
+  animation: panel-in 0.42s var(--ease-out) backwards;
+}
+
+/* ===========================================================================
+   Overlays — modals and popovers
+   ===========================================================================
+   Nine modals and two popovers were mounted straight into place by a
+   `{open && …}`, so each one existed on one frame and not on the one before.
+   Nothing physical does that, and the backdrop snapping to 60% black is the
+   most noticeable part of it.
+
+   Enter only. A real exit means keeping the element mounted past the state
+   change that removed it, which is nine components' worth of state, and the
+   arrival is where almost all of the benefit is.
+
+   `transform` is animated with no fill, so the end state is the element's own
+   (`none`) and no transform lingers to become a containing block — the same
+   trap `.panel-in` documents above. */
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes popover-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+
+.overlay-in {
+  animation: overlay-in 0.16s var(--ease-out);
+}
+
+/* Modals keep `transform-origin: center`. They are the one surface that is
+   not anchored to the thing that opened it — it appears in the middle of the
+   window, so the middle is where it should grow from. */
+.modal-in {
+  animation: modal-in 0.2s var(--ease-out);
+}
+
+/* A popover is anchored, so it grows out of its trigger. `--popover-origin`
+   is set by whichever component knows where the trigger is; the fallback is
+   the common case of a menu hanging below a button at its left edge. */
+.popover-in {
+  transform-origin: var(--popover-origin, top left);
+  animation: popover-in 0.15s var(--ease-out);
+}
+
+/* The track list hangs under its trigger on a wide screen and spans the whole
+   window under the top bar on a phone, so where it grows from changes with
+   it: out of the trigger's corner where there is a corner to grow out of, and
+   down out of the bar where the panel is the width of the screen. */
+.popover-origin-sheet {
+  --popover-origin: top center;
+}
+
+@media (min-width: 640px) {
+  .popover-origin-sheet {
+    --popover-origin: top left;
+  }
 }
 
 /* ===========================================================================
@@ -581,8 +776,10 @@ h1, h2, h3, .type-title, .type-heading, .type-display-sm, .type-hero, .type-sect
   background: rgba(16, 185, 129, 0.03);
 }
 
-.task-group .task-item:hover {
-  background: var(--surface-hover);
+@media (hover: hover) and (pointer: fine) {
+  .task-group .task-item:hover {
+    background: var(--surface-hover);
+  }
 }
 
 /* ===========================================================================
@@ -627,8 +824,10 @@ h1, h2, h3, .type-title, .type-heading, .type-display-sm, .type-hero, .type-sect
   background: var(--card-border-hover);
   border-radius: 3px;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: var(--accent);
+@media (hover: hover) and (pointer: fine) {
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
+  }
 }
 
 /* Structural accent borders (modals, panel accent stripes) use the quieter
@@ -644,10 +843,12 @@ h1, h2, h3, .type-title, .type-heading, .type-display-sm, .type-hero, .type-sect
   transition: color 0.2s ease;
 }
 
-.link-title:hover {
-  color: var(--accent);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+@media (hover: hover) and (pointer: fine) {
+  .link-title:hover {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 }
 
 /* ===========================================================================
@@ -665,12 +866,16 @@ h1, h2, h3, .type-title, .type-heading, .type-display-sm, .type-hero, .type-sect
   z-index: 999;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s ease;
+  /* Closing. Faster than opening, deliberately: opening is the interface
+     presenting something and can take its time, closing is the interface
+     getting out of the way and should not keep you waiting for it. */
+  transition: opacity 0.2s var(--ease-out);
 }
 
 .notes-drawer-overlay.open {
   opacity: 1;
   pointer-events: auto;
+  transition: opacity 0.3s var(--ease-out);
 }
 
 .notes-drawer {
@@ -685,8 +890,12 @@ h1, h2, h3, .type-title, .type-heading, .type-display-sm, .type-hero, .type-sect
   backdrop-filter: blur(20px) saturate(1.2);
   border-left: 1px solid var(--card-border);
   z-index: 1000;
+  /* By its own width, whatever that turns out to be — a percentage in
+     `translate` is relative to the element, so the 550px above and the
+     100vw it falls back to on a phone both hide it exactly. */
   transform: translateX(100%);
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Closing: short and out-eased. */
+  transition: transform 0.22s var(--ease-out);
   box-shadow: -10px 0 40px rgba(0, 0, 0, 0.6);
   display: flex;
   flex-direction: column;
@@ -694,6 +903,10 @@ h1, h2, h3, .type-title, .type-heading, .type-display-sm, .type-hero, .type-sect
 
 .notes-drawer.open {
   transform: translateX(0);
+  /* Opening: the iOS drawer curve. Nearly all of the travel happens in the
+     first third of it, so half a screen's width still reads as a snap rather
+     than a slide, and the remaining time is the panel settling. */
+  transition: transform 0.34s var(--ease-drawer);
 }
 
 .notes-drawer-header {
@@ -723,11 +936,16 @@ h1, h2, h3, .type-title, .type-heading, .type-display-sm, .type-hero, .type-sect
   letter-spacing: 0.05em;
   font-weight: 600;
   border-bottom: 2px solid transparent;
-  transition: all 0.2s ease;
+  /* Was `all`, which put the 0.2s on `flex`, `padding` and `border-bottom-
+     width` too — every layout property this button has. */
+  transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease,
+    transform 0.14s var(--ease-out);
 }
 
-.notes-tab-btn:hover {
-  color: var(--foreground);
+@media (hover: hover) and (pointer: fine) {
+  .notes-tab-btn:hover {
+    color: var(--foreground);
+  }
 }
 
 .notes-tab-btn.active {
@@ -989,13 +1207,25 @@ h1, h2, h3, .type-title, .type-heading, .type-display-sm, .type-hero, .type-sect
   }
 }
 
+/* Reduced motion is fewer and gentler, not none: a fade still tells you a
+   thing arrived, so the overlay keeps its own. What goes is movement —
+   translation, scale, the drawer's travel. */
 @media (prefers-reduced-motion: reduce) {
   .panel-in,
   .checkbox-custom:checked {
     animation: none;
   }
 
-  .day-card-chevron {
+  /* Opacity only. The scale and the 8px rise are the parts that make people
+     ill; the element still has to stop appearing from nowhere. */
+  .modal-in,
+  .popover-in {
+    animation: overlay-in 0.16s var(--ease-out);
+  }
+
+  .day-card-chevron,
+  .notes-drawer,
+  .notes-drawer.open {
     transition: none;
   }
 }

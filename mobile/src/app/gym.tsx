@@ -16,7 +16,7 @@
 // Nothing here is joined to the calendar or the week yet.
 
 import { useCallback, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, Text, TextInput, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Animated, { FadeIn } from "react-native-reanimated";
 import {
@@ -43,6 +43,7 @@ import { ConfirmSheet, type Confirmation } from "../components/ConfirmSheet";
 import { settle, tap } from "../feedback/haptics";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { Tappable } from "../components/Tappable";
 
 export default function WorkoutScreen() {
   const { track } = useWorkspace();
@@ -87,7 +88,7 @@ export default function WorkoutScreen() {
         ) : (
           <>
             {workouts.map((workout) => (
-              <Pressable
+              <Tappable
                 key={workout.id}
                 accessibilityRole="button"
                 accessibilityLabel={`Open ${workout.name}`}
@@ -109,13 +110,13 @@ export default function WorkoutScreen() {
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color={palette.subtleForeground} />
-              </Pressable>
+              </Tappable>
             ))}
 
-            <Pressable accessibilityRole="button" onPress={create} style={styles.addExercise}>
+            <Tappable accessibilityRole="button" onPress={create} style={styles.addExercise}>
               <Ionicons name="add" size={16} color={palette.accent} />
               <Text style={styles.addExerciseLabel}>New workout</Text>
-            </Pressable>
+            </Tappable>
           </>
         )}
 
@@ -127,7 +128,7 @@ export default function WorkoutScreen() {
   return (
     <Refreshable style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <View style={styles.bar}>
-        <Pressable
+        <Tappable
           accessibilityRole="button"
           accessibilityLabel="Back to workouts"
           onPress={() => setOpenId(null)}
@@ -135,7 +136,7 @@ export default function WorkoutScreen() {
           style={styles.back}
         >
           <Ionicons name="chevron-back" size={18} color={palette.foreground} />
-        </Pressable>
+        </Tappable>
 
         <TextInput
           value={open.name}
@@ -146,7 +147,7 @@ export default function WorkoutScreen() {
           accessibilityLabel="Workout name"
         />
 
-        <Pressable
+        <Tappable
           accessibilityRole="button"
           accessibilityLabel="Start this workout again"
           onPress={() =>
@@ -164,7 +165,7 @@ export default function WorkoutScreen() {
           style={styles.back}
         >
           <Ionicons name="refresh" size={17} color={palette.mutedForeground} />
-        </Pressable>
+        </Tappable>
       </View>
 
       <Animated.View key={open.id} entering={FadeIn.duration(200)} style={styles.stack}>
@@ -202,7 +203,7 @@ export default function WorkoutScreen() {
             }}
           />
         ) : (
-          <Pressable
+          <Tappable
             accessibilityRole="button"
             onPress={() => {
               tap();
@@ -212,11 +213,11 @@ export default function WorkoutScreen() {
           >
             <Ionicons name="add" size={16} color={palette.accent} />
             <Text style={styles.addExerciseLabel}>Add exercise</Text>
-          </Pressable>
+          </Tappable>
         )}
       </Animated.View>
 
-      <Pressable
+      <Tappable
         accessibilityRole="button"
         onPress={() =>
           setConfirming({
@@ -233,7 +234,7 @@ export default function WorkoutScreen() {
         style={styles.cancel}
       >
         <Text style={styles.cancelLabel}>Delete workout</Text>
-      </Pressable>
+      </Tappable>
 
       <ConfirmSheet confirmation={confirming} onClose={() => setConfirming(null)} />
     </Refreshable>
@@ -271,14 +272,14 @@ function Exercise({
           style={styles.name}
           accessibilityLabel="Exercise name"
         />
-        <Pressable
+        <Tappable
           accessibilityRole="button"
           accessibilityLabel={`Remove ${exercise.name}`}
           onPress={onRemove}
           hitSlop={8}
         >
           <Ionicons name="ellipsis-vertical" size={18} color={palette.subtleForeground} />
-        </Pressable>
+        </Tappable>
       </View>
 
       <View style={styles.headRow}>
@@ -304,7 +305,7 @@ function Exercise({
         />
       ))}
 
-      <Pressable
+      <Tappable
         accessibilityRole="button"
         onPress={() => {
           tap();
@@ -317,7 +318,7 @@ function Exercise({
       >
         <Ionicons name="add" size={15} color={palette.mutedForeground} />
         <Text style={styles.addSetLabel}>Add set</Text>
-      </Pressable>
+      </Tappable>
     </View>
   );
 }
@@ -363,7 +364,7 @@ function SetRow({
         palette={palette}
       />
 
-      <Pressable
+      <Tappable
         accessibilityRole="checkbox"
         accessibilityState={{ checked: done }}
         accessibilityLabel={`Set ${index + 1} done`}
@@ -376,7 +377,7 @@ function SetRow({
         style={[styles.tick, done && { backgroundColor: palette.success, borderColor: palette.success }]}
       >
         <Ionicons name="checkmark" size={16} color={done ? palette.background : palette.subtleForeground} />
-      </Pressable>
+      </Tappable>
     </View>
   );
 }

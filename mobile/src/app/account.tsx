@@ -2,12 +2,13 @@
 // Settings → Account, and it talks to the same API.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import { currentAccount, deleteAccount, signIn, signOut, storedToken, type Account } from "../auth/session";
 import { describeLastSync, useSync } from "../sync/SyncProvider";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { Refreshable } from "../components/Refreshable";
+import { Tappable } from "../components/Tappable";
 
 export default function AccountScreen() {
   const palette = usePalette();
@@ -154,7 +155,7 @@ function Button({
   styles: ReturnType<typeof makeStyles>;
 }) {
   return (
-    <Pressable
+    <Tappable
       accessibilityRole="button"
       accessibilityState={{ busy }}
       disabled={busy}
@@ -162,7 +163,7 @@ function Button({
       style={[styles.button, primary && styles.buttonPrimary, busy && styles.buttonBusy]}
     >
       <Text style={[styles.buttonLabel, primary && styles.buttonLabelPrimary]}>{busy ? "Working…" : label}</Text>
-    </Pressable>
+    </Tappable>
   );
 }
 

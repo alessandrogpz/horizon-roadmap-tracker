@@ -280,7 +280,7 @@ export default function TrackSwitcher({
       {open && (
         <div
           ref={menuRef}
-          className="fixed inset-x-2 top-[3.6rem] z-50 max-h-[70vh] overflow-y-auto overscroll-contain rounded-md border border-card-border bg-card shadow-[0_10px_25px_-5px_rgba(0,0,0,0.5)] sm:absolute sm:inset-x-auto sm:left-0 sm:top-[calc(100%+0.5rem)] sm:max-h-none sm:w-[360px]"
+          className="popover-in popover-origin-sheet fixed inset-x-2 top-[3.6rem] z-50 max-h-[70vh] overflow-y-auto overscroll-contain rounded-md border border-card-border bg-card shadow-[0_10px_25px_-5px_rgba(0,0,0,0.5)] sm:absolute sm:inset-x-auto sm:left-0 sm:top-[calc(100%+0.5rem)] sm:max-h-none sm:w-[360px]"
         >
           {onOpenMaster && tracks.length > 1 && (
             <button

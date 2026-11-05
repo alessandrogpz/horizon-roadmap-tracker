@@ -8,7 +8,7 @@
 // opens the track it belongs to, which is the only way any of it changes.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { router } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { formatDayMonthYear } from "@shared/dates";
@@ -29,6 +29,7 @@ import { usePalette } from "../theme/ThemeProvider";
 import { NothingSelected, ReadOnlyBand, TrackChip, TrackPicker } from "./MasterChrome";
 import { makeMasterStyles } from "./styles";
 import { useMasterSources } from "./useMasterSources";
+import { Tappable } from "../components/Tappable";
 
 export function MasterSpace() {
   const palette = usePalette();
@@ -131,7 +132,7 @@ export function MasterSpace() {
           <Text style={styles.sectionTitle}>What is running, and what is next</Text>
           {phases.length === 0 && <Text style={styles.muted}>No phases ahead on the selected tracks.</Text>}
           {phases.map((window) => (
-            <Pressable
+            <Tappable
               key={`${window.track.id}-${window.phase.id}`}
               accessibilityRole="button"
               accessibilityLabel={`${window.track.name}: ${window.phase.title}. Opens the track.`}
@@ -150,7 +151,7 @@ export function MasterSpace() {
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={15} color={palette.subtleForeground} />
-            </Pressable>
+            </Tappable>
           ))}
 
           <Text style={styles.sectionTitle}>
@@ -215,7 +216,7 @@ export function MasterSpace() {
             <>
               <Text style={styles.sectionTitle}>Roadmaps · {roadmaps.length}</Text>
               {roadmaps.map(({ track }) => (
-                <Pressable
+                <Tappable
                   key={track.id}
                   accessibilityRole="button"
                   accessibilityLabel={`${track.name}'s roadmap. Opens the track.`}
@@ -227,7 +228,7 @@ export function MasterSpace() {
                     <Text style={styles.footnote}>Opens the track, where it can be read and edited</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={15} color={palette.subtleForeground} />
-                </Pressable>
+                </Tappable>
               ))}
             </>
           )}

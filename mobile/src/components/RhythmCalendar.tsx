@@ -20,7 +20,7 @@
 // panel, which is where it now stays.
 
 import { useCallback, useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Animated, { FadeIn } from "react-native-reanimated";
 import type { TrackState } from "@shared/types";
@@ -32,6 +32,7 @@ import { tap } from "../feedback/haptics";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { Segmented } from "./Segmented";
+import { Tappable } from "./Tappable";
 
 type Scope = "week" | "month";
 
@@ -157,7 +158,7 @@ export function RhythmCalendar({ track }: { track: TrackState }) {
   return (
     <View style={styles.block}>
       <View style={styles.bar}>
-        <Pressable
+        <Tappable
           accessibilityRole="button"
           accessibilityLabel={scope === "week" ? "The week before" : "The month before"}
           onPress={() => step(-1)}
@@ -165,13 +166,13 @@ export function RhythmCalendar({ track }: { track: TrackState }) {
           hitSlop={6}
         >
           <Ionicons name="chevron-back" size={18} color={palette.foreground} />
-        </Pressable>
+        </Tappable>
 
         <Text style={styles.title} numberOfLines={1}>
           {title}
         </Text>
 
-        <Pressable
+        <Tappable
           accessibilityRole="button"
           accessibilityLabel={scope === "week" ? "The week after" : "The month after"}
           onPress={() => step(1)}
@@ -179,7 +180,7 @@ export function RhythmCalendar({ track }: { track: TrackState }) {
           hitSlop={6}
         >
           <Ionicons name="chevron-forward" size={18} color={palette.foreground} />
-        </Pressable>
+        </Tappable>
       </View>
 
       <View style={styles.controls}>
@@ -197,7 +198,7 @@ export function RhythmCalendar({ track }: { track: TrackState }) {
         {/* Only offered when it would do something. A button that is already
             where you are is furniture. */}
         {!onCurrent && (
-          <Pressable
+          <Tappable
             accessibilityRole="button"
             onPress={() => {
               tap();
@@ -207,7 +208,7 @@ export function RhythmCalendar({ track }: { track: TrackState }) {
             style={[styles.scope, styles.todayButton]}
           >
             <Text style={[styles.scopeLabel, { color: palette.accent }]}>Today</Text>
-          </Pressable>
+          </Tappable>
         )}
       </View>
 
@@ -241,7 +242,7 @@ export function RhythmCalendar({ track }: { track: TrackState }) {
               <View key={`pad-${i}`} style={[styles.monthCell, styles.invisible]} />
             ))}
             {days.map((day) => (
-              <Pressable
+              <Tappable
                 key={day.date}
                 accessibilityRole="button"
                 accessibilityLabel={`${parseYMD(day.date).getDate()} ${day.focus?.label ?? "nothing planned"}, ${day.items.length} planned`}
@@ -272,7 +273,7 @@ export function RhythmCalendar({ track }: { track: TrackState }) {
                     ]}
                   />
                 )}
-              </Pressable>
+              </Tappable>
             ))}
           </View>
         </>
@@ -310,7 +311,7 @@ function WeekRow({
 }) {
   const isToday = day.date === today;
   return (
-    <Pressable
+    <Tappable
       accessibilityRole="button"
       accessibilityState={{ expanded: open }}
       onPress={onPress}
@@ -338,7 +339,7 @@ function WeekRow({
           </View>
         )}
       </View>
-    </Pressable>
+    </Tappable>
   );
 }
 
@@ -361,9 +362,9 @@ function DayCard({
           {day.dayKey} {parseYMD(day.date).getDate()} {MONTHS[parseYMD(day.date).getMonth()]} ·{" "}
           {day.focus?.label ?? "nothing set"}
         </Text>
-        <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} hitSlop={10}>
+        <Tappable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} hitSlop={10}>
           <Ionicons name="close" size={16} color={palette.subtleForeground} />
-        </Pressable>
+        </Tappable>
       </View>
       {day.items.length > 0 ? (
         <ScrollView style={styles.cardList}>

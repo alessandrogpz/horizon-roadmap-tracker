@@ -11,7 +11,7 @@
 // and a day worth tapping, because it can then say what was done on it.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Link } from "expo-router";
@@ -31,6 +31,7 @@ import { StatTile } from "../../components/StatTile";
 import { RADIUS, SPACING, TYPE, shadeOf, type Palette } from "../../theme";
 import { MAX_CONTENT } from "../../layout";
 import { usePalette } from "../../theme/ThemeProvider";
+import { Tappable } from "../../components/Tappable";
 
 const CELL = 26;
 const CELL_GAP = 4;
@@ -292,7 +293,7 @@ export default function ProgressScreen() {
         // Any tap that is not on the popover closes it. It covers the grid
         // rather than the screen so the tab bar and the header keep working —
         // dismissing a detail card should not trap the rest of the app.
-        <Pressable
+        <Tappable
           accessibilityLabel="Close the day"
           onPress={() => setOpenDay(null)}
           style={styles.backdrop}
@@ -468,9 +469,9 @@ export default function ProgressScreen() {
         </View>
 
         <Link href="/insights" asChild>
-          <Pressable accessibilityRole="link" accessibilityLabel="History" style={styles.historyButton}>
+          <Tappable accessibilityRole="link" accessibilityLabel="History" style={styles.historyButton}>
             <Ionicons name="stats-chart-outline" size={16} color={palette.foreground} />
-          </Pressable>
+          </Tappable>
         </Link>
       </View>
 
@@ -495,7 +496,7 @@ function YearStep({
   palette: Palette;
 }) {
   return (
-    <Pressable
+    <Tappable
       accessibilityRole="button"
       accessibilityLabel={direction < 0 ? "The year before" : "The year after"}
       accessibilityState={{ disabled }}
@@ -509,7 +510,7 @@ function YearStep({
         size={16}
         color={disabled ? palette.subtleForeground : palette.foreground}
       />
-    </Pressable>
+    </Tappable>
   );
 }
 
@@ -558,7 +559,7 @@ function Cell({
   const off = Boolean(resting) && !began;
 
   return (
-    <Pressable
+    <Tappable
       accessibilityRole="button"
       accessibilityLabel={
         `${formatDayMonthYear(parseYMD(day.date))}, ${day.count} logged` +
@@ -577,7 +578,7 @@ function Cell({
       ]}
     >
       {off && <View style={[styles.restDot, { backgroundColor: colour }]} />}
-    </Pressable>
+    </Tappable>
   );
 }
 
@@ -607,9 +608,9 @@ function DayDetail({
       <View style={styles.detailHead}>
         <Ionicons name="calendar-outline" size={15} color={palette.accent} />
         <Text style={styles.detailTitle}>{formatDayMonthYear(parseYMD(date))}</Text>
-        <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} hitSlop={10}>
+        <Tappable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} hitSlop={10}>
           <Ionicons name="close" size={17} color={palette.subtleForeground} />
-        </Pressable>
+        </Tappable>
       </View>
       {items.length > 0 ? (
         items.map((item, index) => {
