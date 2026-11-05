@@ -145,7 +145,7 @@ export default function TopBarMenu({
       <button
         ref={triggerRef}
         onClick={handleToggle}
-        className="flex h-7 w-7 items-center justify-center rounded-md border border-card-border bg-transparent text-muted-foreground transition-colors hover:border-card-border-hover hover:text-foreground cursor-pointer shrink-0"
+        className="tap-44 flex h-7 w-7 items-center justify-center rounded-md border border-card-border bg-transparent text-muted-foreground transition-colors hover:border-card-border-hover hover:text-foreground cursor-pointer shrink-0"
         title="Menu"
         aria-label="Menu"
         aria-haspopup="menu"

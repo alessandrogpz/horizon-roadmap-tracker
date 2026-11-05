@@ -42,6 +42,7 @@ import { MasterToday } from "../../master/MasterToday";
 import { useUndo } from "../../components/UndoBar";
 import { tap } from "../../feedback/haptics";
 import { leading, RADIUS, SPACING, TYPE, type Palette } from "../../theme";
+import { centredContent } from "../../layout";
 import { usePalette } from "../../theme/ThemeProvider";
 import { EditButton, useEditMode } from "../../components/EditToggle";
 import { TodaysTodos } from "../../components/TodaysTodos";
@@ -413,7 +414,7 @@ function Section({
 function makeStyles(palette: Palette) {
   return StyleSheet.create({
     screen: { flex: 1, backgroundColor: palette.background },
-    content: { padding: SPACING.lg, gap: SPACING.lg },
+    content: { padding: SPACING.lg, gap: SPACING.lg , ...centredContent },
     centered: { alignItems: "center", justifyContent: "center" },
     muted: { color: palette.mutedForeground, ...TYPE.label},
     footerActions: { flexDirection: "row", gap: SPACING.sm, marginTop: SPACING.md },
@@ -484,7 +485,7 @@ function makeStyles(palette: Palette) {
     primaryLabel: { color: palette.background, ...TYPE.body, fontWeight: "700" },
     sectionTitle: {
       color: palette.subtleForeground,
-      ...TYPE.eyebrow,
+      ...TYPE.marker,
       fontWeight: "700",
       letterSpacing: 1.2,
     },

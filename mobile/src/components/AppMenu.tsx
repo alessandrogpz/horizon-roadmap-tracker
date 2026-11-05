@@ -183,7 +183,7 @@ function makeStyles(palette: Palette) {
     syncText: { flex: 1, gap: 1 },
     sectionTitle: {
       color: palette.subtleForeground,
-      ...TYPE.eyebrow,
+      ...TYPE.marker,
       fontWeight: "700",
       letterSpacing: 1.2,
       marginTop: SPACING.md,

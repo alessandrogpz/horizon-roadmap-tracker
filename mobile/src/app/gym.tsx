@@ -470,7 +470,7 @@ function makeStyles(palette: Palette) {
       paddingHorizontal: SPACING.md,
       paddingBottom: SPACING.xs,
     },
-    headCell: { ...TYPE.eyebrow, color: palette.subtleForeground, fontWeight: "700" },
+    headCell: { ...TYPE.marker, color: palette.subtleForeground, fontWeight: "700" },
     row: {
       flexDirection: "row",
       alignItems: "center",

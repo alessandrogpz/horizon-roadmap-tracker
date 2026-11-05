@@ -205,7 +205,7 @@ function WeekStep({ direction, onClick }: { direction: -1 | 1; onClick: () => vo
     <button
       onClick={onClick}
       aria-label={direction === -1 ? "Previous week" : "Next week"}
-      className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-[var(--radius-control)] border border-card-border bg-surface-muted text-muted-foreground transition-colors hover:text-foreground"
+      className="tap-44 flex h-6 w-6 cursor-pointer items-center justify-center rounded-[var(--radius-control)] border border-card-border bg-surface-muted text-muted-foreground transition-colors hover:text-foreground"
     >
       <Icon size={13} strokeWidth={2.5} />
     </button>
@@ -412,7 +412,7 @@ function YearStep({ direction, disabled, onClick }: { direction: -1 | 1; disable
       onClick={onClick}
       disabled={disabled}
       aria-label={direction === -1 ? "Previous year" : "Next year"}
-      className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-[var(--radius-control)] border border-card-border bg-surface-muted text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+      className="tap-44 flex h-6 w-6 cursor-pointer items-center justify-center rounded-[var(--radius-control)] border border-card-border bg-surface-muted text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
     >
       <Icon size={13} strokeWidth={2.5} />
     </button>

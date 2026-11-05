@@ -505,7 +505,7 @@ function makeStyles(palette: Palette) {
     moreRow: { marginTop: SPACING.xl },
     moreTitle: {
       color: palette.subtleForeground,
-      ...TYPE.eyebrow,
+      ...TYPE.marker,
       fontWeight: "700",
       letterSpacing: 1.2,
     },
