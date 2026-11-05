@@ -208,7 +208,6 @@ const SECTIONS: DocSection[] = [
 export default function PrivacyPage() {
   return (
     <DocShell
-      eyebrow="Your data"
       title="Privacy"
       lede={
         <>

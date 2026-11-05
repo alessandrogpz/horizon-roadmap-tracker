@@ -23,14 +23,12 @@ export interface DocSection {
 }
 
 export function DocShell({
-  eyebrow,
   title,
   lede,
   updated,
   sections,
   children,
 }: {
-  eyebrow: string;
   title: string;
   lede: React.ReactNode;
   updated: string;
@@ -41,7 +39,6 @@ export function DocShell({
 }) {
   return (
     <div className="relative min-h-screen overflow-x-hidden">
-      <div className="app-glow" />
       {/* Every in-page link rolls to where it points rather than snapping. */}
       <SmoothAnchors />
 
@@ -72,7 +69,6 @@ export function DocShell({
             screen that says what it is. */}
         <section className="border-b border-card-border">
           <Reveal className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-14 sm:px-6 sm:py-20">
-            <span className="text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-accent">{eyebrow}</span>
             <h1 className="text-[2.2rem] font-semibold leading-[1.08] tracking-tight sm:text-[3rem]">{title}</h1>
             <p className="max-w-2xl text-[1rem] leading-relaxed text-muted-foreground">{lede}</p>
             <span className="mt-1 inline-flex w-fit items-center gap-2 rounded-full border border-card-border bg-surface-muted px-3 py-1 text-[0.72rem] text-muted-foreground">
@@ -89,7 +85,7 @@ export function DocShell({
               column of margin doing nothing anyway. */}
           <nav className="hidden w-[200px] shrink-0 lg:block" aria-label="On this page">
             <div className="sticky top-24 flex flex-col gap-2">
-              <span className="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-subtle-foreground">
+              <span className="text-[0.75rem] font-semibold text-muted-foreground">
                 On this page
               </span>
               {sections.map((section) => (

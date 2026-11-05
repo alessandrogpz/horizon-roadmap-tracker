@@ -145,7 +145,6 @@ const SECTIONS: DocSection[] = [
 export default function SecurityPage() {
   return (
     <DocShell
-      eyebrow="How it is protected"
       title="Security"
       lede={
         <>

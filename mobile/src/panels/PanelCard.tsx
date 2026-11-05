@@ -4,6 +4,15 @@
 // their own padding and heading reads as a pile rather than a page. The header
 // carries an icon and a title, and — where the panel is a summary of something
 // bigger — a chevron that opens the full screen.
+//
+// The icon used to sit in a rounded square filled with a tint of its own, one
+// hue per panel: sky, violet, green, amber, red, teal. Two things were wrong
+// with it. It is the stock dashboard device — an icon in a coloured tile — and
+// more to the point the six hues were chrome, competing with the one colour in
+// this app that carries meaning: the open track's. A screen where the track is
+// green and the panels are a rainbow does not look like it is about that
+// track. The icon is a plain glyph now, in the same muted ink as the website's,
+// and colour is left to the data.
 
 import { useMemo, type ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
@@ -14,14 +23,11 @@ import { usePalette } from "../theme/ThemeProvider";
 export function PanelCard({
   title,
   icon,
-  accent,
   onOpen,
   children,
 }: {
   title: string;
   icon: React.ComponentProps<typeof Ionicons>["name"];
-  /** Tints the icon; panels are told apart by colour before they are read. */
-  accent?: string;
   /** Opens the full screen this panel summarises, if it has one. Given as a
    *  callback rather than a `Link` so the caller can decline it — a touch
    *  that lands to stop a moving list is not a tap, and a list that
@@ -31,13 +37,10 @@ export function PanelCard({
 }) {
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
-  const tint = accent ?? palette.accent;
 
   const header = (
     <View style={styles.head}>
-      <View style={[styles.iconWrap, { backgroundColor: `${tint}22` }]}>
-        <Ionicons name={icon} size={15} color={tint} />
-      </View>
+      <Ionicons name={icon} size={16} color={palette.mutedForeground} />
       <Text style={styles.title}>{title}</Text>
       {onOpen ? <Ionicons name="chevron-forward" size={16} color={palette.subtleForeground} /> : null}
     </View>
@@ -96,7 +99,6 @@ function makeStyles(palette: Palette) {
       paddingHorizontal: SPACING.lg,
       paddingVertical: SPACING.md,
     },
-    iconWrap: { width: 26, height: 26, borderRadius: 8, alignItems: "center", justifyContent: "center" },
     title: { flex: 1, color: palette.foreground, ...TYPE.body, fontWeight: "700" },
     body: { paddingHorizontal: SPACING.lg, paddingBottom: SPACING.lg, gap: SPACING.sm },
   });

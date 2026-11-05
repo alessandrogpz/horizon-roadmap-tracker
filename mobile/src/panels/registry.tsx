@@ -37,22 +37,11 @@ export interface PanelProps {
 }
 
 /** Colour per panel, so the column is scannable before it is readable. */
-const TINTS: Record<string, string> = {
-  weeklyPlan: "#0ea5e9",
-  phaseTracker: "#a855f7",
-  streakGraph: "#22c55e",
-  pomodoroTimer: "#f59e0b",
-  portfolioTracker: "#ef4444",
-  materialsTracker: "#14b8a6",
-  notepad: "#64748b",
-  todoList: "#6366f1",
-  [STEPS_PANEL]: "#22c55e",
-  [FITNESS_PANEL]: "#ef4444",
-};
-
-export function tintFor(id: string): string | undefined {
-  return TINTS[id];
-}
+// There was a TINTS table here: one hue per panel, used to fill a rounded
+// square behind each panel's icon. It is gone because the only colour that
+// should carry meaning on this screen is the open track's, and six fixed hues
+// of chrome drowned it. Panels that still want a colour for their *data* name
+// it at the point of use.
 
 export function PanelBody({ id, track, today }: { id: string } & PanelProps) {
   switch (id) {
@@ -158,7 +147,7 @@ function PhasePanel({ track, today }: PanelProps) {
         </View>
       </View>
       <Meter label="Time spent" value={Math.round(timeline.progressPct)} total={100} tint={palette.subtleForeground} />
-      <Meter label="Work done" value={Math.round(progress.workPct)} total={100} tint={TINTS.phaseTracker} />
+      <Meter label="Work done" value={Math.round(progress.workPct)} total={100} tint={palette.accent} />
     </>
   );
 }
@@ -174,7 +163,7 @@ function StreakPanel({ track, today }: PanelProps) {
   return (
     <>
       <View style={styles.headlineRow}>
-        <Text style={[styles.big, { color: TINTS.streakGraph }]}>{streak}</Text>
+        <Text style={[styles.big, { color: palette.accent }]}>{streak}</Text>
         <Text style={styles.muted}>day{streak === 1 ? "" : "s"} in a row</Text>
       </View>
       <View style={styles.dots}>
@@ -186,7 +175,7 @@ function StreakPanel({ track, today }: PanelProps) {
             key={index}
             style={[
               styles.dot,
-              { backgroundColor: day.count > 0 ? TINTS.streakGraph : palette.surfaceMuted },
+              { backgroundColor: day.count > 0 ? palette.accent : palette.surfaceMuted },
               day.count > 0 && { opacity: Math.min(1, 0.4 + day.count * 0.2) },
             ]}
           />
@@ -206,7 +195,7 @@ function PortfolioPanel({ track }: PanelProps) {
 
   return (
     <>
-      <Meter label="Delivered" value={done} total={items.length} tint={TINTS.portfolioTracker} />
+      <Meter label="Delivered" value={done} total={items.length} tint={palette.accent} />
       {items.slice(0, 3).map((project) => (
         <View key={project.id} style={styles.line}>
           <Ionicons
@@ -237,7 +226,7 @@ function MaterialsPanel({ track }: PanelProps) {
         label="Finished"
         value={materials.filter((m) => (m.status || "").toLowerCase() === "completed").length}
         total={materials.length}
-        tint={TINTS.materialsTracker}
+        tint={palette.accent}
       />
       {reading.map((material) => (
         <Meter
@@ -277,7 +266,7 @@ function StepsPanel({ today }: { today: string }) {
 
   return (
     <View style={styles.headlineRow}>
-      <Text style={[styles.big, { color: TINTS[STEPS_PANEL] }]}>{steps.count.toLocaleString()}</Text>
+      <Text style={[styles.big, { color: palette.accent }]}>{steps.count.toLocaleString()}</Text>
       <Text style={styles.muted}>
         steps today{steps.wholeDay ? "" : " · while Horizon is open"}
       </Text>
