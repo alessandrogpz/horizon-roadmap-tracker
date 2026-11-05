@@ -7,6 +7,34 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.117.3] - 2026-11-05
+
+### Fixed
+- **0.117.2 crashed the dashboard.** Dragging a panel against the right-hand edge threw React
+  #185, "maximum update depth exceeded", and the error boundary replaced the whole workspace.
+  Reported from a real drag; the cause is the window-edge modifier that release added.
+- A dnd-kit modifier clamps the rect that collision detection then measures, and this dashboard
+  moves panels between columns **live** during a drag, in `onDragOver`. Held against the edge the
+  panel's centre stops moving, so the nearest droppable flipped between the two columns — and each
+  flip was a `setPanelColumns`, each of those a re-render, each re-render another collision pass.
+  Nothing that feeds collision detection can be clamped while that handler is live.
+- The bound is still there, moved somewhere it cannot be measured back: a layout effect in
+  `SortablePanel` clamps the transform on the committed DOM, after React has rendered dnd-kit's
+  own value and before the browser paints. dnd-kit keeps tracking the pointer unclamped, so
+  collisions stay monotonic, and the effect sets no state so it cannot re-render anything.
+  Horizontal only — a long dashboard scrolls, and a panel carried down it has to be able to leave
+  the top of the window.
+- The track switcher keeps its modifiers and is unaffected: that list is a single column and
+  nothing moves between containers mid-drag, so there is no handler for a clamp to feed.
+
+### Notes
+- I could not reproduce the crash with synthetic events — the same limit that has stopped every
+  drag test in this repo from completing a drop — so the verification here is that the mechanism
+  is gone rather than that the crash was seen to stop. The bound itself is measured: at 1434 wide
+  the panel stays inside the window at both edges and still crosses between columns.
+- A one-release regression, shipped because 0.117.2 was verified for the thing it changed (the
+  bound) and not for the thing it touched (collision detection feeding a live handler).
+
 ## [0.117.2] - 2026-11-05
 
 ### Fixed
