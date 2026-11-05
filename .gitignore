@@ -72,3 +72,6 @@ mobile/dist
 mobile/android
 mobile/ios
 mobile/*.log
+
+# Working files from the design skill's inspector (screenshots, reports).
+.taste-skill/

@@ -184,13 +184,13 @@ export default function WeeklyPlanPreview() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-2 whitespace-nowrap rounded-md border border-dashed border-accent/30 bg-accent/[0.08] px-3 py-1.5">
-              <span className="text-[0.7rem] font-semibold uppercase tracking-[0.05em] text-muted-foreground">
+              <span className="text-[0.75rem] font-semibold text-muted-foreground">
                 Upper rotation:
               </span>
               <span className="font-mono text-[0.85rem] font-bold text-accent">Incline press</span>
             </span>
             <span className="inline-flex items-center gap-2 whitespace-nowrap rounded-md border border-dashed border-accent/30 bg-accent/[0.08] px-3 py-1.5">
-              <span className="text-[0.7rem] font-semibold uppercase tracking-[0.05em] text-muted-foreground">
+              <span className="text-[0.75rem] font-semibold text-muted-foreground">
                 Lower rotation:
               </span>
               <span className="font-mono text-[0.85rem] font-bold text-accent">Front squat</span>
@@ -203,7 +203,7 @@ export default function WeeklyPlanPreview() {
                 button: this is a photograph of the panel, and a dotted
                 outline that does nothing when pressed is a worse lie than
                 one that is plainly part of the picture. */}
-            <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-md border border-dashed border-card-border-hover px-3 py-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.05em] text-muted-foreground">
+            <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-md border border-dashed border-card-border-hover px-3 py-1.5 text-[0.75rem] font-semibold text-muted-foreground">
               + New Rotation
             </span>
           </div>
@@ -226,7 +226,7 @@ export default function WeeklyPlanPreview() {
                   <div className="day-card-head flex flex-col gap-[0.3rem] border-b border-card-border pb-1">
                     <div className="day-card-when text-center">
                       <span
-                        className={`text-[0.7rem] uppercase tracking-[0.05em] ${
+                        className={`text-[0.78rem] ${
                           isToday ? "font-bold text-foreground" : "font-semibold text-muted-foreground"
                         }`}
                       >
@@ -236,7 +236,7 @@ export default function WeeklyPlanPreview() {
 
                     <div className="day-card-tag flex min-w-0 justify-center">
                       <span
-                        className="track-ink day-card-label max-w-full truncate rounded-[3px] px-1.5 py-px text-[0.55rem] font-semibold uppercase tracking-[0.03em]"
+                        className="track-ink day-card-label max-w-full truncate rounded-[3px] px-1.5 py-px text-[0.6rem] font-semibold"
                         style={{ ...trackInkVariables(day.color), background: withAlpha(day.color, 0.2) } as React.CSSProperties}
                       >
                         {day.label}

@@ -120,7 +120,7 @@ export default function WeeklyPlan({
               {weekOffset !== 0 && (
                 <button
                   onClick={() => setWeekOffset(0)}
-                  className="ml-2 bg-accent text-black border-none rounded px-2.5 py-0.5 text-[0.7rem] font-semibold cursor-pointer uppercase tracking-[0.03em] transition-opacity duration-200 whitespace-nowrap hover:opacity-80"
+                  className="ml-2 bg-accent text-[var(--background)] border-none rounded px-2.5 py-0.5 text-[0.8rem] font-semibold cursor-pointer transition-opacity duration-200 whitespace-nowrap hover:opacity-80"
                 >
                   Back to Today
                 </button>
@@ -159,7 +159,7 @@ export default function WeeklyPlan({
                         : `Runs during ${phaseTitle ? `phase ${rotation.phase} — ${phaseTitle}` : `phase ${rotation.phase}`}`
                   }
                 >
-                  <span className="text-[0.7rem] text-muted-foreground uppercase tracking-[0.05em] font-semibold">
+                  <span className="text-[0.8rem] text-muted-foreground font-semibold">
                     {rotation.label}:
                   </span>
                   <span
@@ -174,7 +174,7 @@ export default function WeeklyPlan({
             {data.isSynced && (
               <button
                 onClick={() => onRotationClick(null)}
-                className="inline-flex items-center gap-1 border border-dashed border-card-border-hover px-3 py-1.5 rounded-md text-[0.7rem] text-muted-foreground uppercase tracking-[0.05em] font-semibold cursor-pointer transition-all duration-200 hover:text-foreground hover:border-card-border-hover"
+                className="inline-flex items-center gap-1 border border-dashed border-card-border-hover px-3 py-1.5 rounded-md text-[0.8rem] text-muted-foreground font-semibold cursor-pointer transition-all duration-200 hover:text-foreground hover:border-card-border-hover"
               >
                 + New Rotation
               </button>
@@ -344,10 +344,10 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
               className="day-card-chevron shrink-0 text-subtle-foreground"
             />
           )}
-          <span className={`text-[0.7rem] uppercase tracking-[0.05em] ${isToday ? "font-bold text-foreground" : "font-semibold text-muted-foreground"}`}>
+          <span className={`text-[0.8rem] ${isToday ? "font-bold text-foreground" : "font-semibold text-muted-foreground"}`}>
             {dayItem.name}
           </span>
-          <div className="day-card-date text-[0.65rem] text-subtle-foreground mt-px">
+          <div className="day-card-date text-[0.75rem] text-subtle-foreground mt-px">
             {data.isSynced ? dayDateStr.slice(5) : "MM-DD"}
           </div>
         </div>
@@ -356,7 +356,7 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
           {/* How much of a shut day is done, so the line is worth reading on
               its own. Hidden while it is open, where the boxes say it better. */}
           {stacked && !open && itemCount > 0 && (
-            <span className="shrink-0 font-mono text-[0.65rem] text-subtle-foreground">
+            <span className="shrink-0 font-mono text-[0.75rem] text-subtle-foreground">
               {doneCount}/{itemCount}
             </span>
           )}
@@ -365,7 +365,7 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
               "ATTERN STUD", which reads as a glitch rather than a long word. */}
           <span
             title={data.isSynced ? dayItem.label : undefined}
-            className={`day-card-label max-w-full truncate text-[0.65rem] font-semibold px-1.5 py-px rounded-[3px] uppercase tracking-[0.03em] ${
+            className={`day-card-label max-w-full truncate text-[0.75rem] font-semibold px-1.5 py-px rounded-[3px] ${
               data.isSynced ? "track-ink" : "text-subtle-foreground"
             }`}
             style={

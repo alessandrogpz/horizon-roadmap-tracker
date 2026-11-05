@@ -7,7 +7,6 @@ import { trackStreak } from "@/lib/restDays";
 import { phaseStats } from "@/lib/stats";
 import { orderedTracks } from "@/lib/selectors";
 import type { SyncStatus } from "@/components/workspace/WorkspaceProvider";
-import { Cloud, Flame } from "lucide-react";
 import HorizonMark from "@/components/HorizonMark";
 import TrackSwitcher from "@/components/TrackSwitcher";
 import MasterStats from "@/components/master/MasterStats";
@@ -110,57 +109,39 @@ function CountUp({ value, className }: { value: number; className?: string }) {
   return <span className={className}>{display}</span>;
 }
 
-/** Circular progress ring — the hero's focal "Day X of Y" element. */
-function ProgressRing({ pct, size = 60 }: { pct: number; size?: number }) {
-  const stroke = 5;
-  const r = (size - stroke) / 2;
-  const circ = 2 * Math.PI * r;
-  const clamped = Math.max(0, Math.min(100, pct));
-  return (
-    <svg width={size} height={size} className="shrink-0 -rotate-90" aria-hidden="true">
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--card-border)" strokeWidth={stroke} />
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={r}
-        fill="none"
-        stroke="var(--accent)"
-        strokeWidth={stroke}
-        strokeLinecap="round"
-        strokeDasharray={circ}
-        strokeDashoffset={circ * (1 - clamped / 100)}
-        style={{ transition: "stroke-dashoffset 0.6s cubic-bezier(0.16,1,0.3,1)" }}
-      />
-    </svg>
-  );
-}
-
-/** One hero stat tile — elevated surface, muted label, large mono value.
- *  Every tile opens its own detail panel, so it's a button, not a div. */
-function StatTile({
+/**
+ * One figure under the opening line.
+ *
+ * These were four bordered tiles with a tracked uppercase label and a bold
+ * mono number — the row every dashboard opens with, and in a product whose
+ * first line already says the day, the rhythm and the streak, four boxes
+ * repeating it was the loudest thing on the screen. They are type now: a
+ * label in sentence case and a figure at regular weight, sitting on the page
+ * rather than in a card. Each still opens its detail panel, which is the only
+ * reason they are buttons.
+ */
+function StatFigure({
   label,
-  icon,
+  value,
+  unit,
   onClick,
-  children,
-  className = "",
 }: {
   label: string;
-  icon?: React.ReactNode;
+  value: React.ReactNode;
+  unit?: string;
   onClick: () => void;
-  children: React.ReactNode;
-  className?: string;
 }) {
   return (
     <button
       onClick={onClick}
-      title={`${label} — click for detail`}
-      className={`flex items-center gap-3 rounded-[10px] border border-card-border bg-card/60 px-4 py-3 text-left cursor-pointer transition-colors duration-200 hover:border-card-border-hover hover:bg-surface-hover focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_var(--ring)] ${className}`}
+      title={`${label} — open the detail`}
+      className="group flex flex-col items-start gap-0.5 bg-transparent border-none p-0 text-left cursor-pointer focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_var(--ring)] rounded-[4px]"
     >
-      {icon}
-      <div className="flex flex-col">
-        <span className="text-[0.65rem] uppercase tracking-[0.08em] text-muted-foreground font-semibold">{label}</span>
-        {children}
-      </div>
+      <span className="type-caption text-subtle-foreground group-hover:text-muted-foreground transition-colors">{label}</span>
+      <span className="flex items-baseline gap-1">
+        <span className="type-display-sm font-normal tabular-nums text-foreground leading-none">{value}</span>
+        {unit ? <span className="type-caption text-muted-foreground">{unit}</span> : null}
+      </span>
     </button>
   );
 }
@@ -203,6 +184,7 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
   const overrunDays = Math.max(0, daysPassed - totalDays);
 
   const streak = data.isSynced ? trackStreak(data, todayYMD()) : 0;
+
 
   const dotColor = syncStatus === "syncing"
     ? "bg-accent shadow-[0_0_8px_var(--accent)]"
@@ -291,63 +273,48 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
         </div>
       </div>
 
-      {/* Hero metrics — the "am I on track?" glance, up front. */}
+      {/* The track's standing: one measure, then the figures. These were four
+          bordered tiles with tracked uppercase labels and bold mono numbers —
+          the row every dashboard opens with. They are type on the page now. */}
       {masterOpen && masterTracks ? (
         <MasterStats tracks={masterTracks} />
       ) : (
-      <div className="grid grid-cols-2 items-stretch gap-3 sm:flex sm:flex-wrap">
-        <StatTile
-          label="Current Streak"
-          icon={<Flame size={20} strokeWidth={2} className="text-warning shrink-0" />}
-          onClick={() => setOpenStat("streak")}
-        >
-          <div className="flex items-baseline gap-1.5">
-            <CountUp value={streak} className="text-[1.6rem] font-bold font-mono text-foreground leading-none" />
-            <span className="text-[0.8rem] text-muted-foreground">{streak === 1 ? "day" : "days"}</span>
+      <div className="flex flex-col gap-5">
+        {/* Where today sits in the track. A plan that has run out keeps the
+            bar full rather than pretending there is more of it. */}
+        {data.isSynced && data.startDate ? (
+          <div
+            className="h-[3px] w-full rounded-full bg-surface-hover overflow-hidden"
+            role="img"
+            aria-label={`Day ${daysPassed} of ${totalDays}`}
+          >
+            <div
+              className="h-full rounded-full bg-accent transition-[width] duration-500"
+              style={{ width: `${Math.min(100, Math.max(1.5, progressPct))}%` }}
+            />
           </div>
-        </StatTile>
+        ) : null}
 
-        <StatTile label="Phase Day" onClick={() => setOpenStat("phase")}>
-          <span className="text-[1.6rem] font-bold font-mono text-foreground leading-none">{daysInPhase}</span>
-        </StatTile>
-
-        <StatTile
-          label="Timeline"
-          className="col-span-2 sm:col-span-1"
-          onClick={() => setOpenStat("timeline")}
-          icon={
-            <div className="relative shrink-0 grid place-items-center" style={{ width: 60, height: 60 }}>
-              <ProgressRing pct={progressPct} />
-              <span className="absolute inset-0 grid place-items-center text-[0.65rem] font-mono font-semibold text-accent">
-                {Math.round(Math.min(100, progressPct))}%
-              </span>
-            </div>
-          }
-        >
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-[1.6rem] font-bold font-mono text-foreground leading-none">{daysPassed}</span>
-            <span className="text-[0.8rem] text-muted-foreground">
-              {overrunDays > 0 ? `days · ${overrunDays} past plan` : `/ ${totalDays} days`}
-            </span>
-          </div>
-        </StatTile>
-
-        <button
-          onClick={() => setOpenStat("progress")}
-          title="Progress — click for detail"
-          className="col-span-2 sm:col-span-1 flex items-center gap-2.5 rounded-[10px] border border-card-border bg-card/60 px-4 py-3 sm:flex-1 sm:min-w-[200px] text-left cursor-pointer transition-colors duration-200 hover:border-card-border-hover hover:bg-surface-hover focus-visible:outline-none focus-visible:shadow-[0_0_0_3px_var(--ring)]"
-        >
-          <Cloud size={18} strokeWidth={2} className="text-muted-foreground shrink-0" />
-          <div className="flex flex-col flex-1 gap-1.5">
-            <span className="text-[0.65rem] uppercase tracking-[0.08em] text-muted-foreground font-semibold">Progress</span>
-            <div className="h-1.5 bg-surface-hover rounded-full overflow-hidden">
-              <div
-                className="h-full bg-accent rounded-full transition-[width] duration-500"
-                style={{ width: `${Math.min(100, progressPct)}%` }}
-              />
-            </div>
-          </div>
-        </button>
+        <div className="flex flex-wrap items-start gap-x-8 gap-y-4">
+          <StatFigure
+            label="Streak"
+            value={<CountUp value={streak} className="type-display-sm font-normal tabular-nums text-foreground leading-none" />}
+            unit={streak === 1 ? "day" : "days"}
+            onClick={() => setOpenStat("streak")}
+          />
+          <StatFigure label="Phase day" value={daysInPhase} onClick={() => setOpenStat("phase")} />
+          <StatFigure
+            label="Timeline"
+            value={daysPassed}
+            unit={overrunDays > 0 ? `· ${overrunDays} past plan` : `of ${totalDays}`}
+            onClick={() => setOpenStat("timeline")}
+          />
+          <StatFigure
+            label="Progress"
+            value={`${Math.round(Math.min(100, progressPct))}%`}
+            onClick={() => setOpenStat("progress")}
+          />
+        </div>
       </div>
       )}
 

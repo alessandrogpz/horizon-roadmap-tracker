@@ -191,21 +191,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Faint, fixed light source high on the page — premium dark UIs almost always
-   have one. Sits behind all content and never intercepts pointer events. */
-.app-glow {
-  position: fixed;
-  top: -20vh;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(1100px, 120vw);
-  height: 60vh;
-  background: radial-gradient(closest-side, var(--glow), transparent 70%);
-  pointer-events: none;
-  z-index: 0;
-  filter: blur(8px);
-}
-
 /* ===========================================================================
    Surfaces
    =========================================================================== */
@@ -223,8 +208,14 @@ body {
   border: 1px solid var(--card-border);
   border-radius: var(--radius-card);
   padding: var(--panel-pad, 1.5rem);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-  box-shadow: var(--highlight-top), var(--shadow-panel);
+  transition: border-color 0.2s ease, background 0.2s ease;
+  /* No drop shadow. A panel at rest sits on the ground; it is told from it by
+     one tone step and a 1px border, which is what the surfaces ladder above
+     is for. Nine panels each casting a soft shadow read as nine things
+     hovering over the page, and the shadow was doing the job the tone step
+     already does. `--shadow-float` survives for what genuinely floats: a
+     dialog, a menu, a popover. */
+  box-shadow: var(--highlight-top);
 }
 
 /* A focused surface: a dialog holding a form wants more air than a panel
@@ -249,7 +240,6 @@ body {
 
 .glass-panel:hover {
   border-color: var(--card-border-hover);
-  box-shadow: var(--highlight-top), var(--shadow-panel-hover);
 }
 
 /* True glass for overlapping surfaces (modals, popovers) — translucent card
@@ -447,15 +437,6 @@ select option:disabled {
 .type-caption { font-size: var(--text-caption); line-height: 1.45; }
 .type-micro { font-size: var(--text-micro); line-height: 1.4; }
 
-/* A marker over a section: the size and its treatment travel together, so a
-   caller cannot take half of it. */
-.type-eyebrow {
-  font-size: var(--text-micro);
-  line-height: 1.3;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-weight: 600;
-}
 
 /* Headings wrap on phrase boundaries rather than leaving one word stranded;
    body copy avoids the orphan. Both are progressive — a browser without them
@@ -464,16 +445,24 @@ h1, h2, h3, .type-title, .type-heading, .type-display-sm {
   text-wrap: balance;
 }
 
+/* Every panel's heading, in one place — which is why it was worth fixing
+   here rather than in ten components.
+
+   It was 0.8rem uppercase tracked at 0.06em: the tiny tracked capital, the
+   single commonest tell of a generated dashboard and the device this screen
+   repeated nineteen times. Nothing was gained by it; a panel called
+   "Deliverables" is not clearer shouted. Sentence case at a size you can
+   actually read also puts the website in step with the phone, which had been
+   setting the same headings in sentence case all along. */
 .section-title {
-  font-size: var(--text-label);
+  font-size: var(--text-heading);
   font-weight: 600;
   margin-bottom: 1rem;
   color: var(--foreground);
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: -0.01em;
 }
 
 /* Small line-icon that precedes a section title — muted so the label leads. */
@@ -905,7 +894,7 @@ h1, h2, h3, .type-title, .type-heading, .type-display-sm {
   }
 
   .day-card-label {
-    font-size: var(--text-micro);
+    font-size: var(--text-caption);
   }
 
   /* Legible at arm's length, and tall enough to hit with a thumb. */
