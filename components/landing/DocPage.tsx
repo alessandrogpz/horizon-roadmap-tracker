@@ -46,12 +46,12 @@ export function DocShell({
         <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <Link href="/landing" className="flex items-center gap-2.5 text-foreground">
             <HorizonMark className="h-4 w-auto text-accent" />
-            <span className="text-[0.95rem] font-semibold tracking-tight">Horizon</span>
+            <span className="type-subhead font-semibold tracking-tight">Horizon</span>
           </Link>
           <div className="flex items-center gap-2 sm:gap-4">
             <Link
               href={title === "Privacy" ? "/security" : "/privacy"}
-              className="hidden text-[0.85rem] text-muted-foreground transition-colors hover:text-foreground sm:block"
+              className="type-body hidden text-muted-foreground transition-colors hover:text-foreground sm:block"
             >
               {title === "Privacy" ? "Security" : "Privacy"}
             </Link>
@@ -69,9 +69,9 @@ export function DocShell({
             screen that says what it is. */}
         <section className="border-b border-card-border">
           <Reveal className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-14 sm:px-6 sm:py-20">
-            <h1 className="text-[2.2rem] font-semibold leading-[1.08] tracking-tight sm:text-[3rem]">{title}</h1>
-            <p className="max-w-2xl text-[1rem] leading-relaxed text-muted-foreground">{lede}</p>
-            <span className="mt-1 inline-flex w-fit items-center gap-2 rounded-full border border-card-border bg-surface-muted px-3 py-1 text-[0.72rem] text-muted-foreground">
+            <h1 className="type-hero font-semibold">{title}</h1>
+            <p className="type-prose max-w-2xl text-muted-foreground">{lede}</p>
+            <span className="mt-1 inline-flex w-fit items-center gap-2 rounded-full border border-card-border bg-surface-muted px-3 py-1 type-caption text-muted-foreground">
               <span className="h-1.5 w-1.5 rounded-full bg-success" />
               Last updated {updated}
             </span>
@@ -85,14 +85,14 @@ export function DocShell({
               column of margin doing nothing anyway. */}
           <nav className="hidden w-[200px] shrink-0 lg:block" aria-label="On this page">
             <div className="sticky top-24 flex flex-col gap-2">
-              <span className="text-[0.75rem] font-semibold text-muted-foreground">
+              <span className="type-label font-semibold text-muted-foreground">
                 On this page
               </span>
               {sections.map((section) => (
                 <a
                   key={section.id}
                   href={`#${section.id}`}
-                  className="text-[0.82rem] leading-snug text-muted-foreground transition-colors hover:text-foreground"
+                  className="type-body text-muted-foreground transition-colors hover:text-foreground"
                 >
                   {section.title}
                 </a>
@@ -104,8 +104,8 @@ export function DocShell({
             {sections.map((section) => (
               <Reveal as="section" key={section.id} className="scroll-mt-24">
                 <div id={section.id} className="flex flex-col gap-3 border-l-2 border-card-border pl-5">
-                  <h2 className="text-[1.2rem] font-semibold tracking-tight">{section.title}</h2>
-                  <div className="flex max-w-2xl flex-col gap-3 text-[0.92rem] leading-relaxed text-muted-foreground">
+                  <h2 className="type-title font-semibold">{section.title}</h2>
+                  <div className="type-prose flex max-w-2xl flex-col gap-3 text-muted-foreground">
                     {section.body}
                   </div>
                 </div>
@@ -121,14 +121,14 @@ export function DocShell({
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-5 gap-y-2 px-4 pt-8 pb-14 sm:px-6">
           <span className="flex items-center gap-2.5">
             <HorizonMark className="h-3.5 w-auto text-muted-foreground" />
-            <span className="text-[0.85rem] text-muted-foreground">Horizon — Roadmap Tracker</span>
+            <span className="type-body text-muted-foreground">Horizon — Roadmap Tracker</span>
           </span>
-          <Link href="/landing" className="text-[0.85rem] text-muted-foreground transition-colors hover:text-foreground">
+          <Link href="/landing" className="type-body text-muted-foreground transition-colors hover:text-foreground">
             About
           </Link>
           <Link
             href={title === "Privacy" ? "/security" : "/privacy"}
-            className="text-[0.85rem] text-muted-foreground transition-colors hover:text-foreground"
+            className="type-body text-muted-foreground transition-colors hover:text-foreground"
           >
             {title === "Privacy" ? "Security" : "Privacy"}
           </Link>
