@@ -55,7 +55,7 @@ export default function TodoList({ noteId }: { noteId: string }) {
         {doneCount > 0 && (
           <button
             onClick={() => commit(clearDoneTodos(items))}
-            className="bg-transparent border-none text-muted-foreground cursor-pointer text-[0.7rem] px-1 py-px font-[inherit] hover:text-foreground"
+            className="bg-transparent border-none text-muted-foreground cursor-pointer type-caption px-1 py-px font-[inherit] hover:text-foreground"
           >
             Clear done ({doneCount})
           </button>
@@ -71,15 +71,15 @@ export default function TodoList({ noteId }: { noteId: string }) {
           disabled={content === null}
           placeholder="Add a to-do…"
           aria-label="New to-do"
-          className="flex-1 min-w-0 p-1.5 rounded bg-input-bg border border-card-border text-foreground outline-none font-[inherit] text-[0.85rem] placeholder:text-muted-foreground focus:border-accent"
+          className="flex-1 min-w-0 p-1.5 rounded bg-input-bg border border-card-border text-foreground outline-none font-[inherit] type-body placeholder:text-muted-foreground focus:border-accent"
         />
-        <button type="submit" disabled={!draft.trim()} className="btn px-2.5 py-1 text-xs disabled:opacity-40">
+        <button type="submit" disabled={!draft.trim()} className="btn px-2.5 py-1 type-caption disabled:opacity-40">
           Add
         </button>
       </form>
 
       {items.length === 0 ? (
-        <p className="text-[0.8rem] italic text-muted-foreground m-0">Nothing to do yet.</p>
+        <p className="type-label italic text-muted-foreground m-0">Nothing to do yet.</p>
       ) : (
         <ul className="flex flex-col m-0 p-0 list-none">
           {items.map((item, index) => (
@@ -107,14 +107,14 @@ export default function TodoList({ noteId }: { noteId: string }) {
                     if (e.key === "Escape") setEditing(null);
                   }}
                   aria-label={`Edit "${item.text}"`}
-                  className="flex-1 min-w-0 rounded border border-accent bg-input-bg px-1 py-0.5 font-[inherit] text-[0.85rem] text-foreground outline-none"
+                  className="flex-1 min-w-0 rounded border border-accent bg-input-bg px-1 py-0.5 font-[inherit] type-body text-foreground outline-none"
                 />
               ) : (
                 <button
                   onClick={() => setEditing({ index, text: item.text })}
                   title="Click to edit"
                   aria-label={`Edit "${item.text}"`}
-                  className={`flex-1 min-w-0 cursor-text break-words border-none bg-transparent p-0 text-left font-[inherit] text-[0.85rem] ${item.done ? "text-muted-foreground line-through" : "text-foreground"}`}
+                  className={`flex-1 min-w-0 cursor-text break-words border-none bg-transparent p-0 text-left font-[inherit] type-body ${item.done ? "text-muted-foreground line-through" : "text-foreground"}`}
                 >
                   {item.text}
                 </button>

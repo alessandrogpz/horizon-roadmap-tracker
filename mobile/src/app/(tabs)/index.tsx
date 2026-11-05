@@ -56,6 +56,7 @@ import { RADIUS, SPACING, TYPE, type Palette } from "../../theme";
 import { centredContent } from "../../layout";
 import { usePalette } from "../../theme/ThemeProvider";
 import { Tappable } from "../../components/Tappable";
+import { ACTION } from "../../theme";
 
 /** A folded panel: tall enough for its header and nothing else. */
 const ROW = 56;
@@ -581,7 +582,7 @@ function DraggablePanel({
       {/* Swiping a panel away hides it, the same gesture as anywhere else.
           Nothing is lost — it is waiting in Arrange, and the data behind it is
           untouched — so this one needs no undo. */}
-      <SwipeRow left={{ label: "Hide", icon: "eye-off-outline", colour: "#64748b", onAct: () => onHide(id) }}>
+      <SwipeRow left={{ label: "Hide", icon: "eye-off-outline", colour: ACTION.neutral, onAct: () => onHide(id) }}>
         <PanelCard
           title={definition.label}
           icon={PANEL_ICON[id] ?? "square-outline"}

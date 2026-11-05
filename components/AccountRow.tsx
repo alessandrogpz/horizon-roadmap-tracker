@@ -10,7 +10,7 @@ import { useAccount } from "@/components/useAccount";
 import { useWorkspaceActions } from "@/components/workspace/WorkspaceProvider";
 
 const quietButton =
-  "rounded-[var(--radius-control)] border border-card-border bg-surface-muted px-3 py-1.5 text-[0.8rem] text-foreground cursor-pointer transition-colors hover:border-card-border-hover hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-50";
+  "rounded-[var(--radius-control)] border border-card-border bg-surface-muted px-3 py-1.5 type-label text-foreground cursor-pointer transition-colors hover:border-card-border-hover hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-50";
 
 /**
  * Settings' Account row: Google's own sign-in button when signed out, the
@@ -137,9 +137,9 @@ export default function AccountRow() {
           <UserRound size={16} strokeWidth={2} />
         </span>
         <div className="flex flex-col gap-0.5">
-          <span className="text-[0.95rem] font-semibold text-foreground">Account</span>
-          <span className="text-[0.8rem] leading-snug text-muted-foreground">{hint}</span>
-          {error && <span className="text-[0.8rem] text-danger">{error}</span>}
+          <span className="type-subhead font-semibold text-foreground">Account</span>
+          <span className="type-label text-muted-foreground">{hint}</span>
+          {error && <span className="type-label text-danger">{error}</span>}
         </div>
       </div>
       <div className="flex shrink-0 items-center gap-2">
@@ -153,7 +153,7 @@ export default function AccountRow() {
               <button
                 onClick={() => setConfirmDelete(true)}
                 disabled={busy}
-                className="cursor-pointer rounded-[var(--radius-control)] border border-danger/30 bg-transparent px-3 py-1.5 text-[0.8rem] text-danger transition-colors hover:bg-danger/10"
+                className="cursor-pointer rounded-[var(--radius-control)] border border-danger/30 bg-transparent px-3 py-1.5 type-label text-danger transition-colors hover:bg-danger/10"
               >
                 Delete account…
               </button>
@@ -163,7 +163,7 @@ export default function AccountRow() {
       </div>
       {account && confirmDelete && (
         <div className="flex basis-full flex-col gap-2 rounded-[var(--radius-inner)] border border-danger/30 bg-danger/[0.05] px-3 py-2.5 sm:order-last">
-          <span className="text-[0.8rem] leading-snug text-foreground">
+          <span className="type-label text-foreground">
             Delete your Horizon account and everything it stores on the server: tracks, progress, notes and
             history, from every device. This can&apos;t be undone. The data on this device stays, and the app keeps
             working without an account.
@@ -172,7 +172,7 @@ export default function AccountRow() {
             <button
               onClick={handleDelete}
               disabled={busy}
-              className="cursor-pointer rounded-[var(--radius-control)] border border-danger/40 bg-danger/15 px-3 py-1.5 text-[0.8rem] font-semibold text-danger disabled:opacity-50"
+              className="cursor-pointer rounded-[var(--radius-control)] border border-danger/40 bg-danger/15 px-3 py-1.5 type-label font-semibold text-danger disabled:opacity-50"
             >
               {busy ? "Deleting…" : "Yes, delete my account"}
             </button>

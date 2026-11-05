@@ -53,6 +53,8 @@ import { TrackHeatmap } from "../components/TrackHeatmap";
 import { Refreshable } from "../components/Refreshable";
 import { Tappable } from "../components/Tappable";
 import { LIMITS } from "@shared/limits";
+import { ACTION } from "../theme";
+import { onColor } from "@shared/colors";
 
 /** A card folded down to its header: a dot, a name, a line about its streak. */
 const ROW = 62;
@@ -611,13 +613,13 @@ function DraggableTrack({
 
   const card = (
     <SwipeRow
-      left={{ label: "Settings", icon: "options-outline", colour: "#64748b", onAct: onSettings }}
+      left={{ label: "Settings", icon: "options-outline", colour: ACTION.neutral, onAct: onSettings }}
       right={
         canDelete
           ? {
               label: "Delete",
               icon: "trash-outline",
-              colour: "#ef4444",
+              colour: ACTION.danger,
               // A swipe is a flick, not a considered tap, and a track carries
               // everything on it — so this one asks first, and deliberately
               // offers no undo afterwards. One decision per intent: asking and
@@ -861,7 +863,10 @@ function Swatches({
           {/* The tick, rather than a ring around the outside. A ring on a
               circle of colour reads as a seventh colour at a glance; a mark
               inside it reads as a choice. */}
-          {value === option && <Ionicons name="checkmark" size={16} color="#ffffff" />}
+          {/* Black or white per swatch: white reads 2.15 on the amber and
+              2.28 on the green, so the mark naming your choice was the
+              hardest thing on the row to see. */}
+          {value === option && <Ionicons name="checkmark" size={16} color={onColor(option)} />}
         </Tappable>
       ))}
     </View>

@@ -393,9 +393,6 @@ select option:disabled {
    Not gated behind `(hover: hover)`, unlike the hover rules above: touch is
    exactly where this matters most.
 
-   `.no-press` is the opt-out for anything whose own transform is already
-   doing a job — a dragged panel, a rotating chevron.
-
    `.btn` is absent from the first rule on purpose: it declares the same
    transition itself, above, alongside its colour transitions. Listing it
    here as well would win on order and replace that whole list with this
@@ -411,10 +408,6 @@ button:not(:disabled):active,
 [role="button"]:not([aria-disabled="true"]):active,
 .press:active {
   transform: scale(0.97);
-}
-
-.no-press:active {
-  transform: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

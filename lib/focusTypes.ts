@@ -15,6 +15,14 @@
 
 import type { DayKey, FocusType, WeekDay } from "./types";
 
+/** The colour a focus type wears when it has not been given one, and the
+ *  colour of a day with no type at all. It was written out twice as a bare
+ *  `#a1a1aa` — once in the weekly plan and once in the type editor — so the
+ *  swatch you pick from and the tag you get could drift apart. Deliberately a
+ *  neutral: an untyped day should not look like it has been assigned
+ *  something. */
+export const DEFAULT_TYPE_COLOR = "#a1a1aa";
+
 export interface FocusPool {
   focusTypes: Record<string, FocusType>;
   weekSchedule: WeekDay[];

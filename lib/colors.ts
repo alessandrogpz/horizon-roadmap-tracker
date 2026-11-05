@@ -108,6 +108,25 @@ export function contrastRatio(a: string, b: string): number {
  * first one that clears `target`. A colour that already passes is returned
  * untouched, which is why the dark theme is left exactly as it was.
  */
+/**
+ * Black or white — whichever can actually be read on this fill.
+ *
+ * For a mark drawn *on* a block of colour, where the mark has no colour of
+ * its own to preserve: the tick inside a chosen swatch, a glyph on a filled
+ * chip. `readableOn` is the wrong tool there, because it walks a colour
+ * towards legibility and would hand back grey.
+ *
+ * Both apps' colour pickers drew that tick in white, and white clears 4.5:1
+ * on exactly one of the six track colours. On the amber it reads 2.15 and on
+ * the green 2.28 — under even the 3:1 floor for graphics — so the mark saying
+ * which colour you had chosen was the hardest thing on the row to see. Black
+ * clears 4.4 or better on all six, but picking per fill is what actually
+ * holds for a colour the person typed in themselves.
+ */
+export function onColor(fill: string): "#000000" | "#ffffff" {
+  return contrastRatio("#000000", fill) >= contrastRatio("#ffffff", fill) ? "#000000" : "#ffffff";
+}
+
 export function readableOn(color: string, surface: string, target = 4.5): string {
   const back = toRgb(surface);
   if (!toRgb(color) || !back) return color;

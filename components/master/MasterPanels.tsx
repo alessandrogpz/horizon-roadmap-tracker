@@ -53,7 +53,7 @@ import { trackInkVariables } from "@/lib/trackAccent";
 export function TrackChip({ name, color }: { name: string; color: string }) {
   return (
     <span
-      className="inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-px text-[0.65rem] font-semibold"
+      className="inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-px type-micro font-semibold"
       style={{ color, background: "var(--surface-hover)" }}
       title={name}
     >
@@ -89,7 +89,7 @@ function PanelShell({
 }
 
 function Empty({ children }: { children: React.ReactNode }) {
-  return <p className="m-0 text-[0.85rem] italic text-muted-foreground">{children}</p>;
+  return <p className="m-0 type-body italic text-muted-foreground">{children}</p>;
 }
 
 // --- The week ----------------------------------------------------------
@@ -121,14 +121,14 @@ export function MasterWeekPanel({
       trailing={
         <div className="flex items-center gap-1 pr-16">
           <WeekStep direction={-1} onClick={() => setWeekOffset(weekOffset - 1)} />
-          <span className="min-w-[5.5rem] text-center font-mono text-[0.8rem] font-semibold text-foreground">
+          <span className="min-w-[5.5rem] text-center font-mono type-label font-semibold text-foreground">
             {weekOffset === 0 ? "This week" : weekOffset > 0 ? `+${weekOffset} week${weekOffset === 1 ? "" : "s"}` : `${weekOffset} week${weekOffset === -1 ? "" : "s"}`}
           </span>
           <WeekStep direction={1} onClick={() => setWeekOffset(weekOffset + 1)} />
           {weekOffset !== 0 && (
             <button
               onClick={() => setWeekOffset(0)}
-              className="ml-1 cursor-pointer rounded border-none bg-accent px-2 py-0.5 text-[0.7rem] font-semibold uppercase tracking-[0.03em] text-black"
+              className="ml-1 cursor-pointer rounded border-none bg-accent px-2 py-0.5 type-caption font-semibold uppercase tracking-[0.03em] text-black"
             >
               Today
             </button>
@@ -148,10 +148,10 @@ export function MasterWeekPanel({
                 }`}
               >
                 <div className="day-card-head day-card-when border-b border-card-border pb-1 text-center">
-                  <span className={`text-[0.7rem] uppercase tracking-[0.05em] ${isToday ? "font-bold text-foreground" : "font-semibold text-muted-foreground"}`}>
+                  <span className={`type-caption uppercase tracking-[0.05em] ${isToday ? "font-bold text-foreground" : "font-semibold text-muted-foreground"}`}>
                     {day.name}
                   </span>
-                  <span className="day-card-date block font-mono text-[0.65rem] text-subtle-foreground">{day.date.slice(5)}</span>
+                  <span className="day-card-date block font-mono type-micro text-subtle-foreground">{day.date.slice(5)}</span>
                 </div>
 
                 {/* No colour dot beside the label: the label is already in
@@ -163,7 +163,7 @@ export function MasterWeekPanel({
                   <div key={entry.track.id} className="flex min-w-0 flex-col gap-0.5">
                     <span className="flex items-start gap-1">
                       <span
-                        className="track-ink min-w-0 flex-1 break-words text-[0.65rem] font-semibold uppercase leading-[1.25] tracking-[0.02em]"
+                        className="track-ink min-w-0 flex-1 break-words type-micro font-semibold uppercase leading-[1.25] tracking-[0.02em]"
                         style={trackInkVariables(entry.track.color) as React.CSSProperties}
                         title={`${entry.track.name}: ${entry.label}`}
                       >
@@ -181,7 +181,7 @@ export function MasterWeekPanel({
                     {entry.rotations.map((rotation) => (
                       <span
                         key={`${rotation.label}-${rotation.title}`}
-                        className="day-item-title break-words text-[0.65rem] leading-[1.3] text-muted-foreground"
+                        className="day-item-title break-words type-micro leading-[1.3] text-muted-foreground"
                         title={`${entry.track.name} · ${rotation.label}: ${rotation.title}`}
                       >
                         {rotation.title}
@@ -297,7 +297,7 @@ export function MasterConsistencyPanel({ tracks }: { tracks: TrackState[] }) {
       icon={<Activity size={14} strokeWidth={2.5} className="section-icon" />}
       title="Consistency"
       trailing={
-        <div className="flex items-center gap-3 pr-16 font-mono text-[0.8rem]">
+        <div className="flex items-center gap-3 pr-16 font-mono type-label">
           <span className="inline-flex items-center gap-1 font-semibold text-warning">
             <Flame size={13} strokeWidth={2} />
             {stats.current} day{stats.current === 1 ? "" : "s"}
@@ -315,7 +315,7 @@ export function MasterConsistencyPanel({ tracks }: { tracks: TrackState[] }) {
                 key={option.value}
                 onClick={() => setLayout(option.value)}
                 aria-pressed={on}
-                className={`cursor-pointer rounded-[calc(var(--radius-control)-2px)] px-2.5 py-1 text-[0.7rem] font-semibold transition-colors ${
+                className={`cursor-pointer rounded-[calc(var(--radius-control)-2px)] px-2.5 py-1 type-caption font-semibold transition-colors ${
                   on ? "bg-card text-foreground" : "bg-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -337,7 +337,7 @@ export function MasterConsistencyPanel({ tracks }: { tracks: TrackState[] }) {
                 key={shape.value}
                 onClick={() => setByMonth(shape.value === "months")}
                 aria-pressed={on}
-                className={`cursor-pointer rounded-[calc(var(--radius-control)-2px)] px-2.5 py-1 text-[0.7rem] font-semibold transition-colors ${
+                className={`cursor-pointer rounded-[calc(var(--radius-control)-2px)] px-2.5 py-1 type-caption font-semibold transition-colors ${
                   on ? "bg-card text-foreground" : "bg-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -350,7 +350,7 @@ export function MasterConsistencyPanel({ tracks }: { tracks: TrackState[] }) {
 
         <div className="flex items-center gap-1">
           <YearStep direction={-1} disabled={year <= years.first} onClick={() => setYear(year - 1)} />
-          <span className="min-w-[3.2rem] text-center font-mono text-[0.8rem] font-bold text-foreground">{year}</span>
+          <span className="min-w-[3.2rem] text-center font-mono type-label font-bold text-foreground">{year}</span>
           <YearStep direction={1} disabled={year >= years.last} onClick={() => setYear(year + 1)} />
         </div>
       </div>
@@ -368,7 +368,7 @@ export function MasterConsistencyPanel({ tracks }: { tracks: TrackState[] }) {
             <div className="flex w-max gap-5">
               {months.map((month) => (
                 <div key={month.key} className="flex flex-col gap-1.5">
-                  <span className="text-[0.7rem] font-semibold text-muted-foreground">{month.label}</span>
+                  <span className="type-caption font-semibold text-muted-foreground">{month.label}</span>
                   <MasterGrid days={month.cells} today={today} isRest={isRest} />
                 </div>
               ))}
@@ -384,7 +384,7 @@ export function MasterConsistencyPanel({ tracks }: { tracks: TrackState[] }) {
           rows carry their own names down the side, and repeating them under
           the chart says nothing twice. */}
       {layout === "one" && (
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[0.7rem] text-subtle-foreground">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 type-caption text-subtle-foreground">
         {tracks.map((track) => (
           <span key={track.meta.id} className="inline-flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-[2px]" style={{ background: track.meta.color }} />
@@ -443,7 +443,7 @@ export function MasterPhasesPanel({ tracks }: { tracks: TrackState[] }) {
         past > 0 ? (
           <button
             onClick={() => setShowPast((v) => !v)}
-            className="cursor-pointer rounded-[var(--radius-control)] border border-card-border bg-surface-muted px-2.5 py-1 text-[0.7rem] font-semibold text-muted-foreground transition-colors hover:text-foreground"
+            className="cursor-pointer rounded-[var(--radius-control)] border border-card-border bg-surface-muted px-2.5 py-1 type-caption font-semibold text-muted-foreground transition-colors hover:text-foreground"
           >
             {showPast ? "Hide finished" : `Show ${past} finished`}
           </button>
@@ -459,16 +459,16 @@ export function MasterPhasesPanel({ tracks }: { tracks: TrackState[] }) {
           >
             <span className="flex flex-wrap items-center gap-2">
               <TrackChip name={window.track.name} color={window.track.color} />
-              <span className="min-w-0 flex-1 truncate text-[0.85rem] font-semibold text-foreground">
+              <span className="min-w-0 flex-1 truncate type-body font-semibold text-foreground">
                 {window.phase.title}
               </span>
               {window.state === "current" && (
-                <span className="shrink-0 rounded px-1.5 py-px text-[0.65rem] font-bold uppercase tracking-[0.05em] text-accent" style={{ background: "var(--surface-hover)" }}>
+                <span className="shrink-0 rounded px-1.5 py-px type-micro font-bold uppercase tracking-[0.05em] text-accent" style={{ background: "var(--surface-hover)" }}>
                   Now
                 </span>
               )}
             </span>
-            <span className="font-mono text-[0.7rem] text-subtle-foreground">
+            <span className="font-mono type-caption text-subtle-foreground">
               {formatDayMonthYear(window.startDate)}
               {window.endDate ? ` → ${formatDayMonthYear(window.endDate)}` : " → no deadline"}
             </span>
@@ -491,7 +491,7 @@ export function MasterDeliverablesPanel({ tracks }: { tracks: TrackState[] }) {
       title="Deliverables"
       trailing={
         rows.length > 0 ? (
-          <span className="pr-16 font-mono text-[0.8rem] text-muted-foreground">
+          <span className="pr-16 font-mono type-label text-muted-foreground">
             {done} / {rows.length}
           </span>
         ) : undefined
@@ -508,7 +508,7 @@ export function MasterDeliverablesPanel({ tracks }: { tracks: TrackState[] }) {
                 background: item.completed ? track.color : "transparent",
               }}
             />
-            <span className={`min-w-0 flex-1 truncate text-[0.85rem] ${item.completed ? "text-subtle-foreground line-through" : "text-foreground"}`}>
+            <span className={`min-w-0 flex-1 truncate type-body ${item.completed ? "text-subtle-foreground line-through" : "text-foreground"}`}>
               {item.title}
             </span>
             <TrackChip name={track.name} color={track.color} />
@@ -527,19 +527,19 @@ export function MasterMaterialsPanel({ tracks }: { tracks: TrackState[] }) {
       icon={<BookMarked size={14} strokeWidth={2.5} className="section-icon" />}
       title="Materials"
       trailing={
-        rows.length > 0 ? <span className="pr-16 font-mono text-[0.8rem] text-muted-foreground">{rows.length}</span> : undefined
+        rows.length > 0 ? <span className="pr-16 font-mono type-label text-muted-foreground">{rows.length}</span> : undefined
       }
     >
       {rows.length === 0 && <Empty>No materials on the selected tracks.</Empty>}
       <div className="flex flex-col gap-1.5">
         {rows.map(({ track, item }) => (
           <span key={`${track.id}-${item.id}`} className="flex items-center gap-2">
-            <span className="min-w-0 flex-1 truncate text-[0.85rem] text-foreground" title={item.title}>
+            <span className="min-w-0 flex-1 truncate type-body text-foreground" title={item.title}>
               {item.title}
               {item.author && <span className="text-subtle-foreground"> · {item.author}</span>}
             </span>
             {item.status && (
-              <span className="shrink-0 font-mono text-[0.65rem] uppercase tracking-[0.04em] text-subtle-foreground">
+              <span className="shrink-0 font-mono type-micro uppercase tracking-[0.04em] text-subtle-foreground">
                 {item.status}
               </span>
             )}
@@ -595,7 +595,7 @@ export function MasterTodoPanel({ tracks }: { tracks: TrackState[] }) {
     <PanelShell
       icon={<ListTodo size={14} strokeWidth={2.5} className="section-icon" />}
       title="To-do"
-      trailing={total > 0 ? <span className="pr-16 font-mono text-[0.8rem] text-muted-foreground">{total}</span> : undefined}
+      trailing={total > 0 ? <span className="pr-16 font-mono type-label text-muted-foreground">{total}</span> : undefined}
     >
       {total === 0 && <Empty>Nothing left on the selected tracks.</Empty>}
       <div className="flex flex-col gap-1.5">
@@ -606,7 +606,7 @@ export function MasterTodoPanel({ tracks }: { tracks: TrackState[] }) {
                 className="h-3.5 w-3.5 shrink-0 rounded-[3px] border"
                 style={{ borderColor: "var(--card-border-hover)" }}
               />
-              <span className="min-w-0 flex-1 truncate text-[0.85rem] text-foreground">{item.text}</span>
+              <span className="min-w-0 flex-1 truncate type-body text-foreground">{item.text}</span>
               <TrackChip name={entry.track.name} color={entry.track.color} />
             </span>
           ))
