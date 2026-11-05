@@ -9,6 +9,7 @@ import { MODULES } from "@/lib/modules";
 import { seedTrackFromTemplate, TEMPLATE_LIST } from "@/lib/templates";
 import { firstFreeColor } from "@/lib/trackColors";
 import ColorSwatches from "@/components/shared/ColorSwatches";
+import { useDismiss } from "@/components/useDismiss";
 
 /**
  * Making a track: what it is called, what colour it wears, when it runs, and
@@ -29,6 +30,9 @@ export default function NewTrackModal({
   onCreate: (track: TrackState) => void;
   onClose: () => void;
 }) {
+  // Lets the panel and its backdrop play their exit before whoever owns
+  // this modal takes it off the page.
+  const { closing, dismiss } = useDismiss(onClose);
   const [name, setName] = useState("");
   // Pre-picked to the first colour nobody has taken. Two tracks in the same
   // colour is allowed — six colours and no cap on tracks means it has to be —
@@ -63,17 +67,17 @@ export default function NewTrackModal({
         MODULES.map((module) => module.id)
       ),
     });
-    onClose();
+    dismiss();
   };
 
   return (
-    <div onClick={onClose} className="modal-overlay overlay-in fixed inset-0 z-[1000] flex items-center justify-center p-4">
+    <div onClick={dismiss} className={`modal-overlay ${closing ? "overlay-out" : "overlay-in"} fixed inset-0 z-[1000] flex items-center justify-center p-4`}>
       <div
         onClick={(e) => e.stopPropagation()}
-        className="modal-in glass-panel panel-roomy max-h-[90vh] max-w-[460px] w-full flex flex-col gap-5 overflow-y-auto p-8 border border-accent-muted relative rounded-lg"
+        className={`${closing ? "modal-out" : "modal-in"} glass-panel panel-roomy max-h-[90vh] max-w-[460px] w-full flex flex-col gap-5 overflow-y-auto p-8 border border-accent-muted relative rounded-lg`}
       >
         <button
-          onClick={onClose}
+          onClick={dismiss}
           className="absolute top-6 right-6 flex items-center bg-transparent border-none text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
           aria-label="Close"
         >

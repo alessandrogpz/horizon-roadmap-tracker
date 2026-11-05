@@ -12,6 +12,7 @@ import {
   timelineStats,
 } from "@/lib/stats";
 import StreakGrid, { type StreakCell } from "@/components/StreakGrid";
+import { useDismiss } from "@/components/useDismiss";
 
 /** Which header tile was clicked. */
 export type StatMetric = "streak" | "timeline" | "phase" | "progress";
@@ -331,28 +332,31 @@ export default function StatDetailModal({
   track: TrackState;
   onClose: () => void;
 }) {
+  // Lets the panel and its backdrop play their exit before whoever owns
+  // this modal takes it off the page.
+  const { closing, dismiss } = useDismiss(onClose);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") dismiss();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [dismiss]);
 
   return (
     <div
-      onClick={onClose}
-      className="modal-overlay overlay-in fixed inset-0 z-[1000] flex items-center justify-center p-4"
+      onClick={dismiss}
+      className={`modal-overlay ${closing ? "overlay-out" : "overlay-in"} fixed inset-0 z-[1000] flex items-center justify-center p-4`}
       role="dialog"
       aria-modal="true"
       aria-label={TITLES[metric]}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="modal-in glass-panel panel-roomy relative flex max-h-[90vh] w-full max-w-[620px] flex-col gap-5 overflow-y-auto border-accent-muted"
+        className={`${closing ? "modal-out" : "modal-in"} glass-panel panel-roomy relative flex max-h-[90vh] w-full max-w-[620px] flex-col gap-5 overflow-y-auto border-accent-muted`}
       >
         <button
-          onClick={onClose}
+          onClick={dismiss}
           className="absolute right-4 top-4 flex cursor-pointer items-center text-muted-foreground transition-colors hover:text-foreground"
           aria-label="Close"
         >
