@@ -40,6 +40,9 @@ export default function NewTrackModal({
   // but it should not be what happens by itself.
   const [color, setColor] = useState(() => firstFreeColor(takenColors));
   const [startDate, setStartDate] = useState(todayYMD());
+  // Pre-selected rather than empty: every template is a valid answer, so the
+  // dialog opens with one chosen and "Create track" always does something.
+  const [templateId, setTemplateId] = useState(TEMPLATE_LIST[0].id);
   const [endDate, setEndDate] = useState("");
 
   const create = (templateId: string) => {
@@ -86,7 +89,7 @@ export default function NewTrackModal({
         </button>
 
         <div>
-          <span className="type-caption bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold uppercase font-mono tracking-[0.05em]">
+          <span className="type-caption bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold font-mono">
             New track
           </span>
           <h2 className="type-title font-bold text-foreground mt-2">One goal, one track</h2>
@@ -138,26 +141,58 @@ export default function NewTrackModal({
         <div className="flex flex-col gap-2">
           <label className="type-label text-muted-foreground">What it is about</label>
           <p className="type-label text-subtle-foreground -mt-1">
-            This only decides which modules the track opens with. Every module stays available to
-            every track, so nothing is locked away by choosing here.
+            This decides which modules the track opens with. Every module stays available to every
+            track, so you can add or close any of them later.
           </p>
-          {TEMPLATE_LIST.map((template) => (
-            <button
-              key={template.id}
-              onClick={() => create(template.id)}
-              className="flex items-start gap-3 rounded-md border border-card-border bg-transparent px-3 py-2.5 text-left cursor-pointer transition-colors hover:bg-surface-hover"
-            >
-              {/* The chosen colour, not the template's — these rows are the
-                  create button, and they should show what is about to be
-                  made. */}
-              <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: color }} />
-              <span className="flex flex-col gap-0.5">
-                <span className="type-body font-semibold text-foreground">{template.label}</span>
-                <span className="type-label text-muted-foreground">{template.description}</span>
-              </span>
-            </button>
-          ))}
+          {/* A choice, not a commit. These four rows used to *be* the submit:
+              clicking one called `create()` and closed the dialog, directly
+              under a sentence promising the choice was low-stakes and
+              reversible. Reading what "Work" sets up created a track, and
+              there was no moment to check the name and the dates first.
+              Now they select, and the button below commits. */}
+          <div role="radiogroup" aria-label="What this track is about" className="flex flex-col gap-2">
+            {TEMPLATE_LIST.map((template) => {
+              const picked = template.id === templateId;
+              return (
+                <button
+                  key={template.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={picked}
+                  onClick={() => setTemplateId(template.id)}
+                  className={`tap-44 flex items-start gap-3 rounded-md border bg-transparent px-3 py-2.5 text-left cursor-pointer transition-colors ${
+                    picked
+                      ? "border-accent bg-[color-mix(in_srgb,var(--accent)_7%,transparent)]"
+                      : "border-card-border hover:bg-surface-hover"
+                  }`}
+                >
+                  {/* The chosen colour, not the template's — this is what is
+                      about to be made rather than what the template would
+                      have picked. Hollow until selected, so the row reads as
+                      an option before it reads as the answer. */}
+                  <span
+                    className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full border-2"
+                    style={{ borderColor: color, backgroundColor: picked ? color : "transparent" }}
+                  />
+                  <span className="flex flex-col gap-0.5">
+                    <span className="type-body font-semibold text-foreground">{template.label}</span>
+                    <span className="type-label text-muted-foreground">{template.description}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
+      </div>
+
+      {/* The committing action, where a dialog's committing action goes. */}
+      <div className="flex items-center justify-end gap-2 border-t border-card-border pt-4">
+        <button onClick={dismiss} className="btn">
+          Cancel
+        </button>
+        <button onClick={() => create(templateId)} className="btn btn-solid">
+          Create track
+        </button>
       </div>
     </div>
   );

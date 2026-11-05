@@ -41,6 +41,7 @@ import { Refreshable } from "../components/Refreshable";
 import { RhythmCalendar } from "../components/RhythmCalendar";
 import { Tappable } from "../components/Tappable";
 import { LIMITS } from "@shared/limits";
+import { NoTrack } from "../components/NoTrack";
 
 const WEEK = DAYS_SHORT.slice(1).concat(DAYS_SHORT[0]); // Mon..Sun
 
@@ -104,11 +105,7 @@ export default function RhythmScreen() {
   );
 
   if (!track) {
-    return (
-      <View style={[styles.screen, styles.centered]}>
-        <Text style={styles.muted}>No track open.</Text>
-      </View>
-    );
+    return <NoTrack title="No track yet" hint="A weekly rhythm is what a track does on each day of the week. Make a track and you can set one." />;
   }
 
   const schedule = track.weekSchedule ?? [];
@@ -179,11 +176,14 @@ export default function RhythmScreen() {
               accessibilityLabel={`Name of ${type.label}`}
             />
             <View style={styles.swatches}>
-              {SWATCHES.map((colour) => (
+              {SWATCHES.map((colour, index) => (
                 <Tappable
                   key={colour}
                   accessibilityRole="button"
-                  accessibilityLabel={`Colour ${type.label} ${colour}`}
+                  // Not the hex. A screen reader announcing "Colour Deep
+                  // work #0ea5e9" is worse than one announcing nothing; the
+                  // position in the row is what identifies the swatch.
+                  accessibilityLabel={`Colour ${index + 1} for ${type.label}`}
                   accessibilityState={{ selected: type.color === colour }}
                   onPress={() => changePool((pool) => recolorFocusType(pool, key, colour))}
                   style={[

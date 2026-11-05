@@ -30,6 +30,7 @@ import { Ring } from "../../components/Ring";
 import { StatTile } from "../../components/StatTile";
 import { Tappable } from "../../components/Tappable";
 import { EmptyState } from "../../components/EmptyState";
+import { NoTrack } from "../../components/NoTrack";
 
 export default function PhasesScreen() {
   // All tracks is the same tab, read-only, with every track folded in.
@@ -57,11 +58,7 @@ export default function PhasesScreen() {
   );
 
   if (!track || !timeline) {
-    return (
-      <View style={[styles.screen, styles.centered]}>
-        <Text style={styles.muted}>No track open.</Text>
-      </View>
-    );
+    return <NoTrack title="No track yet" hint="A track is one goal with a start, a horizon and the phases in between. Make one and the plan appears here." />;
   }
 
   return (
@@ -144,9 +141,16 @@ export default function PhasesScreen() {
               stops meaning anything and is not made. */}
           {!overrun && (
             <Text style={styles.muted}>
-              {progress.paceDelta >= 0
-                ? `${Math.round(progress.paceDelta)} points ahead of the calendar.`
-                : `${Math.abs(Math.round(progress.paceDelta))} points behind the calendar.`}
+              {/* Singular when it is one. This read "1 points behind the
+                  calendar" on the sentence that carries the most weight on
+                  the screen. */}
+              {(() => {
+                const points = Math.abs(Math.round(progress.paceDelta));
+                const unit = points === 1 ? "point" : "points";
+                return progress.paceDelta >= 0
+                  ? `${points} ${unit} ahead of the calendar.`
+                  : `${points} ${unit} behind the calendar.`;
+              })()}
             </Text>
           )}
           {progress.breakdown

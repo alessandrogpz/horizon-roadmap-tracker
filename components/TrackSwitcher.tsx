@@ -306,7 +306,7 @@ export default function TrackSwitcher({
             >
               <Layers size={13} strokeWidth={2.5} className="shrink-0" />
               <span className="flex-1">All tracks</span>
-              <span className="inline-flex items-center gap-1 type-micro font-semibold uppercase tracking-[0.05em] text-subtle-foreground">
+              <span className="inline-flex items-center gap-1 type-micro font-semibold text-subtle-foreground">
                 <Lock size={9} strokeWidth={2.5} />
                 Read only
               </span>

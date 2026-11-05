@@ -70,7 +70,7 @@ export default function MasterStats({ tracks }: { tracks: TrackState[] }) {
       <div className="flex min-w-[200px] flex-1 items-center gap-2.5 rounded-[10px] border border-card-border bg-card/60 px-4 py-3">
         <Layers size={18} strokeWidth={2} className="shrink-0 text-muted-foreground" />
         <div className="flex flex-1 flex-col gap-1.5">
-          <span className="flex flex-wrap items-baseline gap-x-1.5 type-micro font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          <span className="flex flex-wrap items-baseline gap-x-1.5 type-micro font-semibold text-muted-foreground">
             Work done
             <span className="font-normal normal-case tracking-normal text-subtle-foreground">{pace}</span>
           </span>
@@ -92,7 +92,7 @@ function Tile({ label, icon, children }: { label: string; icon?: React.ReactNode
     <div className="flex items-center gap-3 rounded-[10px] border border-card-border bg-card/60 px-4 py-3">
       {icon}
       <div className="flex flex-col">
-        <span className="type-micro font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</span>
+        <span className="type-micro font-semibold text-muted-foreground">{label}</span>
         {children}
       </div>
     </div>
