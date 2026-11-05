@@ -686,15 +686,17 @@ export default function MaterialsTracker({
         <div className={`notes-drawer ${activeNotesId ? "open" : ""}`}>
         <div className="notes-drawer-header">
           <div className="flex flex-col gap-1 min-w-0 flex-1 pr-4">
-            <span className="text-[0.65rem] text-accent uppercase tracking-[0.05em] font-mono font-semibold">
-              Study Notes
-            </span>
+            {/* The title leads; what the drawer is goes under it. This was a
+                tracked uppercase "STUDY NOTES" sitting above the heading — a
+                label over a heading, which is the one device the heading can
+                always carry itself. */}
             <h3
               className="text-base font-semibold text-foreground m-0 overflow-hidden text-ellipsis whitespace-nowrap"
               title={activeNotesTitle}
             >
               {activeNotesTitle}
             </h3>
+            <span className="text-[0.75rem] text-muted-foreground">Study notes</span>
           </div>
           <div className="flex items-center gap-4 shrink-0">
             <span className={`text-[0.7rem] font-mono inline-flex items-center gap-1 ${notesStatus === "error" ? "text-danger" : "text-muted-foreground"}`}>

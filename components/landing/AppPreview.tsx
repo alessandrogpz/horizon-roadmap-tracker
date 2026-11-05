@@ -214,7 +214,7 @@ export default function AppPreview() {
                 metric.icon
               )}
               <span className="flex min-w-0 flex-col">
-                <span className="text-[0.55rem] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                <span className="text-[0.58rem] text-subtle-foreground">
                   {metric.label}
                 </span>
                 <span className="flex items-baseline gap-1">
@@ -265,7 +265,7 @@ export default function AppPreview() {
               {/* What today asks of you, which is the second half of the real
                   panel: the day, and its checklist under it. */}
               <div className="mt-1 flex flex-col gap-1 border-t border-card-border pt-1.5">
-                <span className="text-[0.5rem] font-bold uppercase tracking-[0.08em] text-accent">
+                <span className="text-[0.58rem] font-semibold text-accent">
                   {PREVIEW_WEEK[PREVIEW_TODAY_INDEX]} · {track.focus[PREVIEW_TODAY_INDEX]}
                 </span>
                 {[...track.deliverables, track.materials[0]].slice(0, 3).map((item, index) => (
@@ -392,7 +392,7 @@ function Panel({
     <div className="landing-mini-panel flex flex-col gap-1.5">
       <div className="flex items-center gap-1.5">
         <span className="text-accent">{icon}</span>
-        <span className="text-[0.6rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">{title}</span>
+        <span className="text-[0.68rem] font-semibold text-foreground">{title}</span>
         {trailing && <span className="ml-auto font-mono text-[0.58rem] text-accent">{trailing}</span>}
       </div>
       {children}

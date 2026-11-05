@@ -49,7 +49,7 @@ import { PanelCard } from "../../panels/PanelCard";
 import { PanelBoundary } from "../../components/PanelBoundary";
 import { SwipeRow } from "../../components/SwipeRow";
 import { settle, tap } from "../../feedback/haptics";
-import { PanelBody, PANEL_HREF, PANEL_ICON, tintFor } from "../../panels/registry";
+import { PanelBody, PANEL_HREF, PANEL_ICON } from "../../panels/registry";
 import { availablePanels, panelDefinition, setPanelHidden, visiblePanels } from "../../panels/layout";
 import { panelOrder, setPanelOrder } from "../../storage/deviceSettings";
 import { RADIUS, SPACING, TYPE, type Palette } from "../../theme";
@@ -278,6 +278,7 @@ export default function SpaceScreen() {
         <Text style={styles.barTitle}>{arranging ? "Drag to reorder" : "My space"}</Text>
       </View>
 
+
       {arranging ? (
         <>
           <View style={{ height: shown.length * ROW }}>
@@ -308,13 +309,11 @@ export default function SpaceScreen() {
                   onPress={() => show(panel.id)}
                   style={styles.addRow}
                 >
-                  <View style={[styles.addIcon, { backgroundColor: `${tintFor(panel.id) ?? palette.accent}22` }]}>
-                    <Ionicons
-                      name={PANEL_ICON[panel.id] ?? "add"}
-                      size={15}
-                      color={tintFor(panel.id) ?? palette.accent}
-                    />
-                  </View>
+                  <Ionicons
+                    name={PANEL_ICON[panel.id] ?? "add"}
+                    size={16}
+                    color={palette.mutedForeground}
+                  />
                   <View style={styles.addText}>
                     <Text style={styles.addLabel}>{panel.label}</Text>
                     <Text style={styles.muted}>{panel.hint}</Text>
@@ -584,7 +583,6 @@ function DraggablePanel({
         <PanelCard
           title={definition.label}
           icon={PANEL_ICON[id] ?? "square-outline"}
-          accent={tintFor(id)}
           // Only for the chevron and the screen-reader action; the tap
           // itself is handled by the gesture above.
           onOpen={PANEL_HREF[id] ? () => onOpen(id) : undefined}
@@ -763,9 +761,7 @@ function ArrangeRow({
         </View>
       </GestureDetector>
 
-      <View style={[styles.addIcon, { backgroundColor: `${tintFor(id) ?? palette.accent}22` }]}>
-        <Ionicons name={PANEL_ICON[id] ?? "square-outline"} size={15} color={tintFor(id) ?? palette.accent} />
-      </View>
+      <Ionicons name={PANEL_ICON[id] ?? "square-outline"} size={16} color={palette.mutedForeground} />
       <Text style={styles.addLabel} numberOfLines={1}>
         {definition.label}
       </Text>
@@ -860,7 +856,6 @@ function makeStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
     },
-    addIcon: { width: 26, height: 26, borderRadius: 8, alignItems: "center", justifyContent: "center" },
     addText: { flex: 1, gap: 1 },
     addLabel: { flex: 1, color: palette.foreground, ...TYPE.body, fontWeight: "600" },
     muted: { color: palette.mutedForeground, ...TYPE.caption, lineHeight: 17 },

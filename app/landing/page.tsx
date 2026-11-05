@@ -236,7 +236,6 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 export default function LandingPage() {
   return (
     <div className="relative min-h-screen overflow-x-hidden">
-      <div className="app-glow" />
       {/* Every in-page link rolls to where it points rather than snapping. */}
       <SmoothAnchors />
 

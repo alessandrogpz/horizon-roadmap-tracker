@@ -35,7 +35,7 @@ export default function RootLayout({
       <body className={`${jetbrainsMono.variable} ${inter.variable} ${inter.className}`} suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         {children}
-        <span className="fixed bottom-2 right-2.5 text-[0.65rem] text-subtle-foreground font-mono pointer-events-none select-none z-10">
+        <span className="fixed bottom-4 right-4 text-[0.7rem] text-subtle-foreground font-mono pointer-events-none select-none z-10">
           v{packageJson.version}
         </span>
       </body>

@@ -319,7 +319,6 @@ export default function Dashboard() {
           a track wears its colour everywhere without a colour being threaded
           through every component. */}
       <TrackAccent color={track.meta.color} />
-      <div className="app-glow" aria-hidden="true" />
       <DndContext
         sensors={panelSensors}
         collisionDetection={closestCenter}
