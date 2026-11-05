@@ -52,6 +52,7 @@ import { firstFreeColor, TRACK_COLORS } from "@shared/trackColors";
 import { TrackHeatmap } from "../components/TrackHeatmap";
 import { Refreshable } from "../components/Refreshable";
 import { Tappable } from "../components/Tappable";
+import { LIMITS } from "@shared/limits";
 
 /** A card folded down to its header: a dot, a name, a line about its streak. */
 const ROW = 62;
@@ -357,6 +358,7 @@ export default function TracksScreen() {
           <Text style={styles.panelTitle}>New track</Text>
           <Text style={styles.fieldLabel}>Name</Text>
           <TextInput
+            maxLength={LIMITS.name}
             value={name}
             onChangeText={setName}
             placeholder="What is this track called?"
@@ -758,6 +760,7 @@ function TrackSettings({
       <Text style={styles.panelTitle}>Track settings</Text>
 
       <TextInput
+        maxLength={LIMITS.name}
         value={name}
         onChangeText={setName}
         placeholder="Track name"

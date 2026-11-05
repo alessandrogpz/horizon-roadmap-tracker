@@ -40,6 +40,7 @@ import { EditHeader, useEditMode } from "../components/EditToggle";
 import { Refreshable } from "../components/Refreshable";
 import { RhythmCalendar } from "../components/RhythmCalendar";
 import { Tappable } from "../components/Tappable";
+import { LIMITS } from "@shared/limits";
 
 const WEEK = DAYS_SHORT.slice(1).concat(DAYS_SHORT[0]); // Mon..Sun
 
@@ -171,6 +172,7 @@ export default function RhythmScreen() {
         {focusTypes.map(([key, type]) => (
           <View key={key} style={styles.itemRow}>
             <TextInput
+              maxLength={LIMITS.name}
               value={type.label}
               onChangeText={(label) => changePool((pool) => renameFocusType(pool, key, label))}
               style={[styles.input, { flex: 1 }]}
@@ -231,6 +233,7 @@ export default function RhythmScreen() {
         ))}
 
         <TextInput
+          maxLength={LIMITS.name}
           value={newType}
           onChangeText={setNewType}
           onSubmitEditing={() => {
@@ -260,6 +263,7 @@ export default function RhythmScreen() {
           <View style={styles.itemRow}>
             {editing ? (
               <TextInput
+                maxLength={LIMITS.name}
                 value={rotation.label}
                 onChangeText={(label) => editRotation(rotation.id, (r) => ({ ...r, label }))}
                 style={[styles.input, { flex: 1 }]}
@@ -412,6 +416,7 @@ export default function RhythmScreen() {
 
           {editing && (
           <TextInput
+            maxLength={LIMITS.title}
             value={newItem[rotation.id] ?? ""}
             onChangeText={(text) => setNewItem((prev) => ({ ...prev, [rotation.id]: text }))}
             onSubmitEditing={() => {

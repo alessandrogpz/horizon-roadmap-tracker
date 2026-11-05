@@ -8,6 +8,7 @@ import type { Material } from "@/lib/types";
 import { useGitStats } from "@/components/useGitStats";
 import { categoriesFor, MATERIAL_STATUSES, MATERIAL_TYPES, searchUrlFor } from "@/lib/materialOptions";
 import Portal from "@/components/Portal";
+import { LIMITS } from "@/lib/limits";
 
 interface MaterialsTrackerProps {
   materials: Material[];
@@ -22,6 +23,12 @@ interface MaterialsTrackerProps {
 /** Which category groups are folded shut. A per-device view preference, so it
  *  lives in localStorage rather than on the track (which syncs to Drive). */
 const COLLAPSED_KEY = "horizon-materials-collapsed";
+
+/** How many of a category's materials the panel shows before asking.
+ *  Twelve is roughly a screen of rows on a laptop — enough that the common
+ *  case never sees the control at all, few enough that a long reading list
+ *  cannot bury the panels under it. */
+const GROUP_PREVIEW = 12;
 
 function readCollapsedCategories(): string[] {
   if (typeof window === "undefined") return [];
@@ -74,6 +81,11 @@ export default function MaterialsTracker({
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(readCollapsedCategories()));
   // The archived group starts folded: it's history, not today's reading list.
   const [showArchived, setShowArchived] = useState(false);
+  // Categories the reader has asked to see in full. A reading list is the one
+  // panel here with no natural ceiling — sixty books in one category made this
+  // panel 14,905 pixels tall, twenty screens of it, with seven other panels
+  // stranded underneath. The first dozen is the list; the rest is on request.
+  const [shownInFull, setShownInFull] = useState<Set<string>>(() => new Set());
 
   const activeMaterials = materials.filter(mat => !mat.archived);
   const archivedMaterials = materials.filter(mat => mat.archived);
@@ -278,6 +290,7 @@ export default function MaterialsTracker({
             <label className={labelClass}>Title</label>
             <input
               type="text"
+              maxLength={LIMITS.title}
               required
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
@@ -288,6 +301,7 @@ export default function MaterialsTracker({
             <label className={labelClass}>Author</label>
             <input
               type="text"
+              maxLength={LIMITS.title}
               value={newAuthor}
               onChange={(e) => setNewAuthor(e.target.value)}
               placeholder="Optional"
@@ -325,6 +339,7 @@ export default function MaterialsTracker({
               <label className={labelClass}>Link (URL)</label>
               <input
                 type="text"
+                maxLength={LIMITS.url}
                 value={newLink}
                 onChange={(e) => setNewLink(e.target.value)}
                 placeholder="https://..."
@@ -335,6 +350,7 @@ export default function MaterialsTracker({
               <label className={labelClass}>Local Repo Path (Git Stats)</label>
               <input
                 type="text"
+                maxLength={LIMITS.url}
                 value={newLocalPath}
                 onChange={(e) => setNewLocalPath(e.target.value)}
                 placeholder="~/Documents/..."
@@ -347,9 +363,12 @@ export default function MaterialsTracker({
       )}
 
       <div className="flex flex-col gap-5">
-        {Object.entries(grouped).map(([category, items]) => {
+        {Object.entries(grouped).map(([category, allItems]) => {
           const isCollapsed = collapsed.has(category);
           const groupId = `materials-group-${category.replace(/\W+/g, "-").toLowerCase()}`;
+          const full = shownInFull.has(category);
+          const items = full ? allItems : allItems.slice(0, GROUP_PREVIEW);
+          const hidden = allItems.length - items.length;
 
           return (
           <div key={category}>
@@ -367,7 +386,7 @@ export default function MaterialsTracker({
                   className={`shrink-0 transition-transform duration-200 ${isCollapsed ? "-rotate-90" : ""}`}
                 />
                 <span>{category}</span>
-                <span className="text-muted-foreground font-mono font-normal">({items.length})</span>
+                <span className="text-muted-foreground font-mono font-normal">({allItems.length})</span>
               </button>
             </h3>
             <div
@@ -386,12 +405,13 @@ export default function MaterialsTracker({
                     >
                       <div>
                         <label className={labelClass}>Title</label>
-                        <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className={inputClass} />
+                        <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className={inputClass} maxLength={LIMITS.title} />
                       </div>
                       <div>
                         <label className={labelClass}>Author</label>
                         <input
                           type="text"
+                          maxLength={LIMITS.title}
                           value={editAuthor}
                           onChange={(e) => setEditAuthor(e.target.value)}
                           placeholder="Optional"
@@ -429,11 +449,11 @@ export default function MaterialsTracker({
                       <div className="flex gap-2 flex-wrap">
                         <div className="flex-[1_1_180px]">
                           <label className={labelClass}>Link (URL)</label>
-                          <input type="text" value={editLink} onChange={(e) => setEditLink(e.target.value)} className={inputClass} />
+                          <input type="text" value={editLink} onChange={(e) => setEditLink(e.target.value)} className={inputClass} maxLength={LIMITS.url} />
                         </div>
                         <div className="flex-[1_1_180px]">
                           <label className={labelClass}>Local Repo Path</label>
-                          <input type="text" value={editLocalPath} onChange={(e) => setEditLocalPath(e.target.value)} className={inputClass} />
+                          <input type="text" value={editLocalPath} onChange={(e) => setEditLocalPath(e.target.value)} className={inputClass} maxLength={LIMITS.url} />
                         </div>
                       </div>
 
@@ -455,6 +475,7 @@ export default function MaterialsTracker({
                             <span className={metricLabelClass}>SUBJECT</span>
                             <input
                               type="text"
+                              maxLength={LIMITS.title}
                               value={editCurrentSubject}
                               onChange={(e) => setEditCurrentSubject(e.target.value)}
                               className="flex-1 min-w-0 p-1 rounded bg-input-bg border border-card-border text-foreground font-[inherit] text-[0.85rem] outline-none"
@@ -498,18 +519,24 @@ export default function MaterialsTracker({
                     className={`flex flex-col gap-2 px-4 py-3 bg-transparent border-l-[3px] ${idx === items.length - 1 ? "" : "border-b border-card-border"}`}
                     style={{ borderLeftColor: getLeftBorderColor(mat.status) }}
                   >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1 min-w-0">
+                    {/* Wraps on a narrow panel. The four controls beside the
+                        title are `shrink-0` and come to about 190 points
+                        together, which on a 288-point panel left the title
+                        column nothing at all: it collapsed to zero width and
+                        the row showed its buttons and no name. Given room they
+                        still share a line; without it they take their own. */}
+                    <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+                      <div className="min-w-0 flex-1 basis-[11rem]">
                         {mat.link ? (
                           <div
                             onClick={() => onOpenLink(mat.link)}
-                            className="link-title font-semibold text-[0.95rem] inline-block"
-                            title={`Open ${mat.link}`}
+                            className="link-title line-clamp-2 font-semibold text-[0.95rem]"
+                            title={`${mat.title} — opens ${mat.link}`}
                           >
                             {mat.title}
                           </div>
                         ) : (
-                          <div className="font-semibold text-[0.95rem] text-foreground">
+                          <div className="line-clamp-2 font-semibold text-[0.95rem] text-foreground" title={mat.title}>
                             {mat.title}
                           </div>
                         )}
@@ -552,7 +579,7 @@ export default function MaterialsTracker({
                           </div>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 ml-4 shrink-0">
+                      <div className="flex flex-wrap items-center gap-2">
                         <button
                           onClick={() => openNotes(mat.id, mat.title)}
                           className="bg-transparent border-none text-accent cursor-pointer text-[0.7rem] px-1 py-px font-[inherit] font-medium"
@@ -608,6 +635,18 @@ export default function MaterialsTracker({
                   </div>
                 );
               })}
+
+              {/* The rest of a long category, one click away. Inside the list
+                  rather than under it, so it reads as the list continuing. */}
+              {hidden > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShownInFull(prev => new Set(prev).add(category))}
+                  className="w-full cursor-pointer border-none bg-transparent px-3 py-2.5 text-left type-label text-muted-foreground transition-colors hover:bg-surface-hover hover:text-foreground"
+                >
+                  Show {hidden} more in {category}
+                </button>
+              )}
             </div>
           </div>
           );
@@ -642,7 +681,7 @@ export default function MaterialsTracker({
                   className={`flex justify-between items-start gap-4 px-4 py-3 ${idx === archivedMaterials.length - 1 ? "" : "border-b border-card-border"}`}
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-[0.95rem] text-muted-foreground">{mat.title}</div>
+                    <div className="line-clamp-2 font-semibold text-[0.95rem] text-muted-foreground" title={mat.title}>{mat.title}</div>
                     {mat.author && (
                       <div className="text-[0.8rem] text-muted-foreground mt-0.5">{mat.author}</div>
                     )}
@@ -734,6 +773,7 @@ export default function MaterialsTracker({
         <div className="notes-content-area">
           {notesTab === "write" ? (
             <textarea
+            maxLength={LIMITS.document}
               aria-label="Material notes, in Markdown"
               className="notes-editor-textarea"
               placeholder="Write your study notes here using Markdown...&#10;&#10;Use # for title&#10;Use ## for sections&#10;Use - for list items&#10;Use `code` for inline code"

@@ -24,7 +24,7 @@ export default function PhaseTracker({ phases, currentPhase, startDate, roadmapE
           <Milestone size={14} strokeWidth={2.5} className="section-icon" />
           Phases
         </h2>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {/* The timeline is a summary of the track's full roadmap doc, so the
               way through to it belongs here as well as in the header menu. */}
           {roadmapEnabled ? (
@@ -49,6 +49,18 @@ export default function PhaseTracker({ phases, currentPhase, startDate, roadmapE
           </button>
         </div>
       </div>
+      {/* A track with no phases is a real state — every phase can be deleted,
+          and a track started from the blank template has none to begin with —
+          and this panel used to answer it with its header, its two buttons and
+          a 2px gradient line hanging in the dark. Say what the panel is for
+          and name the control that fills it. */}
+      {phases.length === 0 ? (
+        <p className="type-body m-0 py-2 text-muted-foreground">
+          No phases yet. A phase is a stretch of this track with its own focus
+          and its own deadline — add the first one above, or write the whole
+          thing at once in the full roadmap.
+        </p>
+      ) : (
       <div className="relative flex flex-col gap-5">
 
         {/* Timeline Line */}
@@ -103,6 +115,7 @@ export default function PhaseTracker({ phases, currentPhase, startDate, roadmapE
           );
         })}
       </div>
+      )}
     </div>
   );
 }

@@ -7,6 +7,54 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.113.0] - 2026-11-05
+
+### Fixed
+- **A track name could break the whole page.** Seeded with a 196-character name that had no spaces
+  in it — a long German compound, a pasted URL, a file path — the dashboard measured 1,662 pixels
+  wide inside a 320-pixel window and scrolled sideways, the whole way, on every screen. `body` now
+  carries `overflow-wrap: break-word`, and the one place where that is not enough — a person's text
+  inside a flex row, where the longest unbreakable word becomes the row's minimum width — has a
+  `.user-text` class that drops that floor as well. Measured after: scroll width 320 at a 320-pixel
+  viewport, nothing spilling.
+- Six control clusters could not wrap: the week's `‹ Week 1 ›`, the phases header, the progress
+  switch, the timer's `-5m / +5m`, a material's four buttons, the consistency key. At 200% text on
+  a narrow screen they ran from 239 to 393 points wide inside a 288-point panel. With text at 200%,
+  elements overflowing went from 24 to 8 at 320 points, 3 at 390 and 1 at 463.
+- A material's row collapsed its own title to zero width once the title could be clipped: the four
+  buttons beside it are `shrink-0` and come to about 190 points, which on a 288-point panel left
+  nothing. The row wraps now, so the buttons take their own line rather than the name losing its.
+- **The reading list had no ceiling.** Sixty materials in one category made that panel 14,905 pixels
+  tall — twenty screens of it, with seven other panels stranded underneath. A category shows twelve
+  and offers the rest: 1,494 pixels for the same data.
+- List titles clamp to two lines with the full text in the tooltip, in materials, deliverables,
+  phase tasks, the day editor and the stat breakdown. A single 200-character title was rendering
+  4,468 pixels tall on its own.
+
+### Changed
+- **Nothing capped what a person could type.** One `maxLength` existed in the whole product, on the
+  insights search box; the other 65 fields — 37 on the web, 29 on the phone — took whatever
+  arrived. `lib/limits.ts` now holds one set of ceilings that both apps import, because a value one
+  app accepts and the other truncates is a sync conflict with no resolution. They are deliberately
+  generous: a name is 80, a title 200, a description 1,000, a document 200,000. Wrapping is the
+  second line of defence; this is the first.
+- The phases panel and the phone's plan screen had no empty state. A track can lose every phase, and
+  one started from the blank template never had any, and the panel answered that with its header,
+  its two buttons and a 2px gradient line hanging in the dark. Both say what a phase is for and
+  offer the control that makes one. The phone's progress screen gets the same treatment without a
+  button, because progress is recorded elsewhere and a button here would lead away.
+
+### Notes
+- Evidence is a seeded workspace: a 196-character unbroken name, 60 materials, 40 tasks, titles in
+  Chinese, Arabic and emoji, and empty days among full ones, measured at 320, 390 and 463 points,
+  each at 100% and 200% text. The phone app was measured at 280 points, where it holds: scroll
+  width 280, nothing spilling.
+- The informational pages were already clean and needed nothing: privacy and security measure zero
+  overflowing elements at 320 points at both 100% and 200% text, and the landing page never exceeds
+  the viewport either.
+- Not covered: right-to-left *layout*. Arabic text renders correctly and is not clipped, but the
+  app does not mirror for `dir="rtl"` and there is no translation layer to drive it.
+
 ## [0.112.0] - 2026-11-05
 
 ### Changed

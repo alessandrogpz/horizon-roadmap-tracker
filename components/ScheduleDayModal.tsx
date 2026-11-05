@@ -18,6 +18,7 @@ import {
 import { useWorkspaceActions } from "@/components/workspace/WorkspaceProvider";
 import FocusTypeEditor from "@/components/shared/FocusTypeEditor";
 import { useDismiss } from "@/components/useDismiss";
+import { LIMITS } from "@/lib/limits";
 
 interface ScheduleDayModalProps {
   day: WeekDay;
@@ -198,7 +199,10 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
                               toggle(item.kind, { id: item.id, title: item.title, description: item.description }, e.target.checked, false)
                             }
                           />
-                          <span className={`flex-1 text-[0.85rem] font-semibold ${completed ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                          <span
+                            title={item.title}
+                            className={`min-w-0 flex-1 line-clamp-2 text-[0.85rem] font-semibold ${completed ? "text-muted-foreground line-through" : "text-foreground"}`}
+                          >
                             {item.title}
                           </span>
                           <span className="text-[0.65rem] text-accent/70 uppercase tracking-[0.05em] shrink-0">Rotation</span>
@@ -226,6 +230,7 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
                         />
                         <input
                           type="text"
+                          maxLength={LIMITS.title}
                           value={item.title}
                           onChange={(e) =>
                             applyChange((previous) =>
@@ -257,6 +262,7 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
 
                       <input
                         type="text"
+                        maxLength={LIMITS.description}
                         value={item.description || ""}
                         onChange={(e) =>
                           applyChange((previous) =>
@@ -275,6 +281,7 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
                 <div className="flex flex-col gap-1.5 bg-surface-muted p-[0.6rem] rounded-md border border-dashed border-card-border">
                   <input
                     type="text"
+                    maxLength={LIMITS.title}
                     value={newItem.title}
                     onChange={(e) => setNewItem((prev) => ({ ...prev, title: e.target.value }))}
                     onKeyDown={(e) => e.key === "Enter" && addItem()}
@@ -284,6 +291,7 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
                   <div className="flex gap-2">
                     <input
                       type="text"
+                      maxLength={LIMITS.description}
                       value={newItem.description}
                       onChange={(e) => setNewItem((prev) => ({ ...prev, description: e.target.value }))}
                       onKeyDown={(e) => e.key === "Enter" && addItem()}

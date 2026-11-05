@@ -229,6 +229,31 @@ body {
   font-family: var(--font-sans);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  /* A word too long for its line breaks instead of leaving the box. The
+     default is to let it hang out, which is how a track named with 196
+     characters and no spaces in it — a long German compound, a pasted URL, a
+     file path — made the dashboard 1,662 pixels wide inside a 320-pixel
+     window and set the whole page scrolling sideways on every screen. */
+  overflow-wrap: break-word;
+}
+
+/* Text somebody typed, sitting in a flex row.
+   `break-word` above makes the word wrap, but it deliberately does not change
+   what the layout thinks the text's *minimum* width is — that stays the
+   longest unbreakable word, and a flex item's `min-width: auto` resolves to
+   exactly that. So the row still refuses to shrink and still pushes the page
+   out; it just wraps once it is already too late. This is the other half:
+   `min-width: 0` lets the item shrink, and `anywhere` drops the intrinsic
+   floor to a single character so nothing holds the row open.
+
+   Deliberately *not* on the body. `anywhere` applied everywhere breaks the
+   product's own headings mid-word — "Weekly Overvie/w" — because once the
+   minimum is one character, flexbox stops reserving room for a title. Short
+   labels the product wrote are known-length and keep the normal rules; this
+   is only for the strings whose length nobody controls. */
+.user-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 /* ===========================================================================
