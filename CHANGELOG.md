@@ -7,6 +7,39 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.109.0] - 2026-11-05
+
+### Changed
+- **The informational pages are on the product's type scale, so style changes reach them.** This was
+  the real complaint behind "the landing page should work side by side with the product", and the
+  cause turned out to be worse than drift: the ten-role scale added in 0.105.0 was being used by
+  **one file out of fifty-nine**. Everything else, the app included, carried its own hard-coded
+  `text-[0.85rem]`. Colour propagated because colours are tokens; type never could, because nothing
+  read the tokens.
+- The landing page's 81 literal font sizes, the shared document page's 12 and the security page's 2
+  are now `type-*` roles. Change `--text-body` and the dashboard, the landing page, the privacy page
+  and the security page all move.
+- Two roles were added to the scale for the pages that are read rather than worked in: `--text-hero`
+  and `--text-section`, both fluid, because a headline sized for 1440 is wrong at every other width.
+  `--text-prose` finally got the class it never had.
+- **Eleven eyebrows are gone from the landing page** — the small tracked-uppercase label above each
+  section heading — along with the `SectionLabel` component that made them. Every heading under them
+  turned out to say the whole thing already: "One colour each" sat above "Every track in its own
+  colour, on one year."
+- The remaining shouted labels on the landing page and in the document pages' sidebars are sentence
+  case, and the accent-coloured word inside the "a to-do list tells you what's left" headline is set
+  in one colour like the rest of it.
+- The landing page's app, phone and weekly-plan mock-ups are marked `data-ui`: they are scaled
+  pictures of the real interface, so 9px type and 2px radii inside them are correct and the design
+  inspector should read them by the app's rules rather than the page's.
+
+### Notes
+- The privacy and security pages now measure clean apart from the deliberate typeface choice.
+- The landing hero still sets in three lines. Its column is 388px against a 54px headline, so two
+  lines would need either shorter copy or a full-width hero — both are changes to the page's design
+  rather than to its consistency, so they are left for a decision rather than taken quietly. The
+  accent phrase in that headline is kept for the same reason: it is the page's signature, not drift.
+
 ## [0.108.0] - 2026-11-05
 
 ### Changed
