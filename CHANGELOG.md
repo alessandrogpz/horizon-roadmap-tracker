@@ -7,6 +7,48 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.108.0] - 2026-11-05
+
+### Changed
+- **The dashboard stopped looking like every dashboard.** Measured against the design skill's
+  app-screen rules, the screen scored 6 failures, and the list read like an inventory of the stock
+  template: nineteen tiny tracked-uppercase labels, twenty text blocks at 10px, nine panels each
+  casting a drop shadow, a decorative radial gradient, `PHASE 01 / 02 / 03`, and a row of four
+  bordered metric tiles. None of it was wrong. None of it had been decided.
+- **Panel headings are sentence case**, set in one place — `.section-title`, which ten components
+  share. They were 0.8rem uppercase tracked at 0.06em; a panel called "Deliverables" is not clearer
+  shouted. This also put the website in step with the phone, which had been setting the same
+  headings in sentence case all along.
+- **The four metric tiles are type, not tiles.** Label in sentence case, figure at regular weight,
+  sitting on the page instead of in a bordered card, each still opening its detail panel. The
+  circular progress ring went with them; a single measure under them says the same thing at full
+  width.
+- **Panels no longer float.** The drop shadow is gone from every panel at rest: a panel is told from
+  the ground by one tone step and a 1px border, which is what the surfaces ladder was always for.
+  Dialogs, menus and the notes drawer still float, because they genuinely do.
+- **`PHASE 01` is gone.** The dot and the line beside a phase already give its order, and the active
+  one now says "You are here" rather than relying on a number's colour.
+- The decorative radial glow behind the app and both document pages is removed, the version badge
+  sits inside the margin instead of 10px from the screen edge, and the weekly plan's day names,
+  dates and focus badges are sentence case at a size that clears 11px.
+- **On the phone, the panel icons lost their coloured squares.** Each panel had an icon in a rounded
+  tile filled with its own hue — sky, violet, green, amber, red, teal. Beyond being the stock
+  dashboard device, those six hues were chrome competing with the one colour in this app that
+  carries meaning: the open track's. The icons are plain glyphs in muted ink now, matching the
+  website's, and the meters and figures that used those hues take the track's accent instead.
+- The landing page's app and phone mock-ups were restyled with everything above, because they are
+  pictures of the product and had become pictures of a product that no longer exists.
+- Two label-above-a-heading eyebrows are gone — on the privacy and security pages, and over the
+  notes drawer's title, where "Study notes" now sits under the title as an ordinary line.
+
+### Notes
+- Three of the skill's findings are left standing deliberately. The dealt sheet wanted Instrument
+  Sans; Horizon keeps Inter, which is the documented way to treat an existing brand. The one
+  remaining "floating panel" is the notes drawer, which is an overlay. The "covered text" on the
+  timer is a false positive — nothing is above it, checked by hit-testing the element at its own
+  scroll position — as is the "dark panel borders" warning, which reads `rgba(255, 255, 255, 0.06)`
+  as pure black because it ignores alpha.
+
 ## [0.107.1] - 2026-11-04
 
 ### Security

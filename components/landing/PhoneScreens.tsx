@@ -93,7 +93,7 @@ function Tile({
 }) {
   return (
     <div className="flex flex-1 flex-col gap-1 rounded-lg border border-card-border bg-card px-2 py-2">
-      <span className="flex items-center gap-1 text-[0.5rem] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+      <span className="flex items-center gap-1 text-[0.56rem] font-semibold text-muted-foreground">
         <span className="track-ink" style={trackInkVariables(tint ?? ACCENT) as React.CSSProperties}>
           {icon}
         </span>
@@ -294,7 +294,7 @@ export function WorkoutScreen() {
 
       <div className="flex flex-col gap-2 rounded-xl border border-card-border bg-card p-2.5">
         <span className="text-[0.68rem] font-bold text-foreground">Bench press</span>
-        <div className="grid grid-cols-[22px_1fr_44px_38px_20px] gap-x-1.5 text-[0.48rem] font-bold uppercase tracking-[0.06em] text-subtle-foreground">
+        <div className="grid grid-cols-[22px_1fr_44px_38px_20px] gap-x-1.5 text-[0.52rem] font-semibold text-subtle-foreground">
           <span>Set</span>
           <span>Previous</span>
           <span className="text-center">kg</span>
