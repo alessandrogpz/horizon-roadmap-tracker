@@ -33,6 +33,7 @@ import { MAX_CONTENT } from "../../layout";
 import { usePalette } from "../../theme/ThemeProvider";
 import { Tappable } from "../../components/Tappable";
 import { EmptyState } from "../../components/EmptyState";
+import { NoTrack } from "../../components/NoTrack";
 
 const CELL = 26;
 const CELL_GAP = 4;
@@ -206,11 +207,7 @@ export default function ProgressScreen() {
   const titlesFor = useCallback((date: string) => history[date] ?? [], [history]);
 
   if (!track) {
-    return (
-      <View style={[styles.screen, styles.centered]}>
-        <Text style={styles.muted}>No track open.</Text>
-      </View>
-    );
+    return <NoTrack title="No track yet" hint="A track is one goal with a start and a horizon. Make one, tick something off, and the weeks fill in here." />;
   }
 
   const labels = weekStartsOn === "mon" ? WEEKDAYS_MON : WEEKDAYS_SUN;

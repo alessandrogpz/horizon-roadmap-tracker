@@ -48,7 +48,7 @@ function Figure({ value, unit, hint }: { value: React.ReactNode; unit?: string; 
 function Stat({ label, value, tone = "" }: { label: string; value: React.ReactNode; tone?: string }) {
   return (
     <div className="flex flex-col gap-1 rounded-[var(--radius-inner)] border border-card-border bg-surface-muted px-3 py-2.5">
-      <span className="type-micro uppercase tracking-[0.08em] text-muted-foreground font-semibold">
+      <span className="type-micro text-muted-foreground font-semibold">
         {label}
       </span>
       <span className={`type-subhead font-mono font-semibold ${tone || "text-foreground"}`}>
@@ -72,7 +72,7 @@ function Bar({ pct, tone = "bg-accent" }: { pct: number; tone?: string }) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-3">
-      <h4 className="m-0 border-b border-card-border pb-1 type-caption font-bold uppercase tracking-[0.08em] text-accent">
+      <h4 className="m-0 border-b border-card-border pb-1 type-caption font-bold text-accent">
         {title}
       </h4>
       {children}
@@ -286,12 +286,12 @@ function ProgressBody({ track }: { track: TrackState }) {
       />
 
       <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between type-caption uppercase tracking-[0.08em] text-muted-foreground">
+        <div className="flex items-center justify-between type-caption text-muted-foreground">
           <span className="font-semibold">Work completed</span>
           <span className="font-mono">{Math.round(stats.workPct)}%</span>
         </div>
         <Bar pct={stats.workPct} tone={ahead ? "bg-success" : "bg-accent"} />
-        <div className="flex items-center justify-between type-caption uppercase tracking-[0.08em] text-muted-foreground">
+        <div className="flex items-center justify-between type-caption text-muted-foreground">
           <span className="font-semibold">Time spent</span>
           <span className="font-mono">{Math.round(stats.timePct)}%</span>
         </div>

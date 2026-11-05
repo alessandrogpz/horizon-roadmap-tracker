@@ -13,12 +13,14 @@ import {
   type TodoItem,
 } from "@/lib/quickNotes";
 import { useQuickNote } from "@/components/useQuickNote";
+import { useUndo } from "@/components/UndoBar";
 import { LIMITS } from "@/lib/limits";
 
 /** A plain to-do list: add, tick, rename, delete. One per track; `noteId`
  *  comes from todoNoteId() in lib/quickNotes.ts. */
 export default function TodoList({ noteId }: { noteId: string }) {
   const { content, update } = useQuickNote(noteId, 0);
+  const { offer } = useUndo();
   const [draft, setDraft] = useState("");
   // Which item is open for editing, and what it currently says. Held by index
   // because that is what the list is keyed by; it is cleared on every commit,
@@ -120,9 +122,16 @@ export default function TodoList({ noteId }: { noteId: string }) {
                 </button>
               )}
               <button
-                onClick={() => commit(removeTodo(items, index))}
+                onClick={() => {
+                  // This list is a note, not part of the workspace, so the
+                  // way back is the note's previous text rather than a
+                  // workspace snapshot.
+                  const before = content ?? "";
+                  commit(removeTodo(items, index));
+                  offer("To-do removed", () => update(before));
+                }}
                 aria-label={`Delete "${item.text}"`}
-                className="shrink-0 bg-transparent border-none p-0.5 cursor-pointer text-muted-foreground opacity-40 group-hover:opacity-100 focus:opacity-100 hover:text-danger transition-opacity"
+                className="tap-44 shrink-0 bg-transparent border-none p-0.5 cursor-pointer text-muted-foreground opacity-40 group-hover:opacity-100 focus:opacity-100 hover:text-danger transition-opacity"
               >
                 <X size={13} strokeWidth={2.5} />
               </button>

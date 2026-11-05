@@ -33,6 +33,7 @@ import { usePalette } from "../theme/ThemeProvider";
 import { Refreshable } from "../components/Refreshable";
 import { Tappable } from "../components/Tappable";
 import { LIMITS } from "@shared/limits";
+import { NoTrack } from "../components/NoTrack";
 
 const SAVE_AFTER_MS = 600;
 
@@ -100,11 +101,7 @@ export default function NotesScreen() {
   );
 
   if (!track) {
-    return (
-      <View style={[styles.screen, styles.centered]}>
-        <Text style={styles.muted}>No track open.</Text>
-      </View>
-    );
+    return <NoTrack title="No track yet" hint="Notes belong to a track. Make one and this is where its notepad and to-dos live." />;
   }
 
   return (

@@ -55,7 +55,7 @@ export default function TrackSettingsModal({ name, color, startDate, totalDays, 
         </button>
 
         <div>
-          <span className="type-caption bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold uppercase font-mono tracking-[0.05em]">
+          <span className="type-caption bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold font-mono">
             Track Settings
           </span>
           <h2 className="type-title font-bold text-foreground mt-2">Edit Track</h2>

@@ -25,6 +25,7 @@ import { recommendedPhaseId, removePhase, reorderTracks, setCurrentPhase, setWee
 import { masterSources } from "@/lib/masterTrack";
 import { loadGoogleGisScript } from "@/lib/googleSignIn";
 import { useWorkspace, useWorkspaceActions } from "@/components/workspace/WorkspaceProvider";
+import { useUndoableEdit } from "@/components/UndoBar";
 import { useAccount } from "@/components/useAccount";
 import { panelFor, type PanelContext } from "@/components/panels/registry";
 import PanelErrorBoundary from "@/components/panels/PanelErrorBoundary";
@@ -59,6 +60,7 @@ function FullScreenMessage({ children }: { children: React.ReactNode }) {
 export default function Dashboard() {
   const { workspace, track, status, error, syncStatus, syncError } = useWorkspace();
   const { updateTrack, commitTrack, commitWorkspace, switchTrack, addTrack, syncAccount, reload } = useWorkspaceActions();
+  const undoable = useUndoableEdit();
   // Sync means the account, and only the account. Signed out, the app is
   // local-only — which is a complete way to use it, not a degraded one.
   const account = useAccount();
@@ -261,7 +263,7 @@ export default function Dashboard() {
   if (status === "error" || !track || !workspace) {
     return (
       <div className="flex h-screen flex-col items-center justify-center p-8 bg-background text-foreground font-mono text-center">
-        <h2 className="text-warning mb-4 uppercase tracking-[0.05em] type-display-sm font-bold">Initialization Failed</h2>
+        <h2 className="text-warning mb-4 type-display-sm font-bold">Initialization Failed</h2>
         <p className="text-muted-foreground type-subhead mb-6">Your local workspace could not be opened.</p>
         <div className="p-4 bg-card rounded-md border border-card-border text-danger mb-6 max-w-[500px] break-all">
           {error || "No data was returned by the local database."}
@@ -418,7 +420,9 @@ export default function Dashboard() {
             setSelectedPhase(phase);
             void commitTrack((prev) => updatePhase(prev, phase), "phase update");
           }}
-          onDelete={(id) => void commitTrack((prev) => removePhase(prev, id), "phase delete")}
+          onDelete={(id) =>
+            undoable("Phase removed", () => void commitTrack((prev) => removePhase(prev, id), "phase delete"))
+          }
           canDelete={track.phases.length > 1}
         />
       )}

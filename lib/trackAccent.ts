@@ -29,16 +29,24 @@ const ACCENT_WASH = 0.15;
 const INK_WASH = 0.2;
 
 /**
- * A little above the 4.5 that is actually required.
+ * Above the 4.5 that is actually required, because the surface this solves
+ * against is a model of the real one and not the real one.
  *
- * The washes above are the ones this code can see. The landing page stacks
- * more of them — a translucent panel over the page, a tinted column under a
- * chip — and each layer the model does not know about costs a few hundredths.
- * Solving for exactly 4.5 left chips landing at 4.47 on the screen. The margin
- * is cheaper than teaching this function about every surface in the app, and
- * it costs one step of darkness nobody will see.
+ * The washes below are the ones this code can see. The app stacks more of
+ * them, and each layer the model does not know about costs contrast. The
+ * weekly plan is the worst case and the reason this number moved twice: a
+ * focus tag sits on a 20% wash of its own colour, on a day card that is a 3%
+ * white wash, on a panel, on the page. The model composites that to #17171b
+ * plus one wash; the browser composites it to #153345. At 4.6 the model
+ * reported 4.77 and the screen measured 4.42 — a real failure that the model
+ * called a pass.
+ *
+ * So the margin absorbs the difference rather than this function learning
+ * every surface in the app, which would mean the colour maths knowing the
+ * layout. Verified by measuring the rendered page in both themes, not by
+ * trusting the model: see the day-card tags in the weekly plan.
  */
-const TARGET = 4.6;
+const TARGET = 5.2;
 
 /** The surface a colour has to be read on in a theme: its own wash, resolved
  *  against that theme's card. The raw colour is used for the wash because it
@@ -74,7 +82,12 @@ export function trackAccentVariables(color: string): Record<string, string> {
     variables[`--track-accent-${theme}`] = accent;
     variables[`--track-accent-hover-${theme}`] = hover;
     variables[`--track-accent-muted-${theme}`] = withAlpha(accent, 0.35);
-    variables[`--track-ring-${theme}`] = withAlpha(accent, 0.45);
+    // Full strength, not a wash. At 45% the ring composited to 2.25 against
+    // the page and 2.27 against a panel in dark, 2.04 in light — against the
+    // 3:1 that WCAG 2.2 SC 1.4.11 asks of a non-text indicator. The alpha
+    // was buying softness on the one element whose entire job is to be
+    // unmistakable. At full opacity the same hue reads 7.14 and 5.74.
+    variables[`--track-ring-${theme}`] = accent;
     // `transparent` as the empty step, because these four are only ever used
     // for days that have something on them; the empty one keeps its own
     // variable, set by the theme.

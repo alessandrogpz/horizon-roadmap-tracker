@@ -112,7 +112,7 @@ function CountUp({ value, className }: { value: number; className?: string }) {
 /**
  * One figure under the opening line.
  *
- * These were four bordered tiles with a tracked uppercase label and a bold
+ * These were four bordered tiles with a tracked label and a bold
  * mono number — the row every dashboard opens with, and in a product whose
  * first line already says the day, the rhythm and the streak, four boxes
  * repeating it was the loudest thing on the screen. They are type now: a
@@ -283,7 +283,7 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
       </div>
 
       {/* The track's standing: one measure, then the figures. These were four
-          bordered tiles with tracked uppercase labels and bold mono numbers —
+          bordered tiles with tracked labels and bold mono numbers —
           the row every dashboard opens with. They are type on the page now. */}
       {masterOpen && masterTracks ? (
         <MasterStats tracks={masterTracks} />
