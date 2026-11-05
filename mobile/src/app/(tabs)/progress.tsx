@@ -11,7 +11,7 @@
 // and a day worth tapping, because it can then say what was done on it.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View , type ScrollViewInstance } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Link } from "expo-router";
@@ -114,7 +114,8 @@ export default function ProgressScreen() {
 
   const weekStartsOn = getSettings().weekStartsOn;
   const [year, setYear] = useState(() => parseYMD(today).getFullYear());
-  const gridRef = useRef<ScrollView>(null);
+  // RN 0.88: the instance type, not the component type.
+  const gridRef = useRef<ScrollViewInstance>(null);
   /** Which year-and-shape the graph has already been dropped at the end of. */
   const landedOn = useRef<string | null>(null);
 
