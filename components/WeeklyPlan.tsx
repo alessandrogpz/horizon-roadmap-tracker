@@ -95,7 +95,7 @@ export default function WeeklyPlan({
         {/* Header */}
         <div className="flex flex-col gap-3 pb-3 border-b border-card-border">
           {/* Top Row: Title and Navigation */}
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             {/* h2, like every other panel heading: this sits directly under the
                 page's h1, and an h3 there skips a level for a screen reader
                 walking the outline. The size comes from the class, so nothing
@@ -106,7 +106,14 @@ export default function WeeklyPlan({
             </h2>
 
             {/* Week Navigation Pill */}
-            <div className="flex flex-wrap items-center justify-center gap-1.5 bg-surface-muted px-2 py-1 rounded-md border border-card-border">
+            {/* `flex-nowrap` and it means it. 0.113.0 put `flex-wrap` here to
+                stop this pill overflowing a 288-point panel at 200% text, and
+                bought that by breaking the ordinary case: at 390 points the
+                three glyphs of one pager landed on three different lines,
+                `‹` at y=239 and `›` at y=269 with the label between them. A
+                control does not get to come apart. The row above wraps
+                instead, so the pill moves under the heading as one piece. */}
+            <div className="flex flex-nowrap shrink-0 items-center justify-center gap-1.5 bg-surface-muted px-2 py-1 rounded-md border border-card-border">
               <WeekNavButton label="‹" onClick={() => setWeekOffset(weekOffset - 1)} />
               <span className="text-foreground font-medium type-body min-w-[60px] text-center font-mono whitespace-nowrap">
                 {weekLabel}
