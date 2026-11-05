@@ -107,7 +107,23 @@ function makeStyles(palette: Palette) {
 /** A labelled bar. Used by half the panels, and the reason none of them draw
  *  their own: a column of progress bars that disagree about height reads as
  *  noise. */
-export function Meter({ label, value, total, tint }: { label: string; value: number; total: number; tint?: string }) {
+export function Meter({
+  label,
+  value,
+  total,
+  tint,
+  /** Say it as a percentage rather than `value/total`. Two callers hand this
+   *  a percentage and a total of 100, so the card read "Time spent 1/100"
+   *  next to a "0%" figure — the same quantity written two ways, side by
+   *  side. */
+  asPercent = false,
+}: {
+  label: string;
+  value: number;
+  total: number;
+  tint?: string;
+  asPercent?: boolean;
+}) {
   const palette = usePalette();
   const pct = total > 0 ? Math.min(100, (value / total) * 100) : 0;
 
@@ -120,7 +136,7 @@ export function Meter({ label, value, total, tint }: { label: string; value: num
         <View style={[meterStyles.fill, { width: `${pct}%`, backgroundColor: tint ?? palette.accent }]} />
       </View>
       <Text style={[meterStyles.value, { color: palette.mutedForeground }]}>
-        {value}/{total}
+        {asPercent ? `${Math.round(pct)}%` : `${value}/${total}`}
       </Text>
     </View>
   );

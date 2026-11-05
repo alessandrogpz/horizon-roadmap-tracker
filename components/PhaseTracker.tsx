@@ -104,11 +104,16 @@ export default function PhaseTracker({ phases, currentPhase, startDate, roadmapE
 
               {/* Deadline, deliberately faint — reads as metadata under the
                   description rather than competing with it. Only shown when the
-                  phase actually carries a threshold. */}
+                  phase actually carries a threshold.
+
+                  `text-subtle-foreground`, not `muted/60` under a further
+                  `opacity-70`: that stacked to 0.42 of a token that is already
+                  quiet and measured 1.94:1. The subtle tier is the one picked
+                  and measured for secondary text. */}
               {phase.recommendedByDay !== undefined && startDate && (
-                <p className="type-caption font-mono text-muted-foreground/60 m-0">
+                <p className="type-caption font-mono text-subtle-foreground m-0">
                   Ends {formatDayMonthYear(dateForDay(startDate, phase.recommendedByDay))}
-                  <span className="opacity-70"> · day {phase.recommendedByDay}</span>
+                  <span> · day {phase.recommendedByDay}</span>
                 </p>
               )}
             </div>

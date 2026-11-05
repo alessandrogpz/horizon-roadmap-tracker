@@ -316,7 +316,7 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
         isToday
           ? "bg-accent/[0.06] border border-accent shadow-[0_0_12px_rgba(14,165,233,0.15)]"
           : "bg-input-bg border border-card-border"
-      } ${isFuture ? "opacity-50" : ""}`}
+      } ${isFuture ? "is-future" : ""}`}
     >
       {/* Which day this is, and what it is for.
           Stacked and centred while a day is a column; one line across the top

@@ -356,7 +356,7 @@ export default function StreakGraph({
 
             {/* Header */}
             <div>
-              <span className="type-caption bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold font-mono tracking-[0.05em]">
+              <span className="type-caption bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold font-mono">
                 Streak Achievement
               </span>
               <h3 className="type-heading font-bold text-foreground mt-2 mb-0">
