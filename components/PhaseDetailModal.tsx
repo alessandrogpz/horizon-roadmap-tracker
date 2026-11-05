@@ -29,12 +29,12 @@ function ReadOnlyDetailSection({ title, items }: { title: string; items: PhaseDe
   if (items.length === 0) return null;
   return (
     <div>
-      <h4 className="text-[0.8rem] text-accent uppercase tracking-[0.05em] mb-2 border-b border-card-border pb-1 font-bold">
+      <h4 className="type-label text-accent uppercase tracking-[0.05em] mb-2 border-b border-card-border pb-1 font-bold">
         {title}
       </h4>
       <div className="flex flex-col gap-3">
         {items.map((f, idx) => (
-          <div key={idx} className="text-[0.85rem] leading-normal">
+          <div key={idx} className="type-body">
             <div className="text-foreground font-semibold">{f.item}</div>
             {f.desc && <div className="text-muted-foreground pl-4">{f.desc}</div>}
           </div>
@@ -55,7 +55,7 @@ function EditableDetailSection({
 }) {
   return (
     <div>
-      <h4 className="text-[0.8rem] text-accent uppercase tracking-[0.05em] mb-2 border-b border-card-border pb-1 font-bold">
+      <h4 className="type-label text-accent uppercase tracking-[0.05em] mb-2 border-b border-card-border pb-1 font-bold">
         {title}
       </h4>
       <div className="flex flex-col gap-2">
@@ -72,7 +72,7 @@ function EditableDetailSection({
                   onChange(next);
                 }}
                 placeholder="Item"
-                className="flex-1 bg-transparent border-none text-foreground text-[0.85rem] font-semibold outline-none"
+                className="flex-1 bg-transparent border-none text-foreground type-body font-semibold outline-none"
               />
               <button
                 onClick={() => onChange(items.filter((_, i) => i !== idx))}
@@ -92,14 +92,14 @@ function EditableDetailSection({
                 onChange(next);
               }}
               placeholder="Description (optional)"
-              className="bg-transparent border-none border-t border-dashed border-card-border text-muted-foreground text-[0.8rem] outline-none pt-1"
+              className="bg-transparent border-none border-t border-dashed border-card-border text-muted-foreground type-label outline-none pt-1"
             />
           </div>
         ))}
       </div>
       <button
         onClick={() => onChange([...items, { item: "", desc: "" }])}
-        className="text-accent bg-transparent border-none cursor-pointer text-[0.8rem] font-mono underline mt-2"
+        className="text-accent bg-transparent border-none cursor-pointer type-label font-mono underline mt-2"
       >
         + Add
       </button>
@@ -143,7 +143,7 @@ function PhaseEndDateEditor({
 
   return (
     <div>
-      <h4 className="text-[0.8rem] text-accent uppercase tracking-[0.05em] mb-2 border-b border-card-border pb-1 font-bold">
+      <h4 className="type-label text-accent uppercase tracking-[0.05em] mb-2 border-b border-card-border pb-1 font-bold">
         Phase Ends
       </h4>
       <div className="flex items-center gap-3 flex-wrap">
@@ -151,21 +151,21 @@ function PhaseEndDateEditor({
           type="date"
           value={value}
           onChange={(e) => handle(e.target.value)}
-          className="bg-input-bg border border-card-border rounded-md px-2.5 py-1.5 text-foreground text-[0.85rem] outline-none"
+          className="bg-input-bg border border-card-border rounded-md px-2.5 py-1.5 text-foreground type-body outline-none"
         />
-        <span className="text-[0.8rem] font-mono text-muted-foreground">
+        <span className="type-label font-mono text-muted-foreground">
           {phase.recommendedByDay !== undefined ? `day ${phase.recommendedByDay}` : "no deadline set"}
         </span>
         {phase.recommendedByDay !== undefined && (
           <button
             onClick={() => handle("")}
-            className="text-[0.8rem] text-muted-foreground hover:text-danger bg-transparent border-none cursor-pointer underline"
+            className="type-label text-muted-foreground hover:text-danger bg-transparent border-none cursor-pointer underline"
           >
             Clear
           </button>
         )}
       </div>
-      <p className="text-[0.7rem] text-muted-foreground/70 mt-1.5 m-0">
+      <p className="type-caption text-muted-foreground/70 mt-1.5 m-0">
         Counted from the track start. The last phase with a date also sets the track&apos;s total length.
       </p>
     </div>
@@ -241,10 +241,10 @@ export default function PhaseDetailModal({
                   maxLength={LIMITS.name}
                   value={phase.title}
                   onChange={(e) => onChange({ ...phase, title: e.target.value })}
-                  className="flex-1 bg-transparent border-none text-[1.3rem] font-bold text-accent outline-none"
+                  className="flex-1 bg-transparent border-none type-title font-bold text-accent outline-none"
                 />
                 {isActive ? (
-                  <span className="text-xs bg-success/15 text-success px-2 py-0.5 rounded font-semibold shrink-0">
+                  <span className="type-caption bg-success/15 text-success px-2 py-0.5 rounded font-semibold shrink-0">
                     ACTIVE FOCUS
                   </span>
                 ) : null}
@@ -254,7 +254,7 @@ export default function PhaseDetailModal({
                 value={phase.description}
                 onChange={(e) => onChange({ ...phase, description: e.target.value })}
                 placeholder="What is this phase about?"
-                className="bg-transparent border-none border-b border-dashed border-card-border text-muted-foreground text-[0.95rem] outline-none pb-1.5 resize-none"
+                className="bg-transparent border-none border-b border-dashed border-card-border text-muted-foreground type-subhead outline-none pb-1.5 resize-none"
                 rows={2}
               />
             </div>
@@ -263,7 +263,7 @@ export default function PhaseDetailModal({
 
             {/* Tasks (editing) */}
             <div>
-              <h4 className="text-[0.8rem] text-accent uppercase tracking-[0.05em] mb-2 border-b border-card-border pb-1 font-bold">
+              <h4 className="type-label text-accent uppercase tracking-[0.05em] mb-2 border-b border-card-border pb-1 font-bold">
                 Tasks
               </h4>
               <div className="flex flex-col gap-2">
@@ -280,7 +280,7 @@ export default function PhaseDetailModal({
                       maxLength={LIMITS.title}
                       value={task.title}
                       onChange={(e) => updateTask(task.id, { title: e.target.value })}
-                      className="flex-1 bg-transparent border-none text-foreground text-[0.85rem] outline-none"
+                      className="flex-1 bg-transparent border-none text-foreground type-body outline-none"
                     />
                     <button onClick={() => removeTask(task.id)} className="flex items-center bg-transparent border-none text-danger cursor-pointer" aria-label="Remove task">
                       <X size={14} strokeWidth={2} />
@@ -298,7 +298,7 @@ export default function PhaseDetailModal({
                     e.currentTarget.value = "";
                   }
                 }}
-                className="mt-2 w-full bg-input-bg border border-dashed border-card-border rounded-md px-2.5 py-1.5 text-foreground text-[0.85rem] outline-none"
+                className="mt-2 w-full bg-input-bg border border-dashed border-card-border rounded-md px-2.5 py-1.5 text-foreground type-body outline-none"
               />
             </div>
 
@@ -314,19 +314,19 @@ export default function PhaseDetailModal({
             <div className="flex justify-between items-center mt-2 border-t border-card-border pt-4">
               {confirmingDelete ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-[0.8rem] text-danger">Delete this phase?</span>
+                  <span className="type-label text-danger">Delete this phase?</span>
                   <button
                     onClick={() => {
                       onDelete(phase.id);
                       dismiss();
                     }}
-                    className="btn px-3 py-1.5 text-[0.8rem] !bg-danger/15 !text-danger !border-danger/40"
+                    className="btn px-3 py-1.5 type-label !bg-danger/15 !text-danger !border-danger/40"
                   >
                     Confirm
                   </button>
                   <button
                     onClick={() => setConfirmingDelete(false)}
-                    className="btn px-3 py-1.5 text-[0.8rem] !bg-transparent !text-muted-foreground !border-card-border"
+                    className="btn px-3 py-1.5 type-label !bg-transparent !text-muted-foreground !border-card-border"
                   >
                     Cancel
                   </button>
@@ -336,14 +336,14 @@ export default function PhaseDetailModal({
                   {canDelete && (
                     <button
                       onClick={() => setConfirmingDelete(true)}
-                      className="text-danger bg-transparent border-none cursor-pointer text-[0.8rem]"
+                      className="text-danger bg-transparent border-none cursor-pointer type-label"
                     >
                       Delete Phase
                     </button>
                   )}
                 </div>
               )}
-              <button onClick={() => setIsEditing(false)} className="btn px-5 py-2 text-[0.85rem]">
+              <button onClick={() => setIsEditing(false)} className="btn px-5 py-2 type-body">
                 Done
               </button>
             </div>
@@ -353,16 +353,16 @@ export default function PhaseDetailModal({
             {/* Modal Header (read-only) */}
             <div className="pr-8">
               <div className="flex items-center gap-4">
-                <h2 className="text-[1.3rem] font-bold text-accent m-0">{phase.title}</h2>
+                <h2 className="type-title font-bold text-accent m-0">{phase.title}</h2>
                 {isActive ? (
-                  <span className="text-xs bg-success/15 text-success px-2 py-0.5 rounded font-semibold shrink-0">
+                  <span className="type-caption bg-success/15 text-success px-2 py-0.5 rounded font-semibold shrink-0">
                     ACTIVE FOCUS
                   </span>
                 ) : null}
               </div>
-              <p className="text-muted-foreground text-[0.95rem] mt-1">{phase.description}</p>
+              <p className="text-muted-foreground type-subhead mt-1">{phase.description}</p>
               {endsOn && (
-                <p className="text-[0.7rem] font-mono text-muted-foreground/60 mt-1 m-0">
+                <p className="type-caption font-mono text-muted-foreground/60 mt-1 m-0">
                   Ends {endsOn}<span className="opacity-70"> · day {phase.recommendedByDay}</span>
                 </p>
               )}
@@ -371,7 +371,7 @@ export default function PhaseDetailModal({
             {/* Tasks (read-only — plain list, no checkboxes) */}
             {phase.tasks.length > 0 && (
               <div>
-                <h4 className="text-[0.8rem] text-accent uppercase tracking-[0.05em] mb-2 border-b border-card-border pb-1 font-bold">
+                <h4 className="type-label text-accent uppercase tracking-[0.05em] mb-2 border-b border-card-border pb-1 font-bold">
                   Tasks
                 </h4>
                 <div className="flex flex-col gap-2">
@@ -379,7 +379,7 @@ export default function PhaseDetailModal({
                     <div
                       key={task.id}
                       title={task.title}
-                      className={`line-clamp-2 text-[0.85rem] ${task.completed ? "text-muted-foreground line-through" : "text-foreground"}`}
+                      className={`line-clamp-2 type-body ${task.completed ? "text-muted-foreground line-through" : "text-foreground"}`}
                     >
                       {task.title}
                     </div>
@@ -405,19 +405,19 @@ export default function PhaseDetailModal({
                       onActivatePhase(phase.id);
                       dismiss();
                     }}
-                    className="btn !bg-accent/15 !text-accent border !border-accent text-[0.85rem]"
+                    className="btn !bg-accent/15 !text-accent border !border-accent type-body"
                   >
                     Set as Active Phase
                   </button>
                 )}
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="btn px-4 py-2 text-[0.85rem] !bg-transparent !text-muted-foreground !border-card-border hover:!text-foreground"
+                  className="btn px-4 py-2 type-body !bg-transparent !text-muted-foreground !border-card-border hover:!text-foreground"
                 >
                   Edit
                 </button>
               </div>
-              <button onClick={dismiss} className="btn px-5 py-2 text-[0.85rem]">
+              <button onClick={dismiss} className="btn px-5 py-2 type-body">
                 Close
               </button>
             </div>

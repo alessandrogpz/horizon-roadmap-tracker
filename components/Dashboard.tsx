@@ -51,7 +51,7 @@ function FullScreenMessage({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen flex-col items-center justify-center gap-4 bg-background text-foreground">
       <LoaderCircle className="animate-spin text-accent" size={30} strokeWidth={2} />
-      <p className="text-muted-foreground text-sm">{children}</p>
+      <p className="text-muted-foreground type-body">{children}</p>
     </div>
   );
 }
@@ -261,8 +261,8 @@ export default function Dashboard() {
   if (status === "error" || !track || !workspace) {
     return (
       <div className="flex h-screen flex-col items-center justify-center p-8 bg-background text-foreground font-mono text-center">
-        <h2 className="text-warning mb-4 uppercase tracking-[0.05em] text-2xl font-bold">Initialization Failed</h2>
-        <p className="text-muted-foreground text-[0.95rem] mb-6">Your local workspace could not be opened.</p>
+        <h2 className="text-warning mb-4 uppercase tracking-[0.05em] type-display-sm font-bold">Initialization Failed</h2>
+        <p className="text-muted-foreground type-subhead mb-6">Your local workspace could not be opened.</p>
         <div className="p-4 bg-card rounded-md border border-card-border text-danger mb-6 max-w-[500px] break-all">
           {error || "No data was returned by the local database."}
         </div>
@@ -363,12 +363,12 @@ export default function Dashboard() {
               the master view is showing every track's phases at once. */}
           {!masterOpen && track.currentPhase !== recommendedPhase && (
             <div className="glass-panel border-l-4 !border-l-warning flex justify-between items-center px-6 py-4">
-              <span className="text-[0.95rem] text-foreground">
+              <span className="type-subhead text-foreground">
                 Schedule suggestion: Time to transition to Phase {recommendedPhase} (Day {daysPassed})
               </span>
               <button
                 onClick={() => void commitTrack((prev) => setCurrentPhase(prev, recommendedPhase), "phase change")}
-                className="btn px-3 py-1 text-[0.85rem] !bg-amber-600"
+                className="btn px-3 py-1 type-body !bg-warning !text-background"
               >
                 Switch Now
               </button>
@@ -399,8 +399,8 @@ export default function Dashboard() {
         {!masterOpen && allModulesHidden && (
           <div className="col-span-full glass-panel flex flex-col items-center justify-center gap-3 py-16 text-center">
             <LayoutGrid size={28} strokeWidth={1.75} className="text-muted-foreground" />
-            <p className="text-foreground text-sm font-medium">No modules are open for this track</p>
-            <p className="text-subtle-foreground text-xs max-w-[360px]">
+            <p className="text-foreground type-body font-medium">No modules are open for this track</p>
+            <p className="text-subtle-foreground type-caption max-w-[360px]">
               Open some from the Modules menu in the header. Closing a module only hides it — none of this track&apos;s data is ever deleted.
             </p>
           </div>

@@ -37,10 +37,10 @@ function Figure({ value, unit, hint }: { value: React.ReactNode; unit?: string; 
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-baseline gap-2">
-        <span className="text-[2.4rem] font-bold font-mono leading-none text-foreground">{value}</span>
-        {unit && <span className="text-[0.95rem] text-muted-foreground">{unit}</span>}
+        <span className="type-figure font-bold font-mono text-foreground">{value}</span>
+        {unit && <span className="type-subhead text-muted-foreground">{unit}</span>}
       </div>
-      {hint && <span className="text-[0.8rem] text-muted-foreground">{hint}</span>}
+      {hint && <span className="type-label text-muted-foreground">{hint}</span>}
     </div>
   );
 }
@@ -48,10 +48,10 @@ function Figure({ value, unit, hint }: { value: React.ReactNode; unit?: string; 
 function Stat({ label, value, tone = "" }: { label: string; value: React.ReactNode; tone?: string }) {
   return (
     <div className="flex flex-col gap-1 rounded-[var(--radius-inner)] border border-card-border bg-surface-muted px-3 py-2.5">
-      <span className="text-[0.65rem] uppercase tracking-[0.08em] text-muted-foreground font-semibold">
+      <span className="type-micro uppercase tracking-[0.08em] text-muted-foreground font-semibold">
         {label}
       </span>
-      <span className={`text-[0.95rem] font-mono font-semibold ${tone || "text-foreground"}`}>
+      <span className={`type-subhead font-mono font-semibold ${tone || "text-foreground"}`}>
         {value}
       </span>
     </div>
@@ -72,7 +72,7 @@ function Bar({ pct, tone = "bg-accent" }: { pct: number; tone?: string }) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-3">
-      <h4 className="m-0 border-b border-card-border pb-1 text-[0.7rem] font-bold uppercase tracking-[0.08em] text-accent">
+      <h4 className="m-0 border-b border-card-border pb-1 type-caption font-bold uppercase tracking-[0.08em] text-accent">
         {title}
       </h4>
       {children}
@@ -118,7 +118,7 @@ function StreakBody({ track }: { track: TrackState }) {
 
       <Section title="Every day since you started">
         <StreakGrid cells={cells} />
-        <span className="text-[0.8rem] text-subtle-foreground">
+        <span className="type-label text-subtle-foreground">
           {stats.totalAccomplishments} accomplishment
           {stats.totalAccomplishments === 1 ? "" : "s"} recorded across {stats.activeDays} day
           {stats.activeDays === 1 ? "" : "s"}.
@@ -133,10 +133,10 @@ function StreakBody({ track }: { track: TrackState }) {
                 key={day.date}
                 className="flex flex-col gap-1 rounded-[var(--radius-inner)] border border-card-border bg-surface-muted px-3 py-2"
               >
-                <span className="font-mono text-[0.7rem] text-accent">
+                <span className="font-mono type-caption text-accent">
                   {formatDayMonthYear(parseYMD(day.date))}
                 </span>
-                <span className="text-[0.8rem] leading-snug text-muted-foreground">
+                <span className="type-label text-muted-foreground">
                   {day.titles.join(" · ")}
                 </span>
               </div>
@@ -183,13 +183,13 @@ function TimelineBody({ track }: { track: TrackState }) {
                 }`}
               />
               <span
-                className={`truncate text-[0.85rem] ${
+                className={`truncate type-body ${
                   w.state === "upcoming" ? "text-subtle-foreground" : "text-foreground"
                 }`}
               >
                 {w.phase.title}
               </span>
-              <span className="ml-auto shrink-0 font-mono text-[0.7rem] text-subtle-foreground">
+              <span className="ml-auto shrink-0 font-mono type-caption text-subtle-foreground">
                 {w.endDay !== undefined ? `Days ${w.startDay}–${w.endDay}` : `From day ${w.startDay}`}
               </span>
             </div>
@@ -204,7 +204,7 @@ function PhaseBody({ track }: { track: TrackState }) {
   const stats = phaseStats(track, todayYMD());
 
   if (!stats.phase) {
-    return <p className="m-0 text-[0.95rem] text-muted-foreground">This track has no phases yet.</p>;
+    return <p className="m-0 type-subhead text-muted-foreground">This track has no phases yet.</p>;
   }
 
   return (
@@ -232,7 +232,7 @@ function PhaseBody({ track }: { track: TrackState }) {
       </div>
 
       {stats.behindBy > 0 && stats.recommendedPhase && (
-        <div className="rounded-[var(--radius-inner)] border border-warning/40 bg-warning/[0.07] px-3 py-2.5 text-[0.8rem] leading-snug text-foreground">
+        <div className="rounded-[var(--radius-inner)] border border-warning/40 bg-warning/[0.07] px-3 py-2.5 type-label text-foreground">
           By the schedule you&apos;d be on{" "}
           <strong className="font-semibold">
             phase 0{stats.recommendedPhase.id} — {stats.recommendedPhase.title}
@@ -243,7 +243,7 @@ function PhaseBody({ track }: { track: TrackState }) {
 
       {stats.phase.description && (
         <Section title="What this phase is for">
-          <p className="m-0 text-[0.85rem] leading-relaxed text-muted-foreground">
+          <p className="m-0 type-body text-muted-foreground">
             {stats.phase.description}
           </p>
         </Section>
@@ -286,12 +286,12 @@ function ProgressBody({ track }: { track: TrackState }) {
       />
 
       <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between text-[0.7rem] uppercase tracking-[0.08em] text-muted-foreground">
+        <div className="flex items-center justify-between type-caption uppercase tracking-[0.08em] text-muted-foreground">
           <span className="font-semibold">Work completed</span>
           <span className="font-mono">{Math.round(stats.workPct)}%</span>
         </div>
         <Bar pct={stats.workPct} tone={ahead ? "bg-success" : "bg-accent"} />
-        <div className="flex items-center justify-between text-[0.7rem] uppercase tracking-[0.08em] text-muted-foreground">
+        <div className="flex items-center justify-between type-caption uppercase tracking-[0.08em] text-muted-foreground">
           <span className="font-semibold">Time spent</span>
           <span className="font-mono">{Math.round(stats.timePct)}%</span>
         </div>
@@ -303,8 +303,8 @@ function ProgressBody({ track }: { track: TrackState }) {
           {stats.breakdown.map((part) => (
             <div key={part.label} className="flex flex-col gap-1.5">
               <div className="flex items-baseline justify-between">
-                <span className="text-[0.85rem] text-foreground">{part.label}</span>
-                <span className="font-mono text-[0.8rem] text-muted-foreground">
+                <span className="type-body text-foreground">{part.label}</span>
+                <span className="font-mono type-label text-muted-foreground">
                   {part.total > 0 ? `${part.done}/${part.total}` : "none yet"}
                 </span>
               </div>
@@ -312,7 +312,7 @@ function ProgressBody({ track }: { track: TrackState }) {
             </div>
           ))}
         </div>
-        <span className="text-[0.8rem] leading-snug text-subtle-foreground">
+        <span className="type-label text-subtle-foreground">
           Only the rows that actually hold items count toward the total, so a track with no
           deliverables isn&apos;t capped below 100%.
         </span>
@@ -365,8 +365,8 @@ export default function StatDetailModal({
 
         <div className="flex items-center gap-2.5 pr-8">
           {ICONS[metric]}
-          <h3 className="m-0 text-[1.1rem] font-semibold text-foreground">{TITLES[metric]}</h3>
-          <span className="ml-auto truncate font-mono text-[0.7rem] text-subtle-foreground">
+          <h3 className="m-0 type-heading font-semibold text-foreground">{TITLES[metric]}</h3>
+          <span className="ml-auto truncate font-mono type-caption text-subtle-foreground">
             {track.meta.name}
           </span>
         </div>

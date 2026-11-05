@@ -209,10 +209,10 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
         {mode === "plan" && existing ? (
           <>
             <div className="pr-8 shrink-0">
-              <h2 className="text-[1.3rem] font-bold text-foreground mb-1">
+              <h2 className="type-title font-bold text-foreground mb-1">
                 {existing.label}: Full Plan
               </h2>
-              <p className="text-[0.85rem] text-muted-foreground m-0">
+              <p className="type-body text-muted-foreground m-0">
                 This rotation&apos;s own private plan — autosaves.
               </p>
             </div>
@@ -221,7 +221,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
               <div className="flex items-center justify-between border-b border-card-border px-6 pt-4 shrink-0">
                 <div className="flex gap-1">
                   <button
-                    className={`px-4 py-2 text-[0.8rem] font-semibold uppercase tracking-[0.05em] border-b-2 -mb-px cursor-pointer bg-transparent ${
+                    className={`px-4 py-2 type-label font-semibold uppercase tracking-[0.05em] border-b-2 -mb-px cursor-pointer bg-transparent ${
                       planTab === "write" ? "text-accent border-accent" : "text-muted-foreground border-transparent hover:text-foreground"
                     }`}
                     onClick={() => setPlanTab("write")}
@@ -229,7 +229,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                     Write
                   </button>
                   <button
-                    className={`px-4 py-2 text-[0.8rem] font-semibold uppercase tracking-[0.05em] border-b-2 -mb-px cursor-pointer bg-transparent ${
+                    className={`px-4 py-2 type-label font-semibold uppercase tracking-[0.05em] border-b-2 -mb-px cursor-pointer bg-transparent ${
                       planTab === "preview" ? "text-accent border-accent" : "text-muted-foreground border-transparent hover:text-foreground"
                     }`}
                     onClick={() => setPlanTab("preview")}
@@ -237,7 +237,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                     Preview
                   </button>
                 </div>
-                <span className="text-[0.7rem] font-mono text-muted-foreground pb-2 inline-flex items-center gap-1">
+                <span className="type-caption font-mono text-muted-foreground pb-2 inline-flex items-center gap-1">
                   {planSaveStatus === "saving" && "Saving..."}
                   {planSaveStatus === "saved" && (<><Check size={12} strokeWidth={2.5} /> Saved</>)}
                 </span>
@@ -260,8 +260,8 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                   />
                 ) : (
                   <div className="px-8 py-16 text-center">
-                    <p className="text-muted-foreground text-[0.95rem] mb-4">You haven&apos;t written a plan for this rotation yet.</p>
-                    <button onClick={() => setPlanTab("write")} className="btn px-5 py-2 text-[0.85rem]">
+                    <p className="text-muted-foreground type-subhead mb-4">You haven&apos;t written a plan for this rotation yet.</p>
+                    <button onClick={() => setPlanTab("write")} className="btn px-5 py-2 type-body">
                       Start Writing
                     </button>
                   </div>
@@ -272,11 +272,11 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
             <div className="flex justify-between items-center border-t border-card-border pt-4 shrink-0">
               <button
                 onClick={() => setMode("view")}
-                className="btn px-4 py-2 text-[0.8rem] !bg-transparent !text-muted-foreground !border-card-border hover:!text-foreground"
+                className="btn px-4 py-2 type-label !bg-transparent !text-muted-foreground !border-card-border hover:!text-foreground"
               >
                 &larr; Back to Rotation
               </button>
-              <button onClick={dismiss} className="btn px-4 py-2 text-[0.8rem]">
+              <button onClick={dismiss} className="btn px-4 py-2 type-label">
                 Close
               </button>
             </div>
@@ -284,24 +284,24 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
         ) : mode === "edit" ? (
           <>
             <div className="pr-8 shrink-0">
-              <h2 className="text-[1.3rem] font-bold text-foreground mb-1">
+              <h2 className="type-title font-bold text-foreground mb-1">
                 {isNew ? "New Rotation" : "Edit Rotation"}
               </h2>
-              <p className="text-[0.85rem] text-muted-foreground m-0">
+              <p className="type-body text-muted-foreground m-0">
                 A list of items that cycles once per week, shown on the days you choose.
               </p>
             </div>
 
             <div className="flex flex-col gap-4 flex-1 min-h-0 overflow-y-auto pr-1">
               <label className="flex flex-col gap-1.5">
-                <span className="text-[0.8rem] text-muted-foreground uppercase tracking-[0.05em] font-semibold">Label</span>
+                <span className="type-label text-muted-foreground uppercase tracking-[0.05em] font-semibold">Label</span>
                 <input
                   type="text"
                   maxLength={LIMITS.name}
                   value={label}
                   onChange={(e) => setLabel(e.target.value)}
                   placeholder="e.g. Weekly Reading"
-                  className="bg-surface-muted border border-card-border rounded-md px-3 py-2 text-[0.85rem] text-foreground focus:outline-none focus:border-accent"
+                  className="bg-surface-muted border border-card-border rounded-md px-3 py-2 type-body text-foreground focus:outline-none focus:border-accent"
                 />
               </label>
 
@@ -311,13 +311,13 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                   that you met in phase one. Scoped, a short rotation per
                   phase works through them once and is done by the end. */}
               <div className="flex flex-col gap-1.5">
-                <span className="text-[0.8rem] text-muted-foreground uppercase tracking-[0.05em] font-semibold">
+                <span className="type-label text-muted-foreground uppercase tracking-[0.05em] font-semibold">
                   Runs during
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   <button
                     onClick={() => setPhase(undefined)}
-                    className={`px-3 py-1.5 rounded-md text-[0.8rem] font-semibold cursor-pointer border transition-colors duration-150 ${
+                    className={`px-3 py-1.5 rounded-md type-label font-semibold cursor-pointer border transition-colors duration-150 ${
                       phase === undefined
                         ? "bg-accent/15 border-accent text-accent"
                         : "bg-surface-muted border-card-border text-muted-foreground hover:border-card-border-hover"
@@ -330,7 +330,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                       key={p.id}
                       onClick={() => setPhase(p.id)}
                       title={p.title}
-                      className={`max-w-[11rem] truncate px-3 py-1.5 rounded-md text-[0.8rem] font-semibold cursor-pointer border transition-colors duration-150 ${
+                      className={`max-w-[11rem] truncate px-3 py-1.5 rounded-md type-label font-semibold cursor-pointer border transition-colors duration-150 ${
                         phase === p.id
                           ? "bg-accent/15 border-accent text-accent"
                           : "bg-surface-muted border-card-border text-muted-foreground hover:border-card-border-hover"
@@ -340,7 +340,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                     </button>
                   ))}
                 </div>
-                <span className="text-[0.7rem] leading-snug text-subtle-foreground">
+                <span className="type-caption text-subtle-foreground">
                   {phase === undefined
                     ? "Shows on its days whatever phase you are on."
                     : "Hidden until the track reaches that phase, and gone once it moves past."}
@@ -348,13 +348,13 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <span className="text-[0.8rem] text-muted-foreground uppercase tracking-[0.05em] font-semibold">Days of Week</span>
+                <span className="type-label text-muted-foreground uppercase tracking-[0.05em] font-semibold">Days of Week</span>
                 <div className="flex flex-wrap gap-1.5">
                   {ALL_DAYS.map((day) => (
                     <button
                       key={day}
                       onClick={() => toggleDay(day)}
-                      className={`w-11 py-1.5 rounded-md text-[0.8rem] font-semibold cursor-pointer border transition-colors duration-150 ${
+                      className={`w-11 py-1.5 rounded-md type-label font-semibold cursor-pointer border transition-colors duration-150 ${
                         daysOfWeek.includes(day)
                           ? "bg-accent/15 border-accent text-accent"
                           : "bg-surface-muted border-card-border text-muted-foreground hover:border-card-border-hover"
@@ -368,12 +368,12 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
 
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[0.8rem] text-muted-foreground uppercase tracking-[0.05em] font-semibold">
+                  <span className="type-label text-muted-foreground uppercase tracking-[0.05em] font-semibold">
                     Items (cycles weekly, in order)
                   </span>
                   <button
                     onClick={() => setItems((prev) => [...prev, { title: "", description: "" }])}
-                    className="text-[0.8rem] text-accent cursor-pointer bg-transparent border-none"
+                    className="type-label text-accent cursor-pointer bg-transparent border-none"
                   >
                     + Add Item
                   </button>
@@ -382,14 +382,14 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                   {items.map((item, idx) => (
                     <div key={idx} className="flex flex-col gap-1.5 bg-surface-muted border border-card-border rounded-md p-2.5">
                       <div className="flex items-center gap-2">
-                        <span className="text-[0.7rem] text-subtle-foreground font-mono w-5 shrink-0">{idx + 1}.</span>
+                        <span className="type-caption text-subtle-foreground font-mono w-5 shrink-0">{idx + 1}.</span>
                         <input
                           type="text"
                           maxLength={LIMITS.title}
                           value={item.title}
                           onChange={(e) => updateItem(idx, "title", e.target.value)}
                           placeholder="Title (e.g. Tolkien)"
-                          className="flex-1 bg-transparent border-b border-card-border px-1 py-1 text-[0.8rem] text-foreground focus:outline-none focus:border-accent"
+                          className="flex-1 bg-transparent border-b border-card-border px-1 py-1 type-label text-foreground focus:outline-none focus:border-accent"
                         />
                         <button
                           onClick={() => removeItem(idx)}
@@ -405,7 +405,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                         value={item.description}
                         onChange={(e) => updateItem(idx, "description", e.target.value)}
                         placeholder="Description (optional)"
-                        className="ml-7 bg-transparent border-b border-card-border px-1 py-1 text-[0.8rem] text-muted-foreground focus:outline-none focus:border-accent"
+                        className="ml-7 bg-transparent border-b border-card-border px-1 py-1 type-label text-muted-foreground focus:outline-none focus:border-accent"
                       />
                     </div>
                   ))}
@@ -413,7 +413,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
               </div>
 
               <label className="flex flex-col gap-1.5">
-                <span className="text-[0.8rem] text-muted-foreground uppercase tracking-[0.05em] font-semibold">
+                <span className="type-label text-muted-foreground uppercase tracking-[0.05em] font-semibold">
                   Explanation (optional)
                 </span>
                 <textarea
@@ -422,7 +422,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                   onChange={(e) => setExplanation(e.target.value)}
                   placeholder="Why this rotation, what it covers, how to use it — written as Markdown. Viewable/editable in full any time via the Full Plan button."
                   rows={4}
-                  className="bg-surface-muted border border-card-border rounded-md px-3 py-2 text-[0.8rem] text-foreground leading-snug focus:outline-none focus:border-accent resize-y"
+                  className="bg-surface-muted border border-card-border rounded-md px-3 py-2 type-label text-foreground focus:outline-none focus:border-accent resize-y"
                 />
               </label>
             </div>
@@ -431,7 +431,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
               {existing ? (
                 <button
                   onClick={() => setMode("view")}
-                  className="btn px-4 py-2 text-[0.8rem] !bg-transparent !text-muted-foreground !border-card-border hover:!text-foreground"
+                  className="btn px-4 py-2 type-label !bg-transparent !text-muted-foreground !border-card-border hover:!text-foreground"
                 >
                   Cancel
                 </button>
@@ -441,7 +441,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
               <button
                 onClick={handleSave}
                 disabled={!canSave}
-                className="btn px-4 py-2 text-[0.8rem] disabled:opacity-40 disabled:cursor-not-allowed"
+                className="btn px-4 py-2 type-label disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Save
               </button>
@@ -450,13 +450,13 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
         ) : (
           <>
             <div className="pr-8 shrink-0">
-              <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold uppercase font-mono tracking-[0.05em]">
+              <span className="type-caption bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold uppercase font-mono tracking-[0.05em]">
                 {len}-Week Cycle
               </span>
-              <h2 className="text-[1.3rem] font-bold text-foreground mt-2 mb-1">
+              <h2 className="type-title font-bold text-foreground mt-2 mb-1">
                 {existing?.label}
               </h2>
-              <p className="text-[0.85rem] text-muted-foreground m-0">
+              <p className="type-body text-muted-foreground m-0">
                 Currently on Week {currentWeekNum} of curriculum · shows on {existing?.daysOfWeek.join(", ")}
               </p>
             </div>
@@ -475,17 +475,17 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                     }`}
                   >
                     <div className="flex justify-between items-center">
-                      <span className={`text-[0.8rem] font-bold ${isActive ? "text-foreground" : "text-muted-foreground"}`}>
+                      <span className={`type-label font-bold ${isActive ? "text-foreground" : "text-muted-foreground"}`}>
                         Week {idx + 1}: {item.title}
                       </span>
                       {isActive && (
-                        <span className="text-[0.65rem] bg-accent text-black px-1.5 py-px rounded-[3px] font-bold uppercase">
+                        <span className="type-micro bg-accent text-black px-1.5 py-px rounded-[3px] font-bold uppercase">
                           Active Week
                         </span>
                       )}
                     </div>
                     {item.description && (
-                      <span className={`text-xs leading-snug ${isActive ? "text-foreground" : "text-muted-foreground"}`}>
+                      <span className={`type-caption leading-snug ${isActive ? "text-foreground" : "text-muted-foreground"}`}>
                         {item.description}
                       </span>
                     )}
@@ -497,16 +497,16 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
             <div className="flex justify-between items-center border-t border-card-border pt-4 shrink-0">
               {confirmingDelete ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-[0.8rem] text-danger">Delete this rotation?</span>
+                  <span className="type-label text-danger">Delete this rotation?</span>
                   <button
                     onClick={handleDelete}
-                    className="btn px-3 py-1.5 text-[0.8rem] !bg-danger/15 !text-danger !border-danger/40"
+                    className="btn px-3 py-1.5 type-label !bg-danger/15 !text-danger !border-danger/40"
                   >
                     Confirm
                   </button>
                   <button
                     onClick={() => setConfirmingDelete(false)}
-                    className="btn px-3 py-1.5 text-[0.8rem] !bg-transparent !text-muted-foreground !border-card-border"
+                    className="btn px-3 py-1.5 type-label !bg-transparent !text-muted-foreground !border-card-border"
                   >
                     Cancel
                   </button>
@@ -514,7 +514,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
               ) : (
                 <button
                   onClick={() => setConfirmingDelete(true)}
-                  className="btn px-4 py-2 text-[0.8rem] !bg-transparent !text-danger !border-danger/20 hover:!border-danger/50"
+                  className="btn px-4 py-2 type-label !bg-transparent !text-danger !border-danger/20 hover:!border-danger/50"
                 >
                   Delete Rotation
                 </button>
@@ -522,19 +522,19 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
               <div className="flex gap-2">
                 <button
                   onClick={openPlan}
-                  className="btn px-4 py-2 text-[0.8rem] !bg-transparent !text-muted-foreground !border-card-border hover:!text-foreground"
+                  className="btn px-4 py-2 type-label !bg-transparent !text-muted-foreground !border-card-border hover:!text-foreground"
                 >
                   Full Plan
                 </button>
                 <button
                   onClick={openEdit}
-                  className="btn px-4 py-2 text-[0.8rem] !bg-transparent !text-muted-foreground !border-card-border hover:!text-foreground"
+                  className="btn px-4 py-2 type-label !bg-transparent !text-muted-foreground !border-card-border hover:!text-foreground"
                 >
                   Edit
                 </button>
                 <button
                   onClick={dismiss}
-                  className="btn px-4 py-2 text-[0.8rem]"
+                  className="btn px-4 py-2 type-label"
                 >
                   Close
                 </button>

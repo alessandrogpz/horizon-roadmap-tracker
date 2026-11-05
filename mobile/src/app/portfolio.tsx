@@ -27,6 +27,7 @@ import { EmptyState } from "../components/EmptyState";
 import { Refreshable } from "../components/Refreshable";
 import { Tappable } from "../components/Tappable";
 import { LIMITS } from "@shared/limits";
+import { ACTION } from "../theme";
 
 export default function PortfolioScreen() {
   const { workspace, track, today, editTrack, restoreWorkspace } = useWorkspace();
@@ -73,7 +74,7 @@ export default function PortfolioScreen() {
           right={{
             label: "Remove",
             icon: "trash-outline",
-            colour: "#ef4444",
+            colour: ACTION.danger,
             onAct: () => {
               const previous = workspace;
               editTrack((t) => removePortfolioProject(t, project.id));
@@ -201,7 +202,13 @@ function makeStyles(palette: Palette) {
       alignItems: "center",
       justifyContent: "center",
     },
-    tick: { color: "#fff", ...TYPE.label, fontWeight: "800" },
+    // The page's own background, which is near-black on one theme and
+    // near-white on the other, so it is always the colour furthest from the
+    // fill under it. This was a fixed `#fff`, which reads 2.54 on the dark
+    // theme's success green — under even the 3:1 graphics floor — and 5.48 on
+    // the light theme's deeper one. No single fixed colour clears both;
+    // following the theme gives 7.80 and 5.30.
+    tick: { color: palette.background, ...TYPE.label, fontWeight: "800" },
     title: { flex: 1, color: palette.foreground, ...TYPE.subhead, paddingVertical: 2 },
     repoInput: {
       color: palette.mutedForeground,

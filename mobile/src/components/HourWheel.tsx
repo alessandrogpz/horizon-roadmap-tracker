@@ -164,6 +164,12 @@ function makeStyles(palette: Palette) {
     },
     primary: { backgroundColor: palette.accent, borderColor: palette.accent },
     buttonLabel: { color: palette.mutedForeground, ...TYPE.subhead, fontWeight: "600" },
-    primaryLabel: { color: "#04121c", ...TYPE.subhead, fontWeight: "700" },
+    // `palette.background`, not a fixed near-black. This read `#04121c`,
+    // which is right on the dark theme's bright accent and gives 3.19:1 on
+    // the light theme's deep one — under the 4.5 floor, on a primary button.
+    // The web app fixed exactly this in `.btn:hover` and the phone never got
+    // it. The page's own background is the colour always furthest from the
+    // accent, whichever theme is on: 7.14 dark, 5.74 light.
+    primaryLabel: { color: palette.background, ...TYPE.subhead, fontWeight: "700" },
   });
 }

@@ -14,8 +14,8 @@ interface PortfolioTrackerProps {
   onDeleteProject: (id: string) => void;
 }
 
-const inputClass = "w-full p-1 rounded bg-input-bg border border-card-border text-foreground outline-none font-[inherit] text-[0.85rem]";
-const labelClass = "block text-[0.7rem] text-muted-foreground mb-1 uppercase";
+const inputClass = "w-full p-1 rounded bg-input-bg border border-card-border text-foreground outline-none font-[inherit] type-body";
+const labelClass = "block type-caption text-muted-foreground mb-1 uppercase";
 
 export default function PortfolioTracker({ portfolio, onToggle, onAddProject, onEditProject, onDeleteProject }: PortfolioTrackerProps) {
 
@@ -61,7 +61,7 @@ export default function PortfolioTracker({ portfolio, onToggle, onAddProject, on
         </h2>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className="btn px-2.5 py-1 text-xs"
+          className="btn px-2.5 py-1 type-caption"
         >
           {showAddForm ? "Cancel" : "[+ Add]"}
         </button>
@@ -92,7 +92,7 @@ export default function PortfolioTracker({ portfolio, onToggle, onAddProject, on
               className={inputClass}
             />
           </div>
-          <button type="submit" className="btn px-3 py-1.5 text-xs self-start">Add Project</button>
+          <button type="submit" className="btn px-3 py-1.5 type-caption self-start">Add Project</button>
         </form>
       )}
 
@@ -122,10 +122,10 @@ export default function PortfolioTracker({ portfolio, onToggle, onAddProject, on
                   placeholder="Repo URL (optional)"
                 />
                 <div className="flex gap-2">
-                  <button onClick={() => saveEdit(proj.id)} className="btn px-3 py-1 text-xs">Save</button>
+                  <button onClick={() => saveEdit(proj.id)} className="btn px-3 py-1 type-caption">Save</button>
                   <button
                     onClick={() => setEditingId(null)}
-                    className="btn px-3 py-1 text-xs !bg-transparent !text-muted-foreground !border-card-border"
+                    className="btn px-3 py-1 type-caption !bg-transparent !text-muted-foreground !border-card-border"
                   >
                     Cancel
                   </button>
@@ -143,12 +143,12 @@ export default function PortfolioTracker({ portfolio, onToggle, onAddProject, on
                 <div className="user-text flex flex-1 flex-col">
                   <span
                     title={proj.title}
-                    className={`line-clamp-2 text-[0.95rem] font-medium transition-colors duration-200 ${proj.completed ? "text-muted-foreground line-through" : "text-foreground"}`}
+                    className={`line-clamp-2 type-subhead font-medium transition-colors duration-200 ${proj.completed ? "text-muted-foreground line-through" : "text-foreground"}`}
                   >
                     {proj.title}
                   </span>
                   {gitStats[proj.id] && gitStats[proj.id].isRepo && (
-                    <div className="text-[0.7rem] text-muted-foreground mt-1 font-mono flex flex-wrap gap-x-2">
+                    <div className="type-caption text-muted-foreground mt-1 font-mono flex flex-wrap gap-x-2">
                       <span>branch: <span className="text-accent">{gitStats[proj.id].branch}</span></span>
                       <span>|</span>
                       {(gitStats[proj.id].uncommittedCount ?? 0) > 0 ? (
@@ -167,7 +167,7 @@ export default function PortfolioTracker({ portfolio, onToggle, onAddProject, on
                     </div>
                   )}
                 </div>
-                <div className="flex items-center gap-2 text-xs shrink-0">
+                <div className="flex items-center gap-2 type-caption shrink-0">
                   <button onClick={() => startEdit(proj)} className="text-accent bg-transparent border-none cursor-pointer">Edit</button>
                   <button onClick={() => onDeleteProject(proj.id)} className="text-danger bg-transparent border-none cursor-pointer flex items-center" aria-label="Delete project"><X size={14} strokeWidth={2} /></button>
                 </div>
@@ -176,7 +176,7 @@ export default function PortfolioTracker({ portfolio, onToggle, onAddProject, on
           </div>
         ))}
         {portfolio.length === 0 && !showAddForm && (
-          <p className="text-subtle-foreground text-[0.85rem] italic py-2">No portfolio projects yet.</p>
+          <p className="text-subtle-foreground type-body italic py-2">No portfolio projects yet.</p>
         )}
       </div>
     </div>

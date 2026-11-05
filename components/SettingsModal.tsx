@@ -55,8 +55,8 @@ function Row({
       <div className="flex gap-2.5">
         {icon && <span className="mt-0.5 text-muted-foreground">{icon}</span>}
         <div className="flex flex-col gap-0.5">
-          <span className="text-[0.95rem] font-semibold text-foreground">{title}</span>
-          {hint && <span className="text-[0.8rem] leading-snug text-muted-foreground">{hint}</span>}
+          <span className="type-subhead font-semibold text-foreground">{title}</span>
+          {hint && <span className="type-label text-muted-foreground">{hint}</span>}
         </div>
       </div>
       {children && <div className="flex shrink-0 items-center gap-2">{children}</div>}
@@ -79,7 +79,7 @@ function Segmented<T extends string>({
         <button
           key={option.value}
           onClick={() => onChange(option.value)}
-          className={`flex cursor-pointer items-center gap-1.5 rounded-[5px] px-2.5 py-1 text-[0.8rem] transition-colors ${
+          className={`flex cursor-pointer items-center gap-1.5 rounded-[5px] px-2.5 py-1 type-label transition-colors ${
             option.value === value
               ? "bg-accent/15 text-accent font-semibold"
               : "text-muted-foreground hover:text-foreground"
@@ -94,10 +94,10 @@ function Segmented<T extends string>({
 }
 
 const selectClass =
-  "rounded-[var(--radius-control)] border border-card-border bg-input-bg px-2.5 py-1.5 text-[0.8rem] text-foreground outline-none focus-visible:shadow-[0_0_0_3px_var(--ring)]";
+  "rounded-[var(--radius-control)] border border-card-border bg-input-bg px-2.5 py-1.5 type-label text-foreground outline-none focus-visible:shadow-[0_0_0_3px_var(--ring)]";
 
 const quietButton =
-  "rounded-[var(--radius-control)] border border-card-border bg-surface-muted px-3 py-1.5 text-[0.8rem] text-foreground cursor-pointer transition-colors hover:border-card-border-hover hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-50";
+  "rounded-[var(--radius-control)] border border-card-border bg-surface-muted px-3 py-1.5 type-label text-foreground cursor-pointer transition-colors hover:border-card-border-hover hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-50";
 
 export default function SettingsModal({
   onClose,
@@ -256,8 +256,8 @@ export default function SettingsModal({
           <X size={16} strokeWidth={2} />
         </button>
 
-        <h3 className="m-0 pr-8 text-[1.1rem] font-semibold text-foreground">Settings</h3>
-        <p className="m-0 mb-2 text-[0.8rem] text-muted-foreground">
+        <h3 className="m-0 pr-8 type-heading font-semibold text-foreground">Settings</h3>
+        <p className="m-0 mb-2 type-label text-muted-foreground">
           These apply to this device, and to every track on it. A track&apos;s own name, dates,
           rhythm and rotations live in its settings.
         </p>
@@ -346,10 +346,10 @@ export default function SettingsModal({
         {pending && (
           <div className="flex flex-col gap-3 rounded-[var(--radius-inner)] border border-accent-muted bg-accent/[0.06] px-4 py-3">
             <div className="flex flex-col gap-1">
-              <span className="text-[0.85rem] font-semibold text-foreground">
+              <span className="type-body font-semibold text-foreground">
                 Restore this backup?
               </span>
-              <span className="text-[0.8rem] leading-snug text-muted-foreground">
+              <span className="type-label text-muted-foreground">
                 {pending.summary.trackCount} track
                 {pending.summary.trackCount === 1 ? "" : "s"} (
                 {pending.summary.trackNames.slice(0, 3).join(", ")}
@@ -432,8 +432,8 @@ export default function SettingsModal({
           <div className="flex gap-2.5">
             <AlertTriangle size={16} strokeWidth={2} className="mt-0.5 shrink-0 text-danger" />
             <div className="flex flex-col gap-0.5">
-              <span className="text-[0.95rem] font-semibold text-foreground">Delete local data</span>
-              <span className="text-[0.8rem] leading-snug text-muted-foreground">
+              <span className="type-subhead font-semibold text-foreground">Delete local data</span>
+              <span className="type-label text-muted-foreground">
                 Clears every track, note and credential from this browser, and signs it out.
                 Anything already synced stays in your Drive; this device just forgets it.
               </span>
@@ -444,7 +444,7 @@ export default function SettingsModal({
               <>
                 <button
                   onClick={doWipe}
-                  className="cursor-pointer rounded-[var(--radius-control)] border border-danger/40 bg-danger/15 px-3 py-1.5 text-[0.8rem] font-semibold text-danger"
+                  className="cursor-pointer rounded-[var(--radius-control)] border border-danger/40 bg-danger/15 px-3 py-1.5 type-label font-semibold text-danger"
                 >
                   Yes, delete everything
                 </button>
@@ -455,7 +455,7 @@ export default function SettingsModal({
             ) : (
               <button
                 onClick={() => setConfirmWipe(true)}
-                className="cursor-pointer rounded-[var(--radius-control)] border border-danger/30 bg-transparent px-3 py-1.5 text-[0.8rem] text-danger transition-colors hover:bg-danger/10"
+                className="cursor-pointer rounded-[var(--radius-control)] border border-danger/30 bg-transparent px-3 py-1.5 type-label text-danger transition-colors hover:bg-danger/10"
               >
                 Delete local data…
               </button>
@@ -463,7 +463,7 @@ export default function SettingsModal({
           </div>
         </div>
 
-        {error && <p className="m-0 pt-2 text-[0.8rem] text-danger">{error}</p>}
+        {error && <p className="m-0 pt-2 type-label text-danger">{error}</p>}
       </div>
     </div>
   );

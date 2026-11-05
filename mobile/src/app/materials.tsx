@@ -24,6 +24,7 @@ import { Refreshable } from "../components/Refreshable";
 import { SubNav } from "../components/SubNav";
 import { Tappable } from "../components/Tappable";
 import { LIMITS } from "@shared/limits";
+import { ACTION } from "../theme";
 
 export default function MaterialsScreen() {
   const { workspace, track, today, editTrack, restoreWorkspace } = useWorkspace();
@@ -107,13 +108,13 @@ export default function MaterialsScreen() {
           left={{
             label: "Archive",
             icon: "archive-outline",
-            colour: "#f59e0b",
+            colour: ACTION.warning,
             onAct: () => setArchived(material.id, true),
           }}
           right={{
             label: "Remove",
             icon: "trash-outline",
-            colour: "#ef4444",
+            colour: ACTION.danger,
             onAct: () => {
               const previous = workspace;
               remove(material.id);

@@ -30,7 +30,7 @@ interface ScheduleDayModalProps {
   weekOffset?: number;
 }
 
-const fieldInputClass = "bg-input-bg border border-card-border rounded-md text-foreground font-[inherit] text-[0.8rem] outline-none px-2.5 py-1.5";
+const fieldInputClass = "bg-input-bg border border-card-border rounded-md text-foreground font-[inherit] type-label outline-none px-2.5 py-1.5";
 
 export default function ScheduleDayModal({ day, data, applyChange, onClose, weekOffset = 0 }: ScheduleDayModalProps) {
   // Lets the panel and its backdrop play their exit before whoever owns
@@ -107,10 +107,10 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
 
         {/* Modal Header */}
         <div>
-          <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold uppercase font-mono tracking-[0.05em]">
+          <span className="type-caption bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold uppercase font-mono tracking-[0.05em]">
             {day.name} Schedule • {targetDateStr}
           </span>
-          <h2 className="text-[1.3rem] font-bold text-foreground mt-2">
+          <h2 className="type-title font-bold text-foreground mt-2">
             {getFullLabel(currentDaySchedule.type)}
           </h2>
         </div>
@@ -119,7 +119,7 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-[0.8rem] text-muted-foreground">Focus Type:</span>
+              <span className="type-label text-muted-foreground">Focus Type:</span>
               <select
                 value={currentDaySchedule.type}
                 onChange={(e) => {
@@ -139,7 +139,7 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
                     )
                   );
                 }}
-                className="bg-input-bg border border-card-border rounded-md px-2 py-1.5 text-foreground text-[0.85rem] font-[inherit] outline-none cursor-pointer"
+                className="bg-input-bg border border-card-border rounded-md px-2 py-1.5 text-foreground type-body font-[inherit] outline-none cursor-pointer"
               >
                 {Object.entries(focusTypes).map(([key, val]) => (
                   <option key={key} value={key} className="bg-card text-foreground">
@@ -151,7 +151,7 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
 
             <button
               onClick={() => setShowManager(!showManager)}
-              className="bg-transparent border-none text-accent text-xs cursor-pointer font-mono p-0 underline"
+              className="bg-transparent border-none text-accent type-caption cursor-pointer font-mono p-0 underline"
             >
               {showManager ? "Hide Settings" : "Customize Pool"}
             </button>
@@ -175,7 +175,7 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
               weekly plan. */}
           <div className="flex flex-col gap-5 max-h-[550px] overflow-y-auto pr-1">
             <div className="flex flex-col gap-3">
-              <strong className="text-accent text-xs font-mono tracking-[0.05em] uppercase">
+              <strong className="text-accent type-caption font-mono tracking-[0.05em] uppercase">
                 {isTargetToday ? "TODAY'S " : ""}CHECKLIST:
               </strong>
 
@@ -201,14 +201,14 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
                           />
                           <span
                             title={item.title}
-                            className={`min-w-0 flex-1 line-clamp-2 text-[0.85rem] font-semibold ${completed ? "text-muted-foreground line-through" : "text-foreground"}`}
+                            className={`min-w-0 flex-1 line-clamp-2 type-body font-semibold ${completed ? "text-muted-foreground line-through" : "text-foreground"}`}
                           >
                             {item.title}
                           </span>
-                          <span className="text-[0.65rem] text-accent/70 uppercase tracking-[0.05em] shrink-0">Rotation</span>
+                          <span className="type-micro text-accent/70 uppercase tracking-[0.05em] shrink-0">Rotation</span>
                         </div>
                         {item.description && (
-                          <span className="text-[0.8rem] text-muted-foreground ml-7">{item.description}</span>
+                          <span className="type-label text-muted-foreground ml-7">{item.description}</span>
                         )}
                       </div>
                     );
@@ -239,7 +239,7 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
                           }
                           onBlur={persistOnBlur}
                           placeholder="Item..."
-                          className="flex-1 bg-transparent border-none text-foreground font-[inherit] text-[0.85rem] font-semibold outline-none"
+                          className="flex-1 bg-transparent border-none text-foreground font-[inherit] type-body font-semibold outline-none"
                         />
                         <button
                           onClick={() =>
@@ -271,7 +271,7 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
                         }
                         onBlur={persistOnBlur}
                         placeholder="Description (optional)..."
-                        className="bg-transparent border-none border-b border-dashed border-card-border text-muted-foreground font-[inherit] text-[0.8rem] outline-none py-px ml-7"
+                        className="bg-transparent border-none border-b border-dashed border-card-border text-muted-foreground font-[inherit] type-label outline-none py-px ml-7"
                       />
                     </div>
                   );
@@ -298,7 +298,7 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
                       placeholder="Description (optional)..."
                       className={`flex-1 ${fieldInputClass}`}
                     />
-                    <button onClick={addItem} className="btn px-3 py-1.5 text-[0.8rem]">
+                    <button onClick={addItem} className="btn px-3 py-1.5 type-label">
                       + Add
                     </button>
                   </div>
@@ -310,7 +310,7 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
 
         {/* Modal Footer */}
         <div className="flex justify-end mt-2">
-          <button onClick={dismiss} className="btn px-6 py-2 text-[0.85rem]">
+          <button onClick={dismiss} className="btn px-6 py-2 type-body">
             Done
           </button>
         </div>
