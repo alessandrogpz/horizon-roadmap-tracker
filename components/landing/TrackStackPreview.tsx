@@ -20,7 +20,7 @@ export default function TrackStackPreview() {
       className="glass-panel landing-preview flex min-w-0 select-none flex-col gap-3 overflow-hidden"
     >
       <div className="flex items-baseline justify-between gap-3 border-b border-card-border pb-3">
-        <span className="text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+        <span className="text-[0.68rem] font-semibold text-foreground">
           Consistency · all tracks
         </span>
         <span className="font-mono text-[0.65rem] text-muted-foreground">2026</span>

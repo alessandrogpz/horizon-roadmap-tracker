@@ -75,14 +75,15 @@ export default function PhaseTracker({ phases, currentPhase, startDate, roadmapE
                 }`}
               />
 
-              {/* Header Title Row */}
+              {/* The phase's name, and nothing above it. "PHASE 01" in tracked
+                  monospace capitals used to sit here: a number the dot and the
+                  line beside it already give, shouted. Where a phase stands is
+                  the dot's colour and the weight of its name. */}
               <div className="flex items-center gap-3 flex-wrap">
-                <span className={`text-xs font-mono font-bold tracking-[0.05em] ${isActive ? "text-accent" : isPast ? "text-success" : "text-muted-foreground"}`}>
-                  PHASE 0{phase.id}
-                </span>
-                <h3 className={`text-[0.95rem] font-semibold m-0 ${isActive ? "text-foreground" : "text-foreground"}`}>
+                <h3 className={`text-[0.95rem] m-0 text-foreground ${isActive ? "font-bold" : "font-semibold"}`}>
                   {phase.title.replace(/Phase \d+:\s*/, "")}
                 </h3>
+                {isActive ? <span className="text-[0.75rem] text-accent font-semibold">You are here</span> : null}
               </div>
 
               <p className="text-[0.8rem] text-muted-foreground m-0">
