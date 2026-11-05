@@ -22,6 +22,7 @@ import { formatDateYMD, isDateStr, parseYMD } from "@shared/dates";
 import { tap } from "../feedback/haptics";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { Tappable } from "./Tappable";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -89,14 +90,14 @@ export function DatePicker({
         <View style={styles.sheet}>
           <View style={styles.head}>
             {step !== "year" && (
-              <Pressable
+              <Tappable
                 accessibilityRole="button"
                 accessibilityLabel="Back a step"
                 hitSlop={10}
                 onPress={() => setStep(step === "day" ? "month" : "year")}
               >
                 <Ionicons name="chevron-back" size={20} color={palette.foreground} />
-              </Pressable>
+              </Tappable>
             )}
             <View style={styles.headText}>
               <Text style={styles.title}>{title}</Text>
@@ -108,16 +109,16 @@ export function DatePicker({
                     : `${SHORT[month]} ${year} · pick a day`}
               </Text>
             </View>
-            <Pressable accessibilityRole="button" accessibilityLabel="Close" hitSlop={10} onPress={onClose}>
+            <Tappable accessibilityRole="button" accessibilityLabel="Close" hitSlop={10} onPress={onClose}>
               <Ionicons name="close" size={20} color={palette.subtleForeground} />
-            </Pressable>
+            </Tappable>
           </View>
 
           <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent}>
             {step === "year" && (
               <View style={styles.grid}>
                 {years.map((candidate) => (
-                  <Pressable
+                  <Tappable
                     key={candidate}
                     accessibilityRole="button"
                     accessibilityState={{ disabled: !yearAllowed(candidate), selected: candidate === year }}
@@ -136,7 +137,7 @@ export function DatePicker({
                     <Text style={[styles.cellLabel, candidate === thisYear && { color: palette.accent }]}>
                       {candidate}
                     </Text>
-                  </Pressable>
+                  </Tappable>
                 ))}
               </View>
             )}
@@ -144,7 +145,7 @@ export function DatePicker({
             {step === "month" && (
               <View style={styles.grid}>
                 {MONTHS.map((name, index) => (
-                  <Pressable
+                  <Tappable
                     key={name}
                     accessibilityRole="button"
                     accessibilityState={{ disabled: !monthAllowed(index), selected: index === month }}
@@ -161,7 +162,7 @@ export function DatePicker({
                     ]}
                   >
                     <Text style={styles.cellLabel}>{SHORT[index]}</Text>
-                  </Pressable>
+                  </Tappable>
                 ))}
               </View>
             )}
@@ -173,7 +174,7 @@ export function DatePicker({
                   <View key={`pad-${i}`} style={[styles.day, styles.invisible]} />
                 ))}
                 {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => (
-                  <Pressable
+                  <Tappable
                     key={day}
                     accessibilityRole="button"
                     accessibilityLabel={`${day} ${MONTHS[month]} ${year}`}
@@ -187,7 +188,7 @@ export function DatePicker({
                     style={[styles.day, !allowed(day) && styles.disabled]}
                   >
                     <Text style={styles.cellLabel}>{day}</Text>
-                  </Pressable>
+                  </Tappable>
                 ))}
               </View>
             )}

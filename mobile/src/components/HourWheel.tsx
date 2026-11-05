@@ -15,6 +15,7 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { Tappable } from "./Tappable";
 
 const ROW = 44;
 /** Rows of padding above and below, so the first and last hour can reach the
@@ -91,10 +92,10 @@ export function HourWheel({
           </View>
 
           <View style={styles.actions}>
-            <Pressable accessibilityRole="button" onPress={onClose} style={styles.button}>
+            <Tappable accessibilityRole="button" onPress={onClose} style={styles.button}>
               <Text style={styles.buttonLabel}>Cancel</Text>
-            </Pressable>
-            <Pressable
+            </Tappable>
+            <Tappable
               accessibilityRole="button"
               onPress={() => {
                 onPick(chosen.current);
@@ -103,7 +104,7 @@ export function HourWheel({
               style={[styles.button, styles.primary]}
             >
               <Text style={styles.primaryLabel}>Done</Text>
-            </Pressable>
+            </Tappable>
           </View>
         </View>
       </View>

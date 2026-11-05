@@ -14,7 +14,7 @@
 // imply more than it is.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { parseYMD } from "@shared/dates";
 import { loadStepCount } from "../storage/db";
 import { dailySteps, describeHealth, healthStatus, requestHealthPermission, type HealthStatus } from "../steps/healthConnect";
@@ -22,6 +22,7 @@ import { Refreshable } from "../components/Refreshable";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { Tappable } from "../components/Tappable";
 
 const DAYS_BACK = 365;
 const RECENT = 14;
@@ -135,7 +136,7 @@ export default function StepsScreen() {
       </View>
 
       {health === "needs-permission" ? (
-        <Pressable
+        <Tappable
           accessibilityRole="button"
           style={styles.permission}
           onPress={() => void requestHealthPermission().then(setHealth).then(load)}
@@ -145,7 +146,7 @@ export default function StepsScreen() {
             Whole-day totals, including steps taken with Horizon closed and any counted by a watch.
             Horizon only ever reads steps, and the decision is made in Android&apos;s own dialog.
           </Text>
-        </Pressable>
+        </Tappable>
       ) : null}
 
       <Text style={styles.footnote}>{describeHealth(health)}</Text>

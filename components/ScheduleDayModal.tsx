@@ -85,11 +85,11 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[1000] p-4"
+      className="modal-overlay overlay-in fixed inset-0 z-[1000] flex items-center justify-center p-4"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="glass-panel panel-roomy max-w-[500px] w-full flex flex-col gap-5 border border-accent-muted relative rounded-lg shadow-[0_20px_25px_-5px_rgba(0,0,0,0.5),0_10px_10px_-5px_rgba(0,0,0,0.4)]"
+        className="modal-in glass-panel panel-roomy max-w-[500px] w-full flex flex-col gap-5 border border-accent-muted relative rounded-lg shadow-[0_20px_25px_-5px_rgba(0,0,0,0.5),0_10px_10px_-5px_rgba(0,0,0,0.4)]"
       >
         {/* Close Button */}
         <button

@@ -30,11 +30,11 @@ export default function WeeklyRhythmModal({ weekSchedule, focusTypes, onSave, on
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[1000] p-4"
+      className="modal-overlay overlay-in fixed inset-0 z-[1000] flex items-center justify-center p-4"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="glass-panel panel-roomy max-w-[560px] w-full max-h-[90vh] overflow-y-auto flex flex-col gap-5 border border-accent-muted relative rounded-lg"
+        className="modal-in glass-panel panel-roomy max-w-[560px] w-full max-h-[90vh] overflow-y-auto flex flex-col gap-5 border border-accent-muted relative rounded-lg"
       >
         <button
           onClick={onClose}

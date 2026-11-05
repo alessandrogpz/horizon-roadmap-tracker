@@ -6,7 +6,7 @@
 // on each of them, and what has each already had.
 
 import { useCallback, useMemo } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { router } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { completedItemTitle } from "@shared/streak";
@@ -18,6 +18,7 @@ import { usePalette } from "../theme/ThemeProvider";
 import { NothingSelected, ReadOnlyBand, TrackChip, TrackPicker } from "./MasterChrome";
 import { makeMasterStyles } from "./styles";
 import { useMasterSources } from "./useMasterSources";
+import { Tappable } from "../components/Tappable";
 
 export function MasterToday() {
   const palette = usePalette();
@@ -67,7 +68,7 @@ export function MasterToday() {
 
           <Text style={styles.footnote}>What each track is asking of today.</Text>
           {entries.map((entry) => (
-            <Pressable
+            <Tappable
               key={entry.track.id}
               accessibilityRole="button"
               accessibilityLabel={`${entry.track.name}, ${entry.label}. Opens the track.`}
@@ -89,7 +90,7 @@ export function MasterToday() {
                 ))}
               </View>
               <Ionicons name="chevron-forward" size={15} color={palette.subtleForeground} />
-            </Pressable>
+            </Tappable>
           ))}
 
           <Text style={styles.sectionTitle}>Already logged{total > 0 ? ` · ${total}` : ""}</Text>

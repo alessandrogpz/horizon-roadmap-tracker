@@ -13,7 +13,7 @@
 // edited here and one edited on the laptop are the same edit to the merge.
 
 import { useCallback, useMemo, useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import type { Phase, PhaseDetailItem, PhaseDetailedInfo } from "@shared/types";
 import { updatePhase } from "@shared/trackActions";
@@ -26,6 +26,7 @@ import { DatePicker } from "../../components/DatePicker";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { EditButton, useEditMode } from "../../components/EditToggle";
 import { Refreshable } from "../../components/Refreshable";
+import { Tappable } from "../../components/Tappable";
 
 export default function PhaseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -101,7 +102,7 @@ export default function PhaseDetailScreen() {
         </Text>
         {phase.tasks.map((task) => (
           <View key={task.id} style={styles.taskRow}>
-            <Pressable
+            <Tappable
               accessibilityRole="checkbox"
               accessibilityState={{ checked: task.completed }}
               accessibilityLabel={task.title}
@@ -114,7 +115,7 @@ export default function PhaseDetailScreen() {
               style={[styles.checkbox, task.completed && { backgroundColor: palette.success, borderColor: palette.success }]}
             >
               {task.completed && <Text style={styles.tick}>✓</Text>}
-            </Pressable>
+            </Tappable>
             {editing ? (
               <TextInput
                 value={task.title}
@@ -128,13 +129,13 @@ export default function PhaseDetailScreen() {
               <Text style={[styles.taskTitle, task.completed && styles.doneTask]}>{task.title}</Text>
             )}
             {editing && (
-              <Pressable
+              <Tappable
                 accessibilityRole="button"
                 accessibilityLabel={`Remove ${task.title}`}
                 onPress={() => change((p) => ({ ...p, tasks: p.tasks.filter((t) => t.id !== task.id) }))}
               >
                 <Text style={styles.remove}>×</Text>
-              </Pressable>
+              </Tappable>
             )}
           </View>
         ))}
@@ -185,13 +186,13 @@ export default function PhaseDetailScreen() {
                       <Text style={styles.detailItem}>{item.item}</Text>
                     )}
                     {editing && (
-                      <Pressable
+                      <Tappable
                         accessibilityRole="button"
                         accessibilityLabel={`Remove ${item.item || `${label} item ${index + 1}`}`}
                         onPress={() => set(items.filter((_, i) => i !== index))}
                       >
                         <Text style={styles.remove}>×</Text>
-                      </Pressable>
+                      </Tappable>
                     )}
                   </View>
                   {editing ? (
@@ -237,7 +238,7 @@ export default function PhaseDetailScreen() {
               ({ key }) =>
                 phaseDetailItems(phase.detailedInfo[key]).length === 0 && !openSections.includes(key)
             ).map(({ key, label }) => (
-              <Pressable
+              <Tappable
                 key={key}
                 accessibilityRole="button"
                 accessibilityLabel={`Add a ${label} section`}
@@ -245,7 +246,7 @@ export default function PhaseDetailScreen() {
                 style={styles.addSectionChip}
               >
                 <Text style={styles.addSectionLabel}>+ {label}</Text>
-              </Pressable>
+              </Tappable>
             ))}
           </View>
         )}
@@ -308,7 +309,7 @@ function Deadline({
   return (
     <>
       <View style={styles.deadlineRow}>
-        <Pressable
+        <Tappable
           accessibilityRole="button"
           disabled={!canEdit}
           onPress={() => setPicking(true)}
@@ -322,10 +323,10 @@ function Deadline({
                 ? "No deadline — tap to set one"
                 : "No deadline"}
           </Text>
-        </Pressable>
+        </Tappable>
 
         {canEdit && due ? (
-          <Pressable
+          <Tappable
             accessibilityRole="button"
             accessibilityLabel="Clear the deadline"
             hitSlop={10}
@@ -338,7 +339,7 @@ function Deadline({
             }
           >
             <Ionicons name="close" size={16} color={palette.subtleForeground} />
-          </Pressable>
+          </Tappable>
         ) : null}
       </View>
 

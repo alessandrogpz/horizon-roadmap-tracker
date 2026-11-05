@@ -11,10 +11,11 @@
 // happen to be.
 
 import { useMemo } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { formatRemaining, TIMER_MINUTES, useTimer, type TimerMode } from "../timer/TimerProvider";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { Tappable } from "../components/Tappable";
 
 export default function TimerScreen() {
   const palette = usePalette();
@@ -25,7 +26,7 @@ export default function TimerScreen() {
     <View style={styles.screen}>
       <View style={styles.modes}>
         {(Object.keys(TIMER_MINUTES) as TimerMode[]).map((option) => (
-          <Pressable
+          <Tappable
             key={option}
             accessibilityRole="button"
             accessibilityState={{ selected: mode === option }}
@@ -35,7 +36,7 @@ export default function TimerScreen() {
             <Text style={[styles.modeLabel, mode === option && { color: palette.foreground }]}>
               {option === "focus" ? `Work · ${TIMER_MINUTES.focus}` : `Rest · ${TIMER_MINUTES.rest}`}
             </Text>
-          </Pressable>
+          </Tappable>
         ))}
       </View>
 
@@ -45,23 +46,23 @@ export default function TimerScreen() {
 
       <View style={styles.controls}>
         {!running && !paused && (
-          <Pressable accessibilityRole="button" onPress={() => start(mode)} style={[styles.button, styles.primary]}>
+          <Tappable accessibilityRole="button" onPress={() => start(mode)} style={[styles.button, styles.primary]}>
             <Text style={styles.primaryLabel}>Start</Text>
-          </Pressable>
+          </Tappable>
         )}
         {running && !finished && (
-          <Pressable accessibilityRole="button" onPress={pause} style={styles.button}>
+          <Tappable accessibilityRole="button" onPress={pause} style={styles.button}>
             <Text style={styles.buttonLabel}>Pause</Text>
-          </Pressable>
+          </Tappable>
         )}
         {paused && (
-          <Pressable accessibilityRole="button" onPress={resume} style={[styles.button, styles.primary]}>
+          <Tappable accessibilityRole="button" onPress={resume} style={[styles.button, styles.primary]}>
             <Text style={styles.primaryLabel}>Resume</Text>
-          </Pressable>
+          </Tappable>
         )}
-        <Pressable accessibilityRole="button" onPress={reset} style={styles.button}>
+        <Tappable accessibilityRole="button" onPress={reset} style={styles.button}>
           <Text style={styles.buttonLabel}>Reset</Text>
-        </Pressable>
+        </Tappable>
       </View>
 
       <Text style={styles.footnote}>
