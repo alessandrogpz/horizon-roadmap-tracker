@@ -73,6 +73,9 @@ export const PREVIEW_TRACKS = demo.map((track, index) => ({
   history: track.completedItemsHistory,
   timeline: timelineStats(track),
   dayOfTrack: dayForDate(track.startDate, PREVIEW_TODAY),
+  /** How far into the current phase, which is the second figure the real
+   *  header shows. */
+  phaseDay: dayForDate(track.currentPhaseStartDate || track.startDate, PREVIEW_TODAY),
   // The recent end of the year, not its start. A calendar year begins in
   // January and a track rarely does, so the whole year drawn from the left is
   // mostly the blank months before anything happened — which is a poor

@@ -45,6 +45,7 @@ import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { Tappable } from "../components/Tappable";
 import { LIMITS } from "@shared/limits";
+import { NoTrack } from "../components/NoTrack";
 
 export default function WorkoutScreen() {
   const { track } = useWorkspace();
@@ -69,11 +70,7 @@ export default function WorkoutScreen() {
   }, [change]);
 
   if (!track) {
-    return (
-      <View style={[styles.screen, styles.centered]}>
-        <Text style={styles.muted}>No track open.</Text>
-      </View>
-    );
+    return <NoTrack title="No track yet" hint="Workouts belong to a track. Make one and this is where its sessions live." />;
   }
 
   if (!open) {

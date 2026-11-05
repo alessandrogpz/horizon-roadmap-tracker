@@ -11,7 +11,7 @@
 
 import { useLocalSearchParams } from "expo-router";
 import { MarkdownDocument } from "../../components/MarkdownDocument";
-import { NoTrack } from "../../components/NoTrack";
+import { EmptyState } from "../../components/EmptyState";
 import { useWorkspace } from "../../workspace/WorkspaceProvider";
 
 export default function RotationPlanScreen() {
@@ -19,7 +19,16 @@ export default function RotationPlanScreen() {
   const { track, editTrack } = useWorkspace();
 
   const rotation = track?.rotations?.find((r) => r.id === id) ?? null;
-  if (!rotation) return <NoTrack message="That rotation isn't on the open track." />;
+  // Not a "no track" state — the track is open, this rotation is not on it —
+  // so it does not get "Create a track" as its way out.
+  if (!rotation) {
+    return (
+      <EmptyState
+        title="That rotation isn't on this track"
+        hint="It may have been removed, or it belongs to a track that is not the open one."
+      />
+    );
+  }
 
   return (
     <MarkdownDocument

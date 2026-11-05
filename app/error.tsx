@@ -16,7 +16,7 @@ export default function Error({
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-8 bg-background text-foreground font-mono text-center">
       <div className="p-8 rounded-lg bg-card border border-warning/20 max-w-[600px] w-full shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
-        <h2 className="text-warning mb-4 uppercase tracking-[0.05em] type-display-sm font-bold">
+        <h2 className="text-warning mb-4 type-display-sm font-bold">
           Workspace Error
         </h2>
         <p className="text-muted-foreground type-subhead mb-6">

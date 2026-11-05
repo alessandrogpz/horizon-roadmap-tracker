@@ -43,7 +43,7 @@ export default function FocusTypeEditor({ focusTypes, weekSchedule, onChange }: 
 
   return (
     <div className="bg-surface-muted border border-card-border rounded-lg p-3 flex flex-col gap-[0.6rem]">
-      <span className="type-caption text-muted-foreground font-bold uppercase">
+      <span className="type-caption text-muted-foreground font-bold">
         Edit Focus Types Pool
       </span>
 

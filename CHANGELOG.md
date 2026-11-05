@@ -7,6 +7,69 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.115.0] - 2026-11-05
+
+Everything in this release was found by the critique pass that followed 0.114.0, and measured
+before and after rather than assumed.
+
+### Added
+- **Undo on the web.** The phone app has had `UndoBar` since it was written, and its reasoning is
+  worth repeating: a dialog in front of every destructive action teaches people to click through
+  dialogs, so the action happens at once and a bar offers it back. The web app had inherited the
+  half of that policy that removes the guard and not the half that replaces it — deleting a
+  deliverable, a material, a to-do or a phase was final on the first click of a 14x14 target, in a
+  local-first app with no server history. `components/UndoBar.tsx` restores a whole previous
+  workspace rather than inverting the edit, because `commitWorkspace` already takes one. Verified
+  end to end: two phases, delete, one, Undo, two.
+
+### Fixed
+- **49 of 78 interactive elements failed 44x44 at phone width; 35 failed 24x24.** `.tap-44` had
+  been applied to panel chrome and never to panel contents, which is where every failure lived —
+  all 24 elements carrying it passed, and none of the 49 failures had it. Now 15 and **0**: every
+  control clears the 24x24 that WCAG 2.5.8 actually requires, and the 15 still under Apple's 44
+  are labelled buttons at least 24 in both axes. **The 0.110.0 release notes claimed 22 under
+  44x44; that was measured on a near-empty dashboard and was wrong for a populated one.**
+- **The focus ring failed WCAG 2.2 SC 1.4.11 in both themes** — `rgba(accent, 0.45)` composited to
+  2.23:1 over the page and 2.27 over a panel, against the 3:1 a non-text indicator needs. The alpha
+  was buying softness on the one element whose whole job is to be unmistakable. Full strength now:
+  **7.14** and 6.85.
+- **14 text-contrast failures on the dashboard, 1.94–2.78 against 4.5, identical in both themes —
+  now 0 in both.** Two causes, both de-emphasis implemented as opacity multiplying against tokens
+  that were already as quiet as they could be: `opacity-50` on future day cards, and
+  `muted-foreground/60` captions nested under a further `opacity-70`. No opacity fixes the first —
+  even 0.85 drops the subtle tier to 3.84 — so a future day is a dashed, quieter *frame* now and
+  its text is left alone, which is also what you want from looking ahead.
+- The contrast target the track colours solve against went from 4.6 to **5.2**, because the surface
+  it models is not the surface they land on: the weekly plan composites to `#153345` where the
+  model says `#17171b` plus a wash, and a tag the model scored 4.77 measured 4.42 on screen.
+- **"New track" had no Create button.** The four template rows *were* the irreversible submit,
+  directly under a sentence promising the choice was low-stakes — so clicking one to read what
+  "Work" sets up created a track, with no moment to check the name and dates. They are a radio
+  group now, with **Create track** beside Cancel.
+- The week pager's heading row, the checkbox (18x18, the most repeated action in the product) and
+  the day-card header (full width, 18 points tall) all grew real targets.
+
+### Changed
+- **The phone's front door was three words in an empty screen.** "No track open." — no
+  illustration, no explanation, nothing to press, as the first thing a new person sees. The app
+  already had `EmptyState` doing this properly two tabs away. `NoTrack` is that now, with a
+  **Create a track** button, and the eight screens that had written the three-word version out
+  inline go through it instead of each inventing an answer.
+- **The uppercase ban finished.** `.section-title` and the phone's `TYPE.marker` each removed small
+  tracked capitals with a written argument naming them the commonest tell of a generated
+  dashboard — and the rule reached panel headings and stopped at the panel border. 53 survivors
+  across 21 components, in tab labels, field labels and section markers, now sentence case.
+- The landing page was advertising a dashboard that no longer exists: four bordered stat tiles with
+  icons and a progress ring reading Streak / Timeline / Active / Last 30, against a real header of
+  four bare figures reading Streak / Phase day / Timeline / Progress. The preview's own comment
+  claimed it showed them "as the real header shows them".
+- `globals.css` said the light theme was "Not yet activated by a toggle" and that "the component
+  tree still hardcodes many dark-only colors". Both false, in the file that is the de-facto design
+  system document.
+- "1 points behind the calendar" is singular when it is one. "Time spent 1/100" is a percentage,
+  beside the figure that was already written as one. The focus-type swatches no longer read a raw
+  hex to screen readers.
+
 ## [0.114.1] - 2026-11-05
 
 ### Fixed

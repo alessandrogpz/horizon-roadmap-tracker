@@ -47,7 +47,8 @@
      keeps the saturated --accent reserved for interactive/status signals. */
   --accent-muted: var(--track-accent-muted-dark, rgba(14, 165, 233, 0.35));
   /* Focus ring — shadcn signature; used on inputs/buttons via :focus-visible. */
-  --ring: var(--track-ring-dark, rgba(14, 165, 233, 0.45));
+  /* Full strength: see lib/trackAccent.ts. A 45% ring measured 2.25:1. */
+  --ring: var(--track-ring-dark, #0ea5e9);
 
   /* Elevation ladder */
   --card-bg: #101014;
@@ -98,10 +99,18 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Light theme tokens — infrastructure staged and ready. Not yet activated by
-   a toggle: the component tree still hardcodes many dark-only colors, so a
-   correct light mode needs a dedicated color-token migration (tracked
-   separately). Flip by setting data-theme="light" on <html> once that lands.
+   Light theme tokens.
+
+   Live, and reachable from the sun/moon button in the top bar and from the
+   three-way choice in Settings; `data-theme="light"` on <html> is what the
+   toggle sets, pre-paint, from the inline script in layout.tsx.
+
+   These are composed for a light ground rather than inherited from the dark
+   theme and lightened — `--success` deepens to #047857 and `--warning` to
+   #b45309 so they stay readable on white, which is the whole reason the pair
+   exists. Anything that hardcodes a colour instead of reading a token breaks
+   here first and nowhere else, so this is the theme worth checking a change
+   against.
    --------------------------------------------------------------------------- */
 :root[data-theme="light"] {
   --background: #fbfbfc;
@@ -116,7 +125,7 @@
   --accent: var(--track-accent-light, #0369a1);
   --accent-hover: var(--track-accent-hover-light, #025684);
   --accent-muted: var(--track-accent-muted-light, rgba(3, 105, 161, 0.28));
-  --ring: var(--track-ring-light, rgba(3, 105, 161, 0.4));
+  --ring: var(--track-ring-light, #0369a1);
 
   --success: #047857;
   --warning: #b45309;
@@ -491,6 +500,27 @@ button:not(:disabled):active,
    `:checked`, whose pop animation takes the transform over for 240ms. */
 .checkbox-custom:active {
   transform: scale(0.94);
+}
+
+/* 18x18 is the right size for the box and the wrong size for the target.
+   Ticking something off is the most repeated action in the product and it
+   was the third-smallest thing on the page. Same mechanism as `.tap-44`:
+   the area grows through a pseudo-element on coarse pointers, so the box
+   stays the size the dense rows were built around. */
+@media (pointer: coarse) {
+  .checkbox-custom {
+    position: relative;
+  }
+
+  .checkbox-custom::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+  }
 }
 
 .checkbox-custom:checked {
@@ -1241,6 +1271,10 @@ h1, h2, h3, .type-title, .type-heading, .type-display-sm, .type-hero, .type-sect
      done and what it is for — enough to decide whether to open it. */
   .day-card-head {
     cursor: pointer;
+    /* Full width and 18 points tall: it failed the 44-point rule on height
+       alone, and it is how you open a day on a phone. Padding rather than a
+       pseudo-element, because this one has room to simply be bigger. */
+    min-height: 44px;
   }
 
   .day-card.is-collapsed .day-card-head {
@@ -1287,6 +1321,28 @@ h1, h2, h3, .type-title, .type-heading, .type-display-sm, .type-hero, .type-sect
   .notes-drawer.open {
     transition: none;
   }
+}
+
+/* A day that has not arrived yet.
+   This was `opacity-50` on the whole card, which halved the text along with
+   everything else: the date, the weekday and the focus tag are already on the
+   quietest tier the palette has, chosen to *just* clear 4.5:1, and half of
+   that measured 1.96 to 2.40 in both themes. Six of the dashboard's fourteen
+   contrast failures were this one class.
+
+   There is no opacity that fixes it — 0.85 still drops the subtle tier to
+   3.84 — so the de-emphasis moves off the text entirely and onto the surface
+   holding it. A future day is a quieter frame around text you can still read,
+   which is also what you want from it: looking ahead is the one reason to
+   look at a day that has not happened. */
+.day-card.is-future {
+  background: transparent;
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--card-border) 70%, transparent);
+}
+
+.day-card.is-future .day-card-label {
+  opacity: 0.9;
 }
 
 /* ===========================================================================

@@ -128,7 +128,7 @@ export function MasterWeekPanel({
           {weekOffset !== 0 && (
             <button
               onClick={() => setWeekOffset(0)}
-              className="ml-1 cursor-pointer rounded border-none bg-accent px-2 py-0.5 type-caption font-semibold uppercase tracking-[0.03em] text-black"
+              className="ml-1 cursor-pointer rounded border-none bg-accent px-2 py-0.5 type-caption font-semibold tracking-[0.03em] text-black"
             >
               Today
             </button>
@@ -148,7 +148,7 @@ export function MasterWeekPanel({
                 }`}
               >
                 <div className="day-card-head day-card-when border-b border-card-border pb-1 text-center">
-                  <span className={`type-caption uppercase tracking-[0.05em] ${isToday ? "font-bold text-foreground" : "font-semibold text-muted-foreground"}`}>
+                  <span className={`type-caption ${isToday ? "font-bold text-foreground" : "font-semibold text-muted-foreground"}`}>
                     {day.name}
                   </span>
                   <span className="day-card-date block font-mono type-micro text-subtle-foreground">{day.date.slice(5)}</span>
@@ -163,7 +163,7 @@ export function MasterWeekPanel({
                   <div key={entry.track.id} className="flex min-w-0 flex-col gap-0.5">
                     <span className="flex items-start gap-1">
                       <span
-                        className="track-ink min-w-0 flex-1 break-words type-micro font-semibold uppercase leading-[1.25] tracking-[0.02em]"
+                        className="track-ink min-w-0 flex-1 break-words type-micro font-semibold leading-[1.25] tracking-[0.02em]"
                         style={trackInkVariables(entry.track.color) as React.CSSProperties}
                         title={`${entry.track.name}: ${entry.label}`}
                       >
@@ -463,7 +463,7 @@ export function MasterPhasesPanel({ tracks }: { tracks: TrackState[] }) {
                 {window.phase.title}
               </span>
               {window.state === "current" && (
-                <span className="shrink-0 rounded px-1.5 py-px type-micro font-bold uppercase tracking-[0.05em] text-accent" style={{ background: "var(--surface-hover)" }}>
+                <span className="shrink-0 rounded px-1.5 py-px type-micro font-bold text-accent" style={{ background: "var(--surface-hover)" }}>
                   Now
                 </span>
               )}
@@ -539,7 +539,7 @@ export function MasterMaterialsPanel({ tracks }: { tracks: TrackState[] }) {
               {item.author && <span className="text-subtle-foreground"> · {item.author}</span>}
             </span>
             {item.status && (
-              <span className="shrink-0 font-mono type-micro uppercase tracking-[0.04em] text-subtle-foreground">
+              <span className="shrink-0 font-mono type-micro tracking-[0.04em] text-subtle-foreground">
                 {item.status}
               </span>
             )}

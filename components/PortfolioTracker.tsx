@@ -15,7 +15,7 @@ interface PortfolioTrackerProps {
 }
 
 const inputClass = "w-full p-1 rounded bg-input-bg border border-card-border text-foreground outline-none font-[inherit] type-body";
-const labelClass = "block type-caption text-muted-foreground mb-1 uppercase";
+const labelClass = "block type-caption text-muted-foreground mb-1";
 
 export default function PortfolioTracker({ portfolio, onToggle, onAddProject, onEditProject, onDeleteProject }: PortfolioTrackerProps) {
 
@@ -168,8 +168,8 @@ export default function PortfolioTracker({ portfolio, onToggle, onAddProject, on
                   )}
                 </div>
                 <div className="flex items-center gap-2 type-caption shrink-0">
-                  <button onClick={() => startEdit(proj)} className="text-accent bg-transparent border-none cursor-pointer">Edit</button>
-                  <button onClick={() => onDeleteProject(proj.id)} className="text-danger bg-transparent border-none cursor-pointer flex items-center" aria-label="Delete project"><X size={14} strokeWidth={2} /></button>
+                  <button onClick={() => startEdit(proj)} className="tap-44 text-accent bg-transparent border-none cursor-pointer">Edit</button>
+                  <button onClick={() => onDeleteProject(proj.id)} className="tap-44 text-danger bg-transparent border-none cursor-pointer flex items-center" aria-label="Delete project"><X size={14} strokeWidth={2} /></button>
                 </div>
               </>
             )}

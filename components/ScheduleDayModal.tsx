@@ -107,7 +107,7 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
 
         {/* Modal Header */}
         <div>
-          <span className="type-caption bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold uppercase font-mono tracking-[0.05em]">
+          <span className="type-caption bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold font-mono">
             {day.name} Schedule • {targetDateStr}
           </span>
           <h2 className="type-title font-bold text-foreground mt-2">
@@ -175,7 +175,7 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
               weekly plan. */}
           <div className="flex flex-col gap-5 max-h-[550px] overflow-y-auto pr-1">
             <div className="flex flex-col gap-3">
-              <strong className="text-accent type-caption font-mono tracking-[0.05em] uppercase">
+              <strong className="text-accent type-caption font-mono">
                 {isTargetToday ? "TODAY'S " : ""}CHECKLIST:
               </strong>
 
@@ -205,7 +205,7 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
                           >
                             {item.title}
                           </span>
-                          <span className="type-micro text-accent/70 uppercase tracking-[0.05em] shrink-0">Rotation</span>
+                          <span className="type-micro text-accent/70 shrink-0">Rotation</span>
                         </div>
                         {item.description && (
                           <span className="type-label text-muted-foreground ml-7">{item.description}</span>
