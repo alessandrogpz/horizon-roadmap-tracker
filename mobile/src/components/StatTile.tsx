@@ -111,9 +111,9 @@ function makeStyles(palette: Palette) {
     compactHead: { flexDirection: "row", alignItems: "center", gap: 5 },
     // Small caps are set loose to be read at a glance; in a tile this
     // narrow the tracking is what pushes the word off the end.
-    compactLabel: { flexShrink: 1, letterSpacing: 0.4 },
+    compactLabel: { flexShrink: 1 },
     text: { flex: 1, gap: 2 },
-    label: { ...TYPE.eyebrow, color: palette.subtleForeground, fontWeight: "700" },
+    label: { ...TYPE.marker, color: palette.subtleForeground, fontWeight: "700" },
     figureRow: { flexDirection: "row", alignItems: "baseline", gap: 4 },
     figure: { ...TYPE.figure, color: palette.foreground, fontWeight: "700" },
     unit: { ...TYPE.micro, color: palette.mutedForeground, flexShrink: 1 },

@@ -968,7 +968,7 @@ function makeStyles(palette: Palette) {
       backgroundColor: palette.surfaceMuted,
     },
     panelLabel: { color: palette.foreground, ...TYPE.body, fontWeight: "600" },
-    fieldLabel: { color: palette.subtleForeground, ...TYPE.eyebrow, fontWeight: "700", letterSpacing: 1, marginTop: SPACING.sm },
+    fieldLabel: { color: palette.subtleForeground, ...TYPE.marker, fontWeight: "700", letterSpacing: 1, marginTop: SPACING.sm },
     dateField: {
       flexDirection: "row",
       alignItems: "center",

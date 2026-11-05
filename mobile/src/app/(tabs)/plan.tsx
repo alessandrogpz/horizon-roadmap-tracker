@@ -22,6 +22,7 @@ import { useMasterMode } from "../../master/MasterMode";
 import { MasterPlan } from "../../master/MasterPlan";
 import { useUndo } from "../../components/UndoBar";
 import { RADIUS, SPACING, TYPE, type Palette } from "../../theme";
+import { centredContent } from "../../layout";
 import { usePalette } from "../../theme/ThemeProvider";
 import { EditHeader, useEditMode } from "../../components/EditToggle";
 import { Refreshable } from "../../components/Refreshable";
@@ -330,7 +331,7 @@ export default function PhasesScreen() {
 function makeStyles(palette: Palette) {
   return StyleSheet.create({
     screen: { flex: 1, backgroundColor: palette.background },
-    content: { padding: SPACING.lg, gap: SPACING.md },
+    content: { padding: SPACING.lg, gap: SPACING.md , ...centredContent },
     centered: { alignItems: "center", justifyContent: "center" },
     summary: { gap: SPACING.sm },
     headline: { color: palette.foreground, ...TYPE.title, fontWeight: "700" },
@@ -384,7 +385,7 @@ function makeStyles(palette: Palette) {
     compareWork: { height: 8, borderRadius: 4, backgroundColor: palette.accent },
     cardHead: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
     tileLabel: {
-      ...TYPE.eyebrow,
+      ...TYPE.marker,
       color: palette.subtleForeground,
       fontWeight: "700",
     },

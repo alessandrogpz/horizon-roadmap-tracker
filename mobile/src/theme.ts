@@ -136,8 +136,19 @@ export const TYPE = {
   caption: { fontSize: 12 },
   /** The smallest thing that still has to be read — axis labels, counts. */
   micro: { fontSize: 11 },
-  /** Small-caps markers over a section: a size and the treatment together. */
-  eyebrow: { fontSize: 11, letterSpacing: 1.1, textTransform: "uppercase" },
+  /**
+   * A marker naming the thing under it: a stat tile's "Streak", a section's
+   * "Today".
+   *
+   * It was `eyebrow` — 11pt, uppercased, letter-spaced 1.1 — and seventeen
+   * places used it, which made small tracked capitals the most repeated
+   * typographic gesture in the app. The website carried the same device until
+   * `.section-title` dropped it; leaving it here would have meant the two apps
+   * disagreeing about how a label looks, which is the one thing a shared
+   * palette and a shared type scale exist to prevent. A label is read, not
+   * announced.
+   */
+  marker: { fontSize: 12, letterSpacing: 0 },
 } as const;
 
 // The colour helpers live in the shared core, because the website draws the

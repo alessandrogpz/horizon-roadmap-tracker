@@ -33,6 +33,7 @@ import { AppHeader } from "../../components/AppHeader";
 import { usePalette } from "../../theme/ThemeProvider";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { TYPE } from "../../theme";
+import { MAX_CONTENT, useLayout } from "../../layout";
 
 export default function TabsLayout() {
   const palette = usePalette();
@@ -40,6 +41,7 @@ export default function TabsLayout() {
   // get clipped. Measured rather than assumed: it is 0 on a phone with
   // buttons and about 34 on one without.
   const insets = useSafeAreaInsets();
+  const { width } = useLayout();
 
   return (
     <Tabs
@@ -57,8 +59,17 @@ export default function TabsLayout() {
           height: 76 + insets.bottom,
           paddingTop: 10,
           paddingBottom: insets.bottom + 12,
+          // Gathers the items under the content rather than leaving them in
+          // the far corners of a tablet's bar. Zero on a phone.
+          paddingHorizontal: Math.max(0, (width - MAX_CONTENT) / 2),
         },
         tabBarLabelStyle: { ...TYPE.micro, fontWeight: "600", marginTop: 2 },
+        // On a tablet the four tabs would otherwise sit in the far corners of
+        // an 834-point bar, a thumb's journey apart and nowhere near the
+        // content they belong to. Capping the item width gathers them in the
+        // middle, which is what iPad's own tab bars do; on a phone the cap is
+        // wider than a quarter of the screen, so nothing changes.
+        tabBarItemStyle: { maxWidth: MAX_CONTENT / 4 },
         // The bar is a fixed height, so its labels cannot grow with the
         // OS font scale without clipping — which is the bug this screen
         // already had once, just triggered by my numbers instead of
