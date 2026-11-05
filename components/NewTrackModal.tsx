@@ -10,6 +10,7 @@ import { seedTrackFromTemplate, TEMPLATE_LIST } from "@/lib/templates";
 import { firstFreeColor } from "@/lib/trackColors";
 import ColorSwatches from "@/components/shared/ColorSwatches";
 import { useDismiss } from "@/components/useDismiss";
+import { LIMITS } from "@/lib/limits";
 
 /**
  * Making a track: what it is called, what colour it wears, when it runs, and
@@ -95,6 +96,7 @@ export default function NewTrackModal({
           <label className="text-[0.8rem] text-muted-foreground">Name</label>
           <input
             type="text"
+            maxLength={LIMITS.name}
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="What is this track called?"

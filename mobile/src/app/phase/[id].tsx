@@ -27,6 +27,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { EditButton, useEditMode } from "../../components/EditToggle";
 import { Refreshable } from "../../components/Refreshable";
 import { Tappable } from "../../components/Tappable";
+import { LIMITS } from "@shared/limits";
 
 export default function PhaseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -68,6 +69,7 @@ export default function PhaseDetailScreen() {
         <View style={styles.titleRow}>
           {editing ? (
             <TextInput
+              maxLength={LIMITS.name}
               value={phase.title}
               onChangeText={(title) => change((p) => ({ ...p, title }))}
               style={[styles.titleInput, { flex: 1 }]}
@@ -84,6 +86,7 @@ export default function PhaseDetailScreen() {
         <Text style={styles.sectionTitle}>What this phase is about</Text>
         {editing ? (
           <TextInput
+            maxLength={LIMITS.description}
             value={phase.description}
             onChangeText={(description) => change((p) => ({ ...p, description }))}
             multiline
@@ -118,6 +121,7 @@ export default function PhaseDetailScreen() {
             </Tappable>
             {editing ? (
               <TextInput
+                maxLength={LIMITS.title}
                 value={task.title}
                 onChangeText={(title) =>
                   change((p) => ({ ...p, tasks: p.tasks.map((t) => (t.id === task.id ? { ...t, title } : t)) }))
@@ -141,6 +145,7 @@ export default function PhaseDetailScreen() {
         ))}
         {editing && (
         <TextInput
+          maxLength={LIMITS.title}
           value={newTask}
           onChangeText={setNewTask}
           onSubmitEditing={() => {
@@ -177,6 +182,7 @@ export default function PhaseDetailScreen() {
                   <View style={styles.detailHead}>
                     {editing ? (
                       <TextInput
+                        maxLength={LIMITS.title}
                         value={item.item}
                         onChangeText={(text) => set(items.map((it, i) => (i === index ? { ...it, item: text } : it)))}
                         style={styles.detailItem}
@@ -197,6 +203,7 @@ export default function PhaseDetailScreen() {
                   </View>
                   {editing ? (
                     <TextInput
+                      maxLength={LIMITS.description}
                       value={item.desc}
                       onChangeText={(text) => set(items.map((it, i) => (i === index ? { ...it, desc: text } : it)))}
                       multiline
@@ -213,6 +220,7 @@ export default function PhaseDetailScreen() {
               ))}
               {editing && (
               <TextInput
+                maxLength={LIMITS.title}
                 value={newItem[key] ?? ""}
                 onChangeText={(text) => setNewItem((prev) => ({ ...prev, [key]: text }))}
                 onSubmitEditing={() => {

@@ -12,6 +12,7 @@ import {
 import { isRestType } from "@/lib/restDays";
 import { Moon, X } from "lucide-react";
 import type { FocusType, WeekDay } from "@/lib/types";
+import { LIMITS } from "@/lib/limits";
 
 interface FocusTypeEditorProps {
   focusTypes: Record<string, FocusType>;
@@ -50,6 +51,7 @@ export default function FocusTypeEditor({ focusTypes, weekSchedule, onChange }: 
           <div key={key} className="flex items-center gap-1.5">
             <input
               type="text"
+              maxLength={LIMITS.name}
               value={val.label}
               onChange={(e) => apply(renameFocusType(pool, key, e.target.value))}
               placeholder="Label"
@@ -97,6 +99,7 @@ export default function FocusTypeEditor({ focusTypes, weekSchedule, onChange }: 
       <div className="flex gap-1.5 items-center border-t border-card-border pt-2">
         <input
           type="text"
+          maxLength={LIMITS.name}
           value={draft.label}
           onChange={(e) => setDraft((prev) => ({ ...prev, label: e.target.value }))}
           onKeyDown={(e) => e.key === "Enter" && addType()}

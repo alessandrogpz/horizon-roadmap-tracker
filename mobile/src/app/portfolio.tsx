@@ -26,6 +26,7 @@ import { EditHeader, useEditMode } from "../components/EditToggle";
 import { EmptyState } from "../components/EmptyState";
 import { Refreshable } from "../components/Refreshable";
 import { Tappable } from "../components/Tappable";
+import { LIMITS } from "@shared/limits";
 
 export default function PortfolioScreen() {
   const { workspace, track, today, editTrack, restoreWorkspace } = useWorkspace();
@@ -93,6 +94,7 @@ export default function PortfolioScreen() {
             </View>
             {editing ? (
               <TextInput
+                maxLength={LIMITS.title}
                 value={project.title}
                 onChangeText={(title) => editTrack((t) => updatePortfolioProject(t, project.id, { title }))}
                 style={[styles.title, project.completed && styles.done]}
@@ -105,6 +107,7 @@ export default function PortfolioScreen() {
 
           {editing && (
           <TextInput
+            maxLength={LIMITS.url}
             value={project.repoUrl ?? ""}
             onChangeText={(repoUrl) =>
               // Empty means "no repository", not an empty string — the field is
@@ -155,6 +158,7 @@ export default function PortfolioScreen() {
 
       {editing && (
       <TextInput
+        maxLength={LIMITS.title}
         value={draft}
         onChangeText={setDraft}
         onSubmitEditing={add}

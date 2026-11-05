@@ -27,6 +27,7 @@ import { loadNotes, saveNote } from "../storage/db";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { Tappable } from "./Tappable";
+import { LIMITS } from "@shared/limits";
 
 export function TodaysTodos({
   trackId,
@@ -94,6 +95,7 @@ export function TodaysTodos({
             reword?.index === index ? (
               <View key={`${index}-${item.text}`} style={styles.row}>
                 <TextInput
+                  maxLength={LIMITS.title}
                   value={reword.text}
                   onChangeText={(text) => setReword({ index, text })}
                   onSubmitEditing={() => {
@@ -139,6 +141,7 @@ export function TodaysTodos({
 
           {editing && (
             <TextInput
+              maxLength={LIMITS.title}
               value={draft}
               onChangeText={setDraft}
               onSubmitEditing={() => {
