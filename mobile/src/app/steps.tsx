@@ -198,7 +198,7 @@ function makeStyles(palette: Palette) {
     totalValue: { color: palette.foreground, ...TYPE.figure, fontWeight: "700" },
     sectionTitle: {
       color: palette.subtleForeground,
-      ...TYPE.eyebrow,
+      ...TYPE.marker,
       fontWeight: "700",
       letterSpacing: 1.2,
       marginTop: SPACING.md,

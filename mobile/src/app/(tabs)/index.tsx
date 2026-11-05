@@ -53,6 +53,7 @@ import { PanelBody, PANEL_HREF, PANEL_ICON } from "../../panels/registry";
 import { availablePanels, panelDefinition, setPanelHidden, visiblePanels } from "../../panels/layout";
 import { panelOrder, setPanelOrder } from "../../storage/deviceSettings";
 import { RADIUS, SPACING, TYPE, type Palette } from "../../theme";
+import { centredContent } from "../../layout";
 import { usePalette } from "../../theme/ThemeProvider";
 
 /** A folded panel: tall enough for its header and nothing else. */
@@ -781,7 +782,7 @@ function ArrangeRow({
 function makeStyles(palette: Palette) {
   return StyleSheet.create({
     screen: { flex: 1, backgroundColor: palette.background },
-    content: { padding: SPACING.lg, gap: SPACING.md, paddingBottom: SPACING.xl },
+    content: { padding: SPACING.lg, gap: SPACING.md, paddingBottom: SPACING.xl , ...centredContent },
     centered: { alignItems: "center", justifyContent: "center" },
     stack: { gap: SPACING.md },
     chrome: { gap: SPACING.md },
@@ -841,7 +842,7 @@ function makeStyles(palette: Palette) {
     grip: { paddingVertical: SPACING.sm, paddingRight: SPACING.xs },
     sectionTitle: {
       color: palette.subtleForeground,
-      ...TYPE.eyebrow,
+      ...TYPE.marker,
       fontWeight: "700",
       letterSpacing: 1.2,
       marginTop: SPACING.md,

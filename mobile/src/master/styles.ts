@@ -34,7 +34,7 @@ export function makeMasterStyles(palette: Palette) {
       borderColor: palette.cardBorder,
       backgroundColor: palette.card,
     },
-    tileLabel: { color: palette.mutedForeground, ...TYPE.eyebrow, fontWeight: "700", letterSpacing: 1 },
+    tileLabel: { color: palette.mutedForeground, ...TYPE.marker, fontWeight: "700", letterSpacing: 1 },
     tileValue: { color: palette.foreground, ...TYPE.title, fontWeight: "700" },
     tileRow: { flexDirection: "row", alignItems: "center", gap: SPACING.sm },
     tileRowText: { flex: 1 },

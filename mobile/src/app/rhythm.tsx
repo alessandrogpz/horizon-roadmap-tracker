@@ -475,7 +475,7 @@ function makeStyles(palette: Palette) {
     centered: { alignItems: "center", justifyContent: "center" },
     sectionTitle: {
       color: palette.subtleForeground,
-      ...TYPE.eyebrow,
+      ...TYPE.marker,
       fontWeight: "700",
       letterSpacing: 1.2,
       marginTop: SPACING.sm,
@@ -503,7 +503,7 @@ function makeStyles(palette: Palette) {
       backgroundColor: palette.card,
     },
     cardTitle: { color: palette.foreground, ...TYPE.body, fontWeight: "600" },
-    fieldLabel: { color: palette.subtleForeground, ...TYPE.eyebrow, fontWeight: "700", letterSpacing: 1, marginTop: SPACING.sm },
+    fieldLabel: { color: palette.subtleForeground, ...TYPE.marker, fontWeight: "700", letterSpacing: 1, marginTop: SPACING.sm },
     choices: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.xs },
     choice: {
       paddingHorizontal: SPACING.md,

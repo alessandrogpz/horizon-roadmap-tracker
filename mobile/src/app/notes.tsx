@@ -219,7 +219,7 @@ function makeStyles(palette: Palette) {
     centered: { alignItems: "center", justifyContent: "center" },
     sectionTitle: {
       color: palette.subtleForeground,
-      ...TYPE.eyebrow,
+      ...TYPE.marker,
       fontWeight: "700",
       letterSpacing: 1.2,
     },

@@ -253,7 +253,7 @@ export default function TrackSwitcher({
       <button
         onClick={() => (open ? close() : setOpen(true))}
         aria-expanded={open}
-        className="flex items-center gap-1.5 bg-transparent border-none p-0 cursor-pointer text-[0.85rem] font-semibold text-accent hover:underline"
+        className="tap-44 flex items-center gap-1.5 bg-transparent border-none p-0 cursor-pointer text-[0.85rem] font-semibold text-accent hover:underline"
         title="Switch track"
       >
         {masterOpen ? (
@@ -440,7 +440,7 @@ function TrackRow({
             {...listeners}
             title="Drag to reorder"
             aria-label={`Reorder ${row.track.meta.name}`}
-            className="flex h-6 w-6 cursor-grab touch-none items-center justify-center rounded-[var(--radius-control)] border border-transparent bg-transparent text-subtle-foreground transition-colors hover:border-card-border hover:bg-surface-hover hover:text-foreground active:cursor-grabbing"
+            className="tap-44 flex h-6 w-6 cursor-grab touch-none items-center justify-center rounded-[var(--radius-control)] border border-transparent bg-transparent text-subtle-foreground transition-colors hover:border-card-border hover:bg-surface-hover hover:text-foreground active:cursor-grabbing"
           >
             <GripVertical size={13} strokeWidth={2} />
           </button>
