@@ -74,14 +74,14 @@ function Item({
       className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left transition-colors hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
     >
       <span className="shrink-0 text-muted-foreground">{icon}</span>
-      <span className="flex-1 text-[0.85rem] text-foreground">{label}</span>
+      <span className="flex-1 type-body text-foreground">{label}</span>
     </button>
   );
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="block px-2.5 pb-1 pt-2 text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+    <span className="block px-2.5 pb-1 pt-2 type-micro font-semibold uppercase tracking-[0.08em] text-muted-foreground">
       {children}
     </span>
   );
@@ -181,10 +181,10 @@ export default function TopBarMenu({
           role="menu"
         >
           <div className="flex items-center justify-between gap-2 px-2.5 pb-1 pt-1.5">
-            <span className="text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            <span className="type-micro font-semibold uppercase tracking-[0.08em] text-muted-foreground">
               Track
             </span>
-            <span className="max-w-[130px] truncate text-[0.65rem] text-subtle-foreground" title={trackName}>
+            <span className="max-w-[130px] truncate type-micro text-subtle-foreground" title={trackName}>
               {trackName}
             </span>
           </div>
@@ -232,7 +232,7 @@ export default function TopBarMenu({
                     className={`shrink-0 ${m.visible ? "text-muted-foreground" : "text-subtle-foreground"}`}
                   />
                   <span
-                    className={`flex-1 text-[0.85rem] ${m.visible ? "text-foreground" : "text-muted-foreground"}`}
+                    className={`flex-1 type-body ${m.visible ? "text-foreground" : "text-muted-foreground"}`}
                   >
                     {m.label}
                   </span>
@@ -244,7 +244,7 @@ export default function TopBarMenu({
                 </button>
               );
             })}
-            <span className="block px-2.5 pb-1 pt-1 text-[0.65rem] leading-snug text-subtle-foreground">
+            <span className="block px-2.5 pb-1 pt-1 type-micro text-subtle-foreground">
               Closing a panel only hides it for this track — its data is kept.
             </span>
           </div>

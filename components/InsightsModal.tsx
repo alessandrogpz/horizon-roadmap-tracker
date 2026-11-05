@@ -52,15 +52,15 @@ const shortDate = (ymd: string) =>
 const monthLabel = (ym: string) => new Date(`${ym}-01T00:00:00`).toLocaleDateString(undefined, { month: "short" });
 
 const quietButton =
-  "rounded-[var(--radius-control)] border border-card-border bg-surface-muted px-2 py-0.5 text-[0.7rem] text-muted-foreground cursor-pointer transition-colors hover:text-foreground hover:bg-surface-hover";
+  "rounded-[var(--radius-control)] border border-card-border bg-surface-muted px-2 py-0.5 type-caption text-muted-foreground cursor-pointer transition-colors hover:text-foreground hover:bg-surface-hover";
 
 /** A stat tile: a label and one number. */
 function Tile({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
     <div className="flex min-w-[130px] flex-1 flex-col gap-1 rounded-[10px] border border-card-border bg-card/60 px-3.5 py-2.5">
-      <span className="text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</span>
-      <span className="font-mono text-[1.3rem] font-bold leading-none text-foreground">{value}</span>
-      {note && <span className="text-[0.7rem] text-muted-foreground">{note}</span>}
+      <span className="type-micro font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</span>
+      <span className="font-mono type-title font-bold text-foreground">{value}</span>
+      {note && <span className="type-caption text-muted-foreground">{note}</span>}
     </div>
   );
 }
@@ -79,14 +79,14 @@ function Columns({ title, data }: { title: string; data: { label: string; value:
   return (
     <figure className="m-0 flex min-w-[240px] flex-1 flex-col gap-2">
       <figcaption className="flex items-center justify-between gap-2">
-        <span className="text-[0.8rem] font-semibold text-foreground">{title}</span>
+        <span className="type-label font-semibold text-foreground">{title}</span>
         <button onClick={() => setAsTable((t) => !t)} className={quietButton}>
           {asTable ? "Chart" : "Table"}
         </button>
       </figcaption>
 
       {asTable ? (
-        <table className="w-full text-[0.8rem]">
+        <table className="w-full type-label">
           <tbody>
             {data.map((d) => (
               <tr key={d.label} className="border-b border-card-border last:border-b-0">
@@ -120,7 +120,7 @@ function Columns({ title, data }: { title: string; data: { label: string; value:
             {active !== null && (
               <div
                 role="status"
-                className="pointer-events-none absolute -top-1 z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md border border-card-border bg-card px-2 py-1 text-[0.7rem] shadow-sm"
+                className="pointer-events-none absolute -top-1 z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md border border-card-border bg-card px-2 py-1 type-caption shadow-sm"
                 style={{ left: `${((active + 0.5) / data.length) * 100}%` }}
               >
                 <span className="text-muted-foreground">{data[active].label}</span>{" "}
@@ -130,7 +130,7 @@ function Columns({ title, data }: { title: string; data: { label: string; value:
           </div>
           <div className="mt-1 flex gap-[2px]">
             {data.map((d) => (
-              <span key={d.label} className="flex-1 text-center text-[0.65rem] text-muted-foreground">
+              <span key={d.label} className="flex-1 text-center type-micro text-muted-foreground">
                 {d.label}
               </span>
             ))}
@@ -218,8 +218,8 @@ export default function InsightsModal({ onClose, onOpenTrack }: { onClose: () =>
         </button>
 
         <div>
-          <h3 className="m-0 pr-8 text-[1.1rem] font-semibold text-foreground">Search & insights</h3>
-          <p className="m-0 text-[0.8rem] text-muted-foreground">
+          <h3 className="m-0 pr-8 type-heading font-semibold text-foreground">Search & insights</h3>
+          <p className="m-0 type-label text-muted-foreground">
             Everything your account has synced, from every device. Sync first to include this device&apos;s latest changes.
           </p>
         </div>
@@ -237,15 +237,15 @@ export default function InsightsModal({ onClose, onOpenTrack }: { onClose: () =>
               setQuery(e.target.value);
             }}
             placeholder="Search materials, phases, roadmaps and notes…"
-            className="w-full bg-transparent text-[0.85rem] text-foreground outline-none placeholder:text-subtle-foreground"
+            className="w-full bg-transparent type-body text-foreground outline-none placeholder:text-subtle-foreground"
           />
-          {searching && <span className="text-[0.7rem] text-muted-foreground">Searching…</span>}
+          {searching && <span className="type-caption text-muted-foreground">Searching…</span>}
         </label>
 
         {shown && (
           <div className="flex flex-col gap-2">
             {shown.tracks.length === 0 && shown.notes.length === 0 && (
-              <p className="m-0 text-[0.8rem] text-muted-foreground">Nothing found for “{query.trim()}”.</p>
+              <p className="m-0 type-label text-muted-foreground">Nothing found for “{query.trim()}”.</p>
             )}
             {shown.tracks.map((t) => (
               <button
@@ -257,10 +257,10 @@ export default function InsightsModal({ onClose, onOpenTrack }: { onClose: () =>
                 className="flex cursor-pointer flex-col gap-1 rounded-[var(--radius-inner)] border border-card-border px-3 py-2 text-left transition-colors hover:border-card-border-hover hover:bg-surface-hover"
                 title="Open this track"
               >
-                <span className="text-[0.85rem] font-semibold text-foreground">{t.name}</span>
+                <span className="type-body font-semibold text-foreground">{t.name}</span>
                 {[...t.materials.map((m) => `${m.title}${m.author ? ` · ${m.author}` : ""}`), ...t.phases.map((p) => `Phase: ${p.title}`)].map(
                   (line) => (
-                    <span key={line} className="text-[0.8rem] text-muted-foreground">
+                    <span key={line} className="type-label text-muted-foreground">
                       {line}
                     </span>
                   )
@@ -269,19 +269,19 @@ export default function InsightsModal({ onClose, onOpenTrack }: { onClose: () =>
             ))}
             {shown.notes.map((n) => (
               <div key={n.noteId} className="flex flex-col gap-0.5 rounded-[var(--radius-inner)] border border-card-border px-3 py-2">
-                <span className="text-[0.7rem] uppercase tracking-[0.06em] text-muted-foreground">
+                <span className="type-caption uppercase tracking-[0.06em] text-muted-foreground">
                   {KIND_LABEL[n.kind]} · {n.about}
                 </span>
-                <span className="text-[0.8rem] text-foreground">{n.snippet}</span>
+                <span className="type-label text-foreground">{n.snippet}</span>
               </div>
             ))}
           </div>
         )}
 
         {/* ── History ────────────────────────────────────────────────── */}
-        {!stats && !error && <p className="m-0 text-[0.8rem] text-muted-foreground">Loading your history…</p>}
+        {!stats && !error && <p className="m-0 type-label text-muted-foreground">Loading your history…</p>}
         {stats && stats.totals.activeDays === 0 && (
-          <p className="m-0 text-[0.8rem] text-muted-foreground">
+          <p className="m-0 type-label text-muted-foreground">
             No history synced yet. Tick something off, sync from the top bar, and it shows up here.
           </p>
         )}
@@ -320,10 +320,10 @@ export default function InsightsModal({ onClose, onOpenTrack }: { onClose: () =>
             </div>
 
             <div className="flex flex-col gap-1">
-              <span className="text-[0.8rem] font-semibold text-foreground">By track</span>
-              <table className="w-full text-[0.8rem]">
+              <span className="type-label font-semibold text-foreground">By track</span>
+              <table className="w-full type-label">
                 <thead>
-                  <tr className="text-left text-[0.7rem] uppercase tracking-[0.06em] text-muted-foreground">
+                  <tr className="text-left type-caption uppercase tracking-[0.06em] text-muted-foreground">
                     <th className="py-1 font-semibold">Track</th>
                     <th className="py-1 text-right font-semibold">Active days</th>
                     <th className="py-1 text-right font-semibold">Accomplishments</th>
@@ -350,7 +350,7 @@ export default function InsightsModal({ onClose, onOpenTrack }: { onClose: () =>
           </>
         )}
 
-        {error && <p className="m-0 text-[0.8rem] text-danger">{error}</p>}
+        {error && <p className="m-0 type-label text-danger">{error}</p>}
       </div>
     </div>
   );

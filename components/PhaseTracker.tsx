@@ -30,21 +30,21 @@ export default function PhaseTracker({ phases, currentPhase, startDate, roadmapE
           {roadmapEnabled ? (
             <a
               href="/roadmap"
-              className="btn px-2.5 py-1 text-xs inline-flex items-center gap-1.5 no-underline"
+              className="btn px-2.5 py-1 type-caption inline-flex items-center gap-1.5 no-underline"
             >
               <Map size={12} strokeWidth={2} />
               Full Roadmap
             </a>
           ) : (
             <span
-              className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-card-border px-2.5 py-1 text-xs text-subtle-foreground cursor-not-allowed"
+              className="inline-flex items-center gap-1.5 rounded-[var(--radius-control)] border border-card-border px-2.5 py-1 type-caption text-subtle-foreground cursor-not-allowed"
               title="Connect Google Drive to unlock the full roadmap"
             >
               <Map size={12} strokeWidth={2} />
               Full Roadmap
             </span>
           )}
-          <button onClick={onAddPhase} className="btn px-2.5 py-1 text-xs">
+          <button onClick={onAddPhase} className="btn px-2.5 py-1 type-caption">
             [+ Add Phase]
           </button>
         </div>
@@ -92,13 +92,13 @@ export default function PhaseTracker({ phases, currentPhase, startDate, roadmapE
                   line beside it already give, shouted. Where a phase stands is
                   the dot's colour and the weight of its name. */}
               <div className="flex items-center gap-3 flex-wrap">
-                <h3 className={`text-[0.95rem] m-0 text-foreground ${isActive ? "font-bold" : "font-semibold"}`}>
+                <h3 className={`type-subhead m-0 text-foreground ${isActive ? "font-bold" : "font-semibold"}`}>
                   {phase.title.replace(/Phase \d+:\s*/, "")}
                 </h3>
-                {isActive ? <span className="text-[0.75rem] text-accent font-semibold">You are here</span> : null}
+                {isActive ? <span className="type-caption text-accent font-semibold">You are here</span> : null}
               </div>
 
-              <p className="text-[0.8rem] text-muted-foreground m-0">
+              <p className="type-label text-muted-foreground m-0">
                 {phase.description}
               </p>
 
@@ -106,7 +106,7 @@ export default function PhaseTracker({ phases, currentPhase, startDate, roadmapE
                   description rather than competing with it. Only shown when the
                   phase actually carries a threshold. */}
               {phase.recommendedByDay !== undefined && startDate && (
-                <p className="text-[0.7rem] font-mono text-muted-foreground/60 m-0">
+                <p className="type-caption font-mono text-muted-foreground/60 m-0">
                   Ends {formatDayMonthYear(dateForDay(startDate, phase.recommendedByDay))}
                   <span className="opacity-70"> · day {phase.recommendedByDay}</span>
                 </p>

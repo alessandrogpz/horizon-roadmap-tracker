@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { contrastRatio, darken, flatten, lighten, readableOn } from "../colors";
+import { contrastRatio, darken, flatten, lighten, onColor, readableOn } from "../colors";
 import { TRACK_COLORS } from "../trackColors";
 import { trackAccentVariables, trackInkVariables } from "../trackAccent";
 
@@ -106,3 +106,23 @@ function hueOf(hex: string): number {
   const raw = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
   return ((raw * 60) + 360) % 360;
 }
+
+describe("onColor", () => {
+  it("picks a mark that can be read on every track colour", () => {
+    for (const fill of TRACK_COLORS) {
+      const mark = onColor(fill);
+      expect(contrastRatio(mark, fill)).toBeGreaterThanOrEqual(4.4);
+    }
+  });
+
+  it("picks white on a dark fill and black on a light one", () => {
+    expect(onColor("#0a0a0c")).toBe("#ffffff");
+    expect(onColor("#fbfbfc")).toBe("#000000");
+  });
+
+  it("beats a fixed white, which fails on five of the six track colours", () => {
+    const failsWhite = TRACK_COLORS.filter((c) => contrastRatio("#ffffff", c) < 4.5);
+    expect(failsWhite.length).toBe(5);
+    for (const fill of failsWhite) expect(contrastRatio(onColor(fill), fill)).toBeGreaterThanOrEqual(4.4);
+  });
+});

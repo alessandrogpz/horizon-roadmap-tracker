@@ -10,6 +10,7 @@ import { withAlpha } from "@/lib/colors";
 import { dayItems } from "@/lib/dayItems";
 import { isItemCompleted, setItemCompletion, type ItemKind } from "@/lib/completions";
 import { trackInkVariables } from "@/lib/trackAccent";
+import { DEFAULT_TYPE_COLOR } from "@/lib/focusTypes";
 
 /**
  * Whether the week is in its stacked, one-day-per-row shape.
@@ -99,7 +100,7 @@ export default function WeeklyPlan({
                 page's h1, and an h3 there skips a level for a screen reader
                 walking the outline. The size comes from the class, so nothing
                 about it looks different. */}
-            <h2 className="text-[1.1rem] font-semibold text-foreground m-0 whitespace-nowrap inline-flex items-center gap-2">
+            <h2 className="type-heading font-semibold text-foreground m-0 whitespace-nowrap inline-flex items-center gap-2">
               <CalendarDays size={16} strokeWidth={2.5} className="text-muted-foreground" />
               Weekly Overview
             </h2>
@@ -107,10 +108,10 @@ export default function WeeklyPlan({
             {/* Week Navigation Pill */}
             <div className="flex flex-wrap items-center justify-center gap-1.5 bg-surface-muted px-2 py-1 rounded-md border border-card-border">
               <WeekNavButton label="‹" onClick={() => setWeekOffset(weekOffset - 1)} />
-              <span className="text-foreground font-medium text-[0.85rem] min-w-[60px] text-center font-mono whitespace-nowrap">
+              <span className="text-foreground font-medium type-body min-w-[60px] text-center font-mono whitespace-nowrap">
                 {weekLabel}
                 {weekOffset !== 0 && (
-                  <span className="text-[0.7rem] text-muted-foreground ml-1">
+                  <span className="type-caption text-muted-foreground ml-1">
                     ({weekOffset > 0 ? `+${weekOffset}` : weekOffset})
                   </span>
                 )}
@@ -120,7 +121,7 @@ export default function WeeklyPlan({
               {weekOffset !== 0 && (
                 <button
                   onClick={() => setWeekOffset(0)}
-                  className="ml-2 bg-accent text-[var(--background)] border-none rounded px-2.5 py-0.5 text-[0.8rem] font-semibold cursor-pointer transition-opacity duration-200 whitespace-nowrap hover:opacity-80"
+                  className="ml-2 bg-accent text-[var(--background)] border-none rounded px-2.5 py-0.5 type-label font-semibold cursor-pointer transition-opacity duration-200 whitespace-nowrap hover:opacity-80"
                 >
                   Back to Today
                 </button>
@@ -159,11 +160,11 @@ export default function WeeklyPlan({
                         : `Runs during ${phaseTitle ? `phase ${rotation.phase} — ${phaseTitle}` : `phase ${rotation.phase}`}`
                   }
                 >
-                  <span className="text-[0.8rem] text-muted-foreground font-semibold">
+                  <span className="type-label text-muted-foreground font-semibold">
                     {rotation.label}:
                   </span>
                   <span
-                    className={`text-[0.85rem] font-bold font-mono ${running ? "text-accent" : "text-subtle-foreground"}`}
+                    className={`type-body font-bold font-mono ${running ? "text-accent" : "text-subtle-foreground"}`}
                   >
                     {running ? current : `Phase ${rotation.phase}`}
                   </span>
@@ -174,7 +175,7 @@ export default function WeeklyPlan({
             {data.isSynced && (
               <button
                 onClick={() => onRotationClick(null)}
-                className="inline-flex items-center gap-1 border border-dashed border-card-border-hover px-3 py-1.5 rounded-md text-[0.8rem] text-muted-foreground font-semibold cursor-pointer transition-colors duration-200 hover:text-foreground hover:border-card-border-hover"
+                className="inline-flex items-center gap-1 border border-dashed border-card-border-hover px-3 py-1.5 rounded-md type-label text-muted-foreground font-semibold cursor-pointer transition-colors duration-200 hover:text-foreground hover:border-card-border-hover"
               >
                 + New Rotation
               </button>
@@ -213,7 +214,7 @@ function WeekNavButton({ label, onClick }: { label: string; onClick: () => void 
   return (
     <button
       onClick={onClick}
-      className="tap-44 bg-transparent border border-card-border rounded text-muted-foreground cursor-pointer px-1.5 py-0.5 text-[0.8rem] font-mono leading-none transition-colors duration-150 hover:border-accent hover:text-foreground"
+      className="tap-44 bg-transparent border border-card-border rounded text-muted-foreground cursor-pointer px-1.5 py-0.5 type-label font-mono transition-colors duration-150 hover:border-accent hover:text-foreground"
     >
       {label}
     </button>
@@ -291,7 +292,7 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
   // over. `withAlpha` also leaves a colour it cannot read alone, where hand-
   // rolled hex slicing produced `rgba(NaN, NaN, NaN, 0.2)`.
   const focusTypes = data.focusTypes || DEFAULT_FOCUS_TYPES;
-  const tagColor = focusTypes[dayItem.type]?.color || "#a1a1aa";
+  const tagColor = focusTypes[dayItem.type]?.color || DEFAULT_TYPE_COLOR;
   // The wash keeps the focus type's own colour; the label is read, so it takes
   // the readable step of that colour for whichever theme is on. The defaults
   // are pastels picked on a dark screen — #a78bfa reads 2.42 on white — and a
@@ -344,10 +345,10 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
               className="day-card-chevron shrink-0 text-subtle-foreground"
             />
           )}
-          <span className={`text-[0.8rem] ${isToday ? "font-bold text-foreground" : "font-semibold text-muted-foreground"}`}>
+          <span className={`type-label ${isToday ? "font-bold text-foreground" : "font-semibold text-muted-foreground"}`}>
             {dayItem.name}
           </span>
-          <div className="day-card-date text-[0.75rem] text-subtle-foreground mt-px">
+          <div className="day-card-date type-caption text-subtle-foreground mt-px">
             {data.isSynced ? dayDateStr.slice(5) : "MM-DD"}
           </div>
         </div>
@@ -356,7 +357,7 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
           {/* How much of a shut day is done, so the line is worth reading on
               its own. Hidden while it is open, where the boxes say it better. */}
           {stacked && !open && itemCount > 0 && (
-            <span className="shrink-0 font-mono text-[0.75rem] text-subtle-foreground">
+            <span className="shrink-0 font-mono type-caption text-subtle-foreground">
               {doneCount}/{itemCount}
             </span>
           )}
@@ -365,7 +366,7 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
               "ATTERN STUD", which reads as a glitch rather than a long word. */}
           <span
             title={data.isSynced ? dayItem.label : undefined}
-            className={`day-card-label max-w-full truncate text-[0.75rem] font-semibold px-1.5 py-px rounded-[3px] ${
+            className={`day-card-label max-w-full truncate type-caption font-semibold px-1.5 py-px rounded-[3px] ${
               data.isSynced ? "track-ink" : "text-subtle-foreground"
             }`}
             style={
@@ -399,7 +400,7 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
                   />
                   <span
                     title={item.title}
-                    className={`day-item-title min-w-0 line-clamp-2 text-[0.7rem] leading-[1.3] ${completed ? "text-subtle-foreground line-through" : isToday ? "text-foreground" : "text-muted-foreground"}`}
+                    className={`day-item-title min-w-0 line-clamp-2 type-caption leading-[1.3] ${completed ? "text-subtle-foreground line-through" : isToday ? "text-foreground" : "text-muted-foreground"}`}
                   >
                     {item.title}
                   </span>
@@ -411,7 +412,7 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
 
         {items.length === 0 && (
           <div className="day-card-empty flex flex-1 items-center justify-center">
-            <span className="text-[0.7rem] text-subtle-foreground italic">No tasks</span>
+            <span className="type-caption text-subtle-foreground italic">No tasks</span>
           </div>
         )}
       </div>

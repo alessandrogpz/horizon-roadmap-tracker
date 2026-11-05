@@ -513,7 +513,13 @@ function makeStyles(palette: Palette) {
       justifyContent: "center",
       marginTop: 1,
     },
-    tick: { color: "#fff", ...TYPE.label, fontWeight: "800" },
+    // The page's own background, which is near-black on one theme and
+    // near-white on the other, so it is always the colour furthest from the
+    // fill under it. This was a fixed `#fff`, which reads 2.54 on the dark
+    // theme's success green — under even the 3:1 graphics floor — and 5.48 on
+    // the light theme's deeper one. No single fixed colour clears both;
+    // following the theme gives 7.80 and 5.30.
+    tick: { color: palette.background, ...TYPE.label, fontWeight: "800" },
     rowText: { flex: 1, gap: 3 },
     rowTitle: { color: palette.foreground, ...TYPE.subhead, lineHeight: leading(TYPE.subhead.fontSize, 1.35) },
     rowTitleDone: { color: palette.mutedForeground, textDecorationLine: "line-through" },

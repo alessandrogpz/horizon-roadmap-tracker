@@ -20,13 +20,10 @@ import { useEffect, useRef, type ElementType } from "react";
  */
 export default function Reveal({
   as: Tag = "div",
-  delay = 0,
   className = "",
   children,
 }: {
   as?: ElementType;
-  /** Milliseconds behind the element before it, for staggering a row. */
-  delay?: number;
   className?: string;
   children: React.ReactNode;
 }) {
@@ -38,7 +35,6 @@ export default function Reveal({
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
 
     node.classList.add("reveal");
-    if (delay) node.style.transitionDelay = `${delay}ms`;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -52,7 +48,7 @@ export default function Reveal({
     );
     observer.observe(node);
     return () => observer.disconnect();
-  }, [delay]);
+  }, []);
 
   return (
     <Tag ref={ref} className={className}>
