@@ -7,6 +7,37 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.117.0] - 2026-11-05
+
+### Changed
+- **Expo SDK 57 → 58**, the upgrade parked since 0.107.1, and with it the last three dependency
+  advisories: `npm audit` reports **0 vulnerabilities** where it reported 3 (1 high). The high one
+  was `decode-uri-component` reached through `query-string` from `expo-router`, and no override
+  could fix it — the patched release is ESM-only while `query-string@7` requires it as CommonJS,
+  so the override bundled clean and threw on every URL parse. `expo-router@58` drops
+  `query-string` entirely, which is why this was the only way through.
+- 26 packages moved with it, including React Native 0.86.3 → 0.88.1, React 19.2.3 → 19.3.0,
+  Reanimated 4.5.1 → 4.7.1, Worklets 0.10.1 → 0.13.0 and gesture-handler 2.32 → 3.3, a major.
+- **Four `ScrollView` refs retyped.** RN 0.88 makes `ScrollView` a function component, so
+  `useRef<ScrollView>` describes the component rather than the thing the ref holds, and
+  `scrollTo` / `scrollToEnd` vanish from the type. `ScrollViewInstance` is the type of what you
+  actually get.
+- **The app version is 0.3.0, and that matters more than it looks.** `runtimeVersion` uses the
+  `appVersion` policy, so the runtime version *is* the app version. SDK 58 changes native code: an
+  SDK-58 bundle cannot run inside an SDK-57 binary. Left at 0.2.0, the new build and every
+  existing install would have claimed the same runtime, so the five updates already published to
+  0.2.0 would have been offered to the new binary and the next update to every old one — each a
+  native/JS mismatch, which is a crash on launch. At 0.3.0 the new build has its own runtime and
+  old installs stop cleanly at the last update they can run.
+
+### Notes
+- `expo install --fix` could not complete the upgrade in place: npm hit an ERESOLVE between
+  `expo-router@57` on disk and the `@expo/ui@58` arriving to satisfy its peer. The versions it had
+  already written to `package.json` were correct, so a clean `rm -rf node_modules package-lock.json
+  && npm install` resolved it in one pass.
+- expo-doctor: 19/20, the one failure being the deliberate `resolver.disableHierarchicalLookup`
+  that Metro needs here — unchanged from before the upgrade.
+
 ## [0.116.0] - 2026-11-05
 
 ### Added

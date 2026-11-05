@@ -16,7 +16,7 @@
 // untouched — the pull only exists in the one place the scroll cannot go.
 
 import { useCallback, useState, type ComponentProps } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, View , type ScrollViewInstance } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   interpolate,
@@ -47,7 +47,8 @@ export function Refreshable({
 }: ComponentProps<typeof ScrollView> & {
   /** For screens that need to drive the scroll themselves — the consistency
    *  graph opens at its most recent end rather than its oldest. */
-  scrollRef?: React.Ref<ScrollView>;
+  /** RN 0.88: the instance type, not the component type. */
+  scrollRef?: React.Ref<ScrollViewInstance>;
 }) {
   const palette = usePalette();
   const { sync } = useSync();
