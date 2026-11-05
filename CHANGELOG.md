@@ -7,6 +7,28 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.117.1] - 2026-11-05
+
+### Fixed
+- **A track being reordered could be dragged sideways for ever.** The switcher's list is a
+  `verticalListSortingStrategy` — a row can only land above or below another row — so horizontal
+  movement cannot express anything, and nothing was stopping it. The row simply followed the
+  pointer: out of the panel, off the edge of the menu, and on for as far as you cared to drag,
+  with nothing out there to drop onto. `restrictToVerticalAxis` and `restrictToParentElement` from
+  `@dnd-kit/modifiers` now bound it on both axes. Measured with the drag live: the row's
+  horizontal translate stays at 0 at a pointer offset of 2,500px, while the vertical still tracks
+  normally.
+- Done with the library's own modifiers rather than by zeroing the rendered transform, so
+  dnd-kit's idea of where the row is stays in step with what is drawn — a visual-only clamp would
+  have left the two disagreeing during the drag.
+
+### Notes
+- The phone app was never affected: its reorder is driven by Reanimated and only ever writes
+  `translateY`.
+- The dashboard's panel drag is a different case — those genuinely move between two columns, so
+  the horizontal axis means something there. It is not covered by this change and I could not
+  exercise it synthetically to check its bounds, because its handle is hover-revealed.
+
 ## [0.117.0] - 2026-11-05
 
 ### Changed
