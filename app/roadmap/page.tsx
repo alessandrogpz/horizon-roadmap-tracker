@@ -55,21 +55,21 @@ function RoadmapEditor() {
   return (
     <div className="max-w-[900px] mx-auto px-6 py-8">
       <div className="flex justify-between items-center mb-6 border-b border-card-border pb-4">
-        <h1 className="text-2xl font-bold m-0 flex items-center gap-2">
+        <h1 className="type-display-sm font-bold m-0 flex items-center gap-2">
           <span className="text-accent">&gt;_</span> {track ? `${track.meta.name}: Full Roadmap` : "Full Roadmap"}
         </h1>
-        <Link href="/" className="text-[0.8rem] text-accent no-underline font-semibold">&larr; Back to Hub</Link>
+        <Link href="/" className="type-label text-accent no-underline font-semibold">&larr; Back to Hub</Link>
       </div>
 
       {locked && (
         <div className="glass-panel text-center rounded-lg [--panel-pad:3rem] !border !border-dashed !border-danger/30 !bg-danger/[0.02]">
-          <h2 className="text-[1.1rem] font-semibold text-danger mb-2">Roadmap Locked</h2>
-          <p className="text-muted-foreground text-[0.95rem] max-w-[450px] mx-auto mb-6">
+          <h2 className="type-heading font-semibold text-danger mb-2">Roadmap Locked</h2>
+          <p className="text-muted-foreground type-subhead max-w-[450px] mx-auto mb-6">
             Please connect your Google Drive account on the main dashboard to unlock your roadmap.
           </p>
           <Link
             href="/"
-            className="inline-block px-6 py-2 bg-accent text-black font-bold rounded no-underline text-[0.8rem]"
+            className="inline-block px-6 py-2 bg-accent text-black font-bold rounded no-underline type-label"
           >
             Go to Dashboard &amp; Sync
           </Link>
@@ -81,7 +81,7 @@ function RoadmapEditor() {
           <div className="flex items-center justify-between border-b border-card-border px-6 pt-4">
             <div className="flex gap-1">
               <button
-                className={`px-4 py-2 text-[0.8rem] font-semibold uppercase tracking-[0.05em] border-b-2 -mb-px cursor-pointer bg-transparent ${
+                className={`px-4 py-2 type-label font-semibold uppercase tracking-[0.05em] border-b-2 -mb-px cursor-pointer bg-transparent ${
                   tab === "write" ? "text-accent border-accent" : "text-muted-foreground border-transparent hover:text-foreground"
                 }`}
                 onClick={() => setTab("write")}
@@ -89,7 +89,7 @@ function RoadmapEditor() {
                 Write
               </button>
               <button
-                className={`px-4 py-2 text-[0.8rem] font-semibold uppercase tracking-[0.05em] border-b-2 -mb-px cursor-pointer bg-transparent ${
+                className={`px-4 py-2 type-label font-semibold uppercase tracking-[0.05em] border-b-2 -mb-px cursor-pointer bg-transparent ${
                   tab === "preview" ? "text-accent border-accent" : "text-muted-foreground border-transparent hover:text-foreground"
                 }`}
                 onClick={() => setTab("preview")}
@@ -97,7 +97,7 @@ function RoadmapEditor() {
                 Preview
               </button>
             </div>
-            <span className="text-[0.7rem] font-mono text-muted-foreground inline-flex items-center gap-1">
+            <span className="type-caption font-mono text-muted-foreground inline-flex items-center gap-1">
               {saveStatus === "saving" && "Saving..."}
               {saveStatus === "saved" && (<><Check size={12} strokeWidth={2.5} /> Saved</>)}
               {saveStatus === "idle" && "This track's own private roadmap — autosaves"}
@@ -119,8 +119,8 @@ function RoadmapEditor() {
             />
           ) : (
             <div className="px-10 py-16 text-center">
-              <p className="text-muted-foreground text-[0.95rem] mb-4">You haven&apos;t written a roadmap for this track yet.</p>
-              <button onClick={() => setTab("write")} className="btn px-5 py-2 text-[0.85rem]">
+              <p className="text-muted-foreground type-subhead mb-4">You haven&apos;t written a roadmap for this track yet.</p>
+              <button onClick={() => setTab("write")} className="btn px-5 py-2 type-body">
                 Start Writing
               </button>
             </div>

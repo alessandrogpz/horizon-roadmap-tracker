@@ -7,6 +7,45 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.114.0] - 2026-11-05
+
+### Fixed
+- **Four contrast failures, all of them the same shape: a fixed colour on a surface that changes
+  with the theme.** A primary button's label on the phone was `#04121c`, which reads 6.84 on the
+  dark theme's bright accent and **3.19** on the light theme's deep one. The web app fixed exactly
+  this in `.btn:hover` a while back and recorded why; the phone never got it. Four screens, now on
+  `palette.background` — the colour always furthest from the accent, whichever theme is on: 7.14
+  and 5.74.
+- The phone's checkbox tick was white, which reads **2.54** on the dark theme's success green —
+  under even the 3:1 floor for graphics — and 5.48 on the light one. No fixed colour clears both.
+  Following the theme gives 7.80 and 5.30. Same for the confirm sheet's destructive button, where
+  white read 2.77.
+- **The colour picker's tick was the hardest thing on the row to see**, in both apps: white on the
+  six track colours reads 2.15 on the amber, 2.28 on the green, and clears 4.5 on exactly one of
+  them. `onColor()` in the shared core picks black or white per swatch, and a test holds every
+  track colour to 4.4.
+- Swipe actions carried white labels on literal `#ef4444` and `#f59e0b` — **3.76 and 2.15**. The
+  palette would have been worse (`danger` on dark is `#f87171`, where white reads 2.77), because a
+  solid action slab is a different job from a text colour. `ACTION` names three fills chosen so
+  white holds in both themes: 6.47, 5.02, 7.56.
+- The sync dot — the most-looked-at chrome in the app — was the one piece that ignored the theme.
+  Three of its four states were raw Tailwind palette colours with a mismatched literal hex in the
+  glow, so in light mode it kept the dark-mode greens while every token around it deepened.
+
+### Changed
+- **The type scale finally reaches the app.** 0.109.0 put the informational pages on it and left
+  391 literal sizes in the app itself — 347 arbitrary values and 44 Tailwind steps — which is why
+  changing `--text-body` still moved the website and not the dashboard. All 391 now name a role.
+  The scale was derived from exactly these values, so the sizes are unchanged; what changes is that
+  there is one vocabulary instead of two. Measured on the rendered dashboard: 8 distinct sizes,
+  every one of them a named step, none off-scale. The phone was already clean — zero literals.
+- 27 `leading-*` utilities dropped where the type class now supplies the line-height, rather than
+  left as silent no-ops under an unlayered rule that beats them.
+- The untyped-day grey was written out twice as `#a1a1aa`; it is `DEFAULT_TYPE_COLOR` in the shared
+  core, so the swatch you pick from and the tag you get cannot drift.
+- Removed `.no-press`, an opt-out added in 0.111.0 that nothing opted out of, and `Reveal`'s
+  `delay` prop, which has never been passed.
+
 ## [0.113.0] - 2026-11-05
 
 ### Fixed

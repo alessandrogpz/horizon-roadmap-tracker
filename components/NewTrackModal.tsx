@@ -86,14 +86,14 @@ export default function NewTrackModal({
         </button>
 
         <div>
-          <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold uppercase font-mono tracking-[0.05em]">
+          <span className="type-caption bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold uppercase font-mono tracking-[0.05em]">
             New track
           </span>
-          <h2 className="text-[1.3rem] font-bold text-foreground mt-2">One goal, one track</h2>
+          <h2 className="type-title font-bold text-foreground mt-2">One goal, one track</h2>
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-[0.8rem] text-muted-foreground">Name</label>
+          <label className="type-label text-muted-foreground">Name</label>
           <input
             type="text"
             maxLength={LIMITS.name}
@@ -101,43 +101,43 @@ export default function NewTrackModal({
             onChange={(e) => setName(e.target.value)}
             placeholder="What is this track called?"
             autoFocus
-            className="bg-input-bg border border-card-border rounded-md text-foreground text-[0.95rem] outline-none px-3 py-2 font-[inherit]"
+            className="bg-input-bg border border-card-border rounded-md text-foreground type-subhead outline-none px-3 py-2 font-[inherit]"
           />
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-[0.8rem] text-muted-foreground">Colour</label>
+          <label className="type-label text-muted-foreground">Colour</label>
           <ColorSwatches value={color} onPick={setColor} />
         </div>
 
         <div className="flex gap-3">
           <div className="flex-1 flex flex-col gap-1.5">
-            <label className="text-[0.8rem] text-muted-foreground">Starts</label>
+            <label className="type-label text-muted-foreground">Starts</label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="bg-input-bg border border-card-border rounded-md text-foreground text-[0.95rem] outline-none px-3 py-2 font-[inherit] w-full"
+              className="bg-input-bg border border-card-border rounded-md text-foreground type-subhead outline-none px-3 py-2 font-[inherit] w-full"
             />
           </div>
           <div className="flex-1 flex flex-col gap-1.5">
             {/* The template used to decide this silently, so a track arrived
                 with a horizon nobody had chosen and a phase timeline scaled
                 to it. */}
-            <label className="text-[0.8rem] text-muted-foreground">Should be done by</label>
+            <label className="type-label text-muted-foreground">Should be done by</label>
             <input
               type="date"
               min={startDate}
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="bg-input-bg border border-card-border rounded-md text-foreground text-[0.95rem] outline-none px-3 py-2 font-[inherit] w-full"
+              className="bg-input-bg border border-card-border rounded-md text-foreground type-subhead outline-none px-3 py-2 font-[inherit] w-full"
             />
           </div>
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-[0.8rem] text-muted-foreground">What it is about</label>
-          <p className="text-[0.8rem] text-subtle-foreground -mt-1">
+          <label className="type-label text-muted-foreground">What it is about</label>
+          <p className="type-label text-subtle-foreground -mt-1">
             This only decides which modules the track opens with. Every module stays available to
             every track, so nothing is locked away by choosing here.
           </p>
@@ -152,8 +152,8 @@ export default function NewTrackModal({
                   made. */}
               <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: color }} />
               <span className="flex flex-col gap-0.5">
-                <span className="text-[0.85rem] font-semibold text-foreground">{template.label}</span>
-                <span className="text-[0.8rem] text-muted-foreground">{template.description}</span>
+                <span className="type-body font-semibold text-foreground">{template.label}</span>
+                <span className="type-label text-muted-foreground">{template.description}</span>
               </span>
             </button>
           ))}

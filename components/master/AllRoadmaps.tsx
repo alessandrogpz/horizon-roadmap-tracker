@@ -44,17 +44,17 @@ export default function AllRoadmaps() {
   return (
     <div className="mx-auto max-w-[1100px] px-6 py-8">
       <div className="mb-6 flex items-center justify-between gap-4 border-b border-card-border pb-4">
-        <h1 className="m-0 flex items-center gap-2 text-2xl font-bold">
+        <h1 className="m-0 flex items-center gap-2 type-display-sm font-bold">
           <span className="text-accent">&gt;_</span> All roadmaps
           <span
-            className="inline-flex items-center gap-1 rounded-[var(--radius-control)] border border-card-border bg-surface-muted px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-[0.05em] text-subtle-foreground"
+            className="inline-flex items-center gap-1 rounded-[var(--radius-control)] border border-card-border bg-surface-muted px-2 py-0.5 type-micro font-semibold uppercase tracking-[0.05em] text-subtle-foreground"
             title="Open a track to edit its roadmap."
           >
             <Lock size={10} strokeWidth={2.5} />
             Read only
           </span>
         </h1>
-        <Link href="/" className="shrink-0 text-[0.8rem] font-semibold text-accent no-underline">
+        <Link href="/" className="shrink-0 type-label font-semibold text-accent no-underline">
           &larr; Back to Hub
         </Link>
       </div>
@@ -62,8 +62,8 @@ export default function AllRoadmaps() {
       {roadmaps.length === 0 ? (
         <div className="glass-panel flex flex-col items-center gap-3 rounded-lg py-16 text-center">
           <FileText size={28} strokeWidth={1.75} className="text-muted-foreground" />
-          <p className="m-0 text-sm font-medium text-foreground">No roadmaps written yet</p>
-          <p className="m-0 max-w-[380px] text-xs text-subtle-foreground">
+          <p className="m-0 type-body font-medium text-foreground">No roadmaps written yet</p>
+          <p className="m-0 max-w-[380px] type-caption text-subtle-foreground">
             A track&apos;s roadmap is its own private document — the plan behind the phases. Open a
             track and write one, and it will show up here.
           </p>
@@ -81,7 +81,7 @@ export default function AllRoadmaps() {
                   key={entry.track.id}
                   onClick={() => setOpenId(entry.track.id)}
                   aria-current={on}
-                  className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-left text-[0.85rem] font-semibold transition-colors ${
+                  className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-left type-body font-semibold transition-colors ${
                     on ? "text-foreground" : "border-card-border bg-transparent text-muted-foreground hover:bg-surface-hover hover:text-foreground"
                   }`}
                   style={on ? { borderColor: color, background: `color-mix(in srgb, ${color} 12%, transparent)` } : undefined}
@@ -104,11 +104,11 @@ export default function AllRoadmaps() {
                     className="h-2 w-2 shrink-0 rounded-full"
                     style={{ background: current.track.color || "var(--accent)" }}
                   />
-                  <span className="min-w-0 truncate text-[0.95rem] font-semibold text-foreground">
+                  <span className="min-w-0 truncate type-subhead font-semibold text-foreground">
                     {current.track.name}
                   </span>
                 </span>
-                <span className="shrink-0 font-mono text-[0.7rem] text-subtle-foreground">
+                <span className="shrink-0 font-mono type-caption text-subtle-foreground">
                   {current.content.trim().split(/\s+/).length} words
                 </span>
               </div>

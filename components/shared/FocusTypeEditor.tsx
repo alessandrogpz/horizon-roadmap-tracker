@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import {
   addFocusType,
+  DEFAULT_TYPE_COLOR,
   recolorFocusType,
   removeFocusType,
   renameFocusType,
@@ -42,7 +43,7 @@ export default function FocusTypeEditor({ focusTypes, weekSchedule, onChange }: 
 
   return (
     <div className="bg-surface-muted border border-card-border rounded-lg p-3 flex flex-col gap-[0.6rem]">
-      <span className="text-[0.7rem] text-muted-foreground font-bold uppercase">
+      <span className="type-caption text-muted-foreground font-bold uppercase">
         Edit Focus Types Pool
       </span>
 
@@ -55,12 +56,12 @@ export default function FocusTypeEditor({ focusTypes, weekSchedule, onChange }: 
               value={val.label}
               onChange={(e) => apply(renameFocusType(pool, key, e.target.value))}
               placeholder="Label"
-              className="flex-1 bg-input-bg border border-card-border rounded px-1.5 py-0.5 text-foreground text-xs outline-none"
+              className="flex-1 bg-input-bg border border-card-border rounded px-1.5 py-0.5 text-foreground type-caption outline-none"
             />
 
             <input
               type="color"
-              value={val.color || "#a1a1aa"}
+              value={val.color || DEFAULT_TYPE_COLOR}
               onChange={(e) => apply(recolorFocusType(pool, key, e.target.value))}
               className="w-6 h-6 border-none bg-transparent cursor-pointer p-0"
             />
@@ -85,7 +86,7 @@ export default function FocusTypeEditor({ focusTypes, weekSchedule, onChange }: 
             <button
               onClick={() => apply(removeFocusType(pool, key))}
               disabled={Object.keys(focusTypes).length <= 1}
-              className={`bg-transparent border-none text-[0.8rem] px-0.5 ${
+              className={`bg-transparent border-none type-label px-0.5 ${
                 Object.keys(focusTypes).length <= 1 ? "text-subtle-foreground cursor-not-allowed" : "text-danger cursor-pointer"
               }`}
               title="Delete Focus Type"
@@ -104,7 +105,7 @@ export default function FocusTypeEditor({ focusTypes, weekSchedule, onChange }: 
           onChange={(e) => setDraft((prev) => ({ ...prev, label: e.target.value }))}
           onKeyDown={(e) => e.key === "Enter" && addType()}
           placeholder="New type label..."
-          className="flex-1 bg-input-bg border border-card-border rounded px-2 py-1 text-foreground text-xs outline-none"
+          className="flex-1 bg-input-bg border border-card-border rounded px-2 py-1 text-foreground type-caption outline-none"
         />
         <input
           type="color"
@@ -112,12 +113,12 @@ export default function FocusTypeEditor({ focusTypes, weekSchedule, onChange }: 
           onChange={(e) => setDraft((prev) => ({ ...prev, color: e.target.value }))}
           className="w-6 h-6 border-none bg-transparent cursor-pointer p-0"
         />
-        <button onClick={addType} className="btn px-2 py-1 text-xs">
+        <button onClick={addType} className="btn px-2 py-1 type-caption">
           Add Type
         </button>
       </div>
 
-      <p className="m-0 text-[0.7rem] leading-relaxed text-subtle-foreground">
+      <p className="m-0 type-caption text-subtle-foreground">
         The moon marks a kind of day you take off on purpose. Those days bridge a streak rather
         than breaking it, and show in the consistency grid as a dot.
       </p>

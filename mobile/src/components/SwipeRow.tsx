@@ -26,7 +26,7 @@ import Animated, {
 } from "react-native-reanimated";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { warn } from "../feedback/haptics";
-import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
+import { ACTION, RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
 /** How far the row has to travel before letting go commits it. About a
@@ -108,13 +108,13 @@ export function SwipeRow({
     <View style={styles.wrap}>
       {left && (
         <Animated.View style={[styles.action, styles.actionRight, { backgroundColor: left.colour }, leftStyle]}>
-          <Ionicons name={left.icon} size={18} color="#fff" />
+          <Ionicons name={left.icon} size={18} color={ACTION.on} />
           <Text style={styles.actionLabel}>{left.label}</Text>
         </Animated.View>
       )}
       {right && (
         <Animated.View style={[styles.action, styles.actionLeft, { backgroundColor: right.colour }, rightStyle]}>
-          <Ionicons name={right.icon} size={18} color="#fff" />
+          <Ionicons name={right.icon} size={18} color={ACTION.on} />
           <Text style={styles.actionLabel}>{right.label}</Text>
         </Animated.View>
       )}
@@ -140,6 +140,6 @@ function makeStyles(palette: Palette) {
     },
     actionLeft: { left: 0 },
     actionRight: { right: 0 },
-    actionLabel: { color: "#fff", ...TYPE.label, fontWeight: "700" },
+    actionLabel: { color: ACTION.on, ...TYPE.label, fontWeight: "700" },
   });
 }

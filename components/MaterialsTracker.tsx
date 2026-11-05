@@ -40,10 +40,10 @@ function readCollapsedCategories(): string[] {
   }
 }
 
-const inputClass = "w-full p-1 rounded bg-input-bg border border-card-border text-foreground outline-none font-[inherit] text-[0.85rem]";
-const selectClass = "w-full p-1 rounded bg-input-bg border border-card-border text-foreground outline-none font-[inherit] text-[0.8rem]";
-const labelClass = "block text-[0.7rem] text-muted-foreground mb-1 uppercase";
-const metricLabelClass = "text-[0.65rem] text-muted-foreground w-[70px] uppercase font-mono font-bold tracking-[0.05em]";
+const inputClass = "w-full p-1 rounded bg-input-bg border border-card-border text-foreground outline-none font-[inherit] type-body";
+const selectClass = "w-full p-1 rounded bg-input-bg border border-card-border text-foreground outline-none font-[inherit] type-label";
+const labelClass = "block type-caption text-muted-foreground mb-1 uppercase";
+const metricLabelClass = "type-micro text-muted-foreground w-[70px] uppercase font-mono font-bold tracking-[0.05em]";
 
 export default function MaterialsTracker({
   materials,
@@ -278,7 +278,7 @@ export default function MaterialsTracker({
         </h2>
         <button
           onClick={() => setShowAddForm(!showAddForm)}
-          className="btn px-2.5 py-1 text-xs"
+          className="btn px-2.5 py-1 type-caption"
         >
           {showAddForm ? "Cancel" : "[+ Add]"}
         </button>
@@ -358,7 +358,7 @@ export default function MaterialsTracker({
               />
             </div>
           </div>
-          <button type="submit" className="btn mt-1 text-[0.8rem]">Save Material</button>
+          <button type="submit" className="btn mt-1 type-label">Save Material</button>
         </form>
       )}
 
@@ -378,7 +378,7 @@ export default function MaterialsTracker({
                 onClick={() => toggleCategory(category)}
                 aria-expanded={!isCollapsed}
                 aria-controls={groupId}
-                className="flex w-full items-center gap-1.5 py-0.5 text-xs text-accent uppercase tracking-[0.05em] border-l-2 border-accent pl-2 font-bold bg-transparent text-left cursor-pointer hover:opacity-75 transition-opacity"
+                className="flex w-full items-center gap-1.5 py-0.5 type-caption text-accent uppercase tracking-[0.05em] border-l-2 border-accent pl-2 font-bold bg-transparent text-left cursor-pointer hover:opacity-75 transition-opacity"
               >
                 <ChevronDown
                   size={13}
@@ -466,9 +466,9 @@ export default function MaterialsTracker({
                                 type="number"
                                 value={editCurrentPage}
                                 onChange={(e) => setEditCurrentPage(Number(e.target.value))}
-                                className="w-[60px] p-1 rounded bg-input-bg border border-card-border text-foreground font-[inherit] text-[0.85rem] text-center outline-none"
+                                className="w-[60px] p-1 rounded bg-input-bg border border-card-border text-foreground font-[inherit] type-body text-center outline-none"
                               />
-                              <span className="text-[0.8rem] text-muted-foreground">/ {editTotalPages}</span>
+                              <span className="type-label text-muted-foreground">/ {editTotalPages}</span>
                             </div>
                           )}
                           <div className="flex items-center gap-2">
@@ -478,7 +478,7 @@ export default function MaterialsTracker({
                               maxLength={LIMITS.title}
                               value={editCurrentSubject}
                               onChange={(e) => setEditCurrentSubject(e.target.value)}
-                              className="flex-1 min-w-0 p-1 rounded bg-input-bg border border-card-border text-foreground font-[inherit] text-[0.85rem] outline-none"
+                              className="flex-1 min-w-0 p-1 rounded bg-input-bg border border-card-border text-foreground font-[inherit] type-body outline-none"
                             />
                           </div>
                         </div>
@@ -488,7 +488,7 @@ export default function MaterialsTracker({
                         <button
                           type="button"
                           onClick={() => onDeleteMaterial(mat.id)}
-                          className="bg-danger/10 text-danger border border-danger/30 rounded px-2 py-1 text-xs cursor-pointer"
+                          className="bg-danger/10 text-danger border border-danger/30 rounded px-2 py-1 type-caption cursor-pointer"
                         >
                           Delete
                         </button>
@@ -496,14 +496,14 @@ export default function MaterialsTracker({
                           <button
                             type="button"
                             onClick={() => setEditingId(null)}
-                            className="bg-transparent text-muted-foreground border border-card-border rounded px-2 py-1 text-xs cursor-pointer"
+                            className="bg-transparent text-muted-foreground border border-card-border rounded px-2 py-1 type-caption cursor-pointer"
                           >
                             Cancel
                           </button>
                           <button
                             type="button"
                             onClick={() => saveEdit(mat.id)}
-                            className="btn px-2 py-1 text-xs"
+                            className="btn px-2 py-1 type-caption"
                           >
                             Save
                           </button>
@@ -530,21 +530,21 @@ export default function MaterialsTracker({
                         {mat.link ? (
                           <div
                             onClick={() => onOpenLink(mat.link)}
-                            className="link-title line-clamp-2 font-semibold text-[0.95rem]"
+                            className="link-title line-clamp-2 font-semibold type-subhead"
                             title={`${mat.title} — opens ${mat.link}`}
                           >
                             {mat.title}
                           </div>
                         ) : (
-                          <div className="line-clamp-2 font-semibold text-[0.95rem] text-foreground" title={mat.title}>
+                          <div className="line-clamp-2 font-semibold type-subhead text-foreground" title={mat.title}>
                             {mat.title}
                           </div>
                         )}
                         {mat.author && (
-                          <div className="text-[0.8rem] text-muted-foreground mt-0.5">{mat.author}</div>
+                          <div className="type-label text-muted-foreground mt-0.5">{mat.author}</div>
                         )}
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[0.65rem] text-accent uppercase tracking-[0.05em] font-mono">
+                          <span className="type-micro text-accent uppercase tracking-[0.05em] font-mono">
                             {mat.type}
                           </span>
                           {/* No stored link — offer a search built from the title
@@ -552,7 +552,7 @@ export default function MaterialsTracker({
                           {!mat.link && (
                             <button
                               onClick={() => onOpenLink(searchUrlFor(mat))}
-                              className="cursor-pointer border-none bg-transparent p-0 text-[0.65rem] uppercase tracking-[0.05em] font-mono text-muted-foreground underline hover:text-foreground"
+                              className="cursor-pointer border-none bg-transparent p-0 type-micro uppercase tracking-[0.05em] font-mono text-muted-foreground underline hover:text-foreground"
                               title={`Search the web for "${mat.title}"`}
                             >
                               find
@@ -560,7 +560,7 @@ export default function MaterialsTracker({
                           )}
                         </div>
                         {stats && stats.isRepo && (
-                          <div className="text-[0.7rem] text-muted-foreground mt-1 font-mono flex flex-wrap gap-x-2 gap-y-px">
+                          <div className="type-caption text-muted-foreground mt-1 font-mono flex flex-wrap gap-x-2 gap-y-px">
                             <span>branch: <span className="text-accent">{stats.branch}</span></span>
                             <span>|</span>
                             {(stats.uncommittedCount ?? 0) > 0 ? (
@@ -582,24 +582,24 @@ export default function MaterialsTracker({
                       <div className="flex flex-wrap items-center gap-2">
                         <button
                           onClick={() => openNotes(mat.id, mat.title)}
-                          className="bg-transparent border-none text-accent cursor-pointer text-[0.7rem] px-1 py-px font-[inherit] font-medium"
+                          className="bg-transparent border-none text-accent cursor-pointer type-caption px-1 py-px font-[inherit] font-medium"
                         >
                           Notes
                         </button>
                         <button
                           onClick={() => startEdit(mat)}
-                          className="bg-transparent border-none text-muted-foreground cursor-pointer text-[0.7rem] px-1 py-px font-[inherit]"
+                          className="bg-transparent border-none text-muted-foreground cursor-pointer type-caption px-1 py-px font-[inherit]"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => onArchiveChange(mat.id, true)}
-                          className="bg-transparent border-none text-muted-foreground cursor-pointer text-[0.7rem] px-1 py-px font-[inherit]"
+                          className="bg-transparent border-none text-muted-foreground cursor-pointer type-caption px-1 py-px font-[inherit]"
                           title="Move to Archived. Nothing is deleted, and you can unarchive it any time."
                         >
                           Archive
                         </button>
-                        <span className={`text-[0.7rem] uppercase font-mono font-bold tracking-[0.05em] px-1.5 py-0.5 border rounded whitespace-nowrap ${
+                        <span className={`type-caption uppercase font-mono font-bold tracking-[0.05em] px-1.5 py-0.5 border rounded whitespace-nowrap ${
                           mat.status === "Completed"
                             ? "text-success border-success/20 bg-success/5"
                             : mat.status === "In Progress"
@@ -617,7 +617,7 @@ export default function MaterialsTracker({
                         {mat.type === "Book" && (
                           <div className="flex items-center gap-2">
                             <span className={metricLabelClass}>PAGE</span>
-                            <span className="text-[0.8rem] text-foreground font-mono">
+                            <span className="type-label text-foreground font-mono">
                               {mat.currentPage || 0} / {mat.totalPages || 100}
                             </span>
                           </div>
@@ -625,7 +625,7 @@ export default function MaterialsTracker({
                         {mat.currentSubject && (
                           <div className="flex items-center gap-2">
                             <span className={metricLabelClass}>SUBJECT</span>
-                            <span className="text-[0.8rem] text-foreground">
+                            <span className="type-label text-foreground">
                               {mat.currentSubject}
                             </span>
                           </div>
@@ -660,7 +660,7 @@ export default function MaterialsTracker({
                 onClick={() => setShowArchived(open => !open)}
                 aria-expanded={showArchived}
                 aria-controls="materials-group-archived"
-                className="flex w-full items-center gap-1.5 py-0.5 text-xs text-muted-foreground uppercase tracking-[0.05em] border-l-2 border-card-border pl-2 font-bold bg-transparent text-left cursor-pointer hover:text-foreground transition-colors"
+                className="flex w-full items-center gap-1.5 py-0.5 type-caption text-muted-foreground uppercase tracking-[0.05em] border-l-2 border-card-border pl-2 font-bold bg-transparent text-left cursor-pointer hover:text-foreground transition-colors"
               >
                 <ChevronDown
                   size={13}
@@ -681,24 +681,24 @@ export default function MaterialsTracker({
                   className={`flex justify-between items-start gap-4 px-4 py-3 ${idx === archivedMaterials.length - 1 ? "" : "border-b border-card-border"}`}
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="line-clamp-2 font-semibold text-[0.95rem] text-muted-foreground" title={mat.title}>{mat.title}</div>
+                    <div className="line-clamp-2 font-semibold type-subhead text-muted-foreground" title={mat.title}>{mat.title}</div>
                     {mat.author && (
-                      <div className="text-[0.8rem] text-muted-foreground mt-0.5">{mat.author}</div>
+                      <div className="type-label text-muted-foreground mt-0.5">{mat.author}</div>
                     )}
-                    <div className="text-[0.65rem] text-muted-foreground uppercase tracking-[0.05em] font-mono mt-0.5">
+                    <div className="type-micro text-muted-foreground uppercase tracking-[0.05em] font-mono mt-0.5">
                       {mat.type} · {mat.category || "Other"} · {mat.status}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <button
                       onClick={() => openNotes(mat.id, mat.title)}
-                      className="bg-transparent border-none text-accent cursor-pointer text-[0.7rem] px-1 py-px font-[inherit] font-medium"
+                      className="bg-transparent border-none text-accent cursor-pointer type-caption px-1 py-px font-[inherit] font-medium"
                     >
                       Notes
                     </button>
                     <button
                       onClick={() => onArchiveChange(mat.id, false)}
-                      className="bg-transparent border-none text-muted-foreground cursor-pointer text-[0.7rem] px-1 py-px font-[inherit]"
+                      className="bg-transparent border-none text-muted-foreground cursor-pointer type-caption px-1 py-px font-[inherit]"
                     >
                       Unarchive
                     </button>
@@ -730,15 +730,15 @@ export default function MaterialsTracker({
                 label over a heading, which is the one device the heading can
                 always carry itself. */}
             <h3
-              className="text-base font-semibold text-foreground m-0 overflow-hidden text-ellipsis whitespace-nowrap"
+              className="type-prose font-semibold text-foreground m-0 overflow-hidden text-ellipsis whitespace-nowrap"
               title={activeNotesTitle}
             >
               {activeNotesTitle}
             </h3>
-            <span className="text-[0.75rem] text-muted-foreground">Study notes</span>
+            <span className="type-caption text-muted-foreground">Study notes</span>
           </div>
           <div className="flex items-center gap-4 shrink-0">
-            <span className={`text-[0.7rem] font-mono inline-flex items-center gap-1 ${notesStatus === "error" ? "text-danger" : "text-muted-foreground"}`}>
+            <span className={`type-caption font-mono inline-flex items-center gap-1 ${notesStatus === "error" ? "text-danger" : "text-muted-foreground"}`}>
               {notesStatus === "loading" && "Loading..."}
               {notesStatus === "saving" && "Saving..."}
               {notesStatus === "saved" && (<><Check size={12} strokeWidth={2.5} /> Saved</>)}
@@ -791,12 +791,12 @@ export default function MaterialsTracker({
         </div>
 
         <div className="notes-drawer-footer">
-          <span className="text-[0.7rem] text-muted-foreground">
+          <span className="type-caption text-muted-foreground">
             Markdown supported • Autosaves
           </span>
           <button
             onClick={() => activeNotesId && performSave(activeNotesId, notesContent)}
-            className="btn px-3 py-1 text-xs disabled:opacity-50"
+            className="btn px-3 py-1 type-caption disabled:opacity-50"
             disabled={notesStatus === "loading" || notesStatus === "saving"}
           >
             Save Now

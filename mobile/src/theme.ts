@@ -156,6 +156,30 @@ export const TYPE = {
 // phone still reaches for them where it reaches for the rest of the theme.
 export { shadeOf, withAlpha, shadeScale, lighten, SHADE_STEPS } from "@shared/colors";
 
+/** The fills behind a swipe action.
+ *
+ *  Not `palette.danger` and not a theme value at all, and that is the point:
+ *  a swipe action is a solid slab with white text on it, which is a different
+ *  job from `danger` as a *text* colour and needs a different answer. The
+ *  three that were in use — `#ef4444` for delete, `#f59e0b` for archive,
+ *  `#64748b` for the neutral ones — were literals written at six call sites,
+ *  and two of them failed: white reads 3.76 on that red and 2.15 on that
+ *  amber, against a 4.5 floor. Swapping in the palette would have been worse
+ *  still, since `danger` on the dark theme is #f87171 and white reads 2.77 on
+ *  it.
+ *
+ *  These are deliberately the same in both themes. The slab is revealed by a
+ *  gesture, covers the row underneath it, and is read for the half-second it
+ *  is on screen; it is a signal, not a surface. White on each: 6.47, 5.02,
+ *  7.56. */
+export const ACTION = {
+  danger: "#b91c1c",
+  warning: "#b45309",
+  neutral: "#4b5563",
+  /** The text and icon every action carries. */
+  on: "#ffffff",
+} as const;
+
 export const RADIUS = { control: 8, card: 14 } as const;
 
 /** Every control in the app header — the sync chip, the theme button, the
