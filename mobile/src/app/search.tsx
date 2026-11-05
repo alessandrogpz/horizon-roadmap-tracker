@@ -10,7 +10,7 @@
 // It needs an account, and says so rather than silently returning nothing.
 
 import { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import type { SearchResult } from "@shared/apiTypes";
 import { authorized } from "../auth/session";
 import { searchLocally, type LocalHit } from "../search/localSearch";
@@ -19,6 +19,7 @@ import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { Refreshable } from "../components/Refreshable";
+import { Tappable } from "../components/Tappable";
 
 export default function SearchScreen() {
   const palette = usePalette();
@@ -64,9 +65,9 @@ export default function SearchScreen() {
           style={styles.input}
           accessibilityLabel="Search"
         />
-        <Pressable accessibilityRole="button" onPress={() => void run()} style={styles.button}>
+        <Tappable accessibilityRole="button" onPress={() => void run()} style={styles.button}>
           <Text style={styles.buttonLabel}>Go</Text>
-        </Pressable>
+        </Tappable>
       </View>
 
       {state === "searching" && <ActivityIndicator color={palette.accent} style={{ marginTop: SPACING.lg }} />}

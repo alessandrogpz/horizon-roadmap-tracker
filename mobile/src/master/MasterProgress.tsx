@@ -15,7 +15,7 @@
 // shows that track now, and both ways of seeing all of them live here.
 
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { masterCalendar, masterRestOn, masterRestWeekdays, masterStart, masterStreak } from "@shared/masterTrack";
 import { marksRestDay } from "@shared/restDays";
 import { parseYMD } from "@shared/dates";
@@ -28,6 +28,7 @@ import { usePalette } from "../theme/ThemeProvider";
 import { NothingSelected, ReadOnlyBand, TrackPicker } from "./MasterChrome";
 import { makeMasterStyles } from "./styles";
 import { useMasterSources } from "./useMasterSources";
+import { Tappable } from "../components/Tappable";
 
 const LAYOUTS = [
   { value: "rows", label: "One per track" },
@@ -95,7 +96,7 @@ export function MasterProgress() {
             {LAYOUTS.map((option) => {
               const on = option.value === layout;
               return (
-                <Pressable
+                <Tappable
                   key={option.value}
                   accessibilityRole="button"
                   accessibilityState={{ selected: on }}
@@ -103,7 +104,7 @@ export function MasterProgress() {
                   style={[own.segment, on && { backgroundColor: palette.card }]}
                 >
                   <Text style={[own.segmentLabel, on && { color: palette.foreground }]}>{option.label}</Text>
-                </Pressable>
+                </Tappable>
               );
             })}
           </View>

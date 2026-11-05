@@ -148,7 +148,7 @@ export default function WeeklyPlan({
                 <div
                   key={rotation.id}
                   onClick={() => { if (data.isSynced) onRotationClick(rotation.id); }}
-                  className={`inline-flex items-center gap-2 border border-dashed px-3 py-1.5 rounded-md transition-all duration-200 whitespace-nowrap ${
+                  className={`inline-flex items-center gap-2 border border-dashed px-3 py-1.5 rounded-md transition-colors duration-200 whitespace-nowrap ${
                     running ? "bg-accent/[0.08] border-accent/30" : "bg-surface-muted border-card-border opacity-70"
                   } ${data.isSynced ? "cursor-pointer hover:bg-accent/15 hover:border-accent/50" : "cursor-default"}`}
                   title={
@@ -174,7 +174,7 @@ export default function WeeklyPlan({
             {data.isSynced && (
               <button
                 onClick={() => onRotationClick(null)}
-                className="inline-flex items-center gap-1 border border-dashed border-card-border-hover px-3 py-1.5 rounded-md text-[0.8rem] text-muted-foreground font-semibold cursor-pointer transition-all duration-200 hover:text-foreground hover:border-card-border-hover"
+                className="inline-flex items-center gap-1 border border-dashed border-card-border-hover px-3 py-1.5 rounded-md text-[0.8rem] text-muted-foreground font-semibold cursor-pointer transition-colors duration-200 hover:text-foreground hover:border-card-border-hover"
               >
                 + New Rotation
               </button>
@@ -213,7 +213,7 @@ function WeekNavButton({ label, onClick }: { label: string; onClick: () => void 
   return (
     <button
       onClick={onClick}
-      className="tap-44 bg-transparent border border-card-border rounded text-muted-foreground cursor-pointer px-1.5 py-0.5 text-[0.8rem] font-mono leading-none transition-all duration-150 hover:border-accent hover:text-foreground"
+      className="tap-44 bg-transparent border border-card-border rounded text-muted-foreground cursor-pointer px-1.5 py-0.5 text-[0.8rem] font-mono leading-none transition-colors duration-150 hover:border-accent hover:text-foreground"
     >
       {label}
     </button>
@@ -302,7 +302,7 @@ function DayCard({ dayItem, idx, data, dayOfWeek, weekOffset, viewedWeekNum, onD
   return (
     <div
       onClick={() => onDayClick(dayItem)}
-      className={`day-card flex flex-col gap-[0.35rem] px-2 py-[0.6rem] rounded-lg cursor-pointer transition-all duration-200 min-h-[160px] overflow-hidden ${
+      className={`day-card flex flex-col gap-[0.35rem] px-2 py-[0.6rem] rounded-lg cursor-pointer transition-[background-color,border-color,box-shadow,opacity] duration-200 min-h-[160px] overflow-hidden ${
         open ? "" : "is-collapsed"
       } ${
         isToday

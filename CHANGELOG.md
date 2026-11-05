@@ -7,6 +7,71 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.111.0] - 2026-11-05
+
+### Changed
+- **The dashboard's panels stopped arriving one after another thirteen versions ago and nobody
+  noticed.** `SortablePanel` sets a 60ms-per-panel `animation-delay`, and the `@keyframes panel-in`
+  it referred to was deleted by accident in 0.97.0 — a commit about the weekly overview. The delay
+  has been applied to no animation ever since, and the `prefers-reduced-motion` block has been
+  switching off a class that did not exist. Restored, with the note that made it work: the fill is
+  `backwards`, not `both`, because a retained transform would make the panel the containing block
+  for its `position: fixed` descendants and lay the notes drawer out inside a dashboard card.
+- **Nothing in the app answered a press.** Every control had a hover state and not one had an
+  `:active` state, which on a phone — where there is no hover and your thumb is covering the thing
+  you touched — meant a tap produced no response at all until the work it started finished.
+  Buttons now give by 3% over 140ms. Small enough that nobody will name it; what you notice is its
+  absence, as the interface feeling dead under the finger.
+- The same on the phone app, where it was worse: 141 `Pressable`s, zero `activeOpacity`, zero
+  `android_ripple`, and exactly one component — the SubNav chip — that did anything when touched.
+  That chip's spring is now `src/components/Tappable.tsx` and ~135 of the 141 use it. The handful
+  left out are deliberate: the four full-screen backdrops have nothing to give, and `Segmented`
+  already answers a press by moving its thumb to where you touched.
+- **Hover states were sticking after a tap.** Tailwind v4 wraps its own `hover:` utilities in
+  `@media (hover: hover)`; the eight hover rules hand-written in `globals.css` were not, so on a
+  touch screen they latched on the last thing tapped and stayed. All eight gated. Press feedback is
+  deliberately *not* gated — touch is where it matters most.
+- Nine modals and two popovers existed on one frame and not on the one before. They fade their
+  backdrop and scale up from 0.96 now; the popovers scale out of the corner of the button that
+  opened them rather than out of their own centre, and the modals keep a centred origin because a
+  modal is the one surface that is not anchored to anything. Enter only — a real exit means keeping
+  nine components mounted past the state change that removes them.
+- The three ad-hoc modal backdrops (`bg-black/80`, `bg-black/85`, `.modal-overlay`) are one.
+- Three easing curves as tokens — `--ease-out`, `--ease-in-out`, `--ease-drawer` — replacing the
+  browser's built-in `ease` nearly everywhere and two hand-written `cubic-bezier(0.16, 1, 0.3, 1)`s
+  that nothing else referenced. They live in `@theme`, not `:root`, and that distinction is the
+  whole point: Tailwind v4 ships its own `--ease-out`, so declaring one in `:root` left two
+  definitions of the same name in the stylesheet — ours winning for hand-written CSS and Tailwind's
+  weaker curve staying behind the `ease-out` *utility*. One definition now, and the override is a
+  decision rather than a collision.
+- The notes drawer opens in 340ms on the iOS drawer curve and closes in 220ms. Opening is the
+  interface presenting something and can take its time; closing is it getting out of the way.
+- `transition: all` is gone from all fifteen places it appeared. It was putting a 200ms transition
+  on `flex`, `padding` and `border-width` — every layout property those elements had.
+- Three progress bars filled over 500ms; 280ms now. `width` is kept rather than `scaleX`, which
+  would distort a 6px pill's rounded caps.
+- The phone app had no equivalent of `prefers-reduced-motion` at all, while the web app has
+  honoured it since the landing page's reveals went in. `useReducedMotion()` now reads the same
+  system setting on both platforms. Reduced means fewer and gentler, not none: fades stay, because
+  a fade still says a thing arrived; movement goes.
+
+### Notes
+- **The press feedback on the phone app is not verified.** Reanimated's `useAnimatedStyle` updates
+  do not run under the react-native-web preview this repo verifies the phone app through — the
+  pre-existing `Segmented` thumb, untouched by this change, sits at `translateX(3px)` through a
+  whole switch there too. So the proxy cannot show this working. What is verified is that
+  `onPressIn` fires and the animated style is attached to the right element; whether it *looks*
+  right wants a simulator or a device.
+- On the web app it is verified: a transform transition starts on the button on mousedown, 38
+  hover rules sit inside `@media (hover: hover)` and the one that does not is the rule whose job is
+  to override one of them, the panel stagger measures 0 / 60 / 120 / 180ms across two columns, and
+  the menu's `transform-origin` lands exactly on its trigger's left edge.
+- `PanelCard` — the most-tapped thing in the phone app — still has no give, and cannot use
+  `Tappable`: a gesture handler above it decides whether a touch was a tap, a drag or a scroll, and
+  it is the only thing watching how far the finger travelled.
+- Expo SDK 58 is still deferred until the restyle is finished, along with the native build owed for
+  `orientation` and `ios.supportsTablet`.
+
 ## [0.110.0] - 2026-11-05
 
 ### Changed

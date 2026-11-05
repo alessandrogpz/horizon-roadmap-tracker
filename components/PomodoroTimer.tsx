@@ -106,7 +106,7 @@ export default function PomodoroTimer() {
 
       <div className="flex flex-col items-center gap-4 py-2">
         {/* Clock Display */}
-        <div className={`text-[3.5rem] font-bold font-mono tracking-[0.05em] leading-none transition-all duration-300 ${isActive ? "text-accent [text-shadow:0_0_15px_#0ea5e933]" : "text-foreground"}`}>
+        <div className={`text-[3.5rem] font-bold font-mono tracking-[0.05em] leading-none transition-[color,text-shadow] duration-200 ${isActive ? "text-accent [text-shadow:0_0_15px_#0ea5e933]" : "text-foreground"}`}>
           {formatTime()}
         </div>
 

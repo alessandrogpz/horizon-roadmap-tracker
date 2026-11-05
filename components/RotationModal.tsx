@@ -185,11 +185,11 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center z-[1000] p-4"
+      className="modal-overlay overlay-in fixed inset-0 z-[1000] flex items-center justify-center p-4"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`glass-panel panel-roomy w-full max-h-[90vh] flex flex-col gap-6 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.5)] border border-accent-muted relative rounded-lg overflow-hidden ${
+        className={`modal-in glass-panel panel-roomy w-full max-h-[90vh] flex flex-col gap-6 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.5)] border border-accent-muted relative rounded-lg overflow-hidden ${
           mode === "plan" ? "max-w-[900px] h-[80vh]" : "max-w-[600px]"
         }`}
       >
@@ -310,7 +310,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                 <div className="flex flex-wrap gap-1.5">
                   <button
                     onClick={() => setPhase(undefined)}
-                    className={`px-3 py-1.5 rounded-md text-[0.8rem] font-semibold cursor-pointer border transition-all duration-150 ${
+                    className={`px-3 py-1.5 rounded-md text-[0.8rem] font-semibold cursor-pointer border transition-colors duration-150 ${
                       phase === undefined
                         ? "bg-accent/15 border-accent text-accent"
                         : "bg-surface-muted border-card-border text-muted-foreground hover:border-card-border-hover"
@@ -323,7 +323,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                       key={p.id}
                       onClick={() => setPhase(p.id)}
                       title={p.title}
-                      className={`max-w-[11rem] truncate px-3 py-1.5 rounded-md text-[0.8rem] font-semibold cursor-pointer border transition-all duration-150 ${
+                      className={`max-w-[11rem] truncate px-3 py-1.5 rounded-md text-[0.8rem] font-semibold cursor-pointer border transition-colors duration-150 ${
                         phase === p.id
                           ? "bg-accent/15 border-accent text-accent"
                           : "bg-surface-muted border-card-border text-muted-foreground hover:border-card-border-hover"
@@ -347,7 +347,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                     <button
                       key={day}
                       onClick={() => toggleDay(day)}
-                      className={`w-11 py-1.5 rounded-md text-[0.8rem] font-semibold cursor-pointer border transition-all duration-150 ${
+                      className={`w-11 py-1.5 rounded-md text-[0.8rem] font-semibold cursor-pointer border transition-colors duration-150 ${
                         daysOfWeek.includes(day)
                           ? "bg-accent/15 border-accent text-accent"
                           : "bg-surface-muted border-card-border text-muted-foreground hover:border-card-border-hover"
@@ -458,7 +458,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                   <div
                     key={idx}
                     onClick={() => selectActiveItem(idx)}
-                    className={`flex flex-col gap-1 px-4 py-3 rounded-md cursor-pointer transition-all duration-200 ${
+                    className={`flex flex-col gap-1 px-4 py-3 rounded-md cursor-pointer transition-[background-color,border-color,box-shadow] duration-200 ${
                       isActive
                         ? "bg-accent/[0.08] border border-accent shadow-[0_0_10px_rgba(14,165,233,0.1)]"
                         : "bg-surface-muted border border-card-border hover:bg-surface-hover hover:border-card-border-hover"

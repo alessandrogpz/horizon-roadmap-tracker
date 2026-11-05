@@ -16,12 +16,13 @@
 // and actually correct.
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { warn } from "../feedback/haptics";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { Tappable } from "./Tappable";
 
 const SHOWN_FOR_MS = 6000;
 
@@ -94,7 +95,7 @@ function Bar({ offer, onDone }: { offer: Offer; onDone: () => void }) {
         <Text style={styles.label} numberOfLines={1}>
           {offer.what}
         </Text>
-        <Pressable
+        <Tappable
           accessibilityRole="button"
           accessibilityLabel={`Undo: ${offer.what}`}
           onPress={() => {
@@ -105,7 +106,7 @@ function Bar({ offer, onDone }: { offer: Offer; onDone: () => void }) {
           hitSlop={10}
         >
           <Text style={styles.actionLabel}>Undo</Text>
-        </Pressable>
+        </Tappable>
       </View>
     </View>
   );

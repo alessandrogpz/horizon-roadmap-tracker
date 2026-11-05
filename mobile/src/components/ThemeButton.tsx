@@ -12,11 +12,12 @@
 // guess about which way round someone reads a button.
 
 import { useMemo } from "react";
-import { Pressable, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useTheme } from "../theme/ThemeProvider";
 import { tap } from "../feedback/haptics";
 import { HEADER_CONTROL, type Palette } from "../theme";
+import { Tappable } from "./Tappable";
 
 export function ThemeButton() {
   const { palette, resolved, setPreference } = useTheme();
@@ -24,7 +25,7 @@ export function ThemeButton() {
   const dark = resolved === "dark";
 
   return (
-    <Pressable
+    <Tappable
       accessibilityRole="button"
       accessibilityLabel={dark ? "Dark theme. Switch to light." : "Light theme. Switch to dark."}
       onPress={() => {
@@ -36,7 +37,7 @@ export function ThemeButton() {
       hitSlop={12}
     >
       <Ionicons name={dark ? "moon" : "sunny"} size={16} color={palette.mutedForeground} />
-    </Pressable>
+    </Tappable>
   );
 }
 
