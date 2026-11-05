@@ -31,6 +31,7 @@ import { todayYMD } from "@/lib/dates";
 import { visibleTracks } from "@/lib/selectors";
 import { useWorkspace, useWorkspaceActions } from "@/components/workspace/WorkspaceProvider";
 import AccountRow from "./AccountRow";
+import { useDismiss } from "@/components/useDismiss";
 
 /**
  * App-level settings: the choices that belong to this device rather than to a
@@ -107,6 +108,9 @@ export default function SettingsModal({
   /** Called after a restore or a wipe, so the app can reload the workspace. */
   onRestored: () => void;
 }) {
+  // Lets the panel and its backdrop play their exit before whoever owns
+  // this modal takes it off the page.
+  const { closing, dismiss } = useDismiss(onClose);
   const settings = useAppSettings();
   // A lazy initializer rather than an effect: it reads browser state that
   // can't change while this dialog is open, and the dialog only ever mounts
@@ -134,11 +138,11 @@ export default function SettingsModal({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") dismiss();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [dismiss]);
 
   const handleExport = async (kind: "export-json" | "export-zip") => {
     setBusy(kind);
@@ -175,7 +179,7 @@ export default function SettingsModal({
       await restoreBackup(pending.bundle);
       setPending(null);
       onRestored();
-      onClose();
+      dismiss();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Restore failed");
       setBusy(null);
@@ -234,18 +238,18 @@ export default function SettingsModal({
 
   return (
     <div
-      onClick={onClose}
-      className="modal-overlay overlay-in fixed inset-0 z-[1000] flex items-center justify-center p-4"
+      onClick={dismiss}
+      className={`modal-overlay ${closing ? "overlay-out" : "overlay-in"} fixed inset-0 z-[1000] flex items-center justify-center p-4`}
       role="dialog"
       aria-modal="true"
       aria-label="Settings"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="modal-in glass-panel panel-roomy relative flex max-h-[90vh] w-full max-w-[640px] flex-col gap-1 overflow-y-auto border-accent-muted"
+        className={`${closing ? "modal-out" : "modal-in"} glass-panel panel-roomy relative flex max-h-[90vh] w-full max-w-[640px] flex-col gap-1 overflow-y-auto border-accent-muted`}
       >
         <button
-          onClick={onClose}
+          onClick={dismiss}
           className="absolute right-4 top-4 flex cursor-pointer items-center text-muted-foreground transition-colors hover:text-foreground"
           aria-label="Close"
         >

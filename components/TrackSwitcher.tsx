@@ -28,6 +28,7 @@ import { todayYMD } from "@/lib/dates";
 import { useAppSettings } from "@/lib/useAppSettings";
 import TrackYearStrip from "@/components/TrackYearStrip";
 import { trackInkVariables } from "@/lib/trackAccent";
+import { useDismiss } from "@/components/useDismiss";
 
 interface TrackSwitcherProps {
   tracks: TrackState[];
@@ -141,12 +142,18 @@ export default function TrackSwitcher({
   /** Closing forgets both the half-made decisions: a row armed for deletion,
    *  and an order that has been dragged but whose save has not come back yet.
    *  Dropping the drag order on the way out is what lets a change made on
-   *  another device show up the next time the menu is opened. */
-  const close = useCallback(() => {
-    setConfirming(null);
-    setDragOrder(null);
-    setOpen(false);
-  }, []);
+   *  another device show up the next time the menu is opened.
+   *
+   *  `useDismiss` wraps it so the list plays its exit before it is taken off
+   *  the page. `close` is still the one way out, so every caller below got
+   *  the animation without knowing about it. */
+  const { closing, dismiss: close } = useDismiss(
+    useCallback(() => {
+      setConfirming(null);
+      setDragOrder(null);
+      setOpen(false);
+    }, [])
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -280,7 +287,7 @@ export default function TrackSwitcher({
       {open && (
         <div
           ref={menuRef}
-          className="popover-in popover-origin-sheet fixed inset-x-2 top-[3.6rem] z-50 max-h-[70vh] overflow-y-auto overscroll-contain rounded-md border border-card-border bg-card shadow-[0_10px_25px_-5px_rgba(0,0,0,0.5)] sm:absolute sm:inset-x-auto sm:left-0 sm:top-[calc(100%+0.5rem)] sm:max-h-none sm:w-[360px]"
+          className={`${closing ? "popover-out" : "popover-in"} popover-origin-sheet fixed inset-x-2 top-[3.6rem] z-50 max-h-[70vh] overflow-y-auto overscroll-contain rounded-md border border-card-border bg-card shadow-[0_10px_25px_-5px_rgba(0,0,0,0.5)] sm:absolute sm:inset-x-auto sm:left-0 sm:top-[calc(100%+0.5rem)] sm:max-h-none sm:w-[360px]`}
         >
           {onOpenMaster && tracks.length > 1 && (
             <button
