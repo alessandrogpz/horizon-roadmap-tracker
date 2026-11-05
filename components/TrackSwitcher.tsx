@@ -18,6 +18,7 @@ import {
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { CSS } from "@dnd-kit/utilities";
 import { ChevronDown, Flame, GripVertical, Layers, Lock, Plus, Trash2 } from "lucide-react";
 import type { StreakDay } from "@/lib/stats";
@@ -313,8 +314,24 @@ export default function TrackSwitcher({
             </button>
           )}
 
+          {/* A row can only land above or below another row, so sideways
+              movement cannot express anything — and left unconstrained it did
+              not just look wrong, it followed the pointer out of the panel,
+              off the edge of the menu and on for as far as you cared to drag,
+              with nothing out there to drop onto. `restrictToParentElement`
+              does the same job on the other axis, so a row cannot be flung
+              past the ends of its own list.
+
+              Modifiers rather than zeroing the rendered transform, so
+              dnd-kit's own idea of where the row is stays in step with what
+              is drawn. */}
           {canReorder ? (
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+              onDragEnd={handleDragEnd}
+            >
               <SortableContext items={rows.map((row) => row.track.meta.id)} strategy={verticalListSortingStrategy}>
                 {list}
               </SortableContext>
@@ -380,7 +397,8 @@ function TrackRow({
       // Translate only. dnd-kit's full transform also carries the scale it
       // computes from the ratio between the dragged row and whatever it is
       // over, and these rows differ in height by whether a track has a streak
-      // badge — enough to squash the name mid-drag.
+      // badge — enough to squash the name mid-drag. The axis and the bounds
+      // are handled by the modifiers on the DndContext above.
       style={{ transform: CSS.Translate.toString(transform), transition, zIndex: isDragging ? 20 : undefined }}
       onTouchStart={canReorder ? (listeners?.onTouchStart as React.TouchEventHandler<HTMLDivElement>) : undefined}
       className={`group relative border-b border-card-border last:border-b-0 ${
