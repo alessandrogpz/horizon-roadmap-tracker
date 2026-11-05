@@ -37,6 +37,7 @@ import Animated, {
   useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
+  withSpring,
   withTiming,
 } from "react-native-reanimated";
 import { router } from "expo-router";
@@ -58,6 +59,7 @@ import { usePalette } from "../../theme/ThemeProvider";
 import { Tappable } from "../../components/Tappable";
 import { ACTION } from "../../theme";
 import { NoTrack } from "../../components/NoTrack";
+import { PRESS_SCALE, PRESS_SPRING, useReducedMotion } from "../../motion";
 
 /** A folded panel: tall enough for its header and nothing else. */
 const ROW = 56;
@@ -478,9 +480,29 @@ function DraggablePanel({
    * its end and letting go was doing exactly that, and the panel it landed on
    * was usually the tall one, whose screen is Progress.
    */
+  // The card gives under the thumb.
+  //
+  // `PanelCard` cannot use `Tappable` — the comment in it explains why: this
+  // gesture is the only thing watching how far the finger travelled, so it is
+  // the only thing that can tell a press from the end of a drag, and a
+  // Pressable inside the card saw a press whenever a finger went down and
+  // came up on it. But the gesture already knows, so it can drive the give
+  // itself. `onBegin` fires when the touch lands and `onFinalize` when the
+  // tap ends or is cancelled — and `Gesture.Exclusive` cancels this one the
+  // moment the drag claims the touch, so the give releases exactly as the
+  // pick-up lift takes over, with nothing to coordinate.
+  const pressed = useSharedValue(0);
+  const reduced = useReducedMotion();
+
   const openTap = Gesture.Tap()
     .maxDistance(10)
     .maxDuration(400)
+    .onBegin(() => {
+      pressed.value = withSpring(1, PRESS_SPRING);
+    })
+    .onFinalize(() => {
+      pressed.value = withSpring(0, PRESS_SPRING);
+    })
     .onEnd((_event, success) => {
       if (success) runOnJS(onOpen)(id);
     });
@@ -559,12 +581,20 @@ function DraggablePanel({
       maxHeight: full + (ROW - full) * collapse.value,
       transform: [
         { translateY: mine ? dragY.value : shift.value },
-        // Just enough lift to read as picked up rather than as a layout bug.
-        { scale: mine ? 1 + 0.03 * collapse.value : 1 },
+        // Two things want this scale and they never overlap: the lift when
+        // the panel has been picked up, and the give while a finger is down
+        // on it. Multiplied rather than added so neither has to know about
+        // the other — the tap is cancelled the instant the drag activates,
+        // so `pressed` is already springing back as `collapse` starts.
+        {
+          scale:
+            (mine ? 1 + 0.03 * collapse.value : 1) *
+            (1 - pressed.value * (reduced ? 0 : PRESS_SCALE)),
+        },
       ],
       zIndex: mine ? 20 : 1,
     };
-  }, [open, index]);
+  }, [open, index, reduced]);
 
   const body = useAnimatedStyle(() => ({ opacity: 1 - collapse.value }));
   const ring = useAnimatedStyle(() => ({

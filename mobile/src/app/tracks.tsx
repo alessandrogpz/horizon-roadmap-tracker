@@ -26,6 +26,7 @@ import Animated, {
   useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
+  withSpring,
   withTiming,
 } from "react-native-reanimated";
 import { router } from "expo-router";
@@ -55,6 +56,7 @@ import { Tappable } from "../components/Tappable";
 import { LIMITS } from "@shared/limits";
 import { ACTION } from "../theme";
 import { onColor } from "@shared/colors";
+import { PRESS_SCALE, PRESS_SPRING, useReducedMotion } from "../motion";
 
 /** A card folded down to its header: a dot, a name, a line about its streak. */
 const ROW = 62;
@@ -534,9 +536,22 @@ function DraggableTrack({
    * over a card is not pressing it, however much the up-and-down of it looks
    * like a press to something that only counts touches.
    */
+  // The row gives under the thumb, driven from the gesture rather than from
+  // a Pressable inside the card — same reasoning as the panel list: this
+  // gesture is the only thing watching how far the finger travelled, so it is
+  // the only thing that can tell a press from the end of a drag.
+  const pressed = useSharedValue(0);
+  const reduced = useReducedMotion();
+
   const openTap = Gesture.Tap()
     .maxDistance(10)
     .maxDuration(400)
+    .onBegin(() => {
+      pressed.value = withSpring(1, PRESS_SPRING);
+    })
+    .onFinalize(() => {
+      pressed.value = withSpring(0, PRESS_SPRING);
+    })
     .onEnd((_event, success) => {
       if (success) runOnJS(onOpen)();
     });
@@ -601,12 +616,18 @@ function DraggableTrack({
       maxHeight: full + (ROW - full) * collapse.value,
       transform: [
         { translateY: mine ? dragY.value : shift.value },
-        // Just enough lift to read as picked up rather than as a layout bug.
-        { scale: mine ? 1 + 0.03 * collapse.value : 1 },
+        // The pick-up lift and the press give, multiplied: they never overlap,
+        // because the drag activating cancels the tap and springs `pressed`
+        // back as `collapse` starts.
+        {
+          scale:
+            (mine ? 1 + 0.03 * collapse.value : 1) *
+            (1 - pressed.value * (reduced ? 0 : PRESS_SCALE)),
+        },
       ],
       zIndex: mine ? 20 : 1,
     };
-  }, [open, index]);
+  }, [open, index, reduced]);
 
   const body = useAnimatedStyle(() => ({ opacity: 1 - collapse.value }));
   const ring = useAnimatedStyle(() => ({ opacity: held.value === index ? collapse.value : 0 }));
