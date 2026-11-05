@@ -12,7 +12,6 @@ import {
   type DragEndEvent,
   type DragOverEvent,
 } from "@dnd-kit/core";
-import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { SortableContext, verticalListSortingStrategy, arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { LayoutGrid, LoaderCircle } from "lucide-react";
 import type { PanelColumns, Phase, TrackState, WeekDay, Workspace } from "@/lib/types";
@@ -322,20 +321,24 @@ export default function Dashboard() {
           a track wears its colour everywhere without a colour being threaded
           through every component. */}
       <TrackAccent color={track.meta.color} />
-      {/* Bounded by the window, and only by the window.
-          A panel genuinely moves sideways — the two columns are two
-          `SortableContext`s and crossing between them is the point — so it
-          cannot be pinned to one axis the way the track list can, and it
-          cannot be pinned to its parent either, because its parent is the
-          column it is trying to leave. What it should not do is carry on
-          past the edge of the screen, which it did: the panel followed the
-          pointer out of the viewport and kept going, with no column out
-          there to drop into. `restrictToWindowEdges` leaves every real
-          rearrangement possible and stops exactly the part that was not. */}
+      {/* No `modifiers` here, and that is deliberate — `SortablePanel`
+          bounds the panel's *rendering* instead.
+
+          0.117.2 put a window-edge modifier on this context and it caused a
+          render loop. `onDragOver` below moves the panel between columns
+          live, mid-drag, and a modifier clamps the very rect that
+          `closestCenter` then measures. Held against the edge, the nearest
+          droppable flipped between the two columns — each flip a
+          `setPanelColumns`, each of those a re-render, each re-render
+          another collision pass — until React gave up with "maximum update
+          depth exceeded" and the error boundary took the dashboard.
+
+          So nothing that feeds collision detection can be clamped while this
+          handler is live. The bound has to sit downstream of it, on what is
+          drawn, where it cannot be measured back. */}
       <DndContext
         sensors={panelSensors}
         collisionDetection={closestCenter}
-        modifiers={[restrictToWindowEdges]}
         onDragOver={handlePanelDragOver}
         onDragEnd={handlePanelDragEnd}
       >
