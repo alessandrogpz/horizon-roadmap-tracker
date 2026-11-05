@@ -29,6 +29,7 @@ import { Refreshable } from "../../components/Refreshable";
 import { Ring } from "../../components/Ring";
 import { StatTile } from "../../components/StatTile";
 import { Tappable } from "../../components/Tappable";
+import { EmptyState } from "../../components/EmptyState";
 
 export default function PhasesScreen() {
   // All tracks is the same tab, read-only, with every track folded in.
@@ -309,8 +310,17 @@ export default function PhasesScreen() {
         </Tappable>
       )}
 
+      {/* `EmptyState` rather than the grey sentence this used to be. Its own
+          comment makes the argument: a screen that states the emptiness and
+          leaves the remedy in a toolbar is a dead end, and an empty screen is
+          the one moment you can be sure what the person came to do. */}
       {timeline.windows.length === 0 && (
-        <Text style={styles.muted}>This track has no phases yet.</Text>
+        <EmptyState
+          title="No phases yet"
+          hint="A phase is a stretch of this track with its own focus and its own deadline. Add the first one, or write the whole plan at once in the roadmap."
+          action="Add a phase"
+          onAct={() => editTrack((t) => addPhase(t).track)}
+        />
       )}
       {/* The roadmap, and nothing beside it. The week and the deliverables have
           their own places to be reached from; a row of somewhere-elses under a

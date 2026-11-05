@@ -23,6 +23,7 @@ import { EmptyState } from "../components/EmptyState";
 import { Refreshable } from "../components/Refreshable";
 import { SubNav } from "../components/SubNav";
 import { Tappable } from "../components/Tappable";
+import { LIMITS } from "@shared/limits";
 
 export default function MaterialsScreen() {
   const { workspace, track, today, editTrack, restoreWorkspace } = useWorkspace();
@@ -361,6 +362,7 @@ function MaterialCard({
           )}
 
           <TextInput
+            maxLength={LIMITS.document}
             value={note.content}
             onChangeText={note.onChange}
             placeholder="Notes on this material…"
@@ -433,6 +435,7 @@ function AddMaterial({
       <Text style={styles.title}>Add a material</Text>
 
       <TextInput
+        maxLength={LIMITS.title}
         value={title}
         onChangeText={setTitle}
         placeholder="Title"

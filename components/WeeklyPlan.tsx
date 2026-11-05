@@ -105,7 +105,7 @@ export default function WeeklyPlan({
             </h2>
 
             {/* Week Navigation Pill */}
-            <div className="flex items-center gap-1.5 bg-surface-muted px-2 py-1 rounded-md border border-card-border shrink-0">
+            <div className="flex flex-wrap items-center justify-center gap-1.5 bg-surface-muted px-2 py-1 rounded-md border border-card-border">
               <WeekNavButton label="‹" onClick={() => setWeekOffset(weekOffset - 1)} />
               <span className="text-foreground font-medium text-[0.85rem] min-w-[60px] text-center font-mono whitespace-nowrap">
                 {weekLabel}

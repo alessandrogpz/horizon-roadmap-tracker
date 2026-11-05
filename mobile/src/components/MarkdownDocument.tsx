@@ -22,6 +22,7 @@ import { leading, RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { Refreshable } from "./Refreshable";
 import { Tappable } from "./Tappable";
+import { LIMITS } from "@shared/limits";
 
 const SAVE_AFTER_MS = 800;
 
@@ -78,6 +79,7 @@ export function MarkdownDocument({
 
       {editing ? (
         <TextInput
+          maxLength={LIMITS.document}
           value={draft}
           onChangeText={change}
           multiline

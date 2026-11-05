@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { dateForDay, dayForDate, formatDateYMD } from "@/lib/dates";
 import ColorSwatches from "@/components/shared/ColorSwatches";
 import { useDismiss } from "@/components/useDismiss";
+import { LIMITS } from "@/lib/limits";
 
 interface TrackSettingsFields {
   name: string;
@@ -64,6 +65,7 @@ export default function TrackSettingsModal({ name, color, startDate, totalDays, 
           <label className="text-[0.8rem] text-muted-foreground">Track name</label>
           <input
             type="text"
+            maxLength={LIMITS.name}
             value={draftName}
             onChange={(e) => setDraftName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSave()}

@@ -44,6 +44,7 @@ import { settle, tap } from "../feedback/haptics";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { Tappable } from "../components/Tappable";
+import { LIMITS } from "@shared/limits";
 
 export default function WorkoutScreen() {
   const { track } = useWorkspace();
@@ -139,6 +140,7 @@ export default function WorkoutScreen() {
         </Tappable>
 
         <TextInput
+          maxLength={LIMITS.name}
           value={open.name}
           onChangeText={(name) => change((current) => renameWorkout(current, open.id, name))}
           placeholder="Workout"
@@ -265,6 +267,7 @@ function Exercise({
     <View style={styles.card}>
       <View style={styles.cardHead}>
         <TextInput
+          maxLength={LIMITS.name}
           value={exercise.name}
           onChangeText={onRename}
           placeholder="Exercise"
