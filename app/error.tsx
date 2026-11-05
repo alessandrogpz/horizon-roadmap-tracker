@@ -29,13 +29,13 @@ export default function Error({
         <div className="flex gap-4 justify-center">
           <button
             onClick={() => reset()}
-            className="bg-transparent text-foreground border border-accent rounded-md px-5 py-2 cursor-pointer font-medium transition-all duration-200 hover:bg-accent hover:text-black"
+            className="bg-transparent text-foreground border border-accent rounded-md px-5 py-2 cursor-pointer font-medium transition-colors duration-200 hover:bg-accent hover:text-black"
           >
             Try Again
           </button>
           <button
             onClick={() => window.location.reload()}
-            className="bg-transparent text-muted-foreground border border-card-border rounded-md px-5 py-2 cursor-pointer font-medium transition-all duration-200 hover:border-card-border-hover hover:text-foreground"
+            className="bg-transparent text-muted-foreground border border-card-border rounded-md px-5 py-2 cursor-pointer font-medium transition-colors duration-200 hover:border-card-border-hover hover:text-foreground"
           >
             Reload Page
           </button>

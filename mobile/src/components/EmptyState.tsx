@@ -7,10 +7,11 @@
 // certain what the person wants to do next, so it says it and offers it.
 
 import { useMemo } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { Tappable } from "./Tappable";
 
 export function EmptyState({
   title,
@@ -35,10 +36,10 @@ export function EmptyState({
       <Text style={styles.title}>{title}</Text>
       {hint ? <Text style={styles.hint}>{hint}</Text> : null}
       {action && onAct ? (
-        <Pressable accessibilityRole="button" onPress={onAct} style={styles.button}>
+        <Tappable accessibilityRole="button" onPress={onAct} style={styles.button}>
           <Ionicons name={icon} size={16} color={palette.background} />
           <Text style={styles.label}>{action}</Text>
-        </Pressable>
+        </Tappable>
       ) : null}
     </View>
   );

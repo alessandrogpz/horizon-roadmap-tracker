@@ -23,10 +23,11 @@
 // exists for and putting them behind a mode would be absurd.
 
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { Tappable } from "./Tappable";
 
 /**
  * The switch itself, plus the state behind it.
@@ -54,7 +55,7 @@ export function EditButton({
   const styles = useMemo(() => makeStyles(palette), [palette]);
 
   return (
-    <Pressable
+    <Tappable
       accessibilityRole="button"
       accessibilityState={{ selected: editing }}
       accessibilityLabel={editing ? `Finish editing ${what}` : `Edit ${what}`}
@@ -68,7 +69,7 @@ export function EditButton({
         color={editing ? palette.accent : palette.mutedForeground}
       />
       <Text style={[styles.label, editing && { color: palette.accent }]}>{editing ? "Done" : "Edit"}</Text>
-    </Pressable>
+    </Tappable>
   );
 }
 

@@ -13,7 +13,7 @@
 // screen must never do.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import {
   addTodo,
   clearDoneTodos,
@@ -31,6 +31,7 @@ import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { Refreshable } from "../components/Refreshable";
+import { Tappable } from "../components/Tappable";
 
 const SAVE_AFTER_MS = 600;
 
@@ -142,7 +143,7 @@ export default function NotesScreen() {
                 style={[styles.input, { flex: 1 }]}
                 accessibilityLabel={`Rename ${item.text}`}
               />
-              <Pressable
+              <Tappable
                 accessibilityRole="button"
                 hitSlop={8}
                 onPress={() => {
@@ -151,11 +152,11 @@ export default function NotesScreen() {
                 }}
               >
                 <Text style={styles.saveEdit}>Save</Text>
-              </Pressable>
+              </Tappable>
             </View>
           ) : (
           <View key={`${index}-${item.text}`} style={styles.todoRow}>
-            <Pressable
+            <Tappable
               accessibilityRole="checkbox"
               accessibilityState={{ checked: item.done }}
               accessibilityLabel={item.text}
@@ -168,15 +169,15 @@ export default function NotesScreen() {
                 {item.done && <Text style={styles.tick}>✓</Text>}
               </View>
               <Text style={[styles.todoText, item.done && styles.todoDone]}>{item.text}</Text>
-            </Pressable>
-            <Pressable
+            </Tappable>
+            <Tappable
               accessibilityRole="button"
               accessibilityLabel={`Remove ${item.text}`}
               hitSlop={8}
               onPress={() => commitTodos(removeTodo(todos, index))}
             >
               <Text style={styles.remove}>×</Text>
-            </Pressable>
+            </Tappable>
           </View>
           )
         )}
@@ -184,7 +185,7 @@ export default function NotesScreen() {
         {loaded && todos.length === 0 && <Text style={styles.muted}>Nothing on the list.</Text>}
 
         {todos.some((item) => item.done) && (
-          <Pressable
+          <Tappable
             accessibilityRole="button"
             onPress={() => commitTodos(clearDoneTodos(todos))}
             style={styles.clearButton}
@@ -192,7 +193,7 @@ export default function NotesScreen() {
             <Text style={styles.clearLabel}>
               Clear the {todos.filter((item) => item.done).length} done
             </Text>
-          </Pressable>
+          </Tappable>
         )}
 
         <Text style={[styles.sectionTitle, { marginTop: SPACING.lg }]}>Notepad</Text>

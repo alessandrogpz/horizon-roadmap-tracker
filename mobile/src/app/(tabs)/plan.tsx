@@ -11,7 +11,7 @@
 // agree today.
 
 import { useMemo } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { Link } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { phaseStats, progressStats, timelineStats } from "@shared/stats";
@@ -28,6 +28,7 @@ import { EditHeader, useEditMode } from "../../components/EditToggle";
 import { Refreshable } from "../../components/Refreshable";
 import { Ring } from "../../components/Ring";
 import { StatTile } from "../../components/StatTile";
+import { Tappable } from "../../components/Tappable";
 
 export default function PhasesScreen() {
   // All tracks is the same tab, read-only, with every track folded in.
@@ -110,10 +111,10 @@ export default function PhasesScreen() {
             The plan ran out {timeline.overrunDays} day{timeline.overrunDays === 1 ? "" : "s"} ago
           </Text>
           <Link href="/tracks" asChild>
-            <Pressable accessibilityRole="link" accessibilityLabel="Extend the plan" style={styles.extend}>
+            <Tappable accessibilityRole="link" accessibilityLabel="Extend the plan" style={styles.extend}>
               <Text style={styles.extendLabel}>Extend</Text>
               <Ionicons name="chevron-forward" size={12} color={palette.accent} />
-            </Pressable>
+            </Tappable>
           </Link>
         </View>
       )}
@@ -224,7 +225,7 @@ export default function PhasesScreen() {
               />
 
               <Link href={{ pathname: "/phase/[id]", params: { id: phase.id } }} asChild>
-                <Pressable
+                <Tappable
                   accessibilityRole="button"
                   accessibilityLabel={`Open ${phase.title}`}
                   // Flattened: expo-router's Link passes styles straight
@@ -263,21 +264,21 @@ export default function PhasesScreen() {
                       ? ` · ${phase.tasks.filter((t) => t.completed).length}/${phase.tasks.length} done`
                       : ""}
                   </Text>
-                </Pressable>
+                </Tappable>
               </Link>
 
               {editing && (
                 <View style={styles.actions}>
                   {state !== "current" && (
-                    <Pressable
+                    <Tappable
                       accessibilityRole="button"
                       style={styles.smallButton}
                       onPress={() => editTrack((t) => setCurrentPhase(t, phase.id))}
                     >
                       <Text style={styles.smallLabel}>Make current</Text>
-                    </Pressable>
+                    </Tappable>
                   )}
-                  <Pressable
+                  <Tappable
                     accessibilityRole="button"
                     style={styles.smallButton}
                     onPress={() => {
@@ -290,7 +291,7 @@ export default function PhasesScreen() {
                     }}
                   >
                     <Text style={styles.smallLabel}>Remove</Text>
-                  </Pressable>
+                  </Tappable>
                 </View>
               )}
             </View>
@@ -299,13 +300,13 @@ export default function PhasesScreen() {
       </View>
 
       {editing && (
-        <Pressable
+        <Tappable
           accessibilityRole="button"
           style={styles.addButton}
           onPress={() => editTrack((t) => addPhase(t).track)}
         >
           <Text style={styles.smallLabel}>Add a phase</Text>
-        </Pressable>
+        </Tappable>
       )}
 
       {timeline.windows.length === 0 && (
@@ -317,11 +318,11 @@ export default function PhasesScreen() {
           that had already finished saying what it came to say. This one earns
           the spot: the timeline above is a summary of it. */}
       <Link href="/roadmap" asChild>
-        <Pressable accessibilityRole="link" style={styles.roadmapRow}>
+        <Tappable accessibilityRole="link" style={styles.roadmapRow}>
           <Ionicons name="map-outline" size={16} color={palette.accent} />
           <Text style={styles.roadmapLabel}>Full roadmap</Text>
           <Ionicons name="chevron-forward" size={15} color={palette.subtleForeground} />
-        </Pressable>
+        </Tappable>
       </Link>
 
     </Refreshable>

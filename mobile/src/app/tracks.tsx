@@ -15,7 +15,7 @@
 // tracks comes first" is the same question everywhere.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, Text, TextInput, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   type AnimatedRef,
@@ -51,6 +51,7 @@ import { streakCalendar } from "@shared/stats";
 import { firstFreeColor, TRACK_COLORS } from "@shared/trackColors";
 import { TrackHeatmap } from "../components/TrackHeatmap";
 import { Refreshable } from "../components/Refreshable";
+import { Tappable } from "../components/Tappable";
 
 /** A card folded down to its header: a dot, a name, a line about its streak. */
 const ROW = 62;
@@ -249,7 +250,7 @@ export default function TracksScreen() {
           one track's all-tracks view is a worse copy of that track. */}
       {tracks.length > 1 && (
         <Animated.View style={chrome} pointerEvents={dragging ? "none" : "auto"}>
-          <Pressable
+          <Tappable
             accessibilityRole="button"
             accessibilityLabel="All tracks. A read-only view of every track at once."
             onPress={() => {
@@ -264,7 +265,7 @@ export default function TracksScreen() {
               <Text style={styles.muted}>Every tab, every track at once · read only</Text>
             </View>
             <Ionicons name="chevron-forward" size={16} color={palette.subtleForeground} />
-          </Pressable>
+          </Tappable>
         </Animated.View>
       )}
 
@@ -395,7 +396,7 @@ export default function TracksScreen() {
             track from Arrange, so nothing is locked away by choosing here.
           </Text>
           {TEMPLATE_LIST.map((template) => (
-            <Pressable key={template.id} accessibilityRole="button" style={styles.templateRow} onPress={() => create(template.id)}>
+            <Tappable key={template.id} accessibilityRole="button" style={styles.templateRow} onPress={() => create(template.id)}>
               {/* The chosen colour, not the template's — these rows are the
                   create button, and they should show what is about to be
                   made rather than what the template would have picked. */}
@@ -404,16 +405,16 @@ export default function TracksScreen() {
                 <Text style={styles.name}>{template.label}</Text>
                 <Text style={styles.muted}>{template.description}</Text>
               </View>
-            </Pressable>
+            </Tappable>
           ))}
-          <Pressable accessibilityRole="button" style={styles.panelButton} onPress={() => setCreating(false)}>
+          <Tappable accessibilityRole="button" style={styles.panelButton} onPress={() => setCreating(false)}>
             <Text style={styles.panelLabel}>Cancel</Text>
-          </Pressable>
+          </Tappable>
         </View>
       ) : (
-        <Pressable accessibilityRole="button" style={styles.panelButton} onPress={() => setCreating(true)}>
+        <Tappable accessibilityRole="button" style={styles.panelButton} onPress={() => setCreating(true)}>
           <Text style={styles.panelLabel}>New track…</Text>
-        </Pressable>
+        </Tappable>
       )}
       </Animated.View>
 
@@ -798,7 +799,7 @@ function TrackSettings({
       />
 
       <View style={styles.panelRow}>
-        <Pressable
+        <Tappable
           accessibilityRole="button"
           style={styles.panelButton}
           disabled={!canSave}
@@ -807,14 +808,14 @@ function TrackSettings({
           }
         >
           <Text style={[styles.panelLabel, !canSave && { color: palette.subtleForeground }]}>Save</Text>
-        </Pressable>
-        <Pressable accessibilityRole="button" style={styles.panelButton} onPress={onCancel}>
+        </Tappable>
+        <Tappable accessibilityRole="button" style={styles.panelButton} onPress={onCancel}>
           <Text style={styles.panelLabel}>Cancel</Text>
-        </Pressable>
+        </Tappable>
       </View>
 
       <View style={styles.panelRow}>
-        <Pressable
+        <Tappable
           accessibilityRole="button"
           style={styles.panelButton}
           disabled={!canArchive}
@@ -823,7 +824,7 @@ function TrackSettings({
           <Text style={[styles.panelLabel, !canArchive && { color: palette.subtleForeground }]}>
             {!canArchive ? "Can't delete your only track" : "Delete this track"}
           </Text>
-        </Pressable>
+        </Tappable>
       </View>
     </View>
   );
@@ -846,7 +847,7 @@ function Swatches({
   return (
     <View style={styles.swatches}>
       {TRACK_COLORS.map((option) => (
-        <Pressable
+        <Tappable
           key={option}
           accessibilityRole="button"
           accessibilityLabel={`Colour ${option}`}
@@ -858,7 +859,7 @@ function Swatches({
               circle of colour reads as a seventh colour at a glance; a mark
               inside it reads as a choice. */}
           {value === option && <Ionicons name="checkmark" size={16} color="#ffffff" />}
-        </Pressable>
+        </Tappable>
       ))}
     </View>
   );
@@ -883,7 +884,7 @@ function DateField({
 }) {
   const set = isDateStr(value);
   return (
-    <Pressable
+    <Tappable
       accessibilityRole="button"
       accessibilityLabel={`${describeDate(value, empty ?? "Not set")}. Tap to change.`}
       onPress={onPress}
@@ -893,7 +894,7 @@ function DateField({
         {describeDate(value, empty ?? "Choose a date")}
       </Text>
       <Ionicons name="calendar-outline" size={16} color={palette.subtleForeground} />
-    </Pressable>
+    </Tappable>
   );
 }
 

@@ -237,7 +237,7 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
                 : "Saved on this device. Sign in to sync between devices."
           }
         >
-          <div className={`w-2 h-2 rounded-full transition-all duration-300 shrink-0 ${dotColor}`} />
+          <div className={`w-2 h-2 rounded-full transition-colors duration-200 shrink-0 ${dotColor}`} />
           <span className="font-medium truncate">
             {syncStatus === "syncing" && "Syncing..."}
             {syncStatus === "error" && "Sync Error (retry)"}
@@ -289,7 +289,7 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
             aria-label={`Day ${daysPassed} of ${totalDays}`}
           >
             <div
-              className="h-full rounded-full bg-accent transition-[width] duration-500"
+              className="h-full rounded-full bg-accent transition-[width] duration-[280ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
               style={{ width: `${Math.min(100, Math.max(1.5, progressPct))}%` }}
             />
           </div>

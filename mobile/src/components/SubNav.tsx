@@ -18,6 +18,7 @@ import { Pressable } from "react-native-gesture-handler";
 import { Link } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import { PRESS_DIM, PRESS_SCALE, PRESS_SPRING, useReducedMotion } from "../motion";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
@@ -64,10 +65,21 @@ function Chip({
   // Presses answer rather than just registering. The chip gives under the
   // thumb and springs back, which is the smallest amount of motion that still
   // tells you the tap landed on this one and not the one beside it.
+  //
+  // This chip was where that idea started, and for a while it was the only
+  // place in the app that had it. It is now `Tappable`, which every other
+  // control uses — but not this one: the chip sits inside a horizontal
+  // ScrollView and needs gesture-handler's Pressable to tell a tap from the
+  // start of a sideways drag, which `Tappable` (plain Pressable, so that it
+  // can stand in anywhere) does not use. So it keeps its own three lines and
+  // takes the numbers from the same place, rather than holding a second
+  // opinion about how hard a press should answer.
+  const reduced = useReducedMotion();
+  const scale = reduced ? 0 : PRESS_SCALE;
   const pressed = useSharedValue(0);
   const animated = useAnimatedStyle(() => ({
-    transform: [{ scale: 1 - pressed.value * 0.04 }],
-    opacity: 1 - pressed.value * 0.25,
+    transform: [{ scale: 1 - pressed.value * scale }],
+    opacity: 1 - pressed.value * PRESS_DIM,
   }));
 
   return (
@@ -76,10 +88,10 @@ function Chip({
         accessibilityRole="link"
         accessibilityLabel={link.label}
         onPressIn={() => {
-          pressed.value = withSpring(1, { damping: 22, stiffness: 320 });
+          pressed.value = withSpring(1, PRESS_SPRING);
         }}
         onPressOut={() => {
-          pressed.value = withSpring(0, { damping: 22, stiffness: 320 });
+          pressed.value = withSpring(0, PRESS_SPRING);
         }}
       >
         <Animated.View style={[styles.chip, animated]}>

@@ -16,11 +16,12 @@
 // like any other change.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } from "react-native";
 import Markdown from "react-native-markdown-display";
 import { leading, RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { Refreshable } from "./Refreshable";
+import { Tappable } from "./Tappable";
 
 const SAVE_AFTER_MS = 800;
 
@@ -70,9 +71,9 @@ export function MarkdownDocument({
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View style={styles.bar}>
         <Text style={styles.muted}>{editing ? "Saving as you type" : "Reading"}</Text>
-        <Pressable accessibilityRole="button" onPress={() => setEditing(!editing)} style={styles.button}>
+        <Tappable accessibilityRole="button" onPress={() => setEditing(!editing)} style={styles.button}>
           <Text style={styles.buttonLabel}>{editing ? "Done" : "Edit"}</Text>
-        </Pressable>
+        </Tappable>
       </View>
 
       {editing ? (
