@@ -17,6 +17,7 @@ import {
 } from "@/lib/completions";
 import { useWorkspaceActions } from "@/components/workspace/WorkspaceProvider";
 import FocusTypeEditor from "@/components/shared/FocusTypeEditor";
+import { useDismiss } from "@/components/useDismiss";
 
 interface ScheduleDayModalProps {
   day: WeekDay;
@@ -31,6 +32,9 @@ interface ScheduleDayModalProps {
 const fieldInputClass = "bg-input-bg border border-card-border rounded-md text-foreground font-[inherit] text-[0.8rem] outline-none px-2.5 py-1.5";
 
 export default function ScheduleDayModal({ day, data, applyChange, onClose, weekOffset = 0 }: ScheduleDayModalProps) {
+  // Lets the panel and its backdrop play their exit before whoever owns
+  // this modal takes it off the page.
+  const { closing, dismiss } = useDismiss(onClose);
   const { flush } = useWorkspaceActions();
   const [showManager, setShowManager] = useState(false);
   const [newItem, setNewItem] = useState({ title: "", description: "" });
@@ -84,16 +88,16 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
 
   return (
     <div
-      onClick={onClose}
-      className="modal-overlay overlay-in fixed inset-0 z-[1000] flex items-center justify-center p-4"
+      onClick={dismiss}
+      className={`modal-overlay ${closing ? "overlay-out" : "overlay-in"} fixed inset-0 z-[1000] flex items-center justify-center p-4`}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="modal-in glass-panel panel-roomy max-w-[500px] w-full flex flex-col gap-5 border border-accent-muted relative rounded-lg shadow-[0_20px_25px_-5px_rgba(0,0,0,0.5),0_10px_10px_-5px_rgba(0,0,0,0.4)]"
+        className={`${closing ? "modal-out" : "modal-in"} glass-panel panel-roomy max-w-[500px] w-full flex flex-col gap-5 border border-accent-muted relative rounded-lg shadow-[0_20px_25px_-5px_rgba(0,0,0,0.5),0_10px_10px_-5px_rgba(0,0,0,0.4)]`}
       >
         {/* Close Button */}
         <button
-          onClick={onClose}
+          onClick={dismiss}
           className="absolute top-6 right-6 flex items-center bg-transparent border-none text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
           aria-label="Close"
         >
@@ -298,7 +302,7 @@ export default function ScheduleDayModal({ day, data, applyChange, onClose, week
 
         {/* Modal Footer */}
         <div className="flex justify-end mt-2">
-          <button onClick={onClose} className="btn px-6 py-2 text-[0.85rem]">
+          <button onClick={dismiss} className="btn px-6 py-2 text-[0.85rem]">
             Done
           </button>
         </div>

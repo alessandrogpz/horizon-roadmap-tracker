@@ -7,6 +7,35 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.112.0] - 2026-11-05
+
+### Changed
+- **Modals and popovers now leave as deliberately as they arrive.** 0.111.0 gave the nine modals
+  and two popovers a proper entrance and left the exit for later, on the grounds that keeping
+  eleven surfaces mounted past the state change that removes them meant touching eleven call
+  sites. It does not: `components/useDismiss.ts` does it from inside. The surface takes the close
+  request, marks itself as leaving, plays its exit and only then tells its owner it is gone.
+  Nothing above it changed.
+- The exit is 140ms against the entrance's 200ms, and that asymmetry is the point: opening is the
+  interface presenting something and may take its time, closing is it getting out of the way and
+  must not keep you waiting for it.
+- Every way out now goes through one place. The top bar's menu had been closing itself from four
+  (the trigger, a click outside, Escape, picking an item) and the track list from eight; both have
+  a single `dismiss` now, so the animation arrived everywhere at once rather than at whichever
+  exits someone remembered.
+
+### Notes
+- Verified in slow motion, which is the only way it could be. Played at normal speed, an animation
+  that starts on an element already on the page never leaves `pending` in either the in-app
+  browser or Chrome under automation — a start-up latency in the renderer swallows a 120ms
+  animation whole — while an animation on a *freshly inserted* element runs fine. That is why the
+  entrances measured clean in 0.111.0 and the exits looked dead. Stretched to four seconds, both
+  run exactly as written: the backdrop at opacity 0.05, the panel at 0.97 scale, `pending: false`.
+  Worth remembering for the next time something here looks broken.
+- Unmounting is timed at 160ms against animations of 140 and 120, so the last frame is never raced
+  away.
+- Nothing in this entry touches the phone app.
+
 ## [0.111.0] - 2026-11-05
 
 ### Changed
