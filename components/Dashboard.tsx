@@ -12,6 +12,7 @@ import {
   type DragEndEvent,
   type DragOverEvent,
 } from "@dnd-kit/core";
+import { restrictToWindowEdges } from "@dnd-kit/modifiers";
 import { SortableContext, verticalListSortingStrategy, arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { LayoutGrid, LoaderCircle } from "lucide-react";
 import type { PanelColumns, Phase, TrackState, WeekDay, Workspace } from "@/lib/types";
@@ -321,9 +322,20 @@ export default function Dashboard() {
           a track wears its colour everywhere without a colour being threaded
           through every component. */}
       <TrackAccent color={track.meta.color} />
+      {/* Bounded by the window, and only by the window.
+          A panel genuinely moves sideways — the two columns are two
+          `SortableContext`s and crossing between them is the point — so it
+          cannot be pinned to one axis the way the track list can, and it
+          cannot be pinned to its parent either, because its parent is the
+          column it is trying to leave. What it should not do is carry on
+          past the edge of the screen, which it did: the panel followed the
+          pointer out of the viewport and kept going, with no column out
+          there to drop into. `restrictToWindowEdges` leaves every real
+          rearrangement possible and stops exactly the part that was not. */}
       <DndContext
         sensors={panelSensors}
         collisionDetection={closestCenter}
+        modifiers={[restrictToWindowEdges]}
         onDragOver={handlePanelDragOver}
         onDragEnd={handlePanelDragEnd}
       >
