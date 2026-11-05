@@ -164,8 +164,8 @@ export default function SecurityPage() {
               <span className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-control)] border border-card-border bg-surface-muted text-accent">
                 <Icon size={17} strokeWidth={1.9} />
               </span>
-              <h3 className="text-[0.95rem] font-semibold">{title}</h3>
-              <p className="text-[0.85rem] leading-relaxed text-muted-foreground">{body}</p>
+              <h3 className="type-subhead font-semibold">{title}</h3>
+              <p className="type-body text-muted-foreground">{body}</p>
             </div>
           ))}
         </Reveal>

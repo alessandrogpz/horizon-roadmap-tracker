@@ -424,6 +424,18 @@ select option:disabled {
      dashboard's body on purpose: those roles are dense because a day column is
      ninety-five points wide, and a page of notes is not. */
   --text-prose: 1rem;
+
+  /* The two roles the informational pages need and the dashboard does not: a
+     page has a title that has to carry a whole screen, and sections that have
+     to be found while scrolling. They are fluid because the landing page's
+     headline wrapped to three lines at both 1440 and 390 when it was a fixed
+     3.4rem — a size chosen for one width is wrong at every other one.
+
+     They live here, with the rest of the scale, because that is the whole
+     point: the landing page, the privacy page and the app are one type system.
+     Change a number here and all of them move. */
+  --text-hero: clamp(2.1rem, 1.15rem + 3.8vw, 3.4rem);
+  --text-section: clamp(1.55rem, 1.1rem + 1.8vw, 2.2rem);
 }
 
 .type-display { font-size: var(--text-display); line-height: 1; }
@@ -436,12 +448,15 @@ select option:disabled {
 .type-label { font-size: var(--text-label); line-height: 1.4; }
 .type-caption { font-size: var(--text-caption); line-height: 1.45; }
 .type-micro { font-size: var(--text-micro); line-height: 1.4; }
+.type-prose { font-size: var(--text-prose); line-height: 1.65; }
+.type-hero { font-size: var(--text-hero); line-height: 1.04; letter-spacing: -0.025em; }
+.type-section { font-size: var(--text-section); line-height: 1.15; letter-spacing: -0.02em; }
 
 
 /* Headings wrap on phrase boundaries rather than leaving one word stranded;
    body copy avoids the orphan. Both are progressive — a browser without them
    keeps its own wrapping. */
-h1, h2, h3, .type-title, .type-heading, .type-display-sm {
+h1, h2, h3, .type-title, .type-heading, .type-display-sm, .type-hero, .type-section {
   text-wrap: balance;
 }
 
