@@ -139,7 +139,7 @@ function StatFigure({
     >
       <span className="type-caption text-subtle-foreground group-hover:text-muted-foreground transition-colors">{label}</span>
       <span className="flex items-baseline gap-1">
-        <span className="type-display-sm font-normal tabular-nums text-foreground leading-none">{value}</span>
+        <span className="type-display-sm font-normal tabular-nums text-foreground">{value}</span>
         {unit ? <span className="type-caption text-muted-foreground">{unit}</span> : null}
       </span>
     </button>
@@ -186,21 +186,30 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
   const streak = data.isSynced ? trackStreak(data, todayYMD()) : 0;
 
 
+  // Four states, four tokens. Three of these were raw Tailwind palette
+  // colours with a literal hex in the glow — `bg-emerald-500` with
+  // `#10b981`, `bg-yellow-500` with `#eab308`, and a `#ef4444` glow under a
+  // `bg-danger` dot that is actually `#f87171`. Those are fixed values, so
+  // the most-looked-at piece of chrome in the app was the only thing that
+  // did not follow the theme: in light mode the success and warning tokens
+  // deepen to #047857 and #b45309 to stay readable on a light surface, and
+  // the dot kept the dark-mode greens. The glow now comes from the same
+  // token as the fill, so the two can no longer disagree.
   const dotColor = syncStatus === "syncing"
     ? "bg-accent shadow-[0_0_8px_var(--accent)]"
     : syncStatus === "error"
-      ? "bg-danger shadow-[0_0_8px_#ef4444]"
+      ? "bg-danger shadow-[0_0_8px_var(--danger)]"
       : workspace.hasUnsyncedChanges
-        ? "bg-yellow-500 shadow-[0_0_8px_#eab308]"
-        : "bg-emerald-500 shadow-[0_0_8px_#10b981]";
+        ? "bg-warning shadow-[0_0_8px_var(--warning)]"
+        : "bg-success shadow-[0_0_8px_var(--success)]";
 
   return (
     <header className="main-header w-full flex flex-col gap-4 border-b border-card-border pb-5">
       {/* Line 1: identity, which track, and whether it's saved — the things
           you read. Everything you *do* occasionally lives in the ⋮ menu, so
           this stays one row on a phone instead of wrapping to three. */}
-      <div className="flex items-center gap-2 sm:gap-3 flex-wrap text-[0.85rem]">
-        <h1 className="text-[1.3rem] font-bold text-foreground m-0 flex items-center gap-2 tracking-[-0.01em] shrink-0">
+      <div className="flex items-center gap-2 sm:gap-3 flex-wrap type-body">
+        <h1 className="type-title font-bold text-foreground m-0 flex items-center gap-2 tracking-[-0.01em] shrink-0">
           <HorizonMark className="h-[0.85em] w-auto text-accent" /> Horizon
         </h1>
 
@@ -298,7 +307,7 @@ export default function DashboardHeader({ data, workspace, syncStatus, syncError
         <div className="flex flex-wrap items-start gap-x-8 gap-y-4">
           <StatFigure
             label="Streak"
-            value={<CountUp value={streak} className="type-display-sm font-normal tabular-nums text-foreground leading-none" />}
+            value={<CountUp value={streak} className="type-display-sm font-normal tabular-nums text-foreground" />}
             unit={streak === 1 ? "day" : "days"}
             onClick={() => setOpenStat("streak")}
           />

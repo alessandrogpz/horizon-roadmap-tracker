@@ -95,7 +95,7 @@ export default function PomodoroTimer() {
   const progressPercent = ((minutes * 60 - secondsRemaining) / (minutes * 60)) * 100;
 
   const stepBtnClass = (active: boolean) =>
-    `bg-surface-muted border border-card-border rounded px-2 py-1 text-[0.8rem] font-mono ${active ? "text-subtle-foreground cursor-not-allowed" : "text-foreground cursor-pointer"}`;
+    `bg-surface-muted border border-card-border rounded px-2 py-1 type-label font-mono ${active ? "text-subtle-foreground cursor-not-allowed" : "text-foreground cursor-pointer"}`;
 
   return (
     <div className="glass-panel flex flex-col gap-4">
@@ -106,7 +106,7 @@ export default function PomodoroTimer() {
 
       <div className="flex flex-col items-center gap-4 py-2">
         {/* Clock Display */}
-        <div className={`text-[3.5rem] font-bold font-mono tracking-[0.05em] leading-none transition-[color,text-shadow] duration-200 ${isActive ? "text-accent [text-shadow:0_0_15px_#0ea5e933]" : "text-foreground"}`}>
+        <div className={`type-display font-bold font-mono tracking-[0.05em] transition-[color,text-shadow] duration-200 ${isActive ? "text-accent [text-shadow:0_0_15px_#0ea5e933]" : "text-foreground"}`}>
           {formatTime()}
         </div>
 
@@ -120,7 +120,7 @@ export default function PomodoroTimer() {
 
         {/* Duration Configuration */}
         <div className="flex items-center justify-between w-full gap-4 mt-3">
-          <span className="text-[0.85rem] text-muted-foreground">Duration:</span>
+          <span className="type-body text-muted-foreground">Duration:</span>
           <div className="flex flex-wrap items-center justify-end gap-1.5">
             <button disabled={isActive} onClick={() => adjustMinutes(-5)} className={stepBtnClass(isActive)}>
               -5m
@@ -136,9 +136,9 @@ export default function PomodoroTimer() {
                 updateDuration(val);
               }}
               aria-label="Session length in minutes"
-              className="w-[55px] bg-input-bg border border-card-border rounded-md px-2 py-1 text-foreground font-mono text-[0.85rem] text-center outline-none"
+              className="w-[55px] bg-input-bg border border-card-border rounded-md px-2 py-1 text-foreground font-mono type-body text-center outline-none"
             />
-            <span className="text-[0.85rem] text-muted-foreground font-mono">min</span>
+            <span className="type-body text-muted-foreground font-mono">min</span>
             <button disabled={isActive} onClick={() => adjustMinutes(5)} className={stepBtnClass(isActive)}>
               +5m
             </button>
@@ -148,15 +148,15 @@ export default function PomodoroTimer() {
         {/* Control Buttons */}
         <div className="flex gap-3 w-full mt-4">
           {!isActive ? (
-            <button onClick={handleStart} className="btn flex-1 p-2 text-[0.85rem]">
+            <button onClick={handleStart} className="btn flex-1 p-2 type-body">
               Start
             </button>
           ) : (
-            <button onClick={handlePause} className="btn flex-1 p-2 text-[0.85rem] !border-warning !text-foreground">
+            <button onClick={handlePause} className="btn flex-1 p-2 type-body !border-warning !text-foreground">
               Pause
             </button>
           )}
-          <button onClick={handleReset} className="btn flex-1 p-2 text-[0.85rem] !border-card-border-hover">
+          <button onClick={handleReset} className="btn flex-1 p-2 type-body !border-card-border-hover">
             Reset
           </button>
         </div>

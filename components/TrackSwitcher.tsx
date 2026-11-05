@@ -260,7 +260,7 @@ export default function TrackSwitcher({
       <button
         onClick={() => (open ? close() : setOpen(true))}
         aria-expanded={open}
-        className="tap-44 flex min-w-0 max-w-[min(18rem,55vw)] items-center gap-1.5 bg-transparent border-none p-0 cursor-pointer text-[0.85rem] font-semibold text-accent hover:underline"
+        className="tap-44 flex min-w-0 max-w-[min(18rem,55vw)] items-center gap-1.5 bg-transparent border-none p-0 cursor-pointer type-body font-semibold text-accent hover:underline"
         title={masterOpen ? "Switch track" : activeTrack.meta.name}
       >
         {masterOpen ? (
@@ -300,13 +300,13 @@ export default function TrackSwitcher({
                 onOpenMaster();
               }}
               aria-current={masterOpen}
-              className={`flex w-full items-center gap-2 border-b border-card-border px-3 py-2.5 text-left text-[0.8rem] font-semibold transition-colors ${
+              className={`flex w-full items-center gap-2 border-b border-card-border px-3 py-2.5 text-left type-label font-semibold transition-colors ${
                 masterOpen ? "bg-accent/[0.10] text-accent" : "bg-transparent text-muted-foreground hover:bg-surface-hover hover:text-foreground"
               } cursor-pointer border-x-0 border-t-0`}
             >
               <Layers size={13} strokeWidth={2.5} className="shrink-0" />
               <span className="flex-1">All tracks</span>
-              <span className="inline-flex items-center gap-1 text-[0.65rem] font-semibold uppercase tracking-[0.05em] text-subtle-foreground">
+              <span className="inline-flex items-center gap-1 type-micro font-semibold uppercase tracking-[0.05em] text-subtle-foreground">
                 <Lock size={9} strokeWidth={2.5} />
                 Read only
               </span>
@@ -328,7 +328,7 @@ export default function TrackSwitcher({
               close();
               onNewTrack();
             }}
-            className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-[0.8rem] bg-transparent border-none cursor-pointer text-accent hover:bg-accent/[0.08]"
+            className="w-full flex items-center gap-2 px-3 py-2.5 text-left type-label bg-transparent border-none cursor-pointer text-accent hover:bg-accent/[0.08]"
           >
             <Plus size={13} strokeWidth={2.5} />
             <span>New track…</span>
@@ -401,10 +401,10 @@ function TrackRow({
       >
         <span className="flex items-center gap-2">
           <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: row.color }} />
-          <span className="flex-1 truncate text-[0.85rem] font-semibold text-foreground">{row.track.meta.name}</span>
+          <span className="flex-1 truncate type-body font-semibold text-foreground">{row.track.meta.name}</span>
           {row.streak > 0 && (
             <span
-              className="track-ink inline-flex items-center gap-1 rounded px-1.5 py-px text-[0.65rem] font-bold"
+              className="track-ink inline-flex items-center gap-1 rounded px-1.5 py-px type-micro font-bold"
               style={{ ...trackInkVariables(row.color), backgroundColor: "var(--surface-hover)" } as React.CSSProperties}
             >
               <Flame size={9} strokeWidth={2.5} />
@@ -435,7 +435,7 @@ function TrackRow({
             onBlur={onDisarm}
             title={armed ? "Tap again to delete" : `Delete ${row.track.meta.name}`}
             aria-label={armed ? `Confirm deleting ${row.track.meta.name}` : `Delete ${row.track.meta.name}`}
-            className={`flex h-6 items-center gap-1 rounded-[var(--radius-control)] border px-1.5 text-[0.65rem] font-semibold transition-colors cursor-pointer ${
+            className={`flex h-6 items-center gap-1 rounded-[var(--radius-control)] border px-1.5 type-micro font-semibold transition-colors cursor-pointer ${
               armed
                 ? "border-danger/50 bg-danger/15 text-danger"
                 : "border-transparent bg-transparent text-subtle-foreground hover:border-card-border hover:bg-surface-hover hover:text-danger"

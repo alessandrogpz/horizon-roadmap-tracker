@@ -114,6 +114,8 @@ function makeStyles(palette: Palette) {
     },
     buttonLabel: { color: palette.mutedForeground, ...TYPE.subhead, fontWeight: "600" },
     danger: { backgroundColor: palette.danger, borderColor: palette.danger },
-    dangerLabel: { color: "#fff", ...TYPE.subhead, fontWeight: "700" },
+    // White reads 2.77 on the dark theme's danger tint; the background
+    // follows the theme and gives 7.15 there and 4.67 on light.
+    dangerLabel: { color: palette.background, ...TYPE.subhead, fontWeight: "700" },
   });
 }

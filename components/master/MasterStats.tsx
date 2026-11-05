@@ -36,8 +36,8 @@ export default function MasterStats({ tracks }: { tracks: TrackState[] }) {
     <div className="flex flex-wrap items-stretch gap-3">
       <Tile label="Current Streak" icon={<Flame size={20} strokeWidth={2} className="shrink-0 text-warning" />}>
         <div className="flex items-baseline gap-1.5">
-          <span className="font-mono text-[1.6rem] font-bold leading-none text-foreground">{streak.current}</span>
-          <span className="text-[0.8rem] text-muted-foreground">{streak.current === 1 ? "day" : "days"}</span>
+          <span className="font-mono type-display-sm font-bold text-foreground">{streak.current}</span>
+          <span className="type-label text-muted-foreground">{streak.current === 1 ? "day" : "days"}</span>
         </div>
       </Tile>
 
@@ -46,15 +46,15 @@ export default function MasterStats({ tracks }: { tracks: TrackState[] }) {
         icon={
           <div className="relative grid shrink-0 place-items-center" style={{ width: 60, height: 60 }}>
             <Ring pct={progress.timePct} />
-            <span className="absolute inset-0 grid place-items-center font-mono text-[0.65rem] font-semibold text-accent">
+            <span className="absolute inset-0 grid place-items-center font-mono type-micro font-semibold text-accent">
               {Math.round(Math.min(100, progress.timePct))}%
             </span>
           </div>
         }
       >
         <div className="flex items-baseline gap-1.5">
-          <span className="font-mono text-[1.6rem] font-bold leading-none text-foreground">{progress.count}</span>
-          <span className="text-[0.8rem] text-muted-foreground">
+          <span className="font-mono type-display-sm font-bold text-foreground">{progress.count}</span>
+          <span className="type-label text-muted-foreground">
             track{progress.count === 1 ? "" : "s"} · {progress.totalDays} days planned
           </span>
         </div>
@@ -62,15 +62,15 @@ export default function MasterStats({ tracks }: { tracks: TrackState[] }) {
 
       <Tile label="Active Days" icon={<Activity size={20} strokeWidth={2} className="shrink-0 text-accent" />}>
         <div className="flex items-baseline gap-1.5">
-          <span className="font-mono text-[1.6rem] font-bold leading-none text-foreground">{streak.activeDays}</span>
-          <span className="text-[0.8rem] text-muted-foreground">{streak.activeLast30} in the last 30</span>
+          <span className="font-mono type-display-sm font-bold text-foreground">{streak.activeDays}</span>
+          <span className="type-label text-muted-foreground">{streak.activeLast30} in the last 30</span>
         </div>
       </Tile>
 
       <div className="flex min-w-[200px] flex-1 items-center gap-2.5 rounded-[10px] border border-card-border bg-card/60 px-4 py-3">
         <Layers size={18} strokeWidth={2} className="shrink-0 text-muted-foreground" />
         <div className="flex flex-1 flex-col gap-1.5">
-          <span className="flex flex-wrap items-baseline gap-x-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+          <span className="flex flex-wrap items-baseline gap-x-1.5 type-micro font-semibold uppercase tracking-[0.08em] text-muted-foreground">
             Work done
             <span className="font-normal normal-case tracking-normal text-subtle-foreground">{pace}</span>
           </span>
@@ -92,7 +92,7 @@ function Tile({ label, icon, children }: { label: string; icon?: React.ReactNode
     <div className="flex items-center gap-3 rounded-[10px] border border-card-border bg-card/60 px-4 py-3">
       {icon}
       <div className="flex flex-col">
-        <span className="text-[0.65rem] font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</span>
+        <span className="type-micro font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</span>
         {children}
       </div>
     </div>

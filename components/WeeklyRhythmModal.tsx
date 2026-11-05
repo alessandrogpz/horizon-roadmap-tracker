@@ -50,14 +50,14 @@ export default function WeeklyRhythmModal({ weekSchedule, focusTypes, onSave, on
 
         <div className="flex items-center justify-between pr-8">
           <div>
-            <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold uppercase font-mono tracking-[0.05em]">
+            <span className="type-caption bg-accent/10 text-accent px-2 py-0.5 rounded font-semibold uppercase font-mono tracking-[0.05em]">
               Weekly Overview
             </span>
-            <h2 className="text-[1.3rem] font-bold text-foreground mt-2">Edit Weekly Rhythm</h2>
+            <h2 className="type-title font-bold text-foreground mt-2">Edit Weekly Rhythm</h2>
           </div>
           <button
             onClick={() => setShowManager(!showManager)}
-            className="bg-transparent border-none text-accent text-xs cursor-pointer font-mono p-0 underline"
+            className="bg-transparent border-none text-accent type-caption cursor-pointer font-mono p-0 underline"
           >
             {showManager ? "Hide Settings" : "Customize Pool"}
           </button>
@@ -80,11 +80,11 @@ export default function WeeklyRhythmModal({ weekSchedule, focusTypes, onSave, on
               key={day.name}
               className="flex items-center justify-between gap-2 bg-input-bg border border-card-border rounded-md px-3 py-2"
             >
-              <span className="text-[0.85rem] text-foreground font-mono w-10">{day.name}</span>
+              <span className="type-body text-foreground font-mono w-10">{day.name}</span>
               <select
                 value={day.type}
                 onChange={(e) => setDayType(day.name, e.target.value)}
-                className="flex-1 bg-input-bg border border-card-border rounded-md px-2 py-1.5 text-foreground text-[0.85rem] font-[inherit] outline-none cursor-pointer"
+                className="flex-1 bg-input-bg border border-card-border rounded-md px-2 py-1.5 text-foreground type-body font-[inherit] outline-none cursor-pointer"
               >
                 {Object.entries(draftTypes).map(([key, val]) => (
                   <option key={key} value={key} className="bg-card text-foreground">
@@ -99,11 +99,11 @@ export default function WeeklyRhythmModal({ weekSchedule, focusTypes, onSave, on
         <div className="flex justify-end gap-3 border-t border-card-border pt-4">
           <button
             onClick={dismiss}
-            className="btn px-4 py-2 text-[0.85rem] !bg-transparent !text-muted-foreground !border-card-border hover:!text-foreground"
+            className="btn px-4 py-2 type-body !bg-transparent !text-muted-foreground !border-card-border hover:!text-foreground"
           >
             Cancel
           </button>
-          <button onClick={handleSave} className="btn px-5 py-2 text-[0.85rem]">
+          <button onClick={handleSave} className="btn px-5 py-2 type-body">
             Save
           </button>
         </div>

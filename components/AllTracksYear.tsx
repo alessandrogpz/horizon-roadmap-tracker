@@ -90,12 +90,12 @@ export default function AllTracksYear({
               title={`${row.track.meta.name}: ${Math.round(row.pct)}% through its timeline`}
             />
             <div className="min-w-0 flex flex-col gap-1">
-              <span className="text-[0.8rem] font-semibold text-foreground leading-tight line-clamp-2">
+              <span className="type-label font-semibold text-foreground line-clamp-2">
                 {row.track.meta.name}
               </span>
               {row.streak > 0 && (
                 <span
-                  className="track-ink inline-flex items-center gap-1 self-start rounded px-1.5 py-px text-[0.65rem] font-bold"
+                  className="track-ink inline-flex items-center gap-1 self-start rounded px-1.5 py-px type-micro font-bold"
                   style={{ ...trackInkVariables(row.color), background: "var(--surface-hover)" } as React.CSSProperties}
                 >
                   <Flame size={9} strokeWidth={2.5} />
@@ -109,7 +109,7 @@ export default function AllTracksYear({
 
       <div ref={strips} className="min-w-0 flex-1 overflow-x-auto">
         <div style={{ width: columns * COLUMN }}>
-          <div className="relative text-[0.65rem] text-subtle-foreground" style={{ height: 16 }}>
+          <div className="relative type-micro text-subtle-foreground" style={{ height: 16 }}>
             {marks.map((mark) => (
               <span key={mark.month} className="absolute top-0" style={{ left: mark.column * COLUMN }}>
                 {MONTH_NAMES[mark.month]}

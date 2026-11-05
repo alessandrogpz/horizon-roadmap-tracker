@@ -1,6 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
+import { onColor } from "@/lib/colors";
 import { TRACK_COLORS } from "@/lib/trackColors";
 
 /**
@@ -36,8 +37,11 @@ export default function ColorSwatches({
             style={{ backgroundColor: color }}
           >
             {/* A tick inside, not a ring around the outside: a ring on a
-                circle of colour reads as a seventh colour at a glance. */}
-            {picked && <Check size={15} strokeWidth={3} className="text-white drop-shadow" />}
+                circle of colour reads as a seventh colour at a glance.
+                Black or white per swatch, because white reads 2.15 on the
+                amber and 2.28 on the green — the mark saying which colour you
+                had chosen was the hardest thing on the row to see. */}
+            {picked && <Check size={15} strokeWidth={3} style={{ color: onColor(color) }} />}
           </button>
         );
       })}
