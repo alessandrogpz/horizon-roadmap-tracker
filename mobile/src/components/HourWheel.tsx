@@ -12,7 +12,7 @@
 // the centre is the value, and the highlight band is what tells you so.
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View , type ScrollViewInstance } from "react-native";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { Tappable } from "./Tappable";
@@ -35,7 +35,11 @@ export function HourWheel({
 }) {
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
-  const scroller = useRef<ScrollView>(null);
+  // React Native 0.88 made `ScrollView` a function component, so
+  // `useRef<ScrollView>` no longer describes the thing the ref holds — it
+  // describes the component. `ScrollViewInstance` is the type of what you
+  // actually get, and it is what carries `scrollTo` and `scrollToEnd`.
+  const scroller = useRef<ScrollViewInstance>(null);
   const chosen = useRef(value);
 
   // Open on the current value rather than at the top, so the wheel starts
