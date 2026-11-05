@@ -7,6 +7,28 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.116.0] - 2026-11-05
+
+### Added
+- **The panel cards and the track rows give under a thumb.** They were the last controls in the
+  phone app without press feedback, and the only ones that genuinely could not use `Tappable`: the
+  gesture above them is the one thing watching how far the finger travelled, so it is the one
+  thing that can tell a press from the end of a drag — a Pressable inside the card saw a press
+  whenever a finger went down and came up on it, which is also what dragging the column to its end
+  looks like. The gesture already knows, so it drives the give itself through `onBegin` and
+  `onFinalize`, and the handoff to the pick-up lift is free: `Gesture.Exclusive` cancels the tap
+  the instant the drag activates, so the give is already springing back as the lift starts.
+
+### Notes
+- **Verified on a device at last — a Pixel 7 Pro over USB — and the answer settles an open
+  question.** Reanimated animates correctly there: recorded at 120fps, the untouched `Segmented`
+  thumb travels 12 → 512 pixels over 41 frames with the step size decaying from 25px to 1px, which
+  is a damped spring of about 340ms. The press feedback works too: holding the sync chip moves its
+  left edge inward by 5px of a 233px control, which is the 4% `PRESS_SCALE` asks for.
+- So the finding recorded in 0.111.0 — that `useAnimatedStyle` does not update — was true of the
+  react-native-web preview this repo verifies the phone app through, and only of it. The device
+  was always fine. Worth remembering before trusting that preview on anything time-based.
+
 ## [0.115.0] - 2026-11-05
 
 Everything in this release was found by the critique pass that followed 0.114.0, and measured
