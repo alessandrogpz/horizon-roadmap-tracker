@@ -81,7 +81,7 @@ function RoadmapEditor() {
           <div className="flex items-center justify-between border-b border-card-border px-6 pt-4">
             <div className="flex gap-1">
               <button
-                className={`px-4 py-2 type-label font-semibold uppercase tracking-[0.05em] border-b-2 -mb-px cursor-pointer bg-transparent ${
+                className={`px-4 py-2 type-label font-semibold border-b-2 -mb-px cursor-pointer bg-transparent ${
                   tab === "write" ? "text-accent border-accent" : "text-muted-foreground border-transparent hover:text-foreground"
                 }`}
                 onClick={() => setTab("write")}
@@ -89,7 +89,7 @@ function RoadmapEditor() {
                 Write
               </button>
               <button
-                className={`px-4 py-2 type-label font-semibold uppercase tracking-[0.05em] border-b-2 -mb-px cursor-pointer bg-transparent ${
+                className={`px-4 py-2 type-label font-semibold border-b-2 -mb-px cursor-pointer bg-transparent ${
                   tab === "preview" ? "text-accent border-accent" : "text-muted-foreground border-transparent hover:text-foreground"
                 }`}
                 onClick={() => setTab("preview")}

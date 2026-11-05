@@ -28,6 +28,7 @@ import { Refreshable } from "../components/Refreshable";
 import { Tappable } from "../components/Tappable";
 import { LIMITS } from "@shared/limits";
 import { ACTION } from "../theme";
+import { NoTrack } from "../components/NoTrack";
 
 export default function PortfolioScreen() {
   const { workspace, track, today, editTrack, restoreWorkspace } = useWorkspace();
@@ -50,11 +51,7 @@ export default function PortfolioScreen() {
   }, [draft, editTrack]);
 
   if (!track) {
-    return (
-      <View style={[styles.screen, styles.centered]}>
-        <Text style={styles.muted}>No track open.</Text>
-      </View>
-    );
+    return <NoTrack title="No track yet" hint="Deliverables are the things a track has to produce. Make a track and you can start listing them." />;
   }
 
   const projects = track.portfolio ?? [];

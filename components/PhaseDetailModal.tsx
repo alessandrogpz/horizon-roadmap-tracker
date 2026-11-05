@@ -29,7 +29,7 @@ function ReadOnlyDetailSection({ title, items }: { title: string; items: PhaseDe
   if (items.length === 0) return null;
   return (
     <div>
-      <h4 className="type-label text-accent uppercase tracking-[0.05em] mb-2 border-b border-card-border pb-1 font-bold">
+      <h4 className="type-label text-accent mb-2 border-b border-card-border pb-1 font-bold">
         {title}
       </h4>
       <div className="flex flex-col gap-3">
@@ -55,7 +55,7 @@ function EditableDetailSection({
 }) {
   return (
     <div>
-      <h4 className="type-label text-accent uppercase tracking-[0.05em] mb-2 border-b border-card-border pb-1 font-bold">
+      <h4 className="type-label text-accent mb-2 border-b border-card-border pb-1 font-bold">
         {title}
       </h4>
       <div className="flex flex-col gap-2">
@@ -143,7 +143,7 @@ function PhaseEndDateEditor({
 
   return (
     <div>
-      <h4 className="type-label text-accent uppercase tracking-[0.05em] mb-2 border-b border-card-border pb-1 font-bold">
+      <h4 className="type-label text-accent mb-2 border-b border-card-border pb-1 font-bold">
         Phase Ends
       </h4>
       <div className="flex items-center gap-3 flex-wrap">
@@ -263,7 +263,7 @@ export default function PhaseDetailModal({
 
             {/* Tasks (editing) */}
             <div>
-              <h4 className="type-label text-accent uppercase tracking-[0.05em] mb-2 border-b border-card-border pb-1 font-bold">
+              <h4 className="type-label text-accent mb-2 border-b border-card-border pb-1 font-bold">
                 Tasks
               </h4>
               <div className="flex flex-col gap-2">
@@ -362,8 +362,8 @@ export default function PhaseDetailModal({
               </div>
               <p className="text-muted-foreground type-subhead mt-1">{phase.description}</p>
               {endsOn && (
-                <p className="type-caption font-mono text-muted-foreground/60 mt-1 m-0">
-                  Ends {endsOn}<span className="opacity-70"> · day {phase.recommendedByDay}</span>
+                <p className="type-caption font-mono text-subtle-foreground mt-1 m-0">
+                  Ends {endsOn}<span> · day {phase.recommendedByDay}</span>
                 </p>
               )}
             </div>
@@ -371,7 +371,7 @@ export default function PhaseDetailModal({
             {/* Tasks (read-only — plain list, no checkboxes) */}
             {phase.tasks.length > 0 && (
               <div>
-                <h4 className="type-label text-accent uppercase tracking-[0.05em] mb-2 border-b border-card-border pb-1 font-bold">
+                <h4 className="type-label text-accent mb-2 border-b border-card-border pb-1 font-bold">
                   Tasks
                 </h4>
                 <div className="flex flex-col gap-2">

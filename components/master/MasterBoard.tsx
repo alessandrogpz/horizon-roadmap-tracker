@@ -114,7 +114,7 @@ function TrackPicker({
           All tracks
         </h2>
         <span
-          className="inline-flex items-center gap-1 rounded-[var(--radius-control)] border border-card-border bg-surface-muted px-2 py-0.5 type-caption font-semibold uppercase tracking-[0.05em] text-subtle-foreground"
+          className="inline-flex items-center gap-1 rounded-[var(--radius-control)] border border-card-border bg-surface-muted px-2 py-0.5 type-caption font-semibold text-subtle-foreground"
           title="Nothing in this view can be edited. Open a track to change it."
         >
           <Lock size={10} strokeWidth={2.5} />

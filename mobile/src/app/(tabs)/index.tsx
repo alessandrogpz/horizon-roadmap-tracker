@@ -57,6 +57,7 @@ import { centredContent } from "../../layout";
 import { usePalette } from "../../theme/ThemeProvider";
 import { Tappable } from "../../components/Tappable";
 import { ACTION } from "../../theme";
+import { NoTrack } from "../../components/NoTrack";
 
 /** A folded panel: tall enough for its header and nothing else. */
 const ROW = 56;
@@ -266,11 +267,7 @@ export default function SpaceScreen() {
   );
 
   if (!track) {
-    return (
-      <View style={[styles.screen, styles.centered]}>
-        <Text style={styles.muted}>No track open.</Text>
-      </View>
-    );
+    return <NoTrack title="No track yet" />;
   }
 
   return (

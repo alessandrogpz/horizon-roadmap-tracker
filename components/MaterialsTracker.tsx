@@ -42,8 +42,8 @@ function readCollapsedCategories(): string[] {
 
 const inputClass = "w-full p-1 rounded bg-input-bg border border-card-border text-foreground outline-none font-[inherit] type-body";
 const selectClass = "w-full p-1 rounded bg-input-bg border border-card-border text-foreground outline-none font-[inherit] type-label";
-const labelClass = "block type-caption text-muted-foreground mb-1 uppercase";
-const metricLabelClass = "type-micro text-muted-foreground w-[70px] uppercase font-mono font-bold tracking-[0.05em]";
+const labelClass = "block type-caption text-muted-foreground mb-1";
+const metricLabelClass = "type-micro text-muted-foreground w-[70px] font-mono font-bold";
 
 export default function MaterialsTracker({
   materials,
@@ -378,7 +378,7 @@ export default function MaterialsTracker({
                 onClick={() => toggleCategory(category)}
                 aria-expanded={!isCollapsed}
                 aria-controls={groupId}
-                className="flex w-full items-center gap-1.5 py-0.5 type-caption text-accent uppercase tracking-[0.05em] border-l-2 border-accent pl-2 font-bold bg-transparent text-left cursor-pointer hover:opacity-75 transition-opacity"
+                className="flex w-full items-center gap-1.5 py-1.5 type-caption text-accent border-l-2 border-accent pl-2 font-bold bg-transparent text-left cursor-pointer hover:opacity-75 transition-opacity"
               >
                 <ChevronDown
                   size={13}
@@ -496,7 +496,7 @@ export default function MaterialsTracker({
                           <button
                             type="button"
                             onClick={() => setEditingId(null)}
-                            className="bg-transparent text-muted-foreground border border-card-border rounded px-2 py-1 type-caption cursor-pointer"
+                            className="tap-44 bg-transparent text-muted-foreground border border-card-border rounded px-2 py-1 type-caption cursor-pointer"
                           >
                             Cancel
                           </button>
@@ -544,7 +544,7 @@ export default function MaterialsTracker({
                           <div className="type-label text-muted-foreground mt-0.5">{mat.author}</div>
                         )}
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="type-micro text-accent uppercase tracking-[0.05em] font-mono">
+                          <span className="type-micro text-accent font-mono">
                             {mat.type}
                           </span>
                           {/* No stored link — offer a search built from the title
@@ -552,7 +552,7 @@ export default function MaterialsTracker({
                           {!mat.link && (
                             <button
                               onClick={() => onOpenLink(searchUrlFor(mat))}
-                              className="cursor-pointer border-none bg-transparent p-0 type-micro uppercase tracking-[0.05em] font-mono text-muted-foreground underline hover:text-foreground"
+                              className="tap-44 cursor-pointer border-none bg-transparent p-0 type-micro font-mono text-muted-foreground underline hover:text-foreground"
                               title={`Search the web for "${mat.title}"`}
                             >
                               find
@@ -582,24 +582,24 @@ export default function MaterialsTracker({
                       <div className="flex flex-wrap items-center gap-2">
                         <button
                           onClick={() => openNotes(mat.id, mat.title)}
-                          className="bg-transparent border-none text-accent cursor-pointer type-caption px-1 py-px font-[inherit] font-medium"
+                          className="tap-44 bg-transparent border-none text-accent cursor-pointer type-caption px-1 py-px font-[inherit] font-medium"
                         >
                           Notes
                         </button>
                         <button
                           onClick={() => startEdit(mat)}
-                          className="bg-transparent border-none text-muted-foreground cursor-pointer type-caption px-1 py-px font-[inherit]"
+                          className="tap-44 bg-transparent border-none text-muted-foreground cursor-pointer type-caption px-1 py-px font-[inherit]"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => onArchiveChange(mat.id, true)}
-                          className="bg-transparent border-none text-muted-foreground cursor-pointer type-caption px-1 py-px font-[inherit]"
+                          className="tap-44 bg-transparent border-none text-muted-foreground cursor-pointer type-caption px-1 py-px font-[inherit]"
                           title="Move to Archived. Nothing is deleted, and you can unarchive it any time."
                         >
                           Archive
                         </button>
-                        <span className={`type-caption uppercase font-mono font-bold tracking-[0.05em] px-1.5 py-0.5 border rounded whitespace-nowrap ${
+                        <span className={`type-caption font-mono font-bold px-1.5 py-0.5 border rounded whitespace-nowrap ${
                           mat.status === "Completed"
                             ? "text-success border-success/20 bg-success/5"
                             : mat.status === "In Progress"
@@ -660,7 +660,7 @@ export default function MaterialsTracker({
                 onClick={() => setShowArchived(open => !open)}
                 aria-expanded={showArchived}
                 aria-controls="materials-group-archived"
-                className="flex w-full items-center gap-1.5 py-0.5 type-caption text-muted-foreground uppercase tracking-[0.05em] border-l-2 border-card-border pl-2 font-bold bg-transparent text-left cursor-pointer hover:text-foreground transition-colors"
+                className="flex w-full items-center gap-1.5 py-1.5 type-caption text-muted-foreground border-l-2 border-card-border pl-2 font-bold bg-transparent text-left cursor-pointer hover:text-foreground transition-colors"
               >
                 <ChevronDown
                   size={13}
@@ -685,20 +685,20 @@ export default function MaterialsTracker({
                     {mat.author && (
                       <div className="type-label text-muted-foreground mt-0.5">{mat.author}</div>
                     )}
-                    <div className="type-micro text-muted-foreground uppercase tracking-[0.05em] font-mono mt-0.5">
+                    <div className="type-micro text-muted-foreground font-mono mt-0.5">
                       {mat.type} · {mat.category || "Other"} · {mat.status}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <button
                       onClick={() => openNotes(mat.id, mat.title)}
-                      className="bg-transparent border-none text-accent cursor-pointer type-caption px-1 py-px font-[inherit] font-medium"
+                      className="tap-44 bg-transparent border-none text-accent cursor-pointer type-caption px-1 py-px font-[inherit] font-medium"
                     >
                       Notes
                     </button>
                     <button
                       onClick={() => onArchiveChange(mat.id, false)}
-                      className="bg-transparent border-none text-muted-foreground cursor-pointer type-caption px-1 py-px font-[inherit]"
+                      className="tap-44 bg-transparent border-none text-muted-foreground cursor-pointer type-caption px-1 py-px font-[inherit]"
                     >
                       Unarchive
                     </button>
@@ -726,7 +726,7 @@ export default function MaterialsTracker({
         <div className="notes-drawer-header">
           <div className="flex flex-col gap-1 min-w-0 flex-1 pr-4">
             {/* The title leads; what the drawer is goes under it. This was a
-                tracked uppercase "STUDY NOTES" sitting above the heading — a
+                tracked "STUDY NOTES" sitting above the heading — a
                 label over a heading, which is the one device the heading can
                 always carry itself. */}
             <h3

@@ -58,7 +58,7 @@ const quietButton =
 function Tile({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
     <div className="flex min-w-[130px] flex-1 flex-col gap-1 rounded-[10px] border border-card-border bg-card/60 px-3.5 py-2.5">
-      <span className="type-micro font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</span>
+      <span className="type-micro font-semibold text-muted-foreground">{label}</span>
       <span className="font-mono type-title font-bold text-foreground">{value}</span>
       {note && <span className="type-caption text-muted-foreground">{note}</span>}
     </div>
@@ -269,7 +269,7 @@ export default function InsightsModal({ onClose, onOpenTrack }: { onClose: () =>
             ))}
             {shown.notes.map((n) => (
               <div key={n.noteId} className="flex flex-col gap-0.5 rounded-[var(--radius-inner)] border border-card-border px-3 py-2">
-                <span className="type-caption uppercase tracking-[0.06em] text-muted-foreground">
+                <span className="type-caption text-muted-foreground">
                   {KIND_LABEL[n.kind]} · {n.about}
                 </span>
                 <span className="type-label text-foreground">{n.snippet}</span>
@@ -323,7 +323,7 @@ export default function InsightsModal({ onClose, onOpenTrack }: { onClose: () =>
               <span className="type-label font-semibold text-foreground">By track</span>
               <table className="w-full type-label">
                 <thead>
-                  <tr className="text-left type-caption uppercase tracking-[0.06em] text-muted-foreground">
+                  <tr className="text-left type-caption text-muted-foreground">
                     <th className="py-1 font-semibold">Track</th>
                     <th className="py-1 text-right font-semibold">Active days</th>
                     <th className="py-1 text-right font-semibold">Accomplishments</th>

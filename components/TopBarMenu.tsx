@@ -81,7 +81,7 @@ function Item({
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="block px-2.5 pb-1 pt-2 type-micro font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+    <span className="block px-2.5 pb-1 pt-2 type-micro font-semibold text-muted-foreground">
       {children}
     </span>
   );
@@ -181,7 +181,7 @@ export default function TopBarMenu({
           role="menu"
         >
           <div className="flex items-center justify-between gap-2 px-2.5 pb-1 pt-1.5">
-            <span className="type-micro font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            <span className="type-micro font-semibold text-muted-foreground">
               Track
             </span>
             <span className="max-w-[130px] truncate type-micro text-subtle-foreground" title={trackName}>

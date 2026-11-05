@@ -13,7 +13,6 @@ import {
   MoreHorizontal,
   NotebookPen,
   Sun,
-  TrendingUp,
 } from "lucide-react";
 import HorizonMark from "@/components/HorizonMark";
 import StreakGrid, { type StreakCell } from "@/components/StreakGrid";
@@ -81,12 +80,20 @@ export default function AppPreview() {
    *  rest of the dashboard at this size. */
   const months = track.months.slice(-4);
 
-  /** The four numbers across the top, as the real header shows them. */
+  /** The four numbers across the top, as the real header shows them — which
+   *  is the whole claim this preview makes, so it has to stay true.
+   *
+   *  It had drifted: four bordered tiles with icons and a progress ring,
+   *  labelled Streak / Timeline / Active / Last 30. The dashboard shows four
+   *  bare figures labelled Streak / Phase day / Timeline / Progress, and
+   *  `StatFigure`'s own comment records that the tiles were deliberately
+   *  removed. A marketing preview advertising the version that was replaced
+   *  is worse than no preview. */
   const metrics = [
-    { label: "Streak", icon: <Flame size={11} strokeWidth={2.5} className="text-warning" />, value: `${track.streak}`, unit: "days" },
-    { label: "Timeline", value: `${track.dayOfTrack}`, unit: `/ ${track.timeline.totalDays}`, ring: track.pct },
-    { label: "Active", icon: <Check size={11} strokeWidth={2.5} className="text-accent" />, value: `${track.stats.activeDays}`, unit: "days" },
-    { label: "Last 30", icon: <TrendingUp size={11} strokeWidth={2.5} className="text-accent" />, value: `${track.stats.activeLast30}`, unit: "of 30" },
+    { label: "Streak", value: `${track.streak}`, unit: track.streak === 1 ? "day" : "days" },
+    { label: "Phase day", value: `${track.phaseDay}` },
+    { label: "Timeline", value: `${track.dayOfTrack}`, unit: `of ${track.timeline.totalDays}` },
+    { label: "Progress", value: `${Math.round(Math.min(100, track.pct))}%` },
   ];
 
   return (
@@ -192,40 +199,19 @@ export default function AppPreview() {
         {/* `minmax(0, …)`, not a bare `fr`, here and below: an `fr` track has an
             automatic minimum of `auto`, so a column whose content does not fit
             widens the grid past the card instead of shrinking itself. */}
-        <div className="grid grid-cols-2 gap-1.5 pt-3 lg:grid-cols-4">
+        {/* Label over figure, no card, no icon, no ring — the shape the real
+            header settled on. */}
+        <div className="flex flex-wrap items-start gap-x-5 gap-y-2 pt-3">
           {metrics.map((metric) => (
-            <div
-              key={metric.label}
-              className="flex items-center gap-2 rounded-[8px] border border-card-border bg-card/60 px-2 py-1.5"
-            >
-              {metric.ring !== undefined ? (
-                <svg width={22} height={22} viewBox="0 0 22 22" className="shrink-0 -rotate-90">
-                  <circle cx="11" cy="11" r="9" fill="none" stroke="var(--card-border)" strokeWidth="3" />
-                  <circle
-                    cx="11"
-                    cy="11"
-                    r="9"
-                    fill="none"
-                    stroke={accent}
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeDasharray={2 * Math.PI * 9}
-                    strokeDashoffset={2 * Math.PI * 9 * (1 - Math.min(100, metric.ring) / 100)}
-                  />
-                </svg>
-              ) : (
-                metric.icon
-              )}
-              <span className="flex min-w-0 flex-col">
-                <span className="text-[0.58rem] text-subtle-foreground">
-                  {metric.label}
-                </span>
-                <span className="flex items-baseline gap-1">
-                  <span className="font-mono text-[0.9rem] font-bold leading-none">{metric.value}</span>
+            <span key={metric.label} className="flex min-w-0 flex-col gap-px">
+              <span className="text-[0.58rem] text-subtle-foreground">{metric.label}</span>
+              <span className="flex items-baseline gap-1">
+                <span className="text-[0.95rem] leading-none tabular-nums text-foreground">{metric.value}</span>
+                {metric.unit ? (
                   <span className="truncate text-[0.55rem] text-subtle-foreground">{metric.unit}</span>
-                </span>
+                ) : null}
               </span>
-            </div>
+            </span>
           ))}
         </div>
 

@@ -25,6 +25,7 @@ import { SubNav } from "../components/SubNav";
 import { Tappable } from "../components/Tappable";
 import { LIMITS } from "@shared/limits";
 import { ACTION } from "../theme";
+import { NoTrack } from "../components/NoTrack";
 
 export default function MaterialsScreen() {
   const { workspace, track, today, editTrack, restoreWorkspace } = useWorkspace();
@@ -83,11 +84,7 @@ export default function MaterialsScreen() {
   );
 
   if (!track) {
-    return (
-      <View style={[styles.screen, styles.centered]}>
-        <Text style={styles.muted}>No track open.</Text>
-      </View>
-    );
+    return <NoTrack title="No track yet" hint="Books, courses and anything else you are working through belong to a track. Make one to start a list." />;
   }
 
   return (

@@ -146,8 +146,8 @@ function PhasePanel({ track, today }: PanelProps) {
           </Text>
         </View>
       </View>
-      <Meter label="Time spent" value={Math.round(timeline.progressPct)} total={100} tint={palette.subtleForeground} />
-      <Meter label="Work done" value={Math.round(progress.workPct)} total={100} tint={palette.accent} />
+      <Meter label="Time spent" value={Math.round(timeline.progressPct)} total={100} asPercent tint={palette.subtleForeground} />
+      <Meter label="Work done" value={Math.round(progress.workPct)} total={100} asPercent tint={palette.accent} />
     </>
   );
 }
