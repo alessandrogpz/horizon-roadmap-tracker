@@ -390,7 +390,7 @@ function makeStyles(palette: Palette) {
     choiceLabel: { color: palette.mutedForeground, ...TYPE.label, fontWeight: "600" },
     fieldLabel: {
       color: palette.subtleForeground,
-      ...TYPE.eyebrow,
+      ...TYPE.marker,
       fontWeight: "700",
       letterSpacing: 1,
       marginTop: SPACING.md,

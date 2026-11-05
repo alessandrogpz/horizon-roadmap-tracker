@@ -708,7 +708,7 @@ export default function MaterialsTracker({
             </span>
             <button
               onClick={closeNotes}
-              className="bg-transparent border-none text-foreground cursor-pointer p-1 flex items-center hover:text-muted-foreground transition-colors"
+              className="tap-44 bg-transparent border-none text-foreground cursor-pointer p-1 flex items-center hover:text-muted-foreground transition-colors"
               aria-label="Close notes"
             >
               <X size={18} strokeWidth={2} />

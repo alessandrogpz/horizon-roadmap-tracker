@@ -371,7 +371,7 @@ function makeStyles(palette: Palette) {
     deadlineButton: { flex: 1, flexDirection: "row", alignItems: "center", gap: SPACING.sm, minHeight: 40 },
     sectionTitle: {
       color: palette.subtleForeground,
-      ...TYPE.eyebrow,
+      ...TYPE.marker,
       fontWeight: "700",
       letterSpacing: 1.2,
       marginTop: SPACING.lg,

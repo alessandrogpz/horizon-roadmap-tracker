@@ -7,6 +7,41 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.110.0] - 2026-11-05
+
+### Changed
+- **The phone app was never laid out for anything but a phone held upright.** It shipped
+  `orientation: "portrait"` and without `supportsTablet`, so on an iPad it ran as a scaled-up
+  iPhone: panels 800 points wide holding one short sentence, a week's seven dots spread from edge
+  to edge, meters running the full width of the screen.
+- Layout now comes from the window's width class, never from the device — a phone in landscape, an
+  iPad in Split View and a small tablet all hand you the same width and all three want the same
+  answer. `mobile/src/layout.ts` holds the thresholds (Material's window size classes, which line
+  up closely enough with iOS's regular/compact to serve both).
+- Every tab screen caps its content at 620 points and centres it, and the tab bar's four items are
+  gathered under that column instead of sitting in the far corners of an 834-point bar, which is
+  what iPad's own tab bars do. On a phone the cap is wider than the screen, so there is one code
+  path rather than a phone layout and a tablet layout free to drift apart.
+- `orientation` is `default` and `ios.supportsTablet` is on. Those two are deliberately last:
+  unlocking rotation before the layouts could take it would have shipped a worse app.
+- **The phone stopped shouting too.** `TYPE.eyebrow` — 11pt, uppercased, letter-spaced — was used in
+  seventeen places, which made small tracked capitals the most repeated gesture in the app, and the
+  website had already dropped the same device. It is `TYPE.marker` now: 12pt, sentence case. One
+  role, seventeen call sites, both apps finally agreeing on what a label looks like.
+- **Touch targets on the web app at phone width**: 44 controls were under 44x44, the week's chevrons
+  as small as 22x19. A `.tap-44` utility adds the missing area through a pseudo-element, so the hit
+  region grows and the icon stays the size the dense layout was built around, and only on coarse
+  pointers. 44 down to 22 under 44x44, and 6 under the 24x24 that WCAG 2.5.8 actually requires.
+
+### Notes
+- `orientation` and `supportsTablet` live in `app.json`, so they need a **new native build** to take
+  effect; an over-the-air update carries the layout work but not those two.
+- Evidence for the native work is an emulated viewport through react-native-web at 375, 834 and
+  844x390 — layout, not gestures. The panel drag-reorder was not exercised by touch, and neither was
+  rotation on real hardware; both want a device before release.
+- The two-column panel grid an iPad could carry is not done. My Space's drag-to-reorder assumes a
+  single column, and breaking that gesture to gain a column was not a trade worth making quietly.
+
 ## [0.109.0] - 2026-11-05
 
 ### Changed

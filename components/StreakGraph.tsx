@@ -33,7 +33,7 @@ function YearStep({
       onClick={onClick}
       disabled={disabled}
       aria-label={direction === -1 ? "Previous year" : "Next year"}
-      className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-[var(--radius-control)] border border-card-border bg-surface-muted text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+      className="tap-44 flex h-6 w-6 cursor-pointer items-center justify-center rounded-[var(--radius-control)] border border-card-border bg-surface-muted text-muted-foreground transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
     >
       <Icon size={13} strokeWidth={2.5} />
     </button>

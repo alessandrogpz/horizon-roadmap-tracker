@@ -166,7 +166,7 @@ function makeStyles(palette: Palette) {
     title: {
       flex: 1,
       color: palette.subtleForeground,
-      ...TYPE.eyebrow,
+      ...TYPE.marker,
       fontWeight: "700",
       letterSpacing: 1.2,
     },
