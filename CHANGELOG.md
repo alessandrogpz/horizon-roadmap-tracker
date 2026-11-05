@@ -7,6 +7,26 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.117.2] - 2026-11-05
+
+### Fixed
+- **A dashboard panel being dragged could leave the screen and keep going**, the same runaway
+  0.117.1 fixed for the track list. The panel is a different case and needed a different answer:
+  the two columns are two `SortableContext`s and crossing between them is the whole point, so it
+  cannot be pinned to one axis — and it cannot be pinned to its parent either, because its parent
+  is the column it is trying to leave. `restrictToWindowEdges` leaves every real rearrangement
+  possible and stops only the part that was not one: there is no column outside the viewport to
+  drop into.
+- Measured with the drag live at 1018 and 1440 wide, at every position a real mouse can occupy —
+  each edge and both corners. The panel stays fully inside the window in all of them, and still
+  travels the full width between columns (left edge 32 → 703 at 1440).
+
+### Notes
+- The reorder itself could not be exercised end to end with synthetic events: the drop never
+  commits under them. That is the harness, not the change — a control run with the modifier
+  removed behaves identically, and a dnd-kit modifier only transforms coordinates, so it cannot
+  reach the collision or reorder logic.
+
 ## [0.117.1] - 2026-11-05
 
 ### Fixed
