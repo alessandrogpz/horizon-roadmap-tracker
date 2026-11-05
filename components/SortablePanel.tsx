@@ -5,6 +5,11 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Pencil, EyeOff } from "lucide-react";
 
+/** `useLayoutEffect` on the client, `useEffect` on the server, so rendering
+ *  the dashboard's HTML does not warn. The clamp below has to run before the
+ *  browser paints, which only the layout variant guarantees. */
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect;
+
 interface SortablePanelProps {
   id: string;
   children: React.ReactNode;
@@ -30,6 +35,58 @@ interface SortablePanelProps {
 export default function SortablePanel({ id, children, index = 0, onEdit, onHide }: SortablePanelProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
+  // Keeping the panel on the screen, in the rendering only.
+  //
+  // A panel is wide and you grab it by a handle in its top-right corner, so
+  // a pointer at the right-hand edge of the window already puts most of the
+  // panel past it. Unbounded it simply kept going, with no column out there
+  // to drop into.
+  //
+  // The obvious fix — `restrictToWindowEdges` on the DndContext — is the one
+  // that cannot be used here, and 0.117.2 shipped it and crashed the
+  // dashboard. A modifier clamps the rect that collision detection then
+  // measures, and this dashboard moves panels between columns *live* during
+  // a drag; held against the edge, the nearest droppable flipped between the
+  // two columns forever, one `setState` per flip, until React gave up.
+  //
+  // So the clamp is applied here, to the committed DOM, after React has
+  // rendered dnd-kit's own unclamped transform and before the browser
+  // paints. dnd-kit's idea of where the panel is carries on tracking the
+  // pointer, so collision detection stays monotonic and there is nothing for
+  // a loop to feed on. No state is set, so this cannot re-render anything.
+  //
+  // Horizontal only: a long dashboard scrolls, and a panel being carried
+  // down it has to be able to leave the top of the window.
+  const node = React.useRef<HTMLDivElement | null>(null);
+
+  const attachRef = React.useCallback(
+    (el: HTMLDivElement | null) => {
+      node.current = el;
+      setNodeRef(el);
+    },
+    [setNodeRef]
+  );
+
+  useIsomorphicLayoutEffect(() => {
+    const el = node.current;
+    if (!el || !transform) return;
+    // The DOM already carries dnd-kit's transform at this point, so taking it
+    // back off the measured rect gives the panel's resting position without
+    // having to have remembered it from before the drag.
+    const rect = el.getBoundingClientRect();
+    const restLeft = rect.left - transform.x;
+    const restRight = rect.right - transform.x;
+    const lowest = -restLeft;
+    const highest = window.innerWidth - restRight;
+    // A panel wider than the window has no valid range; leave it be rather
+    // than pinning it somewhere arbitrary.
+    if (highest < lowest) return;
+    const x = Math.min(Math.max(transform.x, lowest), highest);
+    if (x !== transform.x) {
+      el.style.transform = `translate3d(${x}px, ${transform.y}px, 0)`;
+    }
+  }, [transform]);
+
   const style: React.CSSProperties = {
     // Translate only, never CSS.Transform — that one also emits the scaleX/
     // scaleY dnd-kit computes from the ratio between the dragged panel and
@@ -47,7 +104,7 @@ export default function SortablePanel({ id, children, index = 0, onEdit, onHide 
 
   return (
     <div
-      ref={setNodeRef}
+      ref={attachRef}
       style={style}
       className="relative group"
       onTouchStart={listeners?.onTouchStart as React.TouchEventHandler<HTMLDivElement> | undefined}
