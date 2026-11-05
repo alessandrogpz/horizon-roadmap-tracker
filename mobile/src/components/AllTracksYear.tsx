@@ -14,7 +14,7 @@
 // step.
 
 import { useMemo, useRef } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View , type ScrollViewInstance } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { MONTH_NAMES, timelineStats, yearCalendar, yearRuler, type StreakDay } from "@shared/stats";
 import { marksRestDay, restScheduleOf, trackStreak, type RestOn } from "@shared/restDays";
@@ -64,7 +64,11 @@ export function AllTracksYear({
 }) {
   const palette = usePalette();
   const styles = useMemo(() => makeStyles(palette), [palette]);
-  const strips = useRef<ScrollView>(null);
+  // React Native 0.88 made `ScrollView` a function component, so
+  // `useRef<ScrollView>` no longer describes the thing the ref holds — it
+  // describes the component. `ScrollViewInstance` is the type of what you
+  // actually get, and it is what carries `scrollTo` and `scrollToEnd`.
+  const strips = useRef<ScrollViewInstance>(null);
   /** Which year has already been dropped at its recent end. */
   const landedOn = useRef<number | null>(null);
 
