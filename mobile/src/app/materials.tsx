@@ -8,7 +8,7 @@
 // in the shared core decides that, not this screen).
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Linking, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import type { Material } from "@shared/types";
 import { categoriesFor, MATERIAL_STATUSES, MATERIAL_TYPES } from "@shared/materialOptions";
 import { addMaterial, removeMaterial, setMaterialArchived, setMaterialStatus, updateMaterial } from "@shared/trackActions";
@@ -22,6 +22,7 @@ import { EditHeader, useEditMode } from "../components/EditToggle";
 import { EmptyState } from "../components/EmptyState";
 import { Refreshable } from "../components/Refreshable";
 import { SubNav } from "../components/SubNav";
+import { Tappable } from "../components/Tappable";
 
 export default function MaterialsScreen() {
   const { workspace, track, today, editTrack, restoreWorkspace } = useWorkspace();
@@ -146,7 +147,7 @@ export default function MaterialsScreen() {
 
       {archived.length > 0 && (
         <View style={styles.card}>
-          <Pressable
+          <Tappable
             accessibilityRole="button"
             accessibilityState={{ expanded: showArchived }}
             onPress={() => setShowArchived(!showArchived)}
@@ -154,7 +155,7 @@ export default function MaterialsScreen() {
             <Text style={styles.title}>
               Archived ({archived.length}) {showArchived ? "▾" : "▸"}
             </Text>
-          </Pressable>
+          </Tappable>
 
           {showArchived &&
             archived.map((material) => (
@@ -163,13 +164,13 @@ export default function MaterialsScreen() {
                   {material.title}
                   {material.status === "Completed" ? " · finished" : ""}
                 </Text>
-                <Pressable
+                <Tappable
                   accessibilityRole="button"
                   accessibilityLabel={`Bring back ${material.title}`}
                   onPress={() => setArchived(material.id, false)}
                 >
                   <Text style={styles.linkLabel}>Bring back</Text>
-                </Pressable>
+                </Tappable>
               </View>
             ))}
         </View>
@@ -279,7 +280,7 @@ function MaterialCard({
 
   return (
     <View style={styles.card}>
-      <Pressable onPress={onToggle} accessibilityRole="button" style={styles.cardHead}>
+      <Tappable onPress={onToggle} accessibilityRole="button" style={styles.cardHead}>
         <View style={styles.cardText}>
           <Text style={styles.title}>{material.title}</Text>
           <Text style={styles.muted}>
@@ -288,7 +289,7 @@ function MaterialCard({
           </Text>
         </View>
         <View style={[styles.statusDot, { backgroundColor: statusColour }]} />
-      </Pressable>
+      </Tappable>
 
       {total > 0 && (
         <View style={styles.progressTrack}>
@@ -300,7 +301,7 @@ function MaterialCard({
         <View style={styles.details}>
           <View style={styles.statusRow}>
             {MATERIAL_STATUSES.map((status) => (
-              <Pressable
+              <Tappable
                 key={status}
                 accessibilityRole="button"
                 accessibilityState={{ selected: material.status === status }}
@@ -308,7 +309,7 @@ function MaterialCard({
                 style={[styles.statusButton, styles.evenly, material.status === status && { borderColor: palette.accent }]}
               >
                 <Text style={[styles.statusLabel, material.status === status && { color: palette.foreground }]}>{status}</Text>
-              </Pressable>
+              </Tappable>
             ))}
           </View>
 
@@ -372,15 +373,15 @@ function MaterialCard({
 
           {editing && (
             <>
-              <Pressable accessibilityRole="button" onPress={onArchive} style={styles.linkButton}>
+              <Tappable accessibilityRole="button" onPress={onArchive} style={styles.linkButton}>
                 <Text style={styles.linkLabel}>Archive it</Text>
-              </Pressable>
+              </Tappable>
               <Text style={styles.footnote}>
                 Archiving keeps the progress, the notes and the history, and takes it off the list.
                 Removing does not.
               </Text>
 
-              <Pressable
+              <Tappable
                 accessibilityRole="button"
                 onPress={() => (confirmingRemove ? onRemove() : setConfirmingRemove(true))}
                 style={styles.linkButton}
@@ -388,14 +389,14 @@ function MaterialCard({
                 <Text style={[styles.linkLabel, confirmingRemove && { color: palette.danger }]}>
                   {confirmingRemove ? "Tap again to remove it" : "Remove this material"}
                 </Text>
-              </Pressable>
+              </Tappable>
             </>
           )}
 
           {material.link ? (
-            <Pressable accessibilityRole="link" onPress={() => void Linking.openURL(material.link!)} style={styles.linkButton}>
+            <Tappable accessibilityRole="link" onPress={() => void Linking.openURL(material.link!)} style={styles.linkButton}>
               <Text style={styles.linkLabel}>Open link</Text>
-            </Pressable>
+            </Tappable>
           ) : null}
         </View>
       )}
@@ -443,7 +444,7 @@ function AddMaterial({
       <Text style={styles.muted}>What kind</Text>
       <View style={styles.statusRow}>
         {MATERIAL_TYPES.map((option) => (
-          <Pressable
+          <Tappable
             key={option}
             accessibilityRole="button"
             accessibilityState={{ selected: type === option }}
@@ -451,14 +452,14 @@ function AddMaterial({
             style={[styles.statusButton, type === option && { borderColor: palette.accent }]}
           >
             <Text style={[styles.statusLabel, type === option && { color: palette.foreground }]}>{option}</Text>
-          </Pressable>
+          </Tappable>
         ))}
       </View>
 
       <Text style={styles.muted}>Filed under</Text>
       <View style={styles.statusRow}>
         {categories.map((option) => (
-          <Pressable
+          <Tappable
             key={option}
             accessibilityRole="button"
             accessibilityState={{ selected: category === option }}
@@ -466,11 +467,11 @@ function AddMaterial({
             style={[styles.statusButton, category === option && { borderColor: palette.accent }]}
           >
             <Text style={[styles.statusLabel, category === option && { color: palette.foreground }]}>{option}</Text>
-          </Pressable>
+          </Tappable>
         ))}
       </View>
 
-      <Pressable
+      <Tappable
         accessibilityRole="button"
         disabled={!title.trim()}
         onPress={() => {
@@ -480,7 +481,7 @@ function AddMaterial({
         style={styles.linkButton}
       >
         <Text style={[styles.linkLabel, !title.trim() && { color: palette.subtleForeground }]}>Add it</Text>
-      </Pressable>
+      </Tappable>
     </View>
   );
 }

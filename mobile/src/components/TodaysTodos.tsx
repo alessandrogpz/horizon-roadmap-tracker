@@ -12,7 +12,7 @@
 // edits — keyed by the track, through `@shared/quickNotes`.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, Text, TextInput, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import {
   addTodo,
@@ -26,6 +26,7 @@ import {
 import { loadNotes, saveNote } from "../storage/db";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { Tappable } from "./Tappable";
 
 export function TodaysTodos({
   trackId,
@@ -74,7 +75,7 @@ export function TodaysTodos({
 
   return (
     <View style={styles.block}>
-      <Pressable
+      <Tappable
         accessibilityRole="button"
         accessibilityState={{ expanded: open }}
         onPress={() => onOpenChange(!open)}
@@ -85,7 +86,7 @@ export function TodaysTodos({
           To-do{todos.length > 0 ? ` · ${left} left` : ""}
         </Text>
         <Ionicons name={open ? "chevron-up" : "chevron-down"} size={15} color={palette.subtleForeground} />
-      </Pressable>
+      </Tappable>
 
       {open && (
         <>
@@ -104,7 +105,7 @@ export function TodaysTodos({
                   style={[styles.input, { flex: 1, marginTop: 0 }]}
                   accessibilityLabel={`Rename ${item.text}`}
                 />
-                <Pressable
+                <Tappable
                   accessibilityRole="button"
                   hitSlop={8}
                   onPress={() => {
@@ -113,10 +114,10 @@ export function TodaysTodos({
                   }}
                 >
                   <Text style={styles.saveEdit}>Save</Text>
-                </Pressable>
+                </Tappable>
               </View>
             ) : (
-              <Pressable
+              <Tappable
                 key={`${index}-${item.text}`}
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked: item.done }}
@@ -130,7 +131,7 @@ export function TodaysTodos({
                   {item.done && <Text style={styles.tick}>✓</Text>}
                 </View>
                 <Text style={[styles.text, item.done && styles.done]}>{item.text}</Text>
-              </Pressable>
+              </Tappable>
             )
           )}
 

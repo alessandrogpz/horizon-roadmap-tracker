@@ -12,7 +12,7 @@
 // an only copy.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Linking, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Link } from "expo-router";
 import Constants from "expo-constants";
 import { visibleTracks } from "@shared/selectors";
@@ -36,6 +36,7 @@ import { useTheme } from "../theme/ThemeProvider";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { describeHour, HourWheel } from "../components/HourWheel";
 import { Refreshable } from "../components/Refreshable";
+import { Tappable } from "../components/Tappable";
 
 export default function SettingsScreen() {
   const { workspace, today, addTrack, switchTrack, editTrackById, replaceWorkspace, resetLocal } = useWorkspace();
@@ -147,13 +148,13 @@ export default function SettingsScreen() {
   return (
     <Refreshable style={styles.screen} contentContainerStyle={styles.content}>
       <Link href="/account" asChild>
-        <Pressable style={styles.row} accessibilityRole="button">
+        <Tappable style={styles.row} accessibilityRole="button">
           <View style={styles.rowText}>
             <Text style={styles.rowTitle}>Account</Text>
             <Text style={styles.muted}>Sign in, sync, or sign out</Text>
           </View>
           <Ionicons name="chevron-forward" size={16} color={palette.subtleForeground} />
-        </Pressable>
+        </Tappable>
       </Link>
 
       <View style={[styles.row, styles.rowStack]}>
@@ -166,7 +167,7 @@ export default function SettingsScreen() {
         <Text style={styles.fieldLabel}>Weeks start on</Text>
         <View style={styles.choices}>
           {(["mon", "sun"] as const).map((day) => (
-            <Pressable
+            <Tappable
               key={day}
               accessibilityRole="button"
               accessibilityState={{ selected: settings.weekStartsOn === day }}
@@ -176,14 +177,14 @@ export default function SettingsScreen() {
               <Text style={[styles.choiceLabel, settings.weekStartsOn === day && { color: palette.foreground }]}>
                 {day === "mon" ? "Monday" : "Sunday"}
               </Text>
-            </Pressable>
+            </Tappable>
           ))}
         </View>
 
         <Text style={styles.fieldLabel}>My day starts at</Text>
         {/* One button, not twenty-four. The hour is picked on a wheel, which is
             the platform's idiom for one value out of an ordered range. */}
-        <Pressable
+        <Tappable
           accessibilityRole="button"
           accessibilityLabel={`My day starts at ${describeHour(settings.dayRolloverHour)}. Tap to change.`}
           onPress={() => setPickingHour(true)}
@@ -191,7 +192,7 @@ export default function SettingsScreen() {
         >
           <Text style={styles.pickerValue}>{describeHour(settings.dayRolloverHour)}</Text>
           <Ionicons name="chevron-forward" size={16} color={palette.subtleForeground} />
-        </Pressable>
+        </Tappable>
       </View>
 
       <View style={[styles.row, styles.rowStack]}>
@@ -201,26 +202,26 @@ export default function SettingsScreen() {
         </Text>
       </View>
 
-      <Pressable style={styles.row} accessibilityRole="link" onPress={() => void Linking.openURL(`${SERVER_URL}/privacy`)}>
+      <Tappable style={styles.row} accessibilityRole="link" onPress={() => void Linking.openURL(`${SERVER_URL}/privacy`)}>
         <View style={styles.rowText}>
           <Text style={styles.rowTitle}>Privacy</Text>
           <Text style={styles.muted}>What is stored, where it lives, how to delete it</Text>
         </View>
         <Ionicons name="chevron-forward" size={16} color={palette.subtleForeground} />
-      </Pressable>
+      </Tappable>
 
-      <Pressable style={styles.row} accessibilityRole="link" onPress={() => void Linking.openURL(`${SERVER_URL}/security`)}>
+      <Tappable style={styles.row} accessibilityRole="link" onPress={() => void Linking.openURL(`${SERVER_URL}/security`)}>
         <View style={styles.rowText}>
           <Text style={styles.rowTitle}>Security</Text>
           <Text style={styles.muted}>How your data is protected</Text>
         </View>
         <Ionicons name="chevron-forward" size={16} color={palette.subtleForeground} />
-      </Pressable>
+      </Tappable>
 
       {/* Reachable from inside the app rather than only from the website:
           somebody who wants to report something is already in here. */}
       {hasCommunity() && (
-        <Pressable style={styles.row} accessibilityRole="link" onPress={() => void Linking.openURL(DISCORD_INVITE)}>
+        <Tappable style={styles.row} accessibilityRole="link" onPress={() => void Linking.openURL(DISCORD_INVITE)}>
           <View style={styles.rowText}>
             <Text style={styles.rowTitle}>Community</Text>
             <Text style={styles.muted}>
@@ -228,7 +229,7 @@ export default function SettingsScreen() {
             </Text>
           </View>
           <Ionicons name="open-outline" size={16} color={palette.subtleForeground} />
-        </Pressable>
+        </Tappable>
       )}
 
       <View style={[styles.row, styles.rowStack]}>
@@ -240,22 +241,22 @@ export default function SettingsScreen() {
         </Text>
 
         <View style={styles.choices}>
-          <Pressable
+          <Tappable
             accessibilityRole="button"
             disabled={backup.kind === "working"}
             onPress={() => void runExport()}
             style={styles.choice}
           >
             <Text style={styles.choiceLabel}>Save a backup…</Text>
-          </Pressable>
-          <Pressable
+          </Tappable>
+          <Tappable
             accessibilityRole="button"
             disabled={backup.kind === "working"}
             onPress={() => void pickToRestore()}
             style={styles.choice}
           >
             <Text style={styles.choiceLabel}>Restore from a file…</Text>
-          </Pressable>
+          </Tappable>
         </View>
 
         {backup.kind === "working" && <Text style={styles.muted}>{backup.what}</Text>}
@@ -279,16 +280,16 @@ export default function SettingsScreen() {
               Restoring replaces what is on this phone with it. Nothing is merged.
             </Text>
             <View style={styles.choices}>
-              <Pressable
+              <Tappable
                 accessibilityRole="button"
                 onPress={() => void runRestore(backup.bundle)}
                 style={[styles.choice, { borderColor: palette.accent }]}
               >
                 <Text style={[styles.choiceLabel, { color: palette.foreground }]}>Replace everything</Text>
-              </Pressable>
-              <Pressable accessibilityRole="button" onPress={() => setBackup({ kind: "idle" })} style={styles.choice}>
+              </Tappable>
+              <Tappable accessibilityRole="button" onPress={() => setBackup({ kind: "idle" })} style={styles.choice}>
                 <Text style={styles.choiceLabel}>Cancel</Text>
-              </Pressable>
+              </Tappable>
             </View>
           </View>
         )}
@@ -303,7 +304,7 @@ export default function SettingsScreen() {
           tracks otherwise: open them, edit them, delete them.
         </Text>
         <View style={styles.choices}>
-          <Pressable
+          <Tappable
             accessibilityRole="button"
             disabled={demoTracks.length > 0}
             onPress={addDemoTracks}
@@ -312,8 +313,8 @@ export default function SettingsScreen() {
             <Text style={[styles.choiceLabel, demoTracks.length > 0 && { color: palette.subtleForeground }]}>
               Add them
             </Text>
-          </Pressable>
-          <Pressable
+          </Tappable>
+          <Tappable
             accessibilityRole="button"
             disabled={demoTracks.length === 0}
             onPress={removeDemoTracks}
@@ -322,7 +323,7 @@ export default function SettingsScreen() {
             <Text style={[styles.choiceLabel, demoTracks.length === 0 && { color: palette.subtleForeground }]}>
               Remove them
             </Text>
-          </Pressable>
+          </Tappable>
         </View>
         {demoTracks.length > 0 && (
           <Text style={styles.good}>
@@ -338,7 +339,7 @@ export default function SettingsScreen() {
           account — signing in brings it back. It does not delete the account itself; that is on the
           Account screen.
         </Text>
-        <Pressable
+        <Tappable
           accessibilityRole="button"
           disabled={busy}
           onPress={() => (confirming ? void wipe() : setConfirming(true))}
@@ -347,7 +348,7 @@ export default function SettingsScreen() {
           <Text style={[styles.dangerLabel, confirming && { color: palette.danger }]}>
             {busy ? "Clearing…" : confirming ? "Tap again to delete everything on this phone" : "Delete local data…"}
           </Text>
-        </Pressable>
+        </Tappable>
       </View>
       <HourWheel
         open={pickingHour}

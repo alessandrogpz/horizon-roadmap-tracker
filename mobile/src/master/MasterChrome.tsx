@@ -8,12 +8,13 @@
 // repetition costs a line.
 
 import { useMemo } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import type { TrackState } from "@shared/types";
 import { RADIUS, SPACING, TYPE, withAlpha, type Palette } from "../theme";
 import { usePalette, useInk } from "../theme/ThemeProvider";
 import { useMasterMode } from "./MasterMode";
+import { Tappable } from "../components/Tappable";
 
 /** Says once, at the top, what is true of everything below it. Repeating it
  *  as a disabled control on every row would be noise — and a disabled control
@@ -45,7 +46,7 @@ export function TrackPicker({ tracks }: { tracks: TrackState[] }) {
         const on = !excluded.includes(track.meta.id);
         const colour = track.meta.color || palette.accent;
         return (
-          <Pressable
+          <Tappable
             key={track.meta.id}
             accessibilityRole="switch"
             accessibilityState={{ checked: on }}
@@ -65,7 +66,7 @@ export function TrackPicker({ tracks }: { tracks: TrackState[] }) {
               size={12}
               color={on ? palette.foreground : palette.subtleForeground}
             />
-          </Pressable>
+          </Tappable>
         );
       })}
     </View>

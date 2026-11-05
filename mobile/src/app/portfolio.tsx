@@ -10,7 +10,7 @@
 // still here, because opening it is what you would do from a phone anyway.
 
 import { useCallback, useMemo, useState } from "react";
-import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Linking, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import {
   addPortfolioProject,
   removePortfolioProject,
@@ -25,6 +25,7 @@ import { SwipeRow } from "../components/SwipeRow";
 import { EditHeader, useEditMode } from "../components/EditToggle";
 import { EmptyState } from "../components/EmptyState";
 import { Refreshable } from "../components/Refreshable";
+import { Tappable } from "../components/Tappable";
 
 export default function PortfolioScreen() {
   const { workspace, track, today, editTrack, restoreWorkspace } = useWorkspace();
@@ -80,7 +81,7 @@ export default function PortfolioScreen() {
           }}
         >
         <View style={styles.card}>
-          <Pressable
+          <Tappable
             accessibilityRole="checkbox"
             accessibilityState={{ checked: !!project.completed }}
             accessibilityLabel={project.title}
@@ -100,7 +101,7 @@ export default function PortfolioScreen() {
             ) : (
               <Text style={[styles.title, project.completed && styles.done]}>{project.title}</Text>
             )}
-          </Pressable>
+          </Tappable>
 
           {editing && (
           <TextInput
@@ -121,12 +122,12 @@ export default function PortfolioScreen() {
 
           <View style={styles.actions}>
             {project.repoUrl ? (
-              <Pressable accessibilityRole="link" style={styles.smallButton} onPress={() => void Linking.openURL(project.repoUrl!)}>
+              <Tappable accessibilityRole="link" style={styles.smallButton} onPress={() => void Linking.openURL(project.repoUrl!)}>
                 <Text style={styles.smallLabel}>Open repository</Text>
-              </Pressable>
+              </Tappable>
             ) : null}
             {editing && (
-              <Pressable
+              <Tappable
                 accessibilityRole="button"
                 style={styles.smallButton}
                 onPress={() => {
@@ -136,7 +137,7 @@ export default function PortfolioScreen() {
                 }}
               >
                 <Text style={styles.smallLabel}>Remove</Text>
-              </Pressable>
+              </Tappable>
             )}
           </View>
         </View>

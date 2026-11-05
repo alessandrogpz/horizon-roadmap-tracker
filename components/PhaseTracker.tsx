@@ -62,11 +62,11 @@ export default function PhaseTracker({ phases, currentPhase, startDate, roadmapE
             <div
               key={phase.id}
               onClick={() => onPhaseClick(phase)}
-              className={`relative flex flex-col gap-1 cursor-pointer transition-all duration-200 py-2 pr-2 pl-9 rounded-md hover:bg-surface-muted ${isPast ? "opacity-65" : ""}`}
+              className={`relative flex flex-col gap-1 cursor-pointer transition-colors duration-200 py-2 pr-2 pl-9 rounded-md hover:bg-surface-muted ${isPast ? "opacity-65" : ""}`}
             >
               {/* Timeline Indicator Dot */}
               <div
-                className={`absolute left-[5px] top-[10px] w-4 h-4 rounded-full z-[1] transition-all duration-200 ${
+                className={`absolute left-[5px] top-[10px] w-4 h-4 rounded-full z-[1] transition-[background-color,border-color,box-shadow] duration-200 ${
                   isActive
                     ? "bg-background border-[3px] border-accent shadow-[0_0_8px_var(--accent)]"
                     : isPast

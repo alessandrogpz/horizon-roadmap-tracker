@@ -196,14 +196,14 @@ export default function InsightsModal({ onClose, onOpenTrack }: { onClose: () =>
   return (
     <div
       onClick={onClose}
-      className="modal-overlay fixed inset-0 z-[1000] flex items-center justify-center p-4"
+      className="modal-overlay overlay-in fixed inset-0 z-[1000] flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-label="Search and insights"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="glass-panel panel-roomy relative flex max-h-[90vh] w-full max-w-[760px] flex-col gap-4 overflow-y-auto border-accent-muted"
+        className="modal-in glass-panel panel-roomy relative flex max-h-[90vh] w-full max-w-[760px] flex-col gap-4 overflow-y-auto border-accent-muted"
       >
         <button
           onClick={onClose}

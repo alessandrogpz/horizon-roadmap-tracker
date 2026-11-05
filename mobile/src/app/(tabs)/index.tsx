@@ -25,7 +25,7 @@
 // still jump under the thumb.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -55,6 +55,7 @@ import { panelOrder, setPanelOrder } from "../../storage/deviceSettings";
 import { RADIUS, SPACING, TYPE, type Palette } from "../../theme";
 import { centredContent } from "../../layout";
 import { usePalette } from "../../theme/ThemeProvider";
+import { Tappable } from "../../components/Tappable";
 
 /** A folded panel: tall enough for its header and nothing else. */
 const ROW = 56;
@@ -304,7 +305,7 @@ export default function SpaceScreen() {
             <>
               <Text style={styles.sectionTitle}>Add a panel</Text>
               {available.map((panel) => (
-                <Pressable
+                <Tappable
                   key={panel.id}
                   accessibilityRole="button"
                   onPress={() => show(panel.id)}
@@ -320,7 +321,7 @@ export default function SpaceScreen() {
                     <Text style={styles.muted}>{panel.hint}</Text>
                   </View>
                   <Ionicons name="add-circle-outline" size={20} color={palette.mutedForeground} />
-                </Pressable>
+                </Tappable>
               ))}
             </>
           )}
@@ -367,7 +368,7 @@ export default function SpaceScreen() {
           </Text>
         )}
 
-        <Pressable
+        <Tappable
           accessibilityRole="button"
           onPress={() => (arranging ? setArranging(false) : startArranging())}
           style={[styles.arrangeButton, arranging && { borderColor: palette.accent }]}
@@ -380,7 +381,7 @@ export default function SpaceScreen() {
           <Text style={[styles.arrangeLabel, arranging && { color: palette.accent }]}>
             {arranging ? "Done" : "Arrange & add panels"}
           </Text>
-        </Pressable>
+        </Tappable>
       </Animated.View>
     </Refreshable>
   );
@@ -767,14 +768,14 @@ function ArrangeRow({
         {definition.label}
       </Text>
 
-      <Pressable
+      <Tappable
         accessibilityRole="button"
         accessibilityLabel={`Remove ${definition.label}`}
         onPress={onRemove}
         hitSlop={8}
       >
         <Ionicons name="close-circle" size={20} color={palette.subtleForeground} />
-      </Pressable>
+      </Tappable>
     </Animated.View>
   );
 }

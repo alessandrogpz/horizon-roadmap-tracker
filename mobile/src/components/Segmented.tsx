@@ -23,6 +23,7 @@ import Animated, {
   type SharedValue,
 } from "react-native-reanimated";
 import { tap } from "../feedback/haptics";
+import { TRAVEL_SPRING } from "../motion";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 
@@ -46,7 +47,7 @@ export function Segmented<T extends string>({
   const position = useSharedValue(index);
 
   useEffect(() => {
-    position.value = withSpring(index, { damping: 19, stiffness: 190, mass: 0.6 });
+    position.value = withSpring(index, TRAVEL_SPRING);
   }, [index, position]);
 
   // Equal segments, measured rather than assumed: the labels are different

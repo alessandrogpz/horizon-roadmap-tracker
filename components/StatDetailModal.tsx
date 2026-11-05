@@ -61,7 +61,7 @@ function Bar({ pct, tone = "bg-accent" }: { pct: number; tone?: string }) {
   return (
     <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-hover">
       <div
-        className={`h-full rounded-full transition-[width] duration-500 ${tone}`}
+        className={`h-full rounded-full transition-[width] duration-[280ms] ease-[cubic-bezier(0.23,1,0.32,1)] ${tone}`}
         style={{ width: `${Math.max(0, Math.min(100, pct))}%` }}
       />
     </div>
@@ -342,14 +342,14 @@ export default function StatDetailModal({
   return (
     <div
       onClick={onClose}
-      className="modal-overlay fixed inset-0 z-[1000] flex items-center justify-center p-4"
+      className="modal-overlay overlay-in fixed inset-0 z-[1000] flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-label={TITLES[metric]}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="glass-panel panel-roomy relative flex max-h-[90vh] w-full max-w-[620px] flex-col gap-5 overflow-y-auto border-accent-muted"
+        className="modal-in glass-panel panel-roomy relative flex max-h-[90vh] w-full max-w-[620px] flex-col gap-5 overflow-y-auto border-accent-muted"
       >
         <button
           onClick={onClose}

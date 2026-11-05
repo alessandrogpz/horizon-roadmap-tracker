@@ -16,7 +16,7 @@
 // on the phone and one changed on the laptop are the same edit to the merge.
 
 import { useCallback, useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Link } from "expo-router";
 import type { RotationDef } from "@shared/types";
@@ -39,6 +39,7 @@ import { usePalette } from "../theme/ThemeProvider";
 import { EditHeader, useEditMode } from "../components/EditToggle";
 import { Refreshable } from "../components/Refreshable";
 import { RhythmCalendar } from "../components/RhythmCalendar";
+import { Tappable } from "../components/Tappable";
 
 const WEEK = DAYS_SHORT.slice(1).concat(DAYS_SHORT[0]); // Mon..Sun
 
@@ -132,7 +133,7 @@ export default function RhythmScreen() {
             const day = schedule.find((d) => d.name === name);
             const colour = day ? track.focusTypes?.[day.type]?.color : undefined;
             return (
-              <Pressable
+              <Tappable
                 key={name}
                 accessibilityRole="button"
                 disabled={!editing}
@@ -148,7 +149,7 @@ export default function RhythmScreen() {
                     rhythm names the day and the plan fills it, and seeing both
                     here is the point of them being one idea. */}
 
-              </Pressable>
+              </Tappable>
             );
           })}
         </View>
@@ -177,7 +178,7 @@ export default function RhythmScreen() {
             />
             <View style={styles.swatches}>
               {SWATCHES.map((colour) => (
-                <Pressable
+                <Tappable
                   key={colour}
                   accessibilityRole="button"
                   accessibilityLabel={`Colour ${type.label} ${colour}`}
@@ -193,7 +194,7 @@ export default function RhythmScreen() {
             </View>
             {/* A day off, rather than a day missed. These bridge the streak
                 instead of breaking it, and the grid marks them with a dot. */}
-            <Pressable
+            <Tappable
               accessibilityRole="button"
               accessibilityState={{ selected: isRestType(key, type) }}
               accessibilityLabel={
@@ -210,9 +211,9 @@ export default function RhythmScreen() {
                 size={13}
                 color={isRestType(key, type) ? palette.accent : palette.subtleForeground}
               />
-            </Pressable>
+            </Tappable>
 
-            <Pressable
+            <Tappable
               accessibilityRole="button"
               accessibilityLabel={
                 focusTypes.length <= 1
@@ -225,7 +226,7 @@ export default function RhythmScreen() {
               onPress={() => changePool((pool) => removeFocusType(pool, key))}
             >
               <Text style={[styles.remove, focusTypes.length <= 1 && { color: palette.subtleForeground }]}>×</Text>
-            </Pressable>
+            </Tappable>
           </View>
         ))}
 
@@ -274,7 +275,7 @@ export default function RhythmScreen() {
               </Text>
             )}
             {editing && (
-              <Pressable
+              <Tappable
                 accessibilityRole="button"
                 accessibilityLabel={`Remove ${rotation.label}`}
                 onPress={() => {
@@ -284,7 +285,7 @@ export default function RhythmScreen() {
                 }}
               >
                 <Text style={styles.remove}>×</Text>
-              </Pressable>
+              </Tappable>
             )}
           </View>
 
@@ -297,7 +298,7 @@ export default function RhythmScreen() {
               once and is finished by the end. */}
           <Text style={styles.fieldLabel}>Runs during</Text>
           <View style={styles.choices}>
-            <Pressable
+            <Tappable
               accessibilityRole="button"
               accessibilityState={{ selected: rotation.phase === undefined }}
               onPress={() =>
@@ -315,11 +316,11 @@ export default function RhythmScreen() {
               <Text style={[styles.choiceLabel, rotation.phase === undefined && { color: palette.foreground }]}>
                 Every phase
               </Text>
-            </Pressable>
+            </Tappable>
             {(track?.phases ?? []).map((p) => {
               const on = rotation.phase === p.id;
               return (
-                <Pressable
+                <Tappable
                   key={p.id}
                   accessibilityRole="button"
                   accessibilityState={{ selected: on }}
@@ -330,7 +331,7 @@ export default function RhythmScreen() {
                   <Text style={[styles.choiceLabel, on && { color: palette.foreground }]} numberOfLines={1}>
                     {p.title}
                   </Text>
-                </Pressable>
+                </Tappable>
               );
             })}
           </View>
@@ -345,7 +346,7 @@ export default function RhythmScreen() {
             {WEEK.map((day) => {
               const on = rotation.daysOfWeek.includes(day);
               return (
-                <Pressable
+                <Tappable
                   key={day}
                   accessibilityRole="button"
                   accessibilityState={{ selected: on }}
@@ -359,7 +360,7 @@ export default function RhythmScreen() {
                   style={[styles.choice, on && { borderColor: palette.accent }]}
                 >
                   <Text style={[styles.choiceLabel, on && { color: palette.foreground }]}>{day}</Text>
-                </Pressable>
+                </Tappable>
               );
             })}
           </View>
@@ -385,11 +386,11 @@ export default function RhythmScreen() {
           )}
 
           <Link href={{ pathname: "/rotation/[id]", params: { id: rotation.id } }} asChild>
-            <Pressable accessibilityRole="button" style={styles.planButton}>
+            <Tappable accessibilityRole="button" style={styles.planButton}>
               <Text style={styles.planLabel}>
                 {rotation.explanation?.trim() ? "The plan behind this" : "Write the plan behind this"}
               </Text>
-            </Pressable>
+            </Tappable>
           </Link>
 
           <Text style={styles.fieldLabel}>Topics, in order</Text>
@@ -398,13 +399,13 @@ export default function RhythmScreen() {
             <View key={`${index}-${item.title}`} style={styles.itemRow}>
               <Text style={styles.item}>{item.title}</Text>
               {editing && (
-                <Pressable
+                <Tappable
                   accessibilityRole="button"
                   accessibilityLabel={`Remove ${item.title}`}
                   onPress={() => editRotation(rotation.id, (r) => ({ ...r, items: r.items.filter((_, i) => i !== index) }))}
                 >
                   <Text style={styles.remove}>×</Text>
-                </Pressable>
+                </Tappable>
               )}
             </View>
           ))}
@@ -436,7 +437,7 @@ export default function RhythmScreen() {
       )}
 
       {editing && (
-      <Pressable
+      <Tappable
         accessibilityRole="button"
         style={styles.addButton}
         onPress={() =>
@@ -462,7 +463,7 @@ export default function RhythmScreen() {
         }
       >
         <Text style={styles.addLabel}>Add a rotation</Text>
-      </Pressable>
+      </Tappable>
       )}
     </Refreshable>
   );

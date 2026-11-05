@@ -8,7 +8,7 @@
 // belongs to one.
 
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePathname, useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -20,6 +20,7 @@ import { TimerChip } from "./TimerChip";
 import { ThemeButton } from "./ThemeButton";
 import { HEADER_CONTROL, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { Tappable } from "./Tappable";
 
 export function AppHeader({ title }: { title?: string }) {
   const palette = usePalette();
@@ -41,7 +42,7 @@ export function AppHeader({ title }: { title?: string }) {
     <>
       <View style={[styles.header, { paddingTop: insets.top + SPACING.sm }]}>
         {!home && (
-          <Pressable
+          <Tappable
             accessibilityRole="button"
             accessibilityLabel="Back to My Space"
             onPress={() => router.navigate("/")}
@@ -49,13 +50,13 @@ export function AppHeader({ title }: { title?: string }) {
             style={styles.back}
           >
             <Ionicons name="chevron-back" size={22} color={palette.foreground} />
-          </Pressable>
+          </Tappable>
         )}
         {/* The track name is the switcher. Which track you are in is the most
             consequential thing on this bar, and it was three taps away inside
             a menu; the name is already the label for that choice, so it may as
             well be the control. */}
-        <Pressable
+        <Tappable
           accessibilityRole="button"
           accessibilityLabel={
             master
@@ -74,11 +75,11 @@ export function AppHeader({ title }: { title?: string }) {
             {master ? "All tracks" : (title ?? track?.meta.name ?? "Horizon")}
           </Text>
           <Ionicons name="chevron-down" size={14} color={palette.subtleForeground} />
-        </Pressable>
+        </Tappable>
         <TimerChip />
         <SyncChip />
         <ThemeButton />
-        <Pressable
+        <Tappable
           accessibilityRole="button"
           accessibilityLabel="Menu"
           onPress={() => setMenuOpen(true)}
@@ -86,7 +87,7 @@ export function AppHeader({ title }: { title?: string }) {
           hitSlop={10}
         >
           <Ionicons name="ellipsis-horizontal" size={17} color={palette.mutedForeground} />
-        </Pressable>
+        </Tappable>
       </View>
 
       <AppMenu open={menuOpen} onClose={() => setMenuOpen(false)} />

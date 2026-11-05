@@ -11,10 +11,11 @@
 // reading it.
 
 import { useMemo } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { describeLastSync, useSync } from "../sync/SyncProvider";
 import { HEADER_CONTROL, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { Tappable } from "./Tappable";
 
 export function SyncChip() {
   const palette = usePalette();
@@ -24,7 +25,7 @@ export function SyncChip() {
   const { label, colour } = describe(state, lastSyncedAt, palette);
 
   return (
-    <Pressable
+    <Tappable
       accessibilityRole="button"
       accessibilityLabel={`Sync status: ${label}. Tap to sync now.`}
       onPress={() => void sync()}
@@ -39,7 +40,7 @@ export function SyncChip() {
       <Text style={[styles.label, { color: colour }]} numberOfLines={1}>
         {label}
       </Text>
-    </Pressable>
+    </Tappable>
   );
 }
 

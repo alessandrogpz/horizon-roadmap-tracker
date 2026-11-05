@@ -14,6 +14,7 @@ import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
+import { Tappable } from "./Tappable";
 
 export interface Confirmation {
   title: string;
@@ -50,10 +51,10 @@ export function ConfirmSheet({
             <Text style={styles.body}>{confirmation.body}</Text>
 
             <View style={styles.actions}>
-              <Pressable accessibilityRole="button" onPress={onClose} style={styles.button}>
+              <Tappable accessibilityRole="button" onPress={onClose} style={styles.button}>
                 <Text style={styles.buttonLabel}>Cancel</Text>
-              </Pressable>
-              <Pressable
+              </Tappable>
+              <Tappable
                 accessibilityRole="button"
                 onPress={() => {
                   confirmation.onConfirm();
@@ -62,7 +63,7 @@ export function ConfirmSheet({
                 style={[styles.button, styles.danger]}
               >
                 <Text style={styles.dangerLabel}>{confirmation.verb}</Text>
-              </Pressable>
+              </Tappable>
             </View>
           </View>
         )}
