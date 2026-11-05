@@ -237,7 +237,7 @@ export default function StreakGraph({
           the track list, where it can offer the two shapes that question
           actually has. */}
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <div className="flex rounded-[var(--radius-control)] border border-card-border bg-surface-muted p-0.5">
+        <div className="flex flex-wrap rounded-[var(--radius-control)] border border-card-border bg-surface-muted p-0.5">
             {SHAPES.map((shape) => {
               const on = (shape.value === "months") === byMonth;
               return (
@@ -302,7 +302,7 @@ export default function StreakGraph({
       {/* The key. Four strengths of the track's own colour, and the day it
           began in the page's opposite — which is why the colours a track can
           wear stop short of white and black. */}
-      <div className="flex items-center gap-1.5 text-[0.7rem] text-subtle-foreground">
+      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[0.7rem] text-subtle-foreground">
           <span>Less</span>
           {[0, 1, 2, 3, 4].map((level) => (
             <span

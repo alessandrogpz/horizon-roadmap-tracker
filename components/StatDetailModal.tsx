@@ -259,7 +259,7 @@ function PhaseBody({ track }: { track: TrackState }) {
                     task.completed ? "bg-success" : "bg-surface-hover"
                   }`}
                 />
-                <span className="task-label">{task.title}</span>
+                <span className="task-label line-clamp-2" title={task.title}>{task.title}</span>
               </div>
             ))}
           </div>

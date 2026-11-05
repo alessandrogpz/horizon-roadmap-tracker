@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { renderMarkdownToHtml } from "@/lib/markdown";
 import AllRoadmaps from "@/components/master/AllRoadmaps";
 import { WorkspaceProvider, useWorkspace, useWorkspaceActions } from "@/components/workspace/WorkspaceProvider";
+import { LIMITS } from "@/lib/limits";
 
 const SAVE_DEBOUNCE_MS = 800;
 
@@ -105,6 +106,7 @@ function RoadmapEditor() {
 
           {tab === "write" ? (
             <textarea
+            maxLength={LIMITS.document}
               value={content}
               onChange={(e) => handleChange(e.target.value)}
               placeholder="Write your full roadmap using Markdown..."

@@ -260,8 +260,8 @@ export default function TrackSwitcher({
       <button
         onClick={() => (open ? close() : setOpen(true))}
         aria-expanded={open}
-        className="tap-44 flex items-center gap-1.5 bg-transparent border-none p-0 cursor-pointer text-[0.85rem] font-semibold text-accent hover:underline"
-        title="Switch track"
+        className="tap-44 flex min-w-0 max-w-[min(18rem,55vw)] items-center gap-1.5 bg-transparent border-none p-0 cursor-pointer text-[0.85rem] font-semibold text-accent hover:underline"
+        title={masterOpen ? "Switch track" : activeTrack.meta.name}
       >
         {masterOpen ? (
           <Layers size={11} strokeWidth={2.5} className="shrink-0" aria-hidden="true" />
@@ -272,7 +272,11 @@ export default function TrackSwitcher({
             aria-hidden="true"
           />
         )}
-        <span>{masterOpen ? "All tracks" : activeTrack.meta.name}</span>
+        {/* One line, always. This is a control in a bar, not a place to read
+            a name — six wrapped lines of someone's track title would push the
+            sync chip and the menu off the first screen. The full name is in
+            the button's `title` and in the list this opens. */}
+        <span className="truncate">{masterOpen ? "All tracks" : activeTrack.meta.name}</span>
         <ChevronDown size={12} strokeWidth={2.5} className={`text-subtle-foreground transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 

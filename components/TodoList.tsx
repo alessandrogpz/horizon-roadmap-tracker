@@ -13,6 +13,7 @@ import {
   type TodoItem,
 } from "@/lib/quickNotes";
 import { useQuickNote } from "@/components/useQuickNote";
+import { LIMITS } from "@/lib/limits";
 
 /** A plain to-do list: add, tick, rename, delete. One per track; `noteId`
  *  comes from todoNoteId() in lib/quickNotes.ts. */
@@ -64,6 +65,7 @@ export default function TodoList({ noteId }: { noteId: string }) {
       <form onSubmit={handleAdd} className="flex gap-2">
         <input
           type="text"
+          maxLength={LIMITS.title}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           disabled={content === null}
@@ -95,6 +97,7 @@ export default function TodoList({ noteId }: { noteId: string }) {
               {editing?.index === index ? (
                 <input
                   type="text"
+                  maxLength={LIMITS.title}
                   value={editing.text}
                   autoFocus
                   onChange={(e) => setEditing({ index, text: e.target.value })}

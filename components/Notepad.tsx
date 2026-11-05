@@ -3,6 +3,7 @@
 import React from "react";
 import { Check, NotebookPen } from "lucide-react";
 import { useQuickNote } from "@/components/useQuickNote";
+import { LIMITS } from "@/lib/limits";
 
 /** A plain scratchpad for getting something down before it has a proper home.
  *  One per track; `noteId` comes from notepadNoteId() in lib/quickNotes.ts. */
@@ -23,6 +24,7 @@ export default function Notepad({ noteId }: { noteId: string }) {
         </span>
       </div>
       <textarea
+      maxLength={LIMITS.document}
         value={content ?? ""}
         onChange={(e) => update(e.target.value)}
         onBlur={() => void flush()}

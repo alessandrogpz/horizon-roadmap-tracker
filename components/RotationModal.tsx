@@ -7,6 +7,7 @@ import { NEW_ITEM_KIND } from "@/lib/dayItems";
 import { getWeekNum } from "@/lib/dates";
 import { renderMarkdownToHtml } from "@/lib/markdown";
 import { useDismiss } from "@/components/useDismiss";
+import { LIMITS } from "@/lib/limits";
 
 interface RotationModalProps {
   data: TrackState;
@@ -245,6 +246,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
               <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
                 {planTab === "write" ? (
                   <textarea
+                  maxLength={LIMITS.document}
                     value={planContent}
                     onChange={(e) => handlePlanChange(e.target.value)}
                     aria-label="Rotation plan, in Markdown"
@@ -295,6 +297,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                 <span className="text-[0.8rem] text-muted-foreground uppercase tracking-[0.05em] font-semibold">Label</span>
                 <input
                   type="text"
+                  maxLength={LIMITS.name}
                   value={label}
                   onChange={(e) => setLabel(e.target.value)}
                   placeholder="e.g. Weekly Reading"
@@ -382,6 +385,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                         <span className="text-[0.7rem] text-subtle-foreground font-mono w-5 shrink-0">{idx + 1}.</span>
                         <input
                           type="text"
+                          maxLength={LIMITS.title}
                           value={item.title}
                           onChange={(e) => updateItem(idx, "title", e.target.value)}
                           placeholder="Title (e.g. Tolkien)"
@@ -397,6 +401,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                       </div>
                       <input
                         type="text"
+                        maxLength={LIMITS.description}
                         value={item.description}
                         onChange={(e) => updateItem(idx, "description", e.target.value)}
                         placeholder="Description (optional)"
@@ -412,6 +417,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                   Explanation (optional)
                 </span>
                 <textarea
+                maxLength={LIMITS.document}
                   value={explanation}
                   onChange={(e) => setExplanation(e.target.value)}
                   placeholder="Why this rotation, what it covers, how to use it — written as Markdown. Viewable/editable in full any time via the Full Plan button."

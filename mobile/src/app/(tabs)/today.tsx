@@ -48,6 +48,7 @@ import { EditButton, useEditMode } from "../../components/EditToggle";
 import { TodaysTodos } from "../../components/TodaysTodos";
 import { setTodosOpen, todosOpen } from "../../storage/deviceSettings";
 import { Tappable } from "../../components/Tappable";
+import { LIMITS } from "@shared/limits";
 
 interface Row {
   id: string;
@@ -331,6 +332,7 @@ function Section({
           return (
             <View key={`${row.kind}:${row.id}`} style={styles.row}>
               <TextInput
+                maxLength={LIMITS.title}
                 value={draft}
                 onChangeText={setDraft}
                 onSubmitEditing={() => save(row)}
@@ -393,6 +395,7 @@ function Section({
 
       {editing && (
       <TextInput
+        maxLength={LIMITS.title}
         value={adding}
         onChangeText={setAdding}
         onSubmitEditing={() => {

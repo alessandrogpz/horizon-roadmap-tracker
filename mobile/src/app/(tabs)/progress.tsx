@@ -32,6 +32,7 @@ import { RADIUS, SPACING, TYPE, shadeOf, type Palette } from "../../theme";
 import { MAX_CONTENT } from "../../layout";
 import { usePalette } from "../../theme/ThemeProvider";
 import { Tappable } from "../../components/Tappable";
+import { EmptyState } from "../../components/EmptyState";
 
 const CELL = 26;
 const CELL_GAP = 4;
@@ -426,8 +427,14 @@ export default function ProgressScreen() {
         </Animated.View>
         </View>
 
+        {/* No action offered on purpose: progress is recorded on the other
+            screens, and a button here would lead away from the thing you
+            opened. `EmptyState` leaves it out when there is nothing to add. */}
         {weeks.length === 0 && (
-          <Text style={styles.muted}>Nothing recorded on this track yet.</Text>
+          <EmptyState
+            title="Nothing recorded yet"
+            hint="Tick something off on Today or in a phase, and the weeks fill in here."
+          />
         )}
       </Refreshable>
 

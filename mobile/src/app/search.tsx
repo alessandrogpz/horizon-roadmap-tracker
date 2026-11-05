@@ -20,6 +20,7 @@ import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { Refreshable } from "../components/Refreshable";
 import { Tappable } from "../components/Tappable";
+import { LIMITS } from "@shared/limits";
 
 export default function SearchScreen() {
   const palette = usePalette();
@@ -55,6 +56,7 @@ export default function SearchScreen() {
     <Refreshable style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <View style={styles.searchRow}>
         <TextInput
+          maxLength={LIMITS.search}
           value={query}
           onChangeText={setQuery}
           onSubmitEditing={() => void run()}
