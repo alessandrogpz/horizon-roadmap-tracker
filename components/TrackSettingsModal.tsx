@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { X } from "lucide-react";
 import { dateForDay, dayForDate, formatDateYMD } from "@/lib/dates";
 import ColorSwatches from "@/components/shared/ColorSwatches";
+import { useDismiss } from "@/components/useDismiss";
 
 interface TrackSettingsFields {
   name: string;
@@ -20,6 +21,9 @@ interface TrackSettingsModalProps extends TrackSettingsFields {
 }
 
 export default function TrackSettingsModal({ name, color, startDate, totalDays, onSave, onDelete, canDelete, onClose }: TrackSettingsModalProps) {
+  // Lets the panel and its backdrop play their exit before whoever owns
+  // this modal takes it off the page.
+  const { closing, dismiss } = useDismiss(onClose);
   const [draftName, setDraftName] = useState(name);
   const [draftColor, setDraftColor] = useState(color);
   const [draftStartDate, setDraftStartDate] = useState(startDate);
@@ -29,20 +33,20 @@ export default function TrackSettingsModal({ name, color, startDate, totalDays, 
   const handleSave = () => {
     if (!draftName.trim() || !draftStartDate || draftTotalDays < 1) return;
     onSave({ name: draftName.trim(), color: draftColor, startDate: draftStartDate, totalDays: draftTotalDays });
-    onClose();
+    dismiss();
   };
 
   return (
     <div
-      onClick={onClose}
-      className="modal-overlay overlay-in fixed inset-0 z-[1000] flex items-center justify-center p-4"
+      onClick={dismiss}
+      className={`modal-overlay ${closing ? "overlay-out" : "overlay-in"} fixed inset-0 z-[1000] flex items-center justify-center p-4`}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="modal-in glass-panel panel-roomy max-w-[420px] w-full flex flex-col gap-5 border border-accent-muted relative rounded-lg"
+        className={`${closing ? "modal-out" : "modal-in"} glass-panel panel-roomy max-w-[420px] w-full flex flex-col gap-5 border border-accent-muted relative rounded-lg`}
       >
         <button
-          onClick={onClose}
+          onClick={dismiss}
           className="absolute top-6 right-6 flex items-center bg-transparent border-none text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
           aria-label="Close"
         >
@@ -116,7 +120,7 @@ export default function TrackSettingsModal({ name, color, startDate, totalDays, 
               <button
                 onClick={() => {
                   onDelete();
-                  onClose();
+                  dismiss();
                 }}
                 className="btn px-3 py-1.5 text-[0.8rem] !bg-danger/15 !text-danger !border-danger/40"
               >
@@ -144,7 +148,7 @@ export default function TrackSettingsModal({ name, color, startDate, totalDays, 
 
           <div className="flex gap-3">
             <button
-              onClick={onClose}
+              onClick={dismiss}
               className="btn px-4 py-2 text-[0.85rem] !bg-transparent !text-muted-foreground !border-card-border hover:!text-foreground"
             >
               Cancel

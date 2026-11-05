@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { X } from "lucide-react";
 import type { FocusType, WeekDay } from "@/lib/types";
 import FocusTypeEditor from "@/components/shared/FocusTypeEditor";
+import { useDismiss } from "@/components/useDismiss";
 
 interface WeeklyRhythmModalProps {
   weekSchedule: WeekDay[];
@@ -13,6 +14,9 @@ interface WeeklyRhythmModalProps {
 }
 
 export default function WeeklyRhythmModal({ weekSchedule, focusTypes, onSave, onClose }: WeeklyRhythmModalProps) {
+  // Lets the panel and its backdrop play their exit before whoever owns
+  // this modal takes it off the page.
+  const { closing, dismiss } = useDismiss(onClose);
   const [draftSchedule, setDraftSchedule] = useState(weekSchedule);
   const [draftTypes, setDraftTypes] = useState(focusTypes);
   const [showManager, setShowManager] = useState(false);
@@ -24,20 +28,20 @@ export default function WeeklyRhythmModal({ weekSchedule, focusTypes, onSave, on
 
   const handleSave = () => {
     onSave(draftSchedule, draftTypes);
-    onClose();
+    dismiss();
   };
 
   return (
     <div
-      onClick={onClose}
-      className="modal-overlay overlay-in fixed inset-0 z-[1000] flex items-center justify-center p-4"
+      onClick={dismiss}
+      className={`modal-overlay ${closing ? "overlay-out" : "overlay-in"} fixed inset-0 z-[1000] flex items-center justify-center p-4`}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="modal-in glass-panel panel-roomy max-w-[560px] w-full max-h-[90vh] overflow-y-auto flex flex-col gap-5 border border-accent-muted relative rounded-lg"
+        className={`${closing ? "modal-out" : "modal-in"} glass-panel panel-roomy max-w-[560px] w-full max-h-[90vh] overflow-y-auto flex flex-col gap-5 border border-accent-muted relative rounded-lg`}
       >
         <button
-          onClick={onClose}
+          onClick={dismiss}
           className="absolute top-6 right-6 flex items-center bg-transparent border-none text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
           aria-label="Close"
         >
@@ -94,7 +98,7 @@ export default function WeeklyRhythmModal({ weekSchedule, focusTypes, onSave, on
 
         <div className="flex justify-end gap-3 border-t border-card-border pt-4">
           <button
-            onClick={onClose}
+            onClick={dismiss}
             className="btn px-4 py-2 text-[0.85rem] !bg-transparent !text-muted-foreground !border-card-border hover:!text-foreground"
           >
             Cancel
