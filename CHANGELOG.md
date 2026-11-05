@@ -7,6 +7,19 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.114.1] - 2026-11-05
+
+### Fixed
+- **The week pager came apart at phone width**, and 0.113.0 did it. That release gave the
+  `‹ Week 1 ›` pill `flex-wrap` to stop it overflowing a 288-point panel at 200% text, and bought
+  that by breaking the ordinary case: at 390 points the three glyphs of one control landed on
+  three different lines — `‹` at y=239, the label at y=241, `›` at y=269 — on the panel people look
+  at first, every day, at the width most of them are in. Fixing an extreme case by breaking the
+  common one is the wrong trade, and the pass that made it did not re-measure the common one
+  afterwards. The pill is `flex-nowrap shrink-0` now and the heading row above it wraps instead, so
+  it moves under the heading as one piece. Measured at 390: one line at 100% text and still one
+  line at 200%.
+
 ## [0.114.0] - 2026-11-05
 
 ### Fixed
