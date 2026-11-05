@@ -17,6 +17,10 @@ export default function TrackStackPreview() {
   return (
     <div
       aria-hidden="true"
+      // A scaled picture of the real interface, so its insides follow the app's
+      // rules rather than the page's: 9px type and 2px radii are right in a
+      // miniature and wrong in a paragraph. `data-ui` tells the inspector so.
+      data-ui
       className="glass-panel landing-preview flex min-w-0 select-none flex-col gap-3 overflow-hidden"
     >
       <div className="flex items-baseline justify-between gap-3 border-b border-card-border pb-3">
