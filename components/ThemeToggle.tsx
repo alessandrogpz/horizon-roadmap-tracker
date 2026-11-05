@@ -25,7 +25,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={() => setThemePreference(theme === "light" ? "dark" : "light")}
-      className="flex items-center justify-center w-7 h-7 rounded-md bg-transparent border border-card-border text-muted-foreground cursor-pointer hover:text-foreground hover:border-card-border-hover shrink-0 transition-colors"
+      className="tap-44 flex items-center justify-center w-7 h-7 rounded-md bg-transparent border border-card-border text-muted-foreground cursor-pointer hover:text-foreground hover:border-card-border-hover shrink-0 transition-colors"
       title={theme === "light" ? "Switch to dark theme" : "Switch to light theme"}
       aria-label="Toggle light/dark theme"
       suppressHydrationWarning

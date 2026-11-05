@@ -163,7 +163,7 @@ function makeStyles(palette: Palette) {
       backgroundColor: palette.card,
     },
     cardTitle: { color: palette.foreground, ...TYPE.subhead, fontWeight: "600" },
-    kind: { color: palette.subtleForeground, ...TYPE.eyebrow, letterSpacing: 0.8 },
+    kind: { color: palette.subtleForeground, ...TYPE.marker, letterSpacing: 0.8 },
     line: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },
     muted: { color: palette.mutedForeground, ...TYPE.label, lineHeight: 18 },
   });

@@ -43,7 +43,7 @@ export default function SortablePanel({ id, children, index = 0, onEdit, onHide 
   };
 
   const chromeBtn =
-    "w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground bg-card/70 backdrop-blur-sm border border-card-border cursor-pointer hover:text-foreground hover:border-card-border transition-colors";
+    "tap-44 w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground bg-card/70 backdrop-blur-sm border border-card-border cursor-pointer hover:text-foreground hover:border-card-border transition-colors";
 
   return (
     <div

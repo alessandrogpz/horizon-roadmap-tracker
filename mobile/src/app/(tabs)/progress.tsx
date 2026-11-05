@@ -29,6 +29,7 @@ import { Refreshable } from "../../components/Refreshable";
 import { Segmented } from "../../components/Segmented";
 import { StatTile } from "../../components/StatTile";
 import { RADIUS, SPACING, TYPE, shadeOf, type Palette } from "../../theme";
+import { MAX_CONTENT } from "../../layout";
 import { usePalette } from "../../theme/ThemeProvider";
 
 const CELL = 26;
@@ -223,6 +224,7 @@ export default function ProgressScreen() {
     // were comparing a month against slid off the top the moment you went
     // looking for the month.
     <View style={styles.screen}>
+      <View style={styles.frame}>
       {/* Three numbers across the top, not a paragraph. */}
       {/* The run you are on, given the room it deserves — it is the number
           this screen exists to move — with the two that put it in context
@@ -472,6 +474,7 @@ export default function ProgressScreen() {
         </Link>
       </View>
 
+      </View>
     </View>
   );
 }
@@ -635,6 +638,8 @@ function makeStyles(palette: Palette) {
     // The page is a fixed frame now, so it pads itself and the graph inside
     // it stretches to whatever height is left over.
     screen: { flex: 1, backgroundColor: palette.background, paddingHorizontal: SPACING.lg, paddingTop: SPACING.lg },
+    // The page itself does not scroll, so the cap goes on an inner frame.
+    frame: { flex: 1, width: "100%", maxWidth: MAX_CONTENT, alignSelf: "center" },
     grid: { flex: 1 },
     gridContent: { paddingBottom: SPACING.lg },
     weekdayHead: { paddingBottom: 2 },
