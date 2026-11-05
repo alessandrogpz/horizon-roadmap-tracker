@@ -91,6 +91,9 @@ export default function AppPreview() {
 
   return (
     <div
+      // A scaled picture of the real interface — see TrackStackPreview for why
+      // `data-ui` is here.
+      data-ui
       // The same variables `components/TrackAccent.tsx` writes onto `<html>`
       // when a track is opened, scoped to this card instead. Without the four
       // streak steps the miniature's grid stayed the theme's green while the
