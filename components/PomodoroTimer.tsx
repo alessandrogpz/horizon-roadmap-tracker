@@ -121,7 +121,7 @@ export default function PomodoroTimer() {
         {/* Duration Configuration */}
         <div className="flex items-center justify-between w-full gap-4 mt-3">
           <span className="text-[0.85rem] text-muted-foreground">Duration:</span>
-          <div className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center justify-end gap-1.5">
             <button disabled={isActive} onClick={() => adjustMinutes(-5)} className={stepBtnClass(isActive)}>
               -5m
             </button>

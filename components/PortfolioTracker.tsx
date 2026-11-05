@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { FolderGit2, X } from "lucide-react";
 import type { PortfolioProject } from "@/lib/types";
 import { useGitStats } from "@/components/useGitStats";
+import { LIMITS } from "@/lib/limits";
 
 interface PortfolioTrackerProps {
   portfolio: PortfolioProject[];
@@ -72,6 +73,7 @@ export default function PortfolioTracker({ portfolio, onToggle, onAddProject, on
             <label className={labelClass}>Title</label>
             <input
               type="text"
+              maxLength={LIMITS.title}
               required
               autoFocus
               value={newTitle}
@@ -83,6 +85,7 @@ export default function PortfolioTracker({ portfolio, onToggle, onAddProject, on
             <label className={labelClass}>Repo URL (optional, for git stats)</label>
             <input
               type="text"
+              maxLength={LIMITS.url}
               value={newRepoUrl}
               onChange={(e) => setNewRepoUrl(e.target.value)}
               placeholder="https://github.com/owner/repo"
@@ -103,6 +106,7 @@ export default function PortfolioTracker({ portfolio, onToggle, onAddProject, on
               <div className="flex-1 flex flex-col gap-2">
                 <input
                   type="text"
+                  maxLength={LIMITS.title}
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
                   className={inputClass}
@@ -111,6 +115,7 @@ export default function PortfolioTracker({ portfolio, onToggle, onAddProject, on
                 />
                 <input
                   type="text"
+                  maxLength={LIMITS.url}
                   value={editRepoUrl}
                   onChange={(e) => setEditRepoUrl(e.target.value)}
                   className={inputClass}
@@ -135,8 +140,11 @@ export default function PortfolioTracker({ portfolio, onToggle, onAddProject, on
                   onChange={() => onToggle(proj.id)}
                   aria-label={`Mark "${proj.title}" ${proj.completed ? "not done" : "done"}`}
                 />
-                <div className="flex-1 flex flex-col">
-                  <span className={`text-[0.95rem] font-medium transition-colors duration-200 ${proj.completed ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                <div className="user-text flex flex-1 flex-col">
+                  <span
+                    title={proj.title}
+                    className={`line-clamp-2 text-[0.95rem] font-medium transition-colors duration-200 ${proj.completed ? "text-muted-foreground line-through" : "text-foreground"}`}
+                  >
                     {proj.title}
                   </span>
                   {gitStats[proj.id] && gitStats[proj.id].isRepo && (

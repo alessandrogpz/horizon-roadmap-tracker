@@ -32,6 +32,7 @@ import { RADIUS, SPACING, TYPE, type Palette } from "../theme";
 import { usePalette } from "../theme/ThemeProvider";
 import { Refreshable } from "../components/Refreshable";
 import { Tappable } from "../components/Tappable";
+import { LIMITS } from "@shared/limits";
 
 const SAVE_AFTER_MS = 600;
 
@@ -113,6 +114,7 @@ export default function NotesScreen() {
 
         <View style={styles.addRow}>
           <TextInput
+            maxLength={LIMITS.title}
             value={draft}
             onChangeText={setDraft}
             onSubmitEditing={() => {
@@ -132,6 +134,7 @@ export default function NotesScreen() {
           editing?.index === index ? (
             <View key={`${index}-${item.text}`} style={styles.todoRow}>
               <TextInput
+                maxLength={LIMITS.title}
                 value={editing.text}
                 onChangeText={(text) => setEditing({ index, text })}
                 onSubmitEditing={() => {
@@ -198,6 +201,7 @@ export default function NotesScreen() {
 
         <Text style={[styles.sectionTitle, { marginTop: SPACING.lg }]}>Notepad</Text>
         <TextInput
+          maxLength={LIMITS.document}
           value={notepad}
           onChangeText={onNotepadChange}
           placeholder="Jot it down here, sort it out later."

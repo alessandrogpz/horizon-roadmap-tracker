@@ -6,6 +6,7 @@ import { dateForDay, dayForDate, formatDateYMD, formatDayMonthYear } from "@/lib
 import type { Phase, PhaseDetailItem, TaskItem } from "@/lib/types";
 import { phaseDetailItems } from "@/lib/phaseDetails";
 import { useDismiss } from "@/components/useDismiss";
+import { LIMITS } from "@/lib/limits";
 
 interface PhaseDetailModalProps {
   phase: Phase;
@@ -63,6 +64,7 @@ function EditableDetailSection({
             <div className="flex items-center gap-2">
               <input
                 type="text"
+                maxLength={LIMITS.title}
                 value={f.item}
                 onChange={(e) => {
                   const next = [...items];
@@ -82,6 +84,7 @@ function EditableDetailSection({
             </div>
             <input
               type="text"
+              maxLength={LIMITS.description}
               value={f.desc}
               onChange={(e) => {
                 const next = [...items];
@@ -235,6 +238,7 @@ export default function PhaseDetailModal({
               <div className="flex items-center gap-4">
                 <input
                   type="text"
+                  maxLength={LIMITS.name}
                   value={phase.title}
                   onChange={(e) => onChange({ ...phase, title: e.target.value })}
                   className="flex-1 bg-transparent border-none text-[1.3rem] font-bold text-accent outline-none"
@@ -246,6 +250,7 @@ export default function PhaseDetailModal({
                 ) : null}
               </div>
               <textarea
+              maxLength={LIMITS.description}
                 value={phase.description}
                 onChange={(e) => onChange({ ...phase, description: e.target.value })}
                 placeholder="What is this phase about?"
@@ -272,6 +277,7 @@ export default function PhaseDetailModal({
                     />
                     <input
                       type="text"
+                      maxLength={LIMITS.title}
                       value={task.title}
                       onChange={(e) => updateTask(task.id, { title: e.target.value })}
                       className="flex-1 bg-transparent border-none text-foreground text-[0.85rem] outline-none"
@@ -284,6 +290,7 @@ export default function PhaseDetailModal({
               </div>
               <input
                 type="text"
+                maxLength={LIMITS.title}
                 placeholder="Add a task and press Enter..."
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && e.currentTarget.value.trim()) {
@@ -371,7 +378,8 @@ export default function PhaseDetailModal({
                   {phase.tasks.map((task) => (
                     <div
                       key={task.id}
-                      className={`text-[0.85rem] ${task.completed ? "text-muted-foreground line-through" : "text-foreground"}`}
+                      title={task.title}
+                      className={`line-clamp-2 text-[0.85rem] ${task.completed ? "text-muted-foreground line-through" : "text-foreground"}`}
                     >
                       {task.title}
                     </div>
