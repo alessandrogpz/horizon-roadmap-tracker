@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
+import { useDismiss } from "@/components/useDismiss";
 
 /**
  * Search & insights: full-text search across the account's tracks and notes,
@@ -141,6 +142,9 @@ function Columns({ title, data }: { title: string; data: { label: string; value:
 }
 
 export default function InsightsModal({ onClose, onOpenTrack }: { onClose: () => void; onOpenTrack: (trackId: string) => void }) {
+  // Lets the panel and its backdrop play their exit before whoever owns
+  // this modal takes it off the page.
+  const { closing, dismiss } = useDismiss(onClose);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult | null>(null);
   const [searching, setSearching] = useState(false);
@@ -150,10 +154,10 @@ export default function InsightsModal({ onClose, onOpenTrack }: { onClose: () =>
 
   useEffect(() => {
     inputRef.current?.focus();
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && dismiss();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [dismiss]);
 
   useEffect(() => {
     fetch("/api/stats", { cache: "no-store" })
@@ -195,18 +199,18 @@ export default function InsightsModal({ onClose, onOpenTrack }: { onClose: () =>
 
   return (
     <div
-      onClick={onClose}
-      className="modal-overlay overlay-in fixed inset-0 z-[1000] flex items-center justify-center p-4"
+      onClick={dismiss}
+      className={`modal-overlay ${closing ? "overlay-out" : "overlay-in"} fixed inset-0 z-[1000] flex items-center justify-center p-4`}
       role="dialog"
       aria-modal="true"
       aria-label="Search and insights"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="modal-in glass-panel panel-roomy relative flex max-h-[90vh] w-full max-w-[760px] flex-col gap-4 overflow-y-auto border-accent-muted"
+        className={`${closing ? "modal-out" : "modal-in"} glass-panel panel-roomy relative flex max-h-[90vh] w-full max-w-[760px] flex-col gap-4 overflow-y-auto border-accent-muted`}
       >
         <button
-          onClick={onClose}
+          onClick={dismiss}
           className="absolute right-4 top-4 flex cursor-pointer items-center text-muted-foreground transition-colors hover:text-foreground"
           aria-label="Close"
         >
@@ -248,7 +252,7 @@ export default function InsightsModal({ onClose, onOpenTrack }: { onClose: () =>
                 key={t.trackId}
                 onClick={() => {
                   onOpenTrack(t.trackId);
-                  onClose();
+                  dismiss();
                 }}
                 className="flex cursor-pointer flex-col gap-1 rounded-[var(--radius-inner)] border border-card-border px-3 py-2 text-left transition-colors hover:border-card-border-hover hover:bg-surface-hover"
                 title="Open this track"

@@ -572,6 +572,42 @@ button:not(:disabled):active,
   animation: popover-in 0.15s var(--ease-out);
 }
 
+/* Leaving. Shorter than arriving — 140ms against 200ms — because opening is
+   the interface presenting something and closing is it getting out of the
+   way, and the second should never keep you waiting for it.
+
+   `forwards` here, unlike the entrances: the surface has to stay invisible
+   for the moment between the animation ending and `useDismiss` telling its
+   owner to unmount it, otherwise it would flash back to full opacity on the
+   last frame. The transform that retains is the containing-block hazard
+   `.panel-in` documents, and it is safe only because none of these surfaces
+   has a `position: fixed` descendant — checked, and worth re-checking if one
+   ever gains one. */
+@keyframes overlay-out {
+  to { opacity: 0; }
+}
+
+@keyframes modal-out {
+  to { opacity: 0; transform: scale(0.97); }
+}
+
+@keyframes popover-out {
+  to { opacity: 0; transform: scale(0.98); }
+}
+
+.overlay-out {
+  animation: overlay-out 0.14s var(--ease-out) forwards;
+}
+
+.modal-out {
+  animation: modal-out 0.14s var(--ease-out) forwards;
+}
+
+.popover-out {
+  transform-origin: var(--popover-origin, top left);
+  animation: popover-out 0.12s var(--ease-out) forwards;
+}
+
 /* The track list hangs under its trigger on a wide screen and spans the whole
    window under the top bar on a phone, so where it grows from changes with
    it: out of the trigger's corner where there is a corner to grow out of, and
@@ -1221,6 +1257,11 @@ h1, h2, h3, .type-title, .type-heading, .type-display-sm, .type-hero, .type-sect
   .modal-in,
   .popover-in {
     animation: overlay-in 0.16s var(--ease-out);
+  }
+
+  .modal-out,
+  .popover-out {
+    animation: overlay-out 0.14s var(--ease-out) forwards;
   }
 
   .day-card-chevron,

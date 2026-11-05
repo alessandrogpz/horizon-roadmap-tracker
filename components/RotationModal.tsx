@@ -6,6 +6,7 @@ import type { RotationDef, TrackState } from "@/lib/types";
 import { NEW_ITEM_KIND } from "@/lib/dayItems";
 import { getWeekNum } from "@/lib/dates";
 import { renderMarkdownToHtml } from "@/lib/markdown";
+import { useDismiss } from "@/components/useDismiss";
 
 interface RotationModalProps {
   data: TrackState;
@@ -28,6 +29,9 @@ interface DraftItem {
 type ModalMode = "view" | "edit" | "plan";
 
 export default function RotationModal({ data, rotationId, onClose, applyChange }: RotationModalProps) {
+  // Lets the panel and its backdrop play their exit before whoever owns
+  // this modal takes it off the page.
+  const { closing, dismiss } = useDismiss(onClose);
   const isNew = rotationId === null;
   const existing = rotationId ? (data.rotations || []).find((r) => r.id === rotationId) : undefined;
   const currentWeekNum = getWeekNum(data.startDate);
@@ -121,7 +125,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
         : [...(previous.rotations || []), rotation],
     }));
 
-    if (isNew) onClose();
+    if (isNew) dismiss();
     else setMode("view");
   };
 
@@ -143,7 +147,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
       dailyRevisionItems: stripRotationItem(previous.dailyRevisionItems) || previous.dailyRevisionItems,
       dailyTasks: stripRotationItem(previous.dailyTasks) || previous.dailyTasks,
     }));
-    onClose();
+    dismiss();
   };
 
   // Shift which item is "current" for this week by picking one from the cycle.
@@ -184,17 +188,17 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
 
   return (
     <div
-      onClick={onClose}
-      className="modal-overlay overlay-in fixed inset-0 z-[1000] flex items-center justify-center p-4"
+      onClick={dismiss}
+      className={`modal-overlay ${closing ? "overlay-out" : "overlay-in"} fixed inset-0 z-[1000] flex items-center justify-center p-4`}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`modal-in glass-panel panel-roomy w-full max-h-[90vh] flex flex-col gap-6 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.5)] border border-accent-muted relative rounded-lg overflow-hidden ${
+        className={`${closing ? "modal-out" : "modal-in"} glass-panel panel-roomy w-full max-h-[90vh] flex flex-col gap-6 shadow-[0_20px_25px_-5px_rgba(0,0,0,0.5)] border border-accent-muted relative rounded-lg overflow-hidden ${
           mode === "plan" ? "max-w-[900px] h-[80vh]" : "max-w-[600px]"
         }`}
       >
         <button
-          onClick={onClose}
+          onClick={dismiss}
           className="absolute top-6 right-6 flex items-center bg-transparent border-none text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
           aria-label="Close"
         >
@@ -270,7 +274,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
               >
                 &larr; Back to Rotation
               </button>
-              <button onClick={onClose} className="btn px-4 py-2 text-[0.8rem]">
+              <button onClick={dismiss} className="btn px-4 py-2 text-[0.8rem]">
                 Close
               </button>
             </div>
@@ -523,7 +527,7 @@ export default function RotationModal({ data, rotationId, onClose, applyChange }
                   Edit
                 </button>
                 <button
-                  onClick={onClose}
+                  onClick={dismiss}
                   className="btn px-4 py-2 text-[0.8rem]"
                 >
                   Close

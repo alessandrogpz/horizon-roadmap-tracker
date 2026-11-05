@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { dateForDay, dayForDate, formatDateYMD, formatDayMonthYear } from "@/lib/dates";
 import type { Phase, PhaseDetailItem, TaskItem } from "@/lib/types";
 import { phaseDetailItems } from "@/lib/phaseDetails";
+import { useDismiss } from "@/components/useDismiss";
 
 interface PhaseDetailModalProps {
   phase: Phase;
@@ -178,6 +179,9 @@ export default function PhaseDetailModal({
   onDelete,
   canDelete,
 }: PhaseDetailModalProps) {
+  // Lets the panel and its backdrop play their exit before whoever owns
+  // this modal takes it off the page.
+  const { closing, dismiss } = useDismiss(onClose);
   const { detailedInfo } = phase;
   const isActive = phase.id === currentPhaseId;
   const [isEditing, setIsEditing] = useState(false);
@@ -208,16 +212,16 @@ export default function PhaseDetailModal({
 
   return (
     <div
-      onClick={onClose}
-      className="modal-overlay overlay-in fixed inset-0 z-[1000] flex items-center justify-center p-4"
+      onClick={dismiss}
+      className={`modal-overlay ${closing ? "overlay-out" : "overlay-in"} fixed inset-0 z-[1000] flex items-center justify-center p-4`}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="modal-in glass-panel panel-roomy max-w-[600px] w-full max-h-[90vh] overflow-y-auto flex flex-col gap-6 border border-accent-muted relative shadow-[0_20px_25px_-5px_rgba(0,0,0,0.5),0_10px_10px_-5px_rgba(0,0,0,0.4)]"
+        className={`${closing ? "modal-out" : "modal-in"} glass-panel panel-roomy max-w-[600px] w-full max-h-[90vh] overflow-y-auto flex flex-col gap-6 border border-accent-muted relative shadow-[0_20px_25px_-5px_rgba(0,0,0,0.5),0_10px_10px_-5px_rgba(0,0,0,0.4)]`}
       >
         {/* Close Button */}
         <button
-          onClick={onClose}
+          onClick={dismiss}
           className="absolute top-6 right-6 flex items-center bg-transparent border-none text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
           aria-label="Close"
         >
@@ -307,7 +311,7 @@ export default function PhaseDetailModal({
                   <button
                     onClick={() => {
                       onDelete(phase.id);
-                      onClose();
+                      dismiss();
                     }}
                     className="btn px-3 py-1.5 text-[0.8rem] !bg-danger/15 !text-danger !border-danger/40"
                   >
@@ -391,7 +395,7 @@ export default function PhaseDetailModal({
                   <button
                     onClick={() => {
                       onActivatePhase(phase.id);
-                      onClose();
+                      dismiss();
                     }}
                     className="btn !bg-accent/15 !text-accent border !border-accent text-[0.85rem]"
                   >
@@ -405,7 +409,7 @@ export default function PhaseDetailModal({
                   Edit
                 </button>
               </div>
-              <button onClick={onClose} className="btn px-5 py-2 text-[0.85rem]">
+              <button onClick={dismiss} className="btn px-5 py-2 text-[0.85rem]">
                 Close
               </button>
             </div>

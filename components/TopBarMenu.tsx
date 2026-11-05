@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   CalendarCog,
   Ellipsis,
@@ -15,6 +15,7 @@ import {
   Settings,
 } from "lucide-react";
 import { panelFor } from "@/components/panels/registry";
+import { useDismiss } from "@/components/useDismiss";
 
 /**
  * The top bar's overflow menu. The bar keeps what you *read* — the mark, the
@@ -110,21 +111,31 @@ export default function TopBarMenu({
   const MENU_WIDTH = 260;
   const EDGE_MARGIN = 8;
 
+  // The menu plays its exit before it is taken off the page, which means
+  // every way out of it — the trigger, a click outside, Escape, picking an
+  // item — has to go through one place rather than closing the menu itself
+  // from four.
+  const { closing, dismiss } = useDismiss(useCallback(() => setOpen(false), []));
+
   const handleToggle = () => {
-    if (!open && triggerRef.current) {
+    if (open) {
+      dismiss();
+      return;
+    }
+    if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
       setAlignRight(rect.left + MENU_WIDTH > window.innerWidth - EDGE_MARGIN);
     }
-    setOpen((o) => !o);
+    setOpen(true);
   };
 
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node)) dismiss();
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") dismiss();
     };
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
@@ -132,11 +143,17 @@ export default function TopBarMenu({
       document.removeEventListener("mousedown", onDown);
       document.removeEventListener("keydown", onKey);
     };
-  }, [open]);
+    // `dismiss` is stable — `useDismiss` memoises it on an `onClose` that is
+    // itself a dependency-free `useCallback` — so listing it does not make
+    // this effect re-run; it just stops the linter having to take that on
+    // trust.
+  }, [open, dismiss]);
 
-  /** Menu items are one-shot actions: run, then close. */
+  /** Menu items are one-shot actions: run, then close. The action fires at
+   *  once and the menu fades out behind it; waiting for the animation before
+   *  doing the thing would be an animation costing the user 140ms. */
   const run = (action: () => void) => () => {
-    setOpen(false);
+    dismiss();
     action();
   };
 
@@ -156,7 +173,7 @@ export default function TopBarMenu({
 
       {open && (
         <div
-          className={`popover-in !absolute ${alignRight ? "right-0" : "left-0"} glass-surface z-50 mt-2 flex max-h-[75vh] w-[260px] max-w-[calc(100vw-1rem)] flex-col overflow-y-auto p-1.5`}
+          className={`${closing ? "popover-out" : "popover-in"} !absolute ${alignRight ? "right-0" : "left-0"} glass-surface z-50 mt-2 flex max-h-[75vh] w-[260px] max-w-[calc(100vw-1rem)] flex-col overflow-y-auto p-1.5`}
           // The menu grows out of the button that opened it, which means out
           // of whichever corner it just aligned itself to — the same decision
           // `alignRight` already made for the position.
