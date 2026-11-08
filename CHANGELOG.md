@@ -7,6 +7,43 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.117.6] - 2026-11-08
+
+### Added
+- **`docs/exams/nosql-level3.md`** — the SE_06 Level 3 practice sheet. The exam file says what to
+  show; this one is what to rehearse. Eight parts: the claim in one sentence; the ten-minute demo
+  **re-ordered to open with operations**, because that is the part a Level 3 claim rests on and the
+  part most likely to be cut short; the four advanced use cases, each as *what it is → why it is
+  advanced → what to show → the trap*; the NoSQL types compared **for those four use cases**
+  specifically; the operate-and-maintain evidence as a checklist; twelve design decisions with a
+  one-line reason and a piece of evidence each; the seven questions you do not want, answered; a
+  **25-question cold call** with no notes; and a five-minute pre-flight list.
+
+### Changed
+- Local assistant and editor tooling is no longer part of the repository. `CLAUDE.md`, `AGENTS.md`
+  and both `.claude/` directories are untracked — kept on disk, excluded through `.git/info/exclude`
+  rather than `.gitignore`, since `.gitignore` is itself published. Workstation setup is not part of
+  the project, and a published ignore list that names it is the same disclosure by another route.
+- `eslint.config.mjs` ignores dot-directories generally (`**/.*/**`) instead of one by name. Same
+  effect, nothing about the local toolchain. `npm run lint`, `tsc --noEmit` and all 464 tests still
+  pass.
+
+### Fixed
+- **Three counts were wrong, and all three are the kind an examiner checks.** `docs/exams/nosql.md`
+  said seven collections; there are **eight** — six for the data (`users`, `sessions`, `tracks`,
+  `completions`, `notes`, `auditLog`) and two operational. `DATA_LAYER.md` said five aggregation
+  pipelines; there are **six** (`totals`, `byWeekday`, `byWeek`, `byMonth`, `byTrack`,
+  `longestStreaks`).
+- **`RESILIENCE.md` still called the scheduled backup "planned".** It has existed since 0.22.0 —
+  `.github/workflows/backup.yml`, Mondays 03:45 UTC, `mongodump` piped into `gpg`. The restore
+  procedure and the fact that its first test silently restored nothing are now named there too,
+  because Level 3 rests on the backup being real and tested rather than configured.
+- **`MODEL.md` §5 described TTL retention as "one number in its index" for all four collections.**
+  Only the audit log works that way. Sessions, rate limits and security counters put an `expiresAt`
+  in the **document** with `expireAfterSeconds: 0` on the index — because a session and a rate-limit
+  window each have a lifetime of their own, and an index can hold only one number. The distinction
+  is now spelled out; it is question 24 on the cold-call list.
+
 ## [0.117.5] - 2026-11-08
 
 ### Documentation
@@ -718,8 +755,8 @@ before and after rather than assumed.
 - On the phone, the timeline ring's percentage and the segmented control's labels scale with the
   reader's text size again, capped so they cannot outgrow the shapes they sit in, rather than opting
   out of Dynamic Type entirely.
-- ESLint ignores `.claude/**`. Vendored agent skills are somebody else's source, and linting them
-  fails `npm run lint` — a CI step — the moment that folder is committed.
+- ESLint ignores dot-directories. They hold local tool configuration and vendored third-party
+  sources, and linting them fails `npm run lint` — a CI step — the moment one appears in a checkout.
 
 ## [0.103.3] - 2026-10-24
 

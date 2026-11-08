@@ -65,6 +65,7 @@ material lives where an examiner browsing it will find it:
 | Replication, distribution, sharding, resilience | [`docs/nosql/RESILIENCE.md`](../../docs/nosql/RESILIENCE.md) · sharding design in MODEL §9 |
 | The reasoning, step by step | [`docs/LEARNING_LOG.md`](../../docs/LEARNING_LOG.md), entries 4, 7, 9, 10, 11, 13 |
 | The oral: what to show, in what order, and the questions | [`docs/exams/nosql.md`](../../docs/exams/nosql.md) · [`docs/exams/day-before.md`](../../docs/exams/day-before.md) |
+| **Practising the Level 3 claim** | [`docs/exams/nosql-level3.md`](../../docs/exams/nosql-level3.md) — every objective as a drill, with a 25-question cold call |
 
 ## Submission checklist
 
@@ -75,8 +76,10 @@ material lives where an examiner browsing it will find it:
       coordinator with granted access; **not** fine if you make it public.
 - [ ] **Re-run the three commands** in the table above on the exam machine, not
       just this one.
-- [ ] **Walk [`docs/exams/nosql.md`](../../docs/exams/nosql.md) once out loud**,
-      with a timer. It is a 10-minute demo in a 15–30 minute slot.
+- [ ] **Work through [`docs/exams/nosql-level3.md`](../../docs/exams/nosql-level3.md)**
+      in its three passes: read with the documents open, say Parts A–E out loud
+      with a timer, then cold-call yourself with Part G. 20 of 25 without notes
+      and you are ready.
 - [ ] **`docs/exams/day-before.md`** — the shared set-up checklist for all three
       exams on the day.
 - [ ] **Self-assessment essay**, if SE_06 asks for one — see
