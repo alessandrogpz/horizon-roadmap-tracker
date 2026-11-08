@@ -7,6 +7,114 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.117.6] - 2026-11-08
+
+### Added
+- **`docs/exams/nosql-level3.md`** — the SE_06 Level 3 practice sheet. The exam file says what to
+  show; this one is what to rehearse. Eight parts: the claim in one sentence; the ten-minute demo
+  **re-ordered to open with operations**, because that is the part a Level 3 claim rests on and the
+  part most likely to be cut short; the four advanced use cases, each as *what it is → why it is
+  advanced → what to show → the trap*; the NoSQL types compared **for those four use cases**
+  specifically; the operate-and-maintain evidence as a checklist; twelve design decisions with a
+  one-line reason and a piece of evidence each; the seven questions you do not want, answered; a
+  **25-question cold call** with no notes; and a five-minute pre-flight list.
+
+### Changed
+- Local assistant and editor tooling is no longer part of the repository. `CLAUDE.md`, `AGENTS.md`
+  and both `.claude/` directories are untracked — kept on disk, excluded through `.git/info/exclude`
+  rather than `.gitignore`, since `.gitignore` is itself published. Workstation setup is not part of
+  the project, and a published ignore list that names it is the same disclosure by another route.
+- `eslint.config.mjs` ignores dot-directories generally (`**/.*/**`) instead of one by name. Same
+  effect, nothing about the local toolchain. `npm run lint`, `tsc --noEmit` and all 464 tests still
+  pass.
+
+### Fixed
+- **Three counts were wrong, and all three are the kind an examiner checks.** `docs/exams/nosql.md`
+  said seven collections; there are **eight** — six for the data (`users`, `sessions`, `tracks`,
+  `completions`, `notes`, `auditLog`) and two operational. `DATA_LAYER.md` said five aggregation
+  pipelines; there are **six** (`totals`, `byWeekday`, `byWeek`, `byMonth`, `byTrack`,
+  `longestStreaks`).
+- **`RESILIENCE.md` still called the scheduled backup "planned".** It has existed since 0.22.0 —
+  `.github/workflows/backup.yml`, Mondays 03:45 UTC, `mongodump` piped into `gpg`. The restore
+  procedure and the fact that its first test silently restored nothing are now named there too,
+  because Level 3 rests on the backup being real and tested rather than configured.
+- **`MODEL.md` §5 described TTL retention as "one number in its index" for all four collections.**
+  Only the audit log works that way. Sessions, rate limits and security counters put an `expiresAt`
+  in the **document** with `expireAfterSeconds: 0` on the index — because a session and a rate-limit
+  window each have a lifetime of their own, and an index can hold only one number. The distinction
+  is now spelled out; it is question 24 on the cold-call list.
+
+## [0.117.5] - 2026-11-08
+
+### Documentation
+- **The SE_06 level mapping now covers all three levels**, against the module's own wording rather
+  than a condensed version of it. `MODULES_PLAN.md` set the target at Level 1 in week one, before
+  any of the work existed; read against the real criteria, the evidence reaches **Level 3**:
+  designed, deployed, operated and maintained in production, with the design decisions reasoned and
+  measured rather than asserted.
+- **The one real gap, closed** — `MODEL.md` §10, *The same comparison, use case by use case*. Level
+  2 asks for the NoSQL types' trade-offs **for advanced use cases**, not in general, which §10 was
+  not answering. The project's four advanced use cases (the per-item sync merge in one
+  multi-document transaction; longest streaks by gaps and islands; weighted compound text search;
+  counting rejections rather than listing them) are now weighed against document, key-value,
+  wide-column and graph stores, one row each.
+- It says where MongoDB is the **wrong** tool, which the general comparison let it avoid: the rate
+  and security counters belong in a key-value store and are here only to avoid a second thing to
+  deploy, secure, back up and explain; and the text index will never do fuzzy or phrase matching,
+  so Atlas Search is the ceiling. Both are better said out loud than discovered by an examiner.
+- Level 3's "operate and maintain" evidence gathered in one place: Atlas with a least-privilege user
+  and a network access list, a weekly encrypted backup whose restore was tested and found broken the
+  first time, a daily operations check, an uptime check every 30 minutes, retention by TTL index,
+  a runbook entry per failure mode, CI standing up its own three-member replica set on every push —
+  and `0.21.4`, a real production incident in the data layer, found and fixed.
+- `university/SE_06_NoSQL_databases/` updated to claim Level 3, and to name the two soft spots
+  first: sharding is reasoned but never run (the free tier cannot shard), and "production" here
+  means live with real data, backups and monitoring — not scale.
+
+## [0.117.4] - 2026-11-08
+
+### Documentation
+- **The data layer, traced end to end** — `docs/nosql/DATA_LAYER.md`. SE_06 asks for a data layer
+  that serves the project's listed use cases *in a working application*, "not a simple demo or
+  example script". Each of the eight use cases now runs from the control a person touches, through
+  the client, the route and the handler, down to the MongoDB operation and the index that serves
+  it, with file and line for every hop. It opens with five facts that can each be checked in under
+  a minute: no query runs except because someone pressed something; two independent clients (the
+  website and the phone app) drive the same five endpoints; it is deployed and health-checked every
+  half hour; 59 tests run against a real replica set; and it survives a primary failure mid-write.
+- **Setting the whole thing up from nothing** — `docs/nosql/SETUP.md`. Written for an unfamiliar
+  machine with someone watching: what the machine needs, four commands, what each one should print,
+  measured timings, and every failure mode seen so far with its fix. Also how to point the app at a
+  free Atlas cluster when Docker isn't available — the app creates its own collections, validators
+  and indexes on the first request, so a brand-new cluster needs no manual setup.
+- Verified by running it, not by reading it: `npm run db:up` from cold in 13 s, `npm run test:db`
+  green in 2.9 s (59 tests, 6 files), `npm run demo:failover` in 28 s with a new primary after 0.3 s
+  and 0 of 130 acknowledged writes lost, and the app answering `/api/health` with `{"ok":true}`
+  while the signed-out endpoints answer 401 with a plain message.
+
+### Fixed
+- **The ER diagram had drifted.** `docs/nosql/MODEL.md` §2 was written on 2026-09-22 and
+  `lib/types.ts` has moved six times since. The `tracks` entity was missing `startDate`,
+  `currentPhase`, `currentPhaseStartDate`, `phaseDaysSpent`, `lastTasksResetDate`,
+  `lastUpdatedDates`, `panelColumns`, `hiddenPanels` and `restDaysFrom` entirely, and its embedded
+  arrays were listing fields that have since gained siblings — `meta.order`, `TaskItem.description`,
+  `FocusType.restDay`, and seven fields on a material. The module marks the diagram on whether
+  "attributes and types used should be clear", so this mattered.
+- The embedded shapes moved out of the diagram's inline comments into a table under it. One comment
+  had grown to 150 characters and stretched the rendered box across several screens; the diagram is
+  readable again, and the types are more precise than they were in the comment. Checked by actually
+  rendering it with mermaid rather than by eye.
+- `lib/server/collections.ts` is unchanged since the documentation was written, so MODEL's indexes
+  (§5) and validators (§6) were still accurate and are untouched.
+
+### Added
+- `university/SE_06_NoSQL_databases/` — the submission desk for the module: where each hand-in
+  requirement is met, the verification run with its numbers, the submission checklist (including
+  read access for the coordinator, and the warning that `MODULES_PLAN.md` names security issues on
+  the assumption the repo stays private), and a self-assessment scaffold. As with SE_47, the
+  scaffold is facts and questions rather than a draft — the reflection essay has to be in your own
+  words.
+
 ## [0.117.3] - 2026-11-05
 
 ### Fixed
@@ -647,8 +755,8 @@ before and after rather than assumed.
 - On the phone, the timeline ring's percentage and the segmented control's labels scale with the
   reader's text size again, capped so they cannot outgrow the shapes they sit in, rather than opting
   out of Dynamic Type entirely.
-- ESLint ignores `.claude/**`. Vendored agent skills are somebody else's source, and linting them
-  fails `npm run lint` — a CI step — the moment that folder is committed.
+- ESLint ignores dot-directories. They hold local tool configuration and vendored third-party
+  sources, and linting them fails `npm run lint` — a CI step — the moment one appears in a checkout.
 
 ## [0.103.3] - 2026-10-24
 

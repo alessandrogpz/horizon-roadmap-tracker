@@ -5,6 +5,11 @@ One-to-one, 15 to 30 minutes, laptop open: an overview and a demo, then question
 The hand-in documents are [`../nosql/`](../nosql/README.md); the concepts behind each step are in
 [`../LEARNING_LOG.md`](../LEARNING_LOG.md), entries 4, 7, 9, 10, 11 and 13.
 
+**Claiming Level 3?** [`nosql-level3.md`](nosql-level3.md) is the drill: the demo re-ordered to lead
+with operations, the four advanced use cases, the types compared *for those use cases*, the
+operate-and-maintain evidence, twelve design decisions with their one-line reasons, the questions you
+do not want, and a 25-question cold call.
+
 Shared checklist for the day before all three exams: [`day-before.md`](day-before.md).
 
 ## SE_06 NoSQL: the demo (about 10 minutes)
@@ -60,7 +65,8 @@ that come up most:
 - *Sharding?* `{userId: "hashed"}`, and why not the date (MODEL.md §9).
 - *How much data did you test with?* DATA.md.
 - *Mongoose or the native driver?* Both, each where it fits (MODEL.md §6 and learning log 7).
-- *How many collections, and why that many?* Seven: five for the data, two operational (`rateLimits`,
-  `securityEvents`), both counting per time window so a flood costs one document (MODEL.md §1, §4).
+- *How many collections, and why that many?* Eight: six for the data (`users`, `sessions`, `tracks`,
+  `completions`, `notes`, `auditLog`) and two operational (`rateLimits`, `securityEvents`), both
+  counting per time window so a flood costs one document (MODEL.md §1, §4).
 - *What happens to old data?* TTL indexes: sessions at 30 days, audit entries at 90, security counters
   at 30, rate counters within minutes (MODEL.md §5).

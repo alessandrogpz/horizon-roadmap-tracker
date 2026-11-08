@@ -6,7 +6,7 @@ each, so you can prepare them separately:
 | Exam | Prepare with | Shape of it |
 |---|---|---|
 | **Cyber Security** | [`exams/security.md`](exams/security.md) | A 5-minute talk on the security methods applied, then questions |
-| **SE_06 NoSQL Databases** | [`exams/nosql.md`](exams/nosql.md) | An overview and a demo, then questions |
+| **SE_06 NoSQL Databases** | [`exams/nosql.md`](exams/nosql.md), then [`exams/nosql-level3.md`](exams/nosql-level3.md) | An overview and a demo, then questions. The second file is the Level 3 drill: every objective turned into something to rehearse, with a 25-question cold call |
 | **Mobile App Development** | [`exams/mobile.md`](exams/mobile.md) | The app running on the phone, then questions |
 
 Set-up for the day, shared by all three: [`exams/day-before.md`](exams/day-before.md).

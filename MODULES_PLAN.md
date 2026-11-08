@@ -153,7 +153,7 @@ conveniences guarded by `lib/server/localRequest.ts`. Deployed on Vercel. Repo:
   Next 16 differs from training data).
 - Browser-test only on isolated ports, never against the port-3000 daily-use server.
 - Work flows `development` → `main`.
-- Commit attribution: follow the user's global `CLAUDE.md`.
+- Commit attribution: every commit is authored by Alessandro Perez alone.
 - `.gitignore` ignores `.env*`, so committing `.env.example` needs a
   `!.env.example` exception.
 
@@ -251,8 +251,8 @@ never from the sync's security measures.
     driver version than the one Mongoose pins.
   - Pin Node 22+ on Vercel for `google-auth-library` 11, or use `jose`.
 - Docker: the user installed it on 2026-09-10 (Docker 29.7.2, Compose 5.5.1;
-  the daemon runs). Their account wasn't in the `docker` group yet, which
-  Claude's shell needs (it can't use sudo). Membership in that group is
+  the daemon runs). The account wasn't in the `docker` group yet, which a
+  non-interactive shell needs (it can't use sudo). Membership in that group is
   root-equivalent on the host: record it in Step 3 as an accepted risk on a
   single-user dev machine. `mongosh` isn't installed; use it from the container
   (`docker compose exec`).
