@@ -94,7 +94,7 @@
 >   bucket pattern or gaps-and-islands, another codebase?
 > - Did you attend the Learning Unit this semester? If not, say so.
 > - Be specific about *how*: read once up front, or returned to when stuck?
->   `docs/LEARNING_LOG.md` was written as you went — if a particular entry came
+>   `../LEARNING_LOG.md` was written as you went — if a particular entry came
 >   out of one source, say which.
 
 ## 4. In which ways did you use LLMs as a part of the learning process?

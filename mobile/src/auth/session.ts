@@ -29,7 +29,7 @@ import { SERVER_URL, WEB_CLIENT_ID } from "../config";
 // distinction between JavaScript and native code, and what it means for
 // shipping, is the thing to understand about this platform: new JavaScript can
 // be handed to an installed app; new native code needs a new build in the
-// user's hands (MOBILE_PLAN.md §6).
+// user's hands (university/SE_47_Mobile_development/MOBILE_PLAN.md §6).
 
 type SecureStoreModule = typeof import("expo-secure-store");
 type GoogleSigninModule = typeof import("@react-native-google-signin/google-signin");
@@ -72,7 +72,7 @@ function configure(): void {
     // Ask Google for an ID token whose audience is the *web* client — the one
     // the server already verifies against. That way the phone needs no change
     // on the server, and one client ID stays the single source of truth for
-    // "this is Horizon" (MOBILE_PLAN.md §4).
+    // "this is Horizon" (university/SE_47_Mobile_development/MOBILE_PLAN.md §4).
     webClientId: WEB_CLIENT_ID,
     offlineAccess: false,
   });

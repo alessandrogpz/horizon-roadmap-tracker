@@ -15,12 +15,12 @@ The other documents, and what each one is for:
 
 | Document | What it's for |
 |---|---|
-| `MODULES_PLAN.md` | The plan: every step, its status, and the decisions behind it |
-| `docs/security/THREAT_MODEL.md` | Every threat, how likely and how bad, and how it's handled |
-| `CHANGELOG.md` | What changed in each version, from a user's point of view |
+| [`MODULES_PLAN.md`](MODULES_PLAN.md) | The plan: every step, its status, and the decisions behind it |
+| [`../docs/security/THREAT_MODEL.md`](../docs/security/THREAT_MODEL.md) | Every threat, how likely and how bad, and how it's handled |
+| [`../CHANGELOG.md`](../CHANGELOG.md) | What changed in each version, from a user's point of view |
 | This file | What each step teaches |
-| `docs/ORAL_PREP.md` | The exam day: checklist, the 5-minute security talk, the NoSQL demo, the question maps |
-| `docs/DEPLOY.md` | Putting accounts and sync live on horizonroadmap.com |
+| [`README.md`](README.md) | The three exam drills, and the day-before checklist |
+| [`../docs/DEPLOY.md`](../docs/DEPLOY.md) | Putting accounts and sync live on horizonroadmap.com |
 
 ## Entries
 

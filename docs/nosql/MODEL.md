@@ -346,7 +346,7 @@ accomplishments. It would also need a mapper between the app's nested `TrackStat
 migration for every schema change. It would gain foreign keys, cascading deletes, joins and SQL window
 functions. For this app, the document model matches the shape the app already uses, and reuses the
 existing merge logic unchanged. The cost is that consistency across collections is the application's
-responsibility (see §7). The full comparison is in `MODULES_PLAN.md`, Appendix A.
+responsibility (see §7). The full comparison is in `university/MODULES_PLAN.md`, Appendix A.
 
 **Against other NoSQL types.**
 - **Key-value** (e.g. Redis): excellent for sessions or the rate counters. But it can't query inside a
