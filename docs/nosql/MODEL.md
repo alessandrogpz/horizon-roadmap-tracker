@@ -68,29 +68,38 @@ erDiagram
   tracks {
     ObjectId _id PK
     ObjectId userId FK
-    string trackId "client id, unique per user"
-    int schemaVersion
+    string trackId UK "client id, unique per user (with userId)"
+    int schemaVersion "migration level this document was written at"
     int configVersion "higher wins in a merge"
-    Date updatedAt
-    object meta "name, color, templateId, createdAt, archived"
-    array phases "embedded: id, title, description, tasks[], detailedInfo"
-    array materials "embedded: id, title, author, status, pages, link, archived, updatedAt"
-    array portfolio "embedded: id, title, completed, repoUrl"
-    array rotations "embedded: id, label, items[], daysOfWeek[], startWeek"
-    array weekSchedule "embedded: name, type, label"
-    object dailyTasks "Mon to Sun: task[]"
-    object dailyRevisionItems "Mon to Sun: revision[]"
-    object focusTypes "key: label, color"
-    string roadmapContent "markdown"
+    Date updatedAt "server clock"
+    object meta "embedded, see below"
+    string startDate "YYYY-MM-DD: the track's day one"
+    int currentPhase
+    string currentPhaseStartDate "optional, YYYY-MM-DD"
+    object phaseDaysSpent "optional: phase id to day count"
+    string lastTasksResetDate "YYYY-MM-DD or empty: last daily rollover"
+    array phases "embedded, see below"
+    array materials "embedded, see below"
+    array portfolio "embedded, see below"
+    array rotations "embedded, see below"
+    array weekSchedule "embedded, see below"
+    array restDaysFrom "optional, embedded, see below"
+    object dailyTasks "Mon to Sun, each a task array"
+    object dailyRevisionItems "Mon to Sun, each a task array"
+    object focusTypes "checked key to a focus type"
+    object lastUpdatedDates "optional: YYYY-MM-DD to ms"
+    object panelColumns "optional: two columns of panel ids"
+    array hiddenPanels "optional: closed module ids"
+    string roadmapContent "markdown: this track's own plan"
   }
   completions {
     ObjectId _id PK
     ObjectId userId FK
     string trackId FK "with userId"
     string date "YYYY-MM-DD"
-    array tasks "embedded: id, done, updatedAt"
-    array revisions "embedded: id, done, updatedAt"
-    array accomplishments "embedded: title, description, plain, done, updatedAt"
+    array tasks "embedded item states, see below"
+    array revisions "embedded item states, see below"
+    array accomplishments "embedded, see below"
     Date updatedAt
   }
   notes {
@@ -112,6 +121,24 @@ erDiagram
     int notes
   }
 ```
+
+### The embedded shapes
+
+Everything marked *embedded* above lives inside its parent document. `?` marks an optional field.
+
+| In | Field | Shape |
+|---|---|---|
+| `tracks` | `meta` | `id: string`, `name: string`, `color: string`, `templateId: string`, `createdAt: number` (ms), `archived?: bool`, `order?: number` |
+| `tracks` | `phases[]` | `id: int`, `title: string`, `description: string`, `tasks: task[]`, `detailedInfo: object`, `recommendedByDay?: int` |
+| `tracks` | `materials[]` | `id: string`, `title: string`, `author?: string`, `category: string`, `type: string`, `status: string`, `currentPage: int`, `totalPages: int`, `currentSubject: string`, `link: string`, `localPath?: string`, `repoUrl?: string`, `archived?: bool`, `updatedAt?: number` (ms) |
+| `tracks` | `portfolio[]` | `id: string`, `title: string`, `completed: bool`, `localPath?: string`, `repoUrl?: string` |
+| `tracks` | `rotations[]` | `id: string`, `label: string`, `items: {title, description?}[]`, `daysOfWeek: string[]`, `target: "revision" \| "focus"`, `startWeek: int`, `phase?: int`, `explanation?: string` |
+| `tracks` | `weekSchedule[]` | `name: string` (`Mon`..`Sun`), `type: string` (a `focusTypes` key), `label: string` |
+| `tracks` | `restDaysFrom[]` | `date: string` (`YYYY-MM-DD`), `days: string[]` — the weekdays off *from* that date |
+| `tracks` | a task | `id: string`, `title: string`, `completed: bool`, `description?: string` |
+| `tracks` | a focus type | `label: string`, `color: string`, `restDay?: bool` |
+| `completions` | `tasks[]`, `revisions[]` | `id: string`, `done: bool`, `updatedAt: number` (ms) |
+| `completions` | `accomplishments[]` | `title: string`, `description?: string`, `plain?: bool`, `done: bool`, `updatedAt: number` (ms) |
 
 Two collections stand apart from the diagram, because they belong to no user by design:
 

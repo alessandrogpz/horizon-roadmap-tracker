@@ -10,12 +10,17 @@ This folder documents the database side, for the SE_06 NoSQL module.
 | Document | What's in it |
 |---|---|
 | [MODEL.md](MODEL.md) | The data model: diagram with attributes and types, collections, design decisions, indexes, validation, consistency, schema evolution, sharding, and why a document database |
+| [DATA_LAYER.md](DATA_LAYER.md) | Every use case traced from the UI through the route to the data-layer function, the MongoDB operation and the index that serves it |
+| [SETUP.md](SETUP.md) | Setting up the development environment and the database from nothing, with timings, what each step should print, and what to do when it doesn't |
 | [DATA.md](DATA.md) | The generated dataset: how it's made, and its counts and sizes |
 | [PERFORMANCE.md](PERFORMANCE.md) | `explain()` measurements of the app's queries, with and without their indexes |
 | [RESILIENCE.md](RESILIENCE.md) | Replication and failover, measured; write concern, read concern, read preference |
 | [`../LEARNING_LOG.md`](../LEARNING_LOG.md) | How it was built, step by step, with the concepts behind each step |
 
 ## Use cases
+
+Each one traced from the control a person touches down to the query and its index in
+[DATA_LAYER.md](DATA_LAYER.md).
 
 | # | Use case | Status | Where |
 |---|---|---|---|
@@ -36,9 +41,9 @@ Level 1 objectives, and where each is met:
 | NoSQL vs relational, pros and cons | [MODEL.md](MODEL.md) §10 |
 | NoSQL concepts, characteristics, limitations | [MODEL.md](MODEL.md) §4, §7, §10 |
 | The NoSQL types and their trade-offs | [MODEL.md](MODEL.md) §10 |
-| A query or full-text search function | Use cases 3 and 4 |
+| A query or full-text search function | Use cases 3 and 4; traced in [DATA_LAYER.md](DATA_LAYER.md) §2 |
 | Optimise for large data, performance, efficiency | [PERFORMANCE.md](PERFORMANCE.md), [DATA.md](DATA.md), indexes in [MODEL.md](MODEL.md) §5 |
-| Access the database directly and through a framework | Native driver for sync writes, search and aggregation; Mongoose for users, sessions and notes ([MODEL.md](MODEL.md) §6, `lib/server/`) |
+| Access the database directly and through a framework | Native driver for sync writes, search and aggregation; Mongoose for users, sessions and notes ([DATA_LAYER.md](DATA_LAYER.md) §3, [MODEL.md](MODEL.md) §6) |
 | Replication, distribution, sharding, resilience | [RESILIENCE.md](RESILIENCE.md); sharding design in [MODEL.md](MODEL.md) §9 |
 
 ## Setting up and connecting
@@ -50,8 +55,13 @@ npm run db:up
 ```
 
 This starts a three-member replica set on `127.0.0.1:27017–27019`, creates its users, and writes the
-connection strings into `.env.local`. The app connects with `MONGODB_URI`. The full walk-through,
-including `mongosh` and MongoDB Compass, is in the main [README](../../README.md#local-database-mongodb).
+connection strings into `.env.local`. The app connects with `MONGODB_URI`. Measured from cold on
+2026-11-08: 13 s for the database, then `npm run test:db` green in 2.9 s (59 tests).
+
+**[SETUP.md](SETUP.md) is the full walk-through**: what the machine needs, what each step should
+print, every failure mode seen so far with its fix, and how to point the app at MongoDB Atlas instead
+when Docker isn't available. The shorter version is in the main
+[README](../../README.md#local-database-mongodb).
 
 | Command | What it does |
 |---|---|

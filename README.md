@@ -148,6 +148,10 @@ mongodb://horizon_app:<password>@localhost:27017,localhost:27018,localhost:27019
     as a secondary.
 *   How it's built: `compose.yaml` (the servers), `docker/mongo-init.js` (the
     replica set and users), `scripts/dev-env.mjs` (the passwords).
+*   Setting all of this up on a fresh machine, with what each step should print
+    and what to do when it doesn't: [`docs/nosql/SETUP.md`](docs/nosql/SETUP.md).
+    It also covers pointing the app at MongoDB Atlas instead, when Docker isn't
+    available.
 *   The data model, a generated test dataset (`npm run db:seed`), measured query
     performance (`npm run db:explain`) and a failover demo (`npm run demo:failover`):
     see [`docs/nosql/`](docs/nosql/README.md).

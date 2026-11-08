@@ -7,6 +7,50 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.117.4] - 2026-11-08
+
+### Documentation
+- **The data layer, traced end to end** — `docs/nosql/DATA_LAYER.md`. SE_06 asks for a data layer
+  that serves the project's listed use cases *in a working application*, "not a simple demo or
+  example script". Each of the eight use cases now runs from the control a person touches, through
+  the client, the route and the handler, down to the MongoDB operation and the index that serves
+  it, with file and line for every hop. It opens with five facts that can each be checked in under
+  a minute: no query runs except because someone pressed something; two independent clients (the
+  website and the phone app) drive the same five endpoints; it is deployed and health-checked every
+  half hour; 59 tests run against a real replica set; and it survives a primary failure mid-write.
+- **Setting the whole thing up from nothing** — `docs/nosql/SETUP.md`. Written for an unfamiliar
+  machine with someone watching: what the machine needs, four commands, what each one should print,
+  measured timings, and every failure mode seen so far with its fix. Also how to point the app at a
+  free Atlas cluster when Docker isn't available — the app creates its own collections, validators
+  and indexes on the first request, so a brand-new cluster needs no manual setup.
+- Verified by running it, not by reading it: `npm run db:up` from cold in 13 s, `npm run test:db`
+  green in 2.9 s (59 tests, 6 files), `npm run demo:failover` in 28 s with a new primary after 0.3 s
+  and 0 of 130 acknowledged writes lost, and the app answering `/api/health` with `{"ok":true}`
+  while the signed-out endpoints answer 401 with a plain message.
+
+### Fixed
+- **The ER diagram had drifted.** `docs/nosql/MODEL.md` §2 was written on 2026-09-22 and
+  `lib/types.ts` has moved six times since. The `tracks` entity was missing `startDate`,
+  `currentPhase`, `currentPhaseStartDate`, `phaseDaysSpent`, `lastTasksResetDate`,
+  `lastUpdatedDates`, `panelColumns`, `hiddenPanels` and `restDaysFrom` entirely, and its embedded
+  arrays were listing fields that have since gained siblings — `meta.order`, `TaskItem.description`,
+  `FocusType.restDay`, and seven fields on a material. The module marks the diagram on whether
+  "attributes and types used should be clear", so this mattered.
+- The embedded shapes moved out of the diagram's inline comments into a table under it. One comment
+  had grown to 150 characters and stretched the rendered box across several screens; the diagram is
+  readable again, and the types are more precise than they were in the comment. Checked by actually
+  rendering it with mermaid rather than by eye.
+- `lib/server/collections.ts` is unchanged since the documentation was written, so MODEL's indexes
+  (§5) and validators (§6) were still accurate and are untouched.
+
+### Added
+- `university/SE_06_NoSQL_databases/` — the submission desk for the module: where each hand-in
+  requirement is met, the verification run with its numbers, the submission checklist (including
+  read access for the coordinator, and the warning that `MODULES_PLAN.md` names security issues on
+  the assumption the repo stays private), and a self-assessment scaffold. As with SE_47, the
+  scaffold is facts and questions rather than a draft — the reflection essay has to be in your own
+  words.
+
 ## [0.117.3] - 2026-11-05
 
 ### Fixed
