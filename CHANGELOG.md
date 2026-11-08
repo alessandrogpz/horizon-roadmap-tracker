@@ -7,6 +7,33 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.117.5] - 2026-11-08
+
+### Documentation
+- **The SE_06 level mapping now covers all three levels**, against the module's own wording rather
+  than a condensed version of it. `MODULES_PLAN.md` set the target at Level 1 in week one, before
+  any of the work existed; read against the real criteria, the evidence reaches **Level 3**:
+  designed, deployed, operated and maintained in production, with the design decisions reasoned and
+  measured rather than asserted.
+- **The one real gap, closed** — `MODEL.md` §10, *The same comparison, use case by use case*. Level
+  2 asks for the NoSQL types' trade-offs **for advanced use cases**, not in general, which §10 was
+  not answering. The project's four advanced use cases (the per-item sync merge in one
+  multi-document transaction; longest streaks by gaps and islands; weighted compound text search;
+  counting rejections rather than listing them) are now weighed against document, key-value,
+  wide-column and graph stores, one row each.
+- It says where MongoDB is the **wrong** tool, which the general comparison let it avoid: the rate
+  and security counters belong in a key-value store and are here only to avoid a second thing to
+  deploy, secure, back up and explain; and the text index will never do fuzzy or phrase matching,
+  so Atlas Search is the ceiling. Both are better said out loud than discovered by an examiner.
+- Level 3's "operate and maintain" evidence gathered in one place: Atlas with a least-privilege user
+  and a network access list, a weekly encrypted backup whose restore was tested and found broken the
+  first time, a daily operations check, an uptime check every 30 minutes, retention by TTL index,
+  a runbook entry per failure mode, CI standing up its own three-member replica set on every push —
+  and `0.21.4`, a real production incident in the data layer, found and fixed.
+- `university/SE_06_NoSQL_databases/` updated to claim Level 3, and to name the two soft spots
+  first: sharding is reasoned but never run (the free tier cannot shard), and "production" here
+  means live with real data, backups and monitoring — not scale.
+
 ## [0.117.4] - 2026-11-08
 
 ### Documentation
