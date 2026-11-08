@@ -83,11 +83,21 @@ services:
     volumes:
       - ./docker/mongo-init.js:/mongo-init.js:ro
     entrypoint:
-      - bash
-      - -c
-      - |
-        until mongosh --quiet --port 27017 --eval 'db.runCommand({ ping: 1 })' > /dev/null 2>&1; do sleep 1; done
+  - bash
+  - -c
+  - |
+    echo "Waiting for MongoDB on port 27017..."
+
+    for i in $(seq 1 120); do
+      if mongosh --quiet --port 27017 --eval 'db.runCommand({ ping: 1 })' > /dev/null 2>&1; then
+        echo "MongoDB is responding."
         exec mongosh --quiet --port 27017 /mongo-init.js
+      fi
+      sleep 1
+    done
+
+    echo "ERROR: MongoDB did not become ready within 120 seconds."
+    exit 1
 
 volumes:
   keyfile:
