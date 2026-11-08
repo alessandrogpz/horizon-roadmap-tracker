@@ -16,6 +16,8 @@ Every document in this project, what it is for, and when to open it.
 | Document | What's in it |
 |---|---|
 | [`nosql/README.md`](nosql/README.md) | The module's entry point: use cases, which Level 1 objective is met where, how to run the database locally and how the deployed one is set up |
+| [`nosql/DATA_LAYER.md`](nosql/DATA_LAYER.md) | Every use case traced from the control a person touches, through the client, route and handler, to the data-layer function, the MongoDB operation and the index that serves it — the evidence that this is a data layer in a working application, not a demo script |
+| [`nosql/SETUP.md`](nosql/SETUP.md) | Setting up the development environment and the database from nothing: what the machine needs, what each step prints, measured timings, every failure seen so far with its fix, and Atlas when Docker isn't available |
 | [`nosql/MODEL.md`](nosql/MODEL.md) | The data model: every collection with its fields and types, a diagram, why each design choice was made (embedding, the bucket pattern, counting instead of listing), indexes, validation, consistency, schema evolution, sharding, and NoSQL vs relational |
 | [`nosql/DATA.md`](nosql/DATA.md) | The generated dataset: how `npm run db:seed` makes 2,000 users and 572,152 days, and what it weighs |
 | [`nosql/PERFORMANCE.md`](nosql/PERFORMANCE.md) | `explain()` on the app's real queries, with and without their indexes, including the ESR rule measured |
