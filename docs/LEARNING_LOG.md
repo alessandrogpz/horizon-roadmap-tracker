@@ -1210,8 +1210,8 @@ once the thing was in a hand.
 - **Render the UI and measure it.** Three layout bugs were found by serving the React Native app
   through react-native-web at 375×812 and measuring the DOM — category chips squeezing to 18px and
   overlapping, the tab bar clipping its own labels to a 5-pixel sliver, a modal parked a whole
-  viewport below the screen. None were visible in the code. `.claude/launch.json` now carries the
-  config to do it.
+  viewport below the screen. None were visible in the code. The dev-server
+  configuration to do it is kept locally, outside the repository.
 
 - **A touch screen has no hover, so editable and read-only look identical.** The app now opens
   read-only everywhere and puts editing behind a pencil. The exceptions are the two things the app

@@ -38,12 +38,11 @@ Every document in this project, what it is for, and when to open it.
 | Document | What's in it |
 |---|---|
 | [`../DEVELOPMENT.md`](../DEVELOPMENT.md) | The workflow: branches, the checks that must pass before `main`, and the versioning rules |
-| [`exams/security.md`](exams/security.md), [`exams/nosql.md`](exams/nosql.md), [`exams/mobile.md`](exams/mobile.md) | One per oral exam: what to show, in what order, and the questions with short answers. [`exams/day-before.md`](exams/day-before.md) is the shared set-up checklist |
+| [`exams/security.md`](exams/security.md), [`exams/nosql.md`](exams/nosql.md), [`exams/mobile.md`](exams/mobile.md) | One per oral exam: what to show, in what order, and the questions with short answers. [`exams/nosql-level3.md`](exams/nosql-level3.md) is the Level 3 drill for SE_06, and [`exams/day-before.md`](exams/day-before.md) the shared set-up checklist |
 | [`DEPLOY.md`](DEPLOY.md) | Putting it live: the Atlas user and network access, Vercel's variables and region, the release, and the checks afterwards |
 | [`../mobile/README.md`](../mobile/README.md) | Working on the phone app day to day: the dev loop, when a rebuild is unavoidable, over-the-air updates, the two build variants, and the Google credentials each one needs |
 | [`../MOBILE_PLAN.md`](../MOBILE_PLAN.md) | The mobile module's plan: the framework decision and what it cost, storage options, lifecycle, rollout, scope and schedule |
 | [`../MODULES_PLAN.md`](../MODULES_PLAN.md) | The plan both modules follow, with its progress note, the decisions taken and why, and the exam question map |
-| [`../AGENTS.md`](../AGENTS.md), [`../CLAUDE.md`](../CLAUDE.md) | Instructions for AI assistants working in this repository |
 
 ## The parts of the system, and where each is documented
 

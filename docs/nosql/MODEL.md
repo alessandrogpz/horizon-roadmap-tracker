@@ -270,9 +270,13 @@ Timestamps from the future are clamped to the present on the way in.
   text index is about three times the size of the tracks themselves on disk. The `userId` prefix makes
   every search a one-user search.
 - **TTL indexes.** They replace cron jobs: MongoDB deletes expired sessions, old audit entries, old rate
-  counters and old security counters itself (a background task, about once a minute). Each collection's
-  retention is one number in its index: 30 days for sessions, 90 for the audit log, 30 for security
-  counters, two windows for rate limits.
+  counters and old security counters itself (a background task, about once a minute). Retention is
+  30 days for sessions, 90 for the audit log, 30 for security counters, and two windows for rate limits —
+  but it is expressed two different ways, and the difference is deliberate. The audit log puts its
+  retention **in the index** (`expireAfterSeconds: 90 * 24 * 60 * 60` on `at`), because every entry is
+  kept for the same time. The other three put it **in the document**, as an `expiresAt` the writer
+  calculates, with `expireAfterSeconds: 0` on the index — because a rate-limit window and a session can
+  each have a lifetime of their own, and an index can only hold one number.
 
 ## 6. Validation
 

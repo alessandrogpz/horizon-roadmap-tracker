@@ -90,8 +90,11 @@ working offline meanwhile, so the next sync simply catches up.
 
 - **Two members down at once**: no majority, so no primary. Secondaries can still serve reads to clients
   that allow it, but writes stop until a majority is back.
-- **Deleting data**: replication copies mistakes too. That's what backups are for: the Atlas free tier has
-  none, so a scheduled `mongodump` is planned (MODULES_PLAN.md, Step 6). Every device also keeps a full
-  copy of its user's data.
+- **Deleting data**: replication copies mistakes too. That's what backups are for: the Atlas free tier
+  takes none, so `.github/workflows/backup.yml` runs `mongodump` every Monday at 03:45 UTC and pipes it
+  straight into `gpg`, encrypted to `ops/backup-key.pub` — GitHub keeps a file it cannot open. Restoring
+  is [`../security/RUNBOOK.md`](../security/RUNBOOK.md) §4, and it was tested: the first attempt silently
+  restored nothing, because `mongorestore` reads a database name in the URI as the target. Every device
+  also keeps a full copy of its user's data.
 - **A whole region**: the Atlas cluster's three members are all in one region (Frankfurt). Surviving the
   loss of a region would need members in several regions, a paid-tier option.

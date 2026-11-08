@@ -115,7 +115,7 @@ The aggregation framework use case.
 | **Route** | `GET /api/stats` |
 | **Handler** | `handleStats`, `lib/server/insights/handlers.ts:42` |
 | **Data layer** | `userStats` and the `pipelines` object, `lib/server/insights/stats.ts:46,153` |
-| **MongoDB** | Five aggregation pipelines over `completions`, all beginning with `$match: { userId }` so the index does the narrowing before anything else runs. |
+| **MongoDB** | Six aggregation pipelines over `completions`, all beginning with `$match: { userId }` so the index does the narrowing before anything else runs. |
 
 | Pipeline | What it does |
 |---|---|
