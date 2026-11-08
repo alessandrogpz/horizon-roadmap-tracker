@@ -5,7 +5,7 @@ off daily tasks, log what you've done, keep notes on your materials, and watch y
 offline in the browser. Signed in with Google, your data syncs through your own account to MongoDB, where
 it can also be searched and analysed.
 
-This folder documents the database side, for the SE_06 NoSQL module.
+This folder documents the database side of Horizon.
 
 | Document | What's in it |
 |---|---|
@@ -15,7 +15,6 @@ This folder documents the database side, for the SE_06 NoSQL module.
 | [DATA.md](DATA.md) | The generated dataset: how it's made, and its counts and sizes |
 | [PERFORMANCE.md](PERFORMANCE.md) | `explain()` measurements of the app's queries, with and without their indexes |
 | [RESILIENCE.md](RESILIENCE.md) | Replication and failover, measured; write concern, read concern, read preference |
-| [`../LEARNING_LOG.md`](../LEARNING_LOG.md) | How it was built, step by step, with the concepts behind each step |
 
 ## Use cases
 
@@ -32,37 +31,6 @@ Each one traced from the control a person touches down to the query and its inde
 | 6 | Delete my account and all its data from the server | **Implemented** (0.21.0) | `lib/server/account/`, Settings → Account |
 | 7 | Share a track with someone else | **Not planned** (the model keeps every user's data separate) | — |
 | 8 | See what the server has been refusing, without keeping anything personal | **Implemented** (0.22.0) | `lib/server/securityEvents.ts`, `npm run ops:check` |
-
-## The module's objectives, and where each is met
-
-### Level 1
-
-| Objective | Where |
-|---|---|
-| Define and adapt data models to meet business/project needs | [MODEL.md](MODEL.md) §1–4; schema evolution §8 |
-| Advantages and disadvantages of NoSQL compared to relational | [MODEL.md](MODEL.md) §10 |
-| Concepts, characteristics and significance of NoSQL | [MODEL.md](MODEL.md) §4, §7 |
-| Limitations of NoSQL | [MODEL.md](MODEL.md) §7 (no foreign keys, so the cascade is the application's) and §10 |
-| Advantages and disadvantages of the different types of NoSQL database | [MODEL.md](MODEL.md) §10 |
-| Use a query or full-text search function | Use cases 3 and 4; traced in [DATA_LAYER.md](DATA_LAYER.md) §2 |
-| Optimise the data structure for huge amounts of data, performance, efficiency | [PERFORMANCE.md](PERFORMANCE.md), [DATA.md](DATA.md), indexes in [MODEL.md](MODEL.md) §5 |
-| Interact through source code: direct access through plain database objects **and** indirect access through a framework | Native driver for sync writes, search and aggregation; Mongoose for users, sessions and notes — [DATA_LAYER.md](DATA_LAYER.md) §3, [MODEL.md](MODEL.md) §6 |
-| Understand and apply replication, distribution, sharding and resilience | [RESILIENCE.md](RESILIENCE.md) (measured failover, write/read concern, read preference); sharding design in [MODEL.md](MODEL.md) §9 |
-
-### Level 2
-
-| Objective | Where |
-|---|---|
-| Design and implement an **advanced use case** with a NoSQL database | Four of them, each traced in [DATA_LAYER.md](DATA_LAYER.md) §2: a **sync merged per item inside one multi-document transaction** across five collections (use case 2); **longest streaks by gaps and islands** with `$setWindowFields` and `$documentNumber` (use case 4); **weighted compound text search** over two collections, scoped to one user (use case 3); and **counting rejections instead of listing them**, where the access pattern rather than the data chose the shape (use case 8) |
-| Advantages and disadvantages of the different types of NoSQL database **for advanced use cases** | [MODEL.md](MODEL.md) §10, *The same comparison, use case by use case* — each of those four against document, key-value, wide-column and graph, including the two places where MongoDB is **not** the best tool and why it is still used |
-
-### Level 3
-
-| Objective | Where |
-|---|---|
-| Independently design, **operate and maintain** the database in a production or production-like environment | Live on MongoDB Atlas since 2026-09-22 ([`../DEPLOY.md`](../DEPLOY.md)): a least-privilege `horizon_prod` user, a network access list, a **weekly encrypted backup** with a restore that was tested and found broken the first time ([`../security/RUNBOOK.md`](../security/RUNBOOK.md) §4, §8), a **daily operations check** (`npm run ops:check`, `.github/workflows/ops.yml`), an **uptime check every 30 minutes** against `/api/health`, retention enforced by TTL indexes rather than a cron job, and a documented response for each failure ([`../security/RUNBOOK.md`](../security/RUNBOOK.md) §2–§7). CI stands up its own three-member replica set and runs the database tests on every push |
-| Reason about own design decisions in great depth and comprehensibility | [MODEL.md](MODEL.md) §4 (every embed/reference/bucket decision with its reason), §9 (why `{userId: "hashed"}` and not the date or `_id`), §10; [PERFORMANCE.md](PERFORMANCE.md) measures the index decisions instead of asserting them; [`../LEARNING_LOG.md`](../LEARNING_LOG.md) records each decision as it was made, with what it cost |
-| **Maintenance in practice** (not a listed objective, but the evidence for the one above) | `0.21.4`: on the day it went live, the first sync of a device holding an old track answered *"Malformed request."* — the track carried `lastUpdatedDates`, a field the app had retired, and the zod request schema refuses any key it does not list. A real production incident in the data layer, diagnosed, fixed, covered by a regression test, and the sharpest argument for why the schema-versioning pattern (§8) is there |
 
 ## Setting up and connecting
 

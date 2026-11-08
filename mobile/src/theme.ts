@@ -3,7 +3,7 @@
 // Taken from the CSS custom properties in ../../app/globals.css. They can't be
 // imported here — React Native has no CSS — which is a small, concrete example
 // of what does and doesn't cross the platform boundary: logic travels, styling
-// does not (MOBILE_PLAN.md §3).
+// does not (university/SE_47_Mobile_development/MOBILE_PLAN.md §3).
 
 import { PixelRatio } from "react-native";
 

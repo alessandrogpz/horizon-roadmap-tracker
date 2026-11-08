@@ -123,7 +123,7 @@ export async function handleSyncPut(request: NextRequest): Promise<Response> {
         merged = markSynced(stored, now);
       } else {
         mode = "merge";
-        // Device first: it keeps today's Drive semantics (see MODULES_PLAN.md 4f).
+        // Device first: it keeps today's Drive semantics (see university/MODULES_PLAN.md 4f).
         merged = mergeWorkspace(device, stored).data;
       }
 
