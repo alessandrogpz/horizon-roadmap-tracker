@@ -1,7 +1,9 @@
 # SE_06 — NoSQL Databases
 
 Assessment material for SE_06, based on Horizon's MongoDB data layer.
-**Target level: 1** (see *Level* below — the evidence overshoots it in places).
+**Claim Level 3** — the evidence is there, and Level 1 was only ever the floor
+the plan set in week one. See *Level* below for the objective-by-objective
+argument and the two soft spots.
 
 ## Your two worries, answered
 
@@ -83,16 +85,60 @@ material lives where an examiner browsing it will find it:
 
 ## Level
 
-`MODULES_PLAN.md` set the target at **Level 1**, and every Level 1 objective is
-mapped to a location in [`docs/nosql/README.md`](../../docs/nosql/README.md).
+`MODULES_PLAN.md` set the target at **Level 1** in week one, before any of this
+existed. Read against the module's actual wording, the work reaches **Level 3**.
+The full mapping, objective by objective with links, is in
+[`docs/nosql/README.md`](../../docs/nosql/README.md#the-modules-objectives-and-where-each-is-met).
+The short version:
 
-Three pieces of the work go beyond what Level 1 asks, and are worth having ready
-rather than claiming in writing: the database is **deployed and operated**
-(Atlas, a weekly encrypted backup, a daily operations check, an uptime check);
-replication is **measured**, not described; and the sharding design is reasoned
-down to why `{userId: "hashed"}` and not the date. If the examiner opens the
-door to a higher level, those are the three to walk through — but read SE_06's
-own Level 2 and 3 wording first and claim only what it actually asks for.
+**Level 1** — all nine objectives met, each mapped to a document.
+
+**Level 2** asks for two things:
+
+- *"design and implement an advanced use case"* — there are four, and each is
+  traced end to end in `DATA_LAYER.md`: a **sync merged per item inside one
+  multi-document transaction** across five collections; **longest streaks by
+  gaps and islands** (`$setWindowFields` + `$documentNumber`); **weighted
+  compound text search** over two collections, scoped to one user; and
+  **counting rejections instead of listing them**, where the write pattern
+  rather than the data chose the shape.
+- *"advantages and disadvantages of different types for advanced use cases"* —
+  this was the one real gap, and it is now `MODEL.md` §10's second half: those
+  four use cases against document, key-value, wide-column and graph, including
+  the two places where MongoDB is **not** the right tool (the rate and security
+  counters belong in Redis; text search tops out below fuzzy and phrase
+  matching) and why it is still used for them.
+
+**Level 3** asks for two more:
+
+- *"independently design, operate and maintain in a production or
+  production-like environment"* — live on Atlas since 2026-09-22 with a
+  least-privilege user and a network access list; a **weekly encrypted backup**
+  whose restore was tested and **found broken the first time**; a **daily
+  operations check** and an **uptime check every 30 minutes**, both scheduled in
+  CI; retention by TTL index rather than cron; a documented response per failure
+  mode; and CI that stands up its own three-member replica set on every push.
+  Operating it also produced a real incident — `0.21.4`, where the live sync
+  refused a device's own old track — found, diagnosed, fixed and regression-tested.
+- *"reason about own design decisions in great depth and comprehensibility"* —
+  `MODEL.md` §4, §9 and §10, `PERFORMANCE.md` measuring the index decisions
+  instead of asserting them, and `LEARNING_LOG.md` recording each decision as it
+  was made.
+
+### The two soft spots, so you hear them from me first
+
+1. **Sharding is designed, never run.** `{userId: "hashed"}` is reasoned down to
+   why not the date and why not `trackId`, but the free tier cannot shard, so it
+   has never been executed. Say so before you are asked. Level 3 does not require
+   it — it asks you to operate *your* database, which you do — but an examiner
+   may well probe there.
+2. **The deployment is a free tier, and it is yours alone.** "Production" here
+   means a live, publicly reachable app with real data, backups, monitoring and a
+   runbook — not scale. Frame it that way and it holds; frame it as a large
+   system and it will not.
+
+Claim Level 3, lead with the operations evidence, and name both of these
+yourself.
 
 ## The one thing that is not done yet
 

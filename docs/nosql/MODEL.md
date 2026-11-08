@@ -354,3 +354,29 @@ responsibility (see §7). The full comparison is in `MODULES_PLAN.md`, Appendix 
   recommendations). Horizon's data is a tree (user → track → days), with no many-to-many web to traverse.
 - **Document** fits: tree-shaped data read and written per owner, a flexible schema with validators, rich
   queries, aggregation, text search, transactions, and replication and sharding built in.
+
+### The same comparison, use case by use case
+
+The paragraphs above weigh the types against the project as a whole. The harder question is what each
+type would do with the project's *advanced* use cases — the four places where the database is doing
+real work rather than storing and fetching. The answer is not "document, every time".
+
+| Advanced use case | What it needs | Document (MongoDB) | Key-value (Redis) | Wide-column (Cassandra) | Graph (Neo4j) |
+|---|---|---|---|---|---|
+| **Sync two devices, merged per item** (§7) | atomic across 5 collections; read-your-writes; a retry on conflict | **Best fit.** One multi-document transaction, snapshot reads, `writeConcern: majority`, and the driver retries a write conflict on newer data | No multi-key transaction with this shape; the merge would move into the app and lose atomicity | Last-write-wins **per column**, tunable consistency, no transactions — closest in spirit to the per-item merge, but a sync spanning five tables could half-commit | Transactions yes, but the data is a tree with no traversal to pay for the graph engine |
+| **Longest streaks** (gaps and islands) | window functions over one partition, ordered by day | `$setWindowFields` + `$documentNumber`, server-side, one round trip | Impossible in the store; every day would be read into the app | Possible only if a table were designed for this query in advance, which is how Cassandra works | Cypher can walk a day-to-next-day chain, but the chain would have to be materialised as edges — expensive writes to make one read cheap |
+| **Full-text search across a user's tracks and notes** | stemming, field weights, ranking, scoped to one user | One compound text index per collection, `$meta: "textScore"`. Good enough; **not** best — a dedicated engine (Elasticsearch, Atlas Search) does phrase and fuzzy matching this cannot | No search inside values at all | No native text search; you build and maintain an inverted index by hand | Full-text is an add-on, and the relationships it is good at are not what is being searched |
+| **Rate limits and security counters** (§4) | one atomic increment per window; automatic expiry; a flood must cost nothing | Works — `$inc` and a TTL index — but it is **the weakest fit in the project**: these are the two collections that gain nothing from documents | **Best fit.** `INCR` with `EXPIRE` is exactly this, in memory, with no disk write per request | Counter columns exist and scale, but it is a heavy dependency for two small counters | No |
+
+Two honest conclusions from that table, both worth saying out loud rather than hiding:
+
+- **The counters belong in a key-value store, not here.** They live in MongoDB because a second
+  datastore is a second thing to deploy, secure, back up and explain, and at this volume the cost is a
+  few documents a day. That is a deliberate trade of the better tool for one less moving part — and it
+  is the first thing to change if request volume grows.
+- **Search is the ceiling.** MongoDB's text index is enough for "find the book with 'rendering' in the
+  title" and will never do fuzzy or phrase matching. Atlas Search (Lucene, same cluster) is the way
+  out if that is ever needed, and it is a paid tier.
+
+Where the document model is *unambiguously* right is the first two rows: a nested record read and
+written per owner, and an aggregation over one owner's days. Those are the two the app does most.

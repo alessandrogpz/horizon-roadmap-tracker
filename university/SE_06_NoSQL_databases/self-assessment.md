@@ -121,8 +121,10 @@
 
 ## 5. Where do you currently stand with respect to content outlined in the module description?
 
-> **The Level 1 objectives, and where the project stands against each. A
-> checklist to argue from — in your own words, and only where you believe it.**
+> **The objectives, and where the project stands against each. A checklist to
+> argue from — in your own words, and only where you believe it. The full
+> mapping with links is in `docs/nosql/README.md`; the Level 1 rows are
+> below, and Levels 2 and 3 follow them.**
 >
 > | Objective | Evidence |
 > |---|---|
@@ -135,12 +137,26 @@
 > | Access the database directly *and* through a framework | Native driver for sync, search and aggregation; Mongoose for users, sessions, notes — `docs/nosql/DATA_LAYER.md` §3 |
 > | Replication, distribution, sharding, resilience | Three-member replica set in dev and on Atlas; failover measured; sharding designed (`{userId: "hashed"}`) and argued, not deployed |
 >
+>
+> | Level 2 objective | Evidence |
+> |---|---|
+> | Design and implement an **advanced use case** | Four: the per-item sync merge in one multi-document transaction across five collections; longest streaks by gaps and islands (`$setWindowFields`); weighted compound text search over two collections; counting rejections rather than listing them |
+> | The types' trade-offs **for advanced use cases** | `MODEL.md` §10, second half — those four against document, key-value, wide-column and graph, including where MongoDB is the wrong tool and why it is used anyway |
+>
+> | Level 3 objective | Evidence |
+> |---|---|
+> | Independently design, **operate and maintain** in production | Atlas since 2026-09-22; least-privilege user and network list; weekly encrypted backup with a restore tested (and broken the first time); daily ops check and 30-minute uptime check in CI; TTL retention; a runbook per failure mode; CI brings up its own replica set on every push |
+> | Reason about own decisions **in great depth** | `MODEL.md` §4, §9, §10; `PERFORMANCE.md` measures the index decisions; `LEARNING_LOG.md` records each as it was taken |
+>
 > **Questions.**
-> - Which level do you claim, and why that one rather than the one above or
->   below? State it in one sentence, then justify it.
-> - Where is your knowledge thinnest? Sharding is reasoned but never run; the
->   comparison with the other NoSQL types is read rather than lived. Naming that
->   before an examiner does is worth more than hoping they miss it.
+> - **You are claiming Level 3.** Say it in one sentence and justify it — the
+>   strongest single sentence is probably about operating the thing, not
+>   designing it.
+> - Where is your knowledge thinnest? **Sharding is reasoned but never run** (the
+>   free tier cannot), and "production" here means live with real data, backups
+>   and monitoring — not scale. Name both before an examiner does.
+> - The `0.21.4` incident is your best maintenance story. What did it change
+>   about how you think about strict validation against data that already exists?
 > - What would you model differently if you started again now?
 
 **GitHub link:** <add the repository URL>
