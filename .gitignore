@@ -57,10 +57,9 @@ data/notes/
 
 
 
-# Raw model-screening output (temp/ai-eval). Large and regenerable by re-running
-# the harness; the failure cases worth keeping are already Vitest fixtures in
-# lib/__tests__/aiValidate.test.ts.
-temp/ai-eval/results/
+# Large, regenerable harness output; the failure cases worth keeping are
+# already Vitest fixtures.
+temp/*/results/
 
 # Database backups hold personal data (npm run db:backup).
 /backups/
@@ -73,5 +72,3 @@ mobile/android
 mobile/ios
 mobile/*.log
 
-# Working files from the design skill's inspector (screenshots, reports).
-.taste-skill/

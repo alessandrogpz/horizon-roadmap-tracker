@@ -68,29 +68,38 @@ erDiagram
   tracks {
     ObjectId _id PK
     ObjectId userId FK
-    string trackId "client id, unique per user"
-    int schemaVersion
+    string trackId UK "client id, unique per user (with userId)"
+    int schemaVersion "migration level this document was written at"
     int configVersion "higher wins in a merge"
-    Date updatedAt
-    object meta "name, color, templateId, createdAt, archived"
-    array phases "embedded: id, title, description, tasks[], detailedInfo"
-    array materials "embedded: id, title, author, status, pages, link, archived, updatedAt"
-    array portfolio "embedded: id, title, completed, repoUrl"
-    array rotations "embedded: id, label, items[], daysOfWeek[], startWeek"
-    array weekSchedule "embedded: name, type, label"
-    object dailyTasks "Mon to Sun: task[]"
-    object dailyRevisionItems "Mon to Sun: revision[]"
-    object focusTypes "key: label, color"
-    string roadmapContent "markdown"
+    Date updatedAt "server clock"
+    object meta "embedded, see below"
+    string startDate "YYYY-MM-DD: the track's day one"
+    int currentPhase
+    string currentPhaseStartDate "optional, YYYY-MM-DD"
+    object phaseDaysSpent "optional: phase id to day count"
+    string lastTasksResetDate "YYYY-MM-DD or empty: last daily rollover"
+    array phases "embedded, see below"
+    array materials "embedded, see below"
+    array portfolio "embedded, see below"
+    array rotations "embedded, see below"
+    array weekSchedule "embedded, see below"
+    array restDaysFrom "optional, embedded, see below"
+    object dailyTasks "Mon to Sun, each a task array"
+    object dailyRevisionItems "Mon to Sun, each a task array"
+    object focusTypes "checked key to a focus type"
+    object lastUpdatedDates "optional: YYYY-MM-DD to ms"
+    object panelColumns "optional: two columns of panel ids"
+    array hiddenPanels "optional: closed module ids"
+    string roadmapContent "markdown: this track's own plan"
   }
   completions {
     ObjectId _id PK
     ObjectId userId FK
     string trackId FK "with userId"
     string date "YYYY-MM-DD"
-    array tasks "embedded: id, done, updatedAt"
-    array revisions "embedded: id, done, updatedAt"
-    array accomplishments "embedded: title, description, plain, done, updatedAt"
+    array tasks "embedded item states, see below"
+    array revisions "embedded item states, see below"
+    array accomplishments "embedded, see below"
     Date updatedAt
   }
   notes {
@@ -112,6 +121,24 @@ erDiagram
     int notes
   }
 ```
+
+### The embedded shapes
+
+Everything marked *embedded* above lives inside its parent document. `?` marks an optional field.
+
+| In | Field | Shape |
+|---|---|---|
+| `tracks` | `meta` | `id: string`, `name: string`, `color: string`, `templateId: string`, `createdAt: number` (ms), `archived?: bool`, `order?: number` |
+| `tracks` | `phases[]` | `id: int`, `title: string`, `description: string`, `tasks: task[]`, `detailedInfo: object`, `recommendedByDay?: int` |
+| `tracks` | `materials[]` | `id: string`, `title: string`, `author?: string`, `category: string`, `type: string`, `status: string`, `currentPage: int`, `totalPages: int`, `currentSubject: string`, `link: string`, `localPath?: string`, `repoUrl?: string`, `archived?: bool`, `updatedAt?: number` (ms) |
+| `tracks` | `portfolio[]` | `id: string`, `title: string`, `completed: bool`, `localPath?: string`, `repoUrl?: string` |
+| `tracks` | `rotations[]` | `id: string`, `label: string`, `items: {title, description?}[]`, `daysOfWeek: string[]`, `target: "revision" \| "focus"`, `startWeek: int`, `phase?: int`, `explanation?: string` |
+| `tracks` | `weekSchedule[]` | `name: string` (`Mon`..`Sun`), `type: string` (a `focusTypes` key), `label: string` |
+| `tracks` | `restDaysFrom[]` | `date: string` (`YYYY-MM-DD`), `days: string[]` — the weekdays off *from* that date |
+| `tracks` | a task | `id: string`, `title: string`, `completed: bool`, `description?: string` |
+| `tracks` | a focus type | `label: string`, `color: string`, `restDay?: bool` |
+| `completions` | `tasks[]`, `revisions[]` | `id: string`, `done: bool`, `updatedAt: number` (ms) |
+| `completions` | `accomplishments[]` | `title: string`, `description?: string`, `plain?: bool`, `done: bool`, `updatedAt: number` (ms) |
 
 Two collections stand apart from the diagram, because they belong to no user by design:
 
@@ -243,9 +270,13 @@ Timestamps from the future are clamped to the present on the way in.
   text index is about three times the size of the tracks themselves on disk. The `userId` prefix makes
   every search a one-user search.
 - **TTL indexes.** They replace cron jobs: MongoDB deletes expired sessions, old audit entries, old rate
-  counters and old security counters itself (a background task, about once a minute). Each collection's
-  retention is one number in its index: 30 days for sessions, 90 for the audit log, 30 for security
-  counters, two windows for rate limits.
+  counters and old security counters itself (a background task, about once a minute). Retention is
+  30 days for sessions, 90 for the audit log, 30 for security counters, and two windows for rate limits —
+  but it is expressed two different ways, and the difference is deliberate. The audit log puts its
+  retention **in the index** (`expireAfterSeconds: 90 * 24 * 60 * 60` on `at`), because every entry is
+  kept for the same time. The other three put it **in the document**, as an `expiresAt` the writer
+  calculates, with `expireAfterSeconds: 0` on the index — because a rate-limit window and a session can
+  each have a lifetime of their own, and an index can only hold one number.
 
 ## 6. Validation
 
@@ -327,3 +358,29 @@ responsibility (see §7). The full comparison is in `MODULES_PLAN.md`, Appendix 
   recommendations). Horizon's data is a tree (user → track → days), with no many-to-many web to traverse.
 - **Document** fits: tree-shaped data read and written per owner, a flexible schema with validators, rich
   queries, aggregation, text search, transactions, and replication and sharding built in.
+
+### The same comparison, use case by use case
+
+The paragraphs above weigh the types against the project as a whole. The harder question is what each
+type would do with the project's *advanced* use cases — the four places where the database is doing
+real work rather than storing and fetching. The answer is not "document, every time".
+
+| Advanced use case | What it needs | Document (MongoDB) | Key-value (Redis) | Wide-column (Cassandra) | Graph (Neo4j) |
+|---|---|---|---|---|---|
+| **Sync two devices, merged per item** (§7) | atomic across 5 collections; read-your-writes; a retry on conflict | **Best fit.** One multi-document transaction, snapshot reads, `writeConcern: majority`, and the driver retries a write conflict on newer data | No multi-key transaction with this shape; the merge would move into the app and lose atomicity | Last-write-wins **per column**, tunable consistency, no transactions — closest in spirit to the per-item merge, but a sync spanning five tables could half-commit | Transactions yes, but the data is a tree with no traversal to pay for the graph engine |
+| **Longest streaks** (gaps and islands) | window functions over one partition, ordered by day | `$setWindowFields` + `$documentNumber`, server-side, one round trip | Impossible in the store; every day would be read into the app | Possible only if a table were designed for this query in advance, which is how Cassandra works | Cypher can walk a day-to-next-day chain, but the chain would have to be materialised as edges — expensive writes to make one read cheap |
+| **Full-text search across a user's tracks and notes** | stemming, field weights, ranking, scoped to one user | One compound text index per collection, `$meta: "textScore"`. Good enough; **not** best — a dedicated engine (Elasticsearch, Atlas Search) does phrase and fuzzy matching this cannot | No search inside values at all | No native text search; you build and maintain an inverted index by hand | Full-text is an add-on, and the relationships it is good at are not what is being searched |
+| **Rate limits and security counters** (§4) | one atomic increment per window; automatic expiry; a flood must cost nothing | Works — `$inc` and a TTL index — but it is **the weakest fit in the project**: these are the two collections that gain nothing from documents | **Best fit.** `INCR` with `EXPIRE` is exactly this, in memory, with no disk write per request | Counter columns exist and scale, but it is a heavy dependency for two small counters | No |
+
+Two honest conclusions from that table, both worth saying out loud rather than hiding:
+
+- **The counters belong in a key-value store, not here.** They live in MongoDB because a second
+  datastore is a second thing to deploy, secure, back up and explain, and at this volume the cost is a
+  few documents a day. That is a deliberate trade of the better tool for one less moving part — and it
+  is the first thing to change if request volume grows.
+- **Search is the ceiling.** MongoDB's text index is enough for "find the book with 'rendering' in the
+  title" and will never do fuzzy or phrase matching. Atlas Search (Lucene, same cluster) is the way
+  out if that is ever needed, and it is a paid tier.
+
+Where the document model is *unambiguously* right is the first two rows: a nested record read and
+written per owner, and an aggregation over one owner's days. Those are the two the app does most.
