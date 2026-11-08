@@ -1,5 +1,5 @@
 // Mongoose models for accounts. Collections: `users`, `sessions`.
-// (Tracks, completions and notes arrive with sync, MODULES_PLAN.md step 4e.)
+// (Tracks, completions and notes arrive with sync, university/MODULES_PLAN.md step 4e.)
 
 import { mongoose } from "./db";
 

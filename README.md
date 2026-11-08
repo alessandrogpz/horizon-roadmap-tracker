@@ -69,13 +69,12 @@ no business logic.
 ├── scripts/dev-env.mjs           # Generates the local database's secrets
 ├── scripts/ops-check.ts          # The daily look at the live database (npm run ops:check)
 ├── ops/                          # The public key the scheduled backup encrypts to
-├── docs/nosql/                   # Data model, dataset, performance, replication (SE_06)
+├── docs/nosql/                   # Data model, data layer, setup, dataset, performance, replication
 ├── docs/security/                # Threat model, implemented measures, operations runbook
 ├── .github/                      # CI, Dependabot, and the scheduled uptime, operations and backup jobs
 ├── docs/README.md                # What every document is, and when to read it
-├── docs/LEARNING_LOG.md          # What each step of the database & security work teaches
-├── docs/ORAL_PREP.md             # Exam day: the security talk, the NoSQL demo, the questions
-└── docs/DEPLOY.md                # Putting accounts and sync live (Atlas + Vercel)
+├── docs/DEPLOY.md                # Putting accounts and sync live (Atlas + Vercel)
+└── university/                   # Coursework: assessment material only, not part of the app
 ```
 
 ### The logo
@@ -198,7 +197,7 @@ It has everything the website has, arranged for a phone rather than a desk:
   Framework.
 
 JavaScript changes reach installed phones over the air; native ones need a new
-build. `MOBILE_PLAN.md` covers the architecture and `mobile/README.md` the
+build. `university/SE_47_Mobile_development/MOBILE_PLAN.md` covers the architecture and `mobile/README.md` the
 build and release workflow.
 
 ---

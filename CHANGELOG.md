@@ -7,6 +7,38 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.118.0] - 2026-11-08
+
+### Changed
+- **Coursework and software documentation are now separate.** Everything that exists only for the
+  three module assessments moved to `university/`; everything that documents the software stays in
+  `docs/`, where an examiner browsing the repository will find it. Moved: `MODULES_PLAN.md`,
+  `MOBILE_PLAN.md`, `docs/LEARNING_LOG.md`, `docs/ORAL_PREP.md` and all of `docs/exams/`. The
+  repository now reads as a product with documentation, not as coursework with an app attached.
+- Each module folder holds the same three files: a **README** (hand-ins, level mapping, submission
+  checklist), an **exam.md** (the drill), and a **self-assessment.md** scaffold.
+- **The exam material was rewritten as drills rather than prose.** Each one now opens with a
+  four-pass practice plan with a "done when" test, then the demo as a timed table of *show / say*,
+  then the commands that prove each claim **with their expected output**, then cold-call questions.
+  SE_06's two files became one and lost 250 lines; SE_47's prose became a table. Reference material
+  is linked, not restated.
+
+### Added
+- **`university/SE_09_Cybersecurity/`** — the module had only a pointer README. Now: the level
+  mapping against all three levels; `exam.md` with the 5-minute talk as eight beats, five live
+  `curl` checks against the deployed site with their exact expected responses, four local ones, and
+  25 cold-call questions; `cheat-sheet.md` for the theory the repository cannot answer for you
+  (security goals, symmetric vs asymmetric, signatures, TLS 1.3 and its three kinds of key, forward
+  secrecy, layer-3 hardening); and a self-assessment scaffold.
+- The live checks were run, not assumed: a forged cross-site `PUT /api/sync` answers **403**, the
+  same request without a session **401**, `/api/git` **403**, and the response carries HSTS
+  (`max-age=63072000`), a CSP, `X-Frame-Options: DENY` and `nosniff`.
+
+### Fixed
+- **Two different threats shared the ID `T5`** in the threat model — "traffic changed in transit" and
+  "cross-site request forgery". A duplicate identifier in the central hand-in, with `MEASURES.md` and
+  a code comment both pointing at it. CSRF is now **T11**, §7's application-layer row lists it (and
+  `T10`, which it had also dropped), and the count is 44 threats rather than 43.
 ## [0.117.6] - 2026-11-08
 
 ### Added

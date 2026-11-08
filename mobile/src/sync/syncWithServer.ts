@@ -4,7 +4,7 @@
 // a transaction, using the very same `mergeWorkspace` that runs here — so a
 // phone and a laptop ticking different boxes on the same day both keep their
 // tick, and neither overwrites the other. Nothing about that had to be built
-// again for mobile; the phone is simply a third device (MOBILE_PLAN.md §4).
+// again for mobile; the phone is simply a third device (university/SE_47_Mobile_development/MOBILE_PLAN.md §4).
 //
 // The counterpart on the web is lib/serverSync.ts, and the two read almost
 // identically. What differs is where the session comes from (the keystore, not

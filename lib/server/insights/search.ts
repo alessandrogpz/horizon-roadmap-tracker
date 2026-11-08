@@ -6,7 +6,7 @@
 // text. It says *that* a track matched, not *where*, so this also points at
 // the materials and phases containing a search word, for display.
 //
-// Native driver, per MODULES_PLAN.md 4g. Its inputs: the session's user id
+// Native driver, per university/MODULES_PLAN.md 4g. Its inputs: the session's user id
 // and a query string that already passed the zod schema. A $text search is a
 // string, so there's no operator to inject; its only syntax is "quoted
 // phrases" and -excluded words, which are the user's to use.

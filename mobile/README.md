@@ -1,7 +1,7 @@
 # Horizon for Android
 
 The phone app, built with Expo (React Native). The plan, the framework decision and the schedule are
-in [`../MOBILE_PLAN.md`](../MOBILE_PLAN.md).
+in [`../university/SE_47_Mobile_development/MOBILE_PLAN.md`](../university/SE_47_Mobile_development/MOBILE_PLAN.md).
 
 It is a separate npm package on purpose: its own dependencies, its own TypeScript configuration, its
 own bundler. The web app's `tsconfig.json` and ESLint config both exclude this folder, so neither
