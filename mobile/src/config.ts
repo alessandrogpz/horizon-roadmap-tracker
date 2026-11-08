@@ -13,7 +13,7 @@ export const SERVER_URL = (process.env.EXPO_PUBLIC_SERVER_URL ?? extra.serverUrl
 
 /** Horizon's Google OAuth *web* client, the audience the server verifies. The
  *  phone asks Google for a token addressed to it, so the server needs no
- *  second client ID to trust (MOBILE_PLAN.md §4). */
+ *  second client ID to trust (university/SE_47_Mobile_development/MOBILE_PLAN.md §4). */
 export const WEB_CLIENT_ID =
   process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ??
   extra.googleClientId ??

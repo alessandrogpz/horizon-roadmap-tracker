@@ -185,7 +185,7 @@ features.
 | ~~1–2~~ (09-22) | **Done:** Expo app, shared core, SQLite, today's plan, sign-in, sync, the pedometer, permissions, share sheet and deep links | — |
 | 3 (09-29) | Play internal-testing release once identity verification clears; the standalone preview build on the phone | First full rehearsal of the security talk |
 | 4 (10-06) | Polish what the rehearsals expose; optional: today's checklist in the share text, Health Connect | Rehearse NoSQL and mobile |
-| 5 (10-13) | Hand-in admin: repo access, the Learning Platform forms | Rehearse all three (`docs/exams/`) |
+| 5 (10-13) | Hand-in admin: repo access, the Learning Platform forms | Rehearse all three (each module's `exam.md`) |
 | 6 (10-20) | Buffer | Rehearse |
 | 7 (10-27) | Buffer, and the day-before checklist | Rehearse |
 

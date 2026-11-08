@@ -51,7 +51,7 @@ export async function createSession(
  *
  * `Bearer` is deliberate: unlike a cookie, it is never attached automatically,
  * so a request carrying it cannot be forged by another site simply by pointing
- * a browser at this API — which is the whole shape of CSRF (threat T5).
+ * a browser at this API — which is the whole shape of CSRF (threat T11).
  */
 export function sessionTokenFrom(request: { cookies: { get(name: string): { value: string } | undefined }; headers: Headers }): string | undefined {
   const header = request.headers.get("authorization");

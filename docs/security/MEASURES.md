@@ -39,7 +39,7 @@ Every security measure in Horizon: the threat it answers (IDs from
 
 | Measure | Threats | Where | Verified by |
 |---|---|---|---|
-| State-changing API routes require a same-origin `Origin` (and `Sec-Fetch-Site`, when present), plus JSON bodies | CSRF on the API | `lib/server/http.ts` | `serverHttp.test.ts`, `*.db.test.ts` (403s) |
+| State-changing API routes require a same-origin `Origin` (and `Sec-Fetch-Site`, when present), plus JSON bodies | T11 | `lib/server/http.ts` | `serverHttp.test.ts`, `*.db.test.ts` (403s) |
 | Local-only routes check `Host`, `Origin` and `Sec-Fetch-Site`; `/api/open` accepts JSON only | E1 | `lib/server/localRequest.ts`, `app/api/open/route.ts` | `localRequest.test.ts`; attack page before and after (0.14.4) |
 | `/api/git` checks the path restriction before existence, and again after symlinks, with generic errors; `/api/open` validates the link (string, length, no leading `-`) | I4, I5, E4 | `app/api/git`, `app/api/open`, `app/api/notes` | `localRoutes.test.ts` |
 | Content-Security-Policy: `connect-src` allowlist, `img-src 'self' data: blob:`, `frame-ancestors 'none'`, `object-src 'none'`, `form-action 'self'`, `base-uri 'self'`; plus Referrer-Policy, `nosniff` and `X-Frame-Options: DENY` | I2, I3 | `next.config.ts` | Live headers checked with curl |

@@ -21,7 +21,7 @@
 > generated data, `explain()` report, failover demo and `docs/nosql/` (0.20.1).
 > Account deletion (use case 6) shipped in 0.21.0, and Step 6's in-repo work in 0.21.1
 > (CI, Dependabot, gitleaks, Semgrep, backups, MEASURES.md, RUNBOOK.md). Step 7's guides
-> shipped in 0.21.3: `docs/ORAL_PREP.md` and `docs/DEPLOY.md`.
+> shipped in 0.21.3: the exam drills and `docs/DEPLOY.md`.
 > **Live since 2026-09-22** (0.21.4), two weeks ahead of the week-5 slot: an Atlas free cluster in
 > Frankfurt with a `readWrite`-on-one-database user, Vercel's production variables and `fra1`
 > region, `main` protected by a ruleset requiring a pull request and the four CI checks, and the
@@ -37,7 +37,7 @@
 > staging database, which needs a fixed preview URL registered with Google first.
 > The plan moved from
 > `temp/` to the repo root in 0.17.1. What each step teaches:
-> `docs/LEARNING_LOG.md`, updated with every step.
+> `university/LEARNING_LOG.md`, updated with every step.
 
 ---
 
@@ -972,7 +972,7 @@ leave them unsharded or shard on hashed `_id`.
 - Code documentation: keep the existing habit of explaining security decisions
   in comments.
 
-*DONE in 0.21.3:* `docs/ORAL_PREP.md` (a checklist for the day before;
+*DONE in 0.21.3:* the exam drills (a checklist for the day before;
 the 5-minute security talk timed in seven parts; the security question map
 with short answers and a TLS-keys explanation; a 10-minute NoSQL demo in six
 parts with ready `mongosh` queries; the NoSQL questions) and `docs/DEPLOY.md`

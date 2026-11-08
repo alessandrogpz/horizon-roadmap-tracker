@@ -7,7 +7,7 @@ sign-in with Google, from 0.18.0, as built, and adds S6; 1.3 updates T8 for the
 1.6 adds the read-only search and stats routes from 0.20.0;
 1.7 adds account deletion from 0.21.0 and T10;
 1.8 marks the 0.21.1 development life cycle measures). Models Horizon v0.21.1 *and* the planned sign-in
-with Google plus MongoDB sync (`MODULES_PLAN.md`, Step 4), so that
+with Google plus MongoDB sync (`university/MODULES_PLAN.md`, Step 4), so that
 security is designed in before the server is built. Parts that don't exist yet
 are marked **planned**. Revisit after Step 4 ships, and whenever a route, a
 data store or a third party is added.
@@ -231,7 +231,7 @@ data leak whether or not anyone was attacking.
 ## 6. Threats
 
 L = likelihood, I = impact, both 1–3. Risk is rated before mitigation. Plan
-steps like "4b" refer to `MODULES_PLAN.md`.
+steps like "4b" refer to `university/MODULES_PLAN.md`.
 
 ### Spoofing: pretending to be someone else
 
@@ -273,7 +273,7 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 | I1 | IDOR: user A asks for a track by its id and gets user B's. Track ids are only unique per user, and every migrated legacy workspace has the same one (`track_legacy_engine_graphics`), so even a bug without an attacker would mix users' data | F4, A, DB | 3 | 3 | High | Every query filters by the session's `userId`. A unique index on `{userId, trackId}`. Tests that user A can't read or write user B's tracks, completions or notes, even with the same track id | Implemented (0.19.0 sync; 0.20.0 search and stats: every query and every `$lookup` filters by the session's `userId`; compound text indexes start with `userId`; tested with two users sharing `track_legacy_engine_graphics`) |
 | I2 | Cross-site scripting (XSS): injected script reads the GitHub token and everything in IndexedDB, or sends requests as the signed-in user | B, LS, IDB | 1 | 3 | Medium | React escapes what it renders. The markdown renderer escapes all HTML and allows only safe link schemes (`lib/markdown.ts`). The session cookie is `HttpOnly`. The CSP limits where data can be sent, within the limits described in I3 | Implemented |
 | I3 | The CSP's `connect-src` allowlist doesn't cover every way out. Injected script could still send data inside an image URL (`img-src https:` allows any HTTPS host), or by navigating the page away | B | 1 | 3 | Medium | Narrow `img-src` to `'self' data: blob:`; the app loads no external images today. Add Google's avatar host only if the UI shows one. No CSP rule can restrict navigation, so preventing XSS (I2) remains the real defence | Implemented (0.18.0: `img-src 'self' data: blob:`) |
-| T5 | Cross-site request forgery: another site makes the browser act as the signed-in user | A | 2 | 3 | High | `Origin` and `Sec-Fetch-Site` checked on every state-changing route; JSON-only bodies; SameSite cookie | Implemented (0.14.4 for the local routes, 0.19.0 for the account API). Refined 0.28.2: a request carrying **no cookie** is allowed without an `Origin` — it has no ambient authority to abuse, which is what CSRF depends on, and the phone authenticates with a Bearer token it supplies deliberately. A cookie with no `Origin` is still refused |
+| T11 | Cross-site request forgery: another site makes the browser act as the signed-in user | A | 2 | 3 | High | `Origin` and `Sec-Fetch-Site` checked on every state-changing route; JSON-only bodies; SameSite cookie | Implemented (0.14.4 for the local routes, 0.19.0 for the account API). Refined 0.28.2: a request carrying **no cookie** is allowed without an `Origin` — it has no ambient authority to abuse, which is what CSRF depends on, and the phone authenticates with a Bearer token it supplies deliberately. A cookie with no `Origin` is still refused |
 | I4 | Error messages reveal internals: `/api/git` and `/api/notes` return the raw `error.message`, and `/api/git`'s 403 names the home directory | D | 1 | 1 | Low | Generic messages to the client, details only in server logs. New routes do this from the start | Implemented (0.19.1: `/api/git` and `/api/notes` return generic messages and log details server-side; the 403 no longer names the home directory; tested) |
 | I5 | `/api/git` checks whether a path exists *before* applying the `~/Documents` restriction, so a 404 vs a 403 reveals whether any path on the computer exists | D, H | 1 | 1 | Low | Check the path against `~/Documents` first, then whether it exists, then its real path (to catch symlinks) | Implemented (0.19.1: the `~/Documents` check runs on the path as written before any existence check, and again after following symlinks; tested) |
 | I6 | Tokens or cookies written to logs | A | 2 | 3 | High | Never log request bodies or headers on the auth and sync routes | Implemented (sign-in 0.18.0, sync 0.19.0: generic errors; logs carry reason codes or error names only) |
@@ -281,7 +281,7 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 | I8 | Anyone on the internet can try to connect to the Atlas cluster. The free tier has no private networking and Vercel's outgoing IP addresses change, so the access list has to allow `0.0.0.0/0` | DB | 1 | 3 | Medium | A long random password, TLS, a database user limited to `readWrite` on one database, and separate users for production and preview | Network exposure Accepted; the rest Planned (4a) |
 | I9 | A copy of the database leaks: an Atlas breach, or a stray `mongodump` file | DB | 1 | 3 | Medium | Atlas encrypts storage at rest. Sessions are stored only as hashes, and there are no passwords to steal, because Google handles sign-in. Dumps stay out of the repo | Planned (4a, Step 6) |
 | I10 | Someone with physical access to a computer reads browser data, tokens and `.env.local` | Disk | 1 | 2 | Low | Development desktop: the Linux disk isn't encrypted (checked 2026-09-10). The laptop used for the exam demo needs full-disk encryption and a screen lock | Desktop Accepted; laptop Open |
-| I11 | The private repo contains details of unfixed issues: this document and `MODULES_PLAN.md` | CI | 1 | 2 | Low | Keep the repo private. Remove details of open issues before ever making it public | Accepted |
+| I11 | The private repo contains details of unfixed issues: this document and `university/MODULES_PLAN.md` | CI | 1 | 2 | Low | Keep the repo private. Remove details of open issues before ever making it public | Accepted |
 | I12 | ~~The Drive token could be used to read the user's other Drive files~~ | — | — | — | **Gone** | Drive sync was removed in 0.32.0, so there is no token, no scope and no folder. The strongest mitigation available is deleting the feature: the account sync it duplicated is on infrastructure this project controls | Removed |
 | I13 | Another device, or another program on the computer, reads or changes the local development database | DB | 1 | 2 | Low | It listens on `127.0.0.1` only. Access control is on, and the members authenticate each other with a shared key file. Passwords are generated per machine into git-ignored files only the owner can read (mode 600). The app is given only `horizon_app`'s password, never root's | Implemented (0.17.1; verified: logged-out access refused, sockets on 127.0.0.1) |
 
@@ -314,7 +314,7 @@ steps like "4b" refer to `MODULES_PLAN.md`.
 | Physical | A stolen or borrowed computer; an unencrypted disk | I10 |
 | Network | Who can reach what: Atlas open to the internet, the dev server on the LAN, the local database, request floods | I8, I13, E2, D2 |
 | Transport | Traffic read or changed in transit | T5, T6 |
-| Application | Sign-in, sessions, authorization, validation, XSS, CSRF, errors, logs | S1–S6, T1–T4, T7, R1–R2, I1–I6, I12, D1, E1, E3–E5 |
+| Application | Sign-in, sessions, authorization, validation, XSS, CSRF, errors, logs | S1–S6, T1–T4, T7, T10, T11, R1–R2, I1–I6, I12, D1, E1, E3–E5 |
 | Development and operations | Dependencies, accounts, secrets, deploys, backups | T8, T9, I7, I9, D4, E6, E7 |
 
 ## 8. By security goal
