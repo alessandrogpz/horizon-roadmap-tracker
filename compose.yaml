@@ -46,58 +46,90 @@ services:
       - -c
       - |
         set -e
-        if [ ! -s /keyfile/key ]; then head -c 756 /dev/urandom | base64 -w 0 > /keyfile/key; fi
+        if [ ! -s /keyfile/key ]; then
+          head -c 756 /dev/urandom | base64 -w 0 > /keyfile/key
+        fi
         chown 999:999 /keyfile/key
         chmod 400 /keyfile/key
 
   mongo1:
     <<: *member
-    command: [mongod, --replSet, rs0, --port, "27017", --bind_ip, 127.0.0.1, --keyFile, /keyfile/key]
+    command:
+      - mongod
+      - --replSet
+      - rs0
+      - --port
+      - "27017"
+      - --bind_ip
+      - 127.0.0.1
+      - --keyFile
+      - /keyfile/key
     volumes:
       - mongo1:/data/db
       - keyfile:/keyfile:ro
 
   mongo2:
     <<: *member
-    command: [mongod, --replSet, rs0, --port, "27018", --bind_ip, 127.0.0.1, --keyFile, /keyfile/key]
+    command:
+      - mongod
+      - --replSet
+      - rs0
+      - --port
+      - "27018"
+      - --bind_ip
+      - 127.0.0.1
+      - --keyFile
+      - /keyfile/key
     volumes:
       - mongo2:/data/db
       - keyfile:/keyfile:ro
 
   mongo3:
     <<: *member
-    command: [mongod, --replSet, rs0, --port, "27019", --bind_ip, 127.0.0.1, --keyFile, /keyfile/key]
+    command:
+      - mongod
+      - --replSet
+      - rs0
+      - --port
+      - "27019"
+      - --bind_ip
+      - 127.0.0.1
+      - --keyFile
+      - /keyfile/key
     volumes:
       - mongo3:/data/db
       - keyfile:/keyfile:ro
 
-  # One-shot: initiates the set and creates the users, then exits. Runs on every
-  # `up` and changes only what's missing.
+  # One-shot: initiates the set and creates the users, then exits.
+  # Runs on every `up` and changes only what's missing.
   init:
     image: mongo:8.3
     network_mode: host
-    depends_on: [mongo1, mongo2, mongo3]
+    depends_on:
+      - mongo1
+      - mongo2
+      - mongo3
     # Only this container sees the passwords. The app gets MONGODB_URI from
     # .env.local, and never the root password.
     env_file: .env.docker
     volumes:
       - ./docker/mongo-init.js:/mongo-init.js:ro
     entrypoint:
-  - bash
-  - -c
-  - |
-    echo "Waiting for MongoDB on port 27017..."
+      - bash
+      - -c
+      - |
+        echo "Waiting for MongoDB on port 27017..."
 
-    for i in $(seq 1 120); do
-      if mongosh --quiet --port 27017 --eval 'db.runCommand({ ping: 1 })' > /dev/null 2>&1; then
-        echo "MongoDB is responding."
-        exec mongosh --quiet --port 27017 /mongo-init.js
-      fi
-      sleep 1
-    done
+        for i in $(seq 1 120); do
+          if mongosh --quiet --port 27017 --eval 'db.runCommand({ ping: 1 })' > /dev/null 2>&1; then
+            echo "MongoDB is responding."
+            exec mongosh --quiet --port 27017 /mongo-init.js
+          fi
+          sleep 1
+        done
 
-    echo "ERROR: MongoDB did not become ready within 120 seconds."
-    exit 1
+        echo "ERROR: MongoDB did not become ready within 120 seconds."
+        exit 1
 
 volumes:
   keyfile:
