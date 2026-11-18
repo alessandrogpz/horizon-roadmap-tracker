@@ -17,7 +17,7 @@
 //
 // Everything is written as it happens rather than on a timer or on close:
 // Android can kill this process at any moment and gives no warning
-// (university/SE_47_Mobile_development/MOBILE_PLAN.md §5).
+// (docs/MOBILE.md §5).
 
 import * as SQLite from "expo-sqlite";
 import type { Workspace } from "@shared/types";

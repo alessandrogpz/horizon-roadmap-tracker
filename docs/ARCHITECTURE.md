@@ -98,8 +98,7 @@ no business logic.
 ├── docs/security/                # Threat model, implemented measures, operations runbook
 ├── .github/                      # CI, Dependabot, and the scheduled uptime, operations and backup jobs
 ├── docs/README.md                # What every document is, and when to read it
-├── docs/DEPLOY.md                # Putting accounts and sync live (Atlas + Vercel)
-└── university/                   # Coursework: assessment material only, not part of the app
+└── docs/DEPLOY.md                # Putting accounts and sync live (Atlas + Vercel)
 ```
 ## Local-only endpoints
 

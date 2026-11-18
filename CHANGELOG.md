@@ -7,6 +7,29 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.119.0] - 2026-11-18
+
+### Changed
+- **The repository no longer references `university/` anywhere.** 21 references across code comments,
+  documentation and config now stand on their own, so the coursework folder can be moved out without
+  leaving a broken link behind.
+
+### Added
+- **`docs/MOBILE.md`** — the phone app's architecture, which eight code comments and `mobile/README.md`
+  were citing from a coursework plan. Why a wrapper is not enough; the framework decision and what it
+  costs; what is shared with the web app and the one server-side detail that is not; the four device
+  stores and what each is for; lifecycle and state restoration; rollout. Written from the plan's
+  architecture sections, with the module framing and the obsolete "staying on SDK 57" note dropped.
+- It also records a limit the old text asserted away: **iOS is configured in `app.json` but has never
+  been built** — `eas.json` defines Android profiles only.
+
+### Fixed
+- Six references to the implementation plan rewritten to be self-contained: `DEPLOY.md` no longer
+  points at a plan section for its own steps, `MODEL.md` §10 drops a pointer to an appendix for a
+  comparison it already makes, the threat model explains its own `4b`-style step labels, and three
+  server comments describe what they do rather than citing a plan step.
+- Threat **I11** no longer names the plan file as the second place unfixed issues are written down.
+
 ## [0.118.4] - 2026-11-18
 
 ### Changed

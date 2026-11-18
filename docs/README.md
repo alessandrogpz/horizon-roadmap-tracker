@@ -14,6 +14,7 @@ flat index.
 | To understand how it is put together | [`ARCHITECTURE.md`](ARCHITECTURE.md) |
 | To set up the database from nothing | [`nosql/SETUP.md`](nosql/SETUP.md) |
 | To put it on a phone | [`INSTALL.md`](INSTALL.md) |
+| To understand the phone app | [`MOBILE.md`](MOBILE.md) |
 | To know what changed and when | [`../CHANGELOG.md`](../CHANGELOG.md) |
 | The workflow: branches, checks, versioning | [`../DEVELOPMENT.md`](../DEVELOPMENT.md) |
 
@@ -45,6 +46,7 @@ flat index.
 |---|---|
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | How the three clients share one core, the layering inside the web app, the directory tree, the local-only endpoints, the GitHub rate-limit budget, and the logo |
 | [`INSTALL.md`](INSTALL.md) | Installing it on a phone as a PWA or as the Android app, and what the Android app adds |
+| [`MOBILE.md`](MOBILE.md) | The phone app: why not a wrapper, the framework decision and its cost, what is shared with the web app, the four device stores, lifecycle and state restoration, and rollout |
 | [`DEPLOY.md`](DEPLOY.md) | Putting it live: the Atlas user and network access, Vercel's variables and region, the release, and the checks afterwards |
 | [`../mobile/README.md`](../mobile/README.md) | The phone app day to day: the dev loop, when a rebuild is unavoidable, over-the-air updates, the two build variants, and the Google credentials each needs |
 
@@ -63,7 +65,7 @@ flat index.
 | Security counters, health check, daily check | `lib/server/securityEvents.ts`, `lib/server/health.ts`, `scripts/ops-check.ts` | MEASURES "Detection and response"; RUNBOOK §7 |
 | Backups, encrypted and scheduled | `scripts/backup.ts`, `.github/workflows/backup.yml`, `ops/` | RUNBOOK §4, §8 |
 | CI, dependency audit, secret scan, static analysis | `.github/workflows/ci.yml`, `.github/dependabot.yml` | MEASURES "Development life cycle" |
-| The phone app: shared core, SQLite, sign-in, sync | `mobile/src/` | [`../mobile/README.md`](../mobile/README.md) |
+| The phone app: shared core, SQLite, sign-in, sync | `mobile/src/` | [`MOBILE.md`](MOBILE.md), [`../mobile/README.md`](../mobile/README.md) |
 | Replica set, failover, the generated dataset | `compose.yaml`, `scripts/{seed,explain,failover}.ts` | RESILIENCE; DATA |
 
 ## The scripts

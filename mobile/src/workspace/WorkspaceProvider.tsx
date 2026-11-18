@@ -4,7 +4,7 @@
 // Every rule about what an edit *means* comes from the shared core in ../lib —
 // the same code the website runs. This file only decides when to read, when to
 // write, and what the screens can call. That split is the whole reason a second
-// platform is a few weeks of work rather than a rewrite (university/SE_47_Mobile_development/MOBILE_PLAN.md §3).
+// platform is a few weeks of work rather than a rewrite (docs/MOBILE.md §2).
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { AppState, type AppStateStatus } from "react-native";

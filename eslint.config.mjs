@@ -12,7 +12,7 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    // The Expo app is a separate package with its own toolchain (university/SE_47_Mobile_development/MOBILE_PLAN.md).
+    // The Expo app is a separate package with its own toolchain (docs/MOBILE.md).
     "mobile/**",
     // Dot-directories hold local tool configuration and vendored third-party
     // sources, not this app's code. Linting them says nothing about the app and

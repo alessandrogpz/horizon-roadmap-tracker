@@ -1,8 +1,8 @@
 # Deploying accounts and sync to horizonroadmap.com
 
 Until these steps are done, the live site works exactly as before. Without a Google client ID and a
-database it hides sign-in, and the new API routes answer "not available". Planned for week 5
-(university/MODULES_PLAN.md §5). Do them in order.
+database it hides sign-in, and the new API routes answer "not available". Do the steps below in
+order.
 
 ## 1. Atlas: the database users and network access
 

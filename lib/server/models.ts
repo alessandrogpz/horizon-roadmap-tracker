@@ -1,5 +1,6 @@
 // Mongoose models for accounts. Collections: `users`, `sessions`.
-// (Tracks, completions and notes arrive with sync, university/MODULES_PLAN.md step 4e.)
+// (Tracks and completions are written through the native driver; see
+//  docs/nosql/DATA_LAYER.md §3 for which parts use which.)
 
 import { mongoose } from "./db";
 

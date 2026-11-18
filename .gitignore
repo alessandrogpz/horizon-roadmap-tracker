@@ -72,11 +72,9 @@ mobile/android
 mobile/ios
 mobile/*.log
 
-# Hand-in media and generated PDFs. Large, regenerable, and uploaded to the
-# assessment platform rather than served from the repository.
-university/**/*.mp4
-university/**/*.mov
-university/**/*.pdf
+# Large media and generated PDFs are not served from this repository.
+*.mp4
+*.mov
 
 # Scratch output from local review tooling.
 .impeccable/

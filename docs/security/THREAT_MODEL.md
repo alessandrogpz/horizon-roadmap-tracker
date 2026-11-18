@@ -6,8 +6,8 @@ sign-in with Google, from 0.18.0, as built, and adds S6; 1.3 updates T8 for the
 1.5 adds rate limiting and the local-route fixes from 0.19.1;
 1.6 adds the read-only search and stats routes from 0.20.0;
 1.7 adds account deletion from 0.21.0 and T10;
-1.8 marks the 0.21.1 development life cycle measures). Models Horizon v0.21.1 *and* the planned sign-in
-with Google plus MongoDB sync (`university/MODULES_PLAN.md`, Step 4), so that
+1.8 marks the 0.21.1 development life cycle measures). Models Horizon v0.21.1 *and* the then-planned
+sign-in with Google plus MongoDB sync, so that
 security is designed in before the server is built. Parts that don't exist yet
 are marked **planned**. Revisit after Step 4 ships, and whenever a route, a
 data store or a third party is added.
@@ -230,8 +230,9 @@ data leak whether or not anyone was attacking.
 
 ## 6. Threats
 
-L = likelihood, I = impact, both 1–3. Risk is rated before mitigation. Plan
-steps like "4b" refer to `university/MODULES_PLAN.md`.
+L = likelihood, I = impact, both 1–3. Risk is rated before mitigation. Labels
+like "4b" are steps of the implementation plan the server was built to; §10
+lists them.
 
 ### Spoofing: pretending to be someone else
 
@@ -281,7 +282,7 @@ steps like "4b" refer to `university/MODULES_PLAN.md`.
 | I8 | Anyone on the internet can try to connect to the Atlas cluster. The free tier has no private networking and Vercel's outgoing IP addresses change, so the access list has to allow `0.0.0.0/0` | DB | 1 | 3 | Medium | A long random password, TLS, a database user limited to `readWrite` on one database, and separate users for production and preview | Network exposure Accepted; the rest Planned (4a) |
 | I9 | A copy of the database leaks: an Atlas breach, or a stray `mongodump` file | DB | 1 | 3 | Medium | Atlas encrypts storage at rest. Sessions are stored only as hashes, and there are no passwords to steal, because Google handles sign-in. Dumps stay out of the repo | Planned (4a, Step 6) |
 | I10 | Someone with physical access to a computer reads browser data, tokens and `.env.local` | Disk | 1 | 2 | Low | Development desktop: the Linux disk isn't encrypted (checked 2026-09-10). The laptop used for the exam demo needs full-disk encryption and a screen lock | Desktop Accepted; laptop Open |
-| I11 | The private repo contains details of unfixed issues: this document and `university/MODULES_PLAN.md` | CI | 1 | 2 | Low | Keep the repo private. Remove details of open issues before ever making it public | Accepted |
+| I11 | The private repo contains details of unfixed issues, this document among them | CI | 1 | 2 | Low | Keep the repo private. Remove details of open issues before ever making it public | Accepted |
 | I12 | ~~The Drive token could be used to read the user's other Drive files~~ | — | — | — | **Gone** | Drive sync was removed in 0.32.0, so there is no token, no scope and no folder. The strongest mitigation available is deleting the feature: the account sync it duplicated is on infrastructure this project controls | Removed |
 | I13 | Another device, or another program on the computer, reads or changes the local development database | DB | 1 | 2 | Low | It listens on `127.0.0.1` only. Access control is on, and the members authenticate each other with a shared key file. Passwords are generated per machine into git-ignored files only the owner can read (mode 600). The app is given only `horizon_app`'s password, never root's | Implemented (0.17.1; verified: logged-out access refused, sockets on 127.0.0.1) |
 

@@ -85,7 +85,6 @@ The Dexie (IndexedDB) database and Google Drive `database.json` used for daily p
 | CI and dependency updates | `.github/workflows/ci.yml` (checks, database tests, gitleaks, Semgrep), `.github/dependabot.yml` |
 | Security measures, and what to do in an incident | `docs/security/MEASURES.md`, `docs/security/RUNBOOK.md`, `SECURITY.md` |
 | Threats and how each is handled | `docs/security/THREAT_MODEL.md`: update it when adding a route, a data store or a third party |
-| Coursework material (plans, learning log, exam drills) | `university/` — assessment only; nothing the app needs lives there |
 
 Rules of thumb: `lib/` stays free of React, components stay free of business
 rules. A new mutation belongs in `lib/trackActions.ts` as a pure

@@ -51,6 +51,7 @@ Documentation of this project is structured using the
 **Explanation:** how it is put together, and why.
 
 - [Architecture](docs/ARCHITECTURE.md) — the shared core, the clients, the layering
+- [The phone app](docs/MOBILE.md) — the framework decision, device storage, lifecycle, rollout
 - [Why a document database](docs/nosql/MODEL.md#10-why-a-document-database)
 - [Replication and failover](docs/nosql/RESILIENCE.md) — measured, with write and read concern
 - [Threat model](docs/security/THREAT_MODEL.md) — 44 STRIDE threats, rated, with accepted risks
