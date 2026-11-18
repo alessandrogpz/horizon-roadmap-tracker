@@ -7,6 +7,27 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.118.2] - 2026-11-18
+
+### Changed
+- **The README is organised by [Diátaxis](https://diataxis.fr) mode** — tutorial, how-to guides,
+  reference, explanation — matching the structure used in the ray-tracer repository. 237 lines down
+  to 118. What a visitor needs in order to *do* something is now one click from the top, grouped by
+  what they are trying to do rather than by which subsystem it belongs to.
+- The features list lost its walls of text. Each entry is now one or two lines; the reasoning behind
+  each behaviour moved to the document that owns it.
+- Dropped the stale note that the workspace was "configured for the 12-Month Graphics & Game Engine
+  Developer track" — a personal detail that has not been true of the project for a long time.
+
+### Added
+- **`docs/ARCHITECTURE.md`** — the explanation the README was carrying inline: three clients over one
+  framework-free core, the `lib/` versus `components/` layering, the full directory tree, the
+  local-only endpoints and why they refuse everything else, the GitHub rate-limit budget, and the
+  logo pipeline.
+- **`docs/INSTALL.md`** — installing it on a phone, as a PWA or as the Android app, and a table of
+  exactly what the Android app adds over the PWA (step counter, share sheet, deep links, Storage
+  Access Framework backups) — the four things a browser cannot reach.
+
 ## [0.118.1] - 2026-11-18
 
 ### Changed

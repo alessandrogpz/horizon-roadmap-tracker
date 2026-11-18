@@ -4,10 +4,16 @@ Every document in this project, what it is for, and when to open it.
 
 ## Start here
 
+The [root README](../README.md) is the entry point and groups everything below by
+[Diátaxis](https://diataxis.fr) mode — tutorial, how-to, reference, explanation. This file is the
+flat index.
+
 | If you want | Read |
 |---|---|
 | To understand the app and run it | [`../README.md`](../README.md) |
+| To understand how it is put together | [`ARCHITECTURE.md`](ARCHITECTURE.md) |
 | To set up the database from nothing | [`nosql/SETUP.md`](nosql/SETUP.md) |
+| To put it on a phone | [`INSTALL.md`](INSTALL.md) |
 | To know what changed and when | [`../CHANGELOG.md`](../CHANGELOG.md) |
 | The workflow: branches, checks, versioning | [`../DEVELOPMENT.md`](../DEVELOPMENT.md) |
 
@@ -37,6 +43,8 @@ Every document in this project, what it is for, and when to open it.
 
 | Document | What's in it |
 |---|---|
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) | How the three clients share one core, the layering inside the web app, the directory tree, the local-only endpoints, the GitHub rate-limit budget, and the logo |
+| [`INSTALL.md`](INSTALL.md) | Installing it on a phone as a PWA or as the Android app, and what the Android app adds |
 | [`DEPLOY.md`](DEPLOY.md) | Putting it live: the Atlas user and network access, Vercel's variables and region, the release, and the checks afterwards |
 | [`../mobile/README.md`](../mobile/README.md) | The phone app day to day: the dev loop, when a rebuild is unavoidable, over-the-air updates, the two build variants, and the Google credentials each needs |
 
