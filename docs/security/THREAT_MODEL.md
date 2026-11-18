@@ -342,6 +342,7 @@ steps like "4b" refer to `university/MODULES_PLAN.md`.
 | `docker` group membership (E6) | A single-user development machine |
 | Replay of a captured ID token (S6) | Capturing one takes XSS, which can already act as the user; a nonce would add a round trip for little gain |
 | Account deletion without re-authentication (T10) | Needs a stolen session first, and devices keep full copies; step-up authentication stays an option |
+| Advisories in development-only dependencies (T8) | The CI gate blocks on `npm audit --omit=dev --audit-level=high`, so an advisory in shipped code fails the build; one in the linter or the test runner is printed but does not. Those run on this repository's own files, not on anything a user supplies, and upstream sometimes has no patched version for weeks — which must not be able to block a release. As of 2026-11-18 this covers 16 advisories, all one ReDoS in `picomatch`, reached through `eslint-config-next` and `vitest`, with no fixed version published |
 
 ## 10. Actions
 

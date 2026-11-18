@@ -7,6 +7,32 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.118.3] - 2026-11-18
+
+### Security
+- **Upgraded `mongoose` 9.10.1 → 9.12.2.** 9.10.1 was inside the range of four advisories, one of
+  which — [GHSA-gg4r-jv3p-qx3c](https://github.com/advisories/GHSA-gg4r-jv3p-qx3c), high, *"connection-level
+  sanitizeFilter not applied"* — named the exact mechanism `lib/server/db.ts` relies on and
+  `MEASURES.md` cites as the answer to threat T1, NoSQL operator injection. The control was checked
+  before the upgrade rather than assumed: the T1 pair in `auth.db.test.ts` still rejected a smuggled
+  `{"$ne": null}` on the old version, so the documented defence did hold on the path that test
+  covers. Upgraded anyway. The other three were prototype pollution via `Schema.prototype.virtual()`,
+  inherited-property walking on hydrate/set/merge, and a discriminator-key casting bypass.
+- **Upgraded `next` 16.4.3 → 16.4.6**, clearing a cache leak across root params in nested
+  `use cache` functions (range `>=16.3.0 <=16.4.4`). 16.4.3 also made `next build` exit non-zero on
+  its own advisory check, so the build now exits 0 again.
+- **The production dependency tree is clean**: `npm audit --omit=dev --audit-level=high` reports
+  0 vulnerabilities.
+
+### Changed
+- **The CI dependency gate now blocks on shipped code only.** `npm audit --omit=dev
+  --audit-level=high` fails the build; a second, non-blocking run prints advisories in development
+  dependencies. The 16 that remain are one ReDoS in `picomatch`, reached through `eslint-config-next`
+  and `vitest`, and **4.0.7 is the newest published version while the advisory covers `<=4.0.7`** —
+  there is nothing to upgrade to, and an unfixable advisory in the test runner must not be able to
+  block a release. Recorded as an accepted risk in the threat model (§9) with that reasoning, and
+  `MEASURES.md` updated to describe the split gate.
+
 ## [0.118.2] - 2026-11-18
 
 ### Changed

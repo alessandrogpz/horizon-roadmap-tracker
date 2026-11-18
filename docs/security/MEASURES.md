@@ -82,7 +82,7 @@ Every security measure in Horizon: the threat it answers (IDs from
 | Measure | Threats | Where | Verified by |
 |---|---|---|---|
 | CI on every push: types, lint, unit tests, build, database tests on a real replica set | T9 | `.github/workflows/ci.yml` | The workflow itself |
-| Dependency checks in CI: `npm audit --audit-level=high`, and `npm audit signatures` (registry signatures and provenance) | T8 | `.github/workflows/ci.yml` | 0 vulnerabilities; all signatures verified |
+| Dependency checks in CI: `npm audit --omit=dev --audit-level=high` blocks on shipped code, a second non-blocking run prints development advisories, and `npm audit signatures` verifies registry signatures and provenance | T8 | `.github/workflows/ci.yml` | 0 vulnerabilities in the production tree; all signatures verified |
 | Lockfile with `npm ci`; framework pinned exactly; few runtime dependencies; npm blocks dependencies' install scripts | T8 | `package.json`, `package-lock.json` | — |
 | Dependabot for npm, GitHub Actions and the mongo image, targeting `development` | T8 | `.github/dependabot.yml` | — |
 | Secret scan of the whole history on every push (gitleaks) | I7 | `.github/workflows/ci.yml` | 149 commits, no leaks |

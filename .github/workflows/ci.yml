@@ -41,8 +41,15 @@ jobs:
           cache: npm
       - name: Install exactly what the lockfile says
         run: npm ci
-      - name: No known high or critical vulnerabilities
-        run: npm audit --audit-level=high
+      # The gate is on what ships. An advisory in the linter or the test runner
+      # is real but is not reachable by a user of this app, and it can sit
+      # unfixable for weeks when upstream has published no patched version —
+      # which must not be able to block a release. Dev advisories are still
+      # printed below, and recorded as an accepted risk in the threat model.
+      - name: No known high or critical vulnerabilities in shipped code
+        run: npm audit --omit=dev --audit-level=high
+      - name: Advisories in development dependencies, for information
+        run: npm audit --audit-level=high || true
       - name: Every package is signed by the registry
         run: npm audit signatures
       - run: npx tsc --noEmit
