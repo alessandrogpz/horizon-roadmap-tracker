@@ -1,23 +1,23 @@
 # Horizon
 
-A tracker for long goals: plans that run for months, where the question is not
-what to do today but whether you are still on course.
+Progress tracker for multi-month plans.
 
 **[horizonroadmap.com](https://horizonroadmap.com)**
 
 ## Overview
 
-You set up a *track*: a goal, a start date, a deadline, the phases in between,
-and the rhythm you intend to keep each week. Horizon then tells you where you
-stand against that plan — a year of days in the track's own colour, what this
-week asks of you, which phase you should be in by now, and what you have
-actually finished.
+A *track* is a goal with a start date, a deadline, ordered phases and a weekly
+rhythm. The app reports progress against it: a year of daily activity, the
+current week's items, the phase the plan expects by now, and what has been
+completed.
 
-It runs in three places from one codebase: a website, an installable PWA and a
-native Android app. Every domain rule lives in a framework-free TypeScript core
-that all three import unchanged. Signed out, no data leaves the device. Signed
-in, it syncs through your account, merged per item on the server so two devices
-cannot overwrite each other.
+| | |
+|---|---|
+| **Clients** | website, installable PWA, native Android app — one codebase |
+| **Shared code** | every domain rule sits in a framework-free TypeScript core, imported unchanged by all three |
+| **Offline** | fully usable signed out; no data leaves the device |
+| **Sync** | signed in, through the account; merged per item on the server, so concurrent edits on two devices both survive |
+| **Storage** | IndexedDB on the web, SQLite on the phone, MongoDB on the server |
 
 ## Documentation
 

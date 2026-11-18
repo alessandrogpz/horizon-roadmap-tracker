@@ -7,6 +7,12 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.119.2] - 2026-11-19
+
+### Changed
+- The README's opening is a statement of facts rather than a narrative: what a track is, then a table
+  of clients, shared code, offline behaviour, sync and storage. The tagline is one line.
+
 ## [0.119.1] - 2026-11-19
 
 ### Changed
