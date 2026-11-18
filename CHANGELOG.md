@@ -7,6 +7,17 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.118.1] - 2026-11-18
+
+### Changed
+- **SE_47's Framework Analysis is nearly half the length and written like a person wrote it.** 3,564
+  words down to about 1,900, and the register changed with it: fewer file paths and line counts,
+  more plain explanation of what the app does and why. The substance an examiner can probe is still
+  there — the absolute-end-time timer, the Android step counter that cannot see past the
+  foreground, the single-row workspace, the three stores for three reasons — just told rather than
+  catalogued. The claim stays at **Level 2**, with all five of the template's Level 2 sections
+  present: framework comparison, data storage, rollout, inter-app communication, permissions.
+
 ## [0.118.0] - 2026-11-08
 
 ### Changed
