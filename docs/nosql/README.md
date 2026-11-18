@@ -1,11 +1,7 @@
 # Horizon and MongoDB
 
-Horizon is a roadmap and habit tracker: you plan a learning (or fitness, or work) track in phases, tick
-off daily tasks, log what you've done, keep notes on your materials, and watch your streak. It works
-offline in the browser. Signed in with Google, your data syncs through your own account to MongoDB, where
-it can also be searched and analysed.
-
-This folder documents the database side of Horizon.
+The database side of Horizon. The app works offline in the browser; signed in with Google, a user's
+data syncs to MongoDB, where it is also searched and aggregated.
 
 | Document | What's in it |
 |---|---|
@@ -18,8 +14,7 @@ This folder documents the database side of Horizon.
 
 ## Use cases
 
-Each one traced from the control a person touches down to the query and its index in
-[DATA_LAYER.md](DATA_LAYER.md).
+Each one is traced to its query and index in [DATA_LAYER.md](DATA_LAYER.md).
 
 | # | Use case | Status | Where |
 |---|---|---|---|
@@ -56,20 +51,19 @@ when Docker isn't available. The shorter version is in the main
 | `npm run test:db` | Database tests: sign-in, sync, search, stats, rate limits, account deletion (against `horizon_test`) |
 | `npm run db:seed` | Generate the large dataset into `horizon_perf` (2,000 users, a year each) |
 | `npm run db:explain` | Measure the queries on it, and rewrite `PERFORMANCE.md` |
-| `npm run demo:failover` | Stop the primary mid-writes, and show nothing is lost (`-- --crash` to kill it) |
-| `npm run ops:check` | What the last day held: accounts, and the counters the server keeps when it refuses something |
+| `npm run demo:failover` | Stop the primary mid-writes and count the acknowledged writes back (`-- --crash` to kill it instead) |
+| `npm run ops:check` | The last day: accounts, and the counters raised when the server refuses something |
 | `npm run db:backup` | Back it up (`-- --uri-env ATLAS_URI` for the deployed one, `--encrypt-to ops/backup-key.pub` to encrypt) |
 
 **Deployed** since 2026-09-22 at [horizonroadmap.com](https://horizonroadmap.com): MongoDB Atlas (free
 tier, AWS Frankfurt `eu-central-1`), reached through the `MONGODB_URI` environment variable in Vercel,
 whose functions run in the same region. The database user `horizon_prod` has `readWrite` on the
-`horizon` database and nothing else. Step by step, including the network access list and what the
-connection string must contain: [`../DEPLOY.md`](../DEPLOY.md). The cluster is backed up weekly by a
-scheduled workflow, encrypted so that only the owner can read it ([`../security/RUNBOOK.md`](../security/RUNBOOK.md) §8).
+`horizon` database and nothing else. [`../DEPLOY.md`](../DEPLOY.md) covers the network access list and the
+connection string. The cluster is backed up weekly by a scheduled workflow, encrypted to a public key
+([`../security/RUNBOOK.md`](../security/RUNBOOK.md) §8).
 
 ## How much data, and how it was generated
 
 Real use is small: about 28 KB for a year of one user's tracks. To test the model at scale,
 `scripts/seed.ts` generates **2,000 users with 572,152 day documents (251 MB of data, 48 MB on disk)**
-from the app's own templates, with realistic habits and a fixed random seed. The details and sizes are in
-[DATA.md](DATA.md).
+from the app's own templates, with a fixed random seed. Counts and sizes are in [DATA.md](DATA.md).

@@ -7,6 +7,26 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.118.4] - 2026-11-18
+
+### Changed
+- **An editing pass over every document in `docs/` and the root README**, for one thing only: plain,
+  objective statements in place of rhetorical ones. No facts, numbers, file references or measured
+  results changed.
+- The pattern removed throughout was sentences that argued rather than stated — "the clearest
+  demonstration of", "two honest conclusions, both worth saying out loud", "for nothing in return",
+  "written to be followed while someone watches", "the one to be able to explain line by line".
+  Each became the fact it was decorating.
+- **`docs/nosql/DATA_LAYER.md` lost its exam framing.** It opened with a quoted hand-in rule and a
+  section headed *"Why this is not a demo script"*, arguing a case to an examiner. It now opens by
+  describing the data layer, and the three asides addressed to an oral exam are gone. Coursework
+  framing belongs in `university/`, which is where the rest of it already lives.
+
+### Removed
+- `.impeccable/critique/…md`, a tracked scratch file from local review tooling, and `.impeccable/`
+  added to `.gitignore` — the same reasoning that took the other tool directories out of the
+  repository in 0.117.6.
+
 ## [0.118.3] - 2026-11-18
 
 ### Security

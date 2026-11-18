@@ -8,7 +8,7 @@ The full `explain("executionStats")` output of every run is in `docs/nosql/expla
 
 How to read a plan: `COLLSCAN` reads every document in the collection; `IXSCAN <index>` walks an
 index; `FETCH` then loads the matching documents; `TEXT_MATCH`/`TEXT_OR` are the text index at work.
-The number that matters most is **documents examined** compared with **returned**: ideally equal.
+The key figure is **documents examined** against **documents returned**; equal is optimal.
 
 ## 1. One track's days over a date range
 

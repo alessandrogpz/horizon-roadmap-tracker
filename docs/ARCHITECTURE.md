@@ -1,7 +1,7 @@
 # Architecture
 
-How Horizon is put together, and why. For *what* each collection or measure is,
-see the reference documents; this explains the shape.
+How Horizon is put together. For what each collection or measure contains, see
+the reference documents.
 
 ## Three parts, one set of rules
 
@@ -21,27 +21,25 @@ missed one, how two devices' changes are merged — lives in `lib/`, in plain
 TypeScript that imports nothing from React, React Native or Next. Both clients
 import it unchanged.
 
-That constraint is the reason there is one definition of a streak in this
-system rather than two that drift apart, and the reason a second platform took
-weeks rather than a rewrite: about 1,500 lines moved across without edits.
+The result is one definition of each rule rather than one per client. About
+1,500 lines moved to the phone without edits.
 
-**The clients differ only in presentation and storage.** The web app is Next.js
+**The clients differ in presentation and storage only.** The web app is Next.js
 with IndexedDB (Dexie); the phone app is Expo Router over React Native with
 SQLite, AsyncStorage and the Android Keystore. Both are offline-first: signed
-out, nothing leaves the device, and that is a complete way to use Horizon
-rather than a degraded one.
+out, no data leaves the device, and the app is fully usable in that state.
 
-**The server is the shared copy.** Next.js route handlers over MongoDB, holding
+**The server holds the shared copy.** Next.js route handlers over MongoDB:
 accounts, sync, search and history. A sync is one multi-document transaction
-that merges per item, so two devices never overwrite each other
+that merges per item, so two devices cannot overwrite each other
 ([`nosql/DATA_LAYER.md`](nosql/DATA_LAYER.md) use case 2).
 
 ## Layering inside the web app
 
-`lib/` holds the data model and every rule about what an edit means, and knows
-nothing about React. `components/` renders it and owns no business logic. A new
-mutation belongs in `lib/trackActions.ts` as a pure `(track, args) => nextTrack`
-function with a test, not inline in a component.
+`lib/` holds the data model and every rule about what an edit means, and imports
+nothing from React. `components/` renders it and contains no business logic. A
+new mutation belongs in `lib/trackActions.ts` as a pure
+`(track, args) => nextTrack` function with a test, not inline in a component.
 
 ## Directory structure
 
@@ -105,7 +103,7 @@ no business logic.
 ```
 ## Local-only endpoints
 
-Three routes exist for a local checkout and refuse anything else: `/api/git`
+Three routes serve a local checkout only: `/api/git`
 (local filesystem repo status), `/api/open` (opening PDF and source links
 locally) and `/api/notes` (a one-time import of notes from an older on-disk
 format). Each accepts only requests addressed to `localhost` and sent by the

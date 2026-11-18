@@ -53,8 +53,8 @@ What they show:
   prompting an election, and then enters *quiesce mode*: it finishes in-flight work while clients notice
   the new primary. That's why the process only exited 10 s later (Docker's grace period). No write
   noticed anything.
-- **A crash takes as long as the election timeout (10.8 s).** Nobody told the others. They waited for
-  missed heartbeats (10 s), then elected a new primary.
+- **A crash takes as long as the election timeout (10.8 s).** The other members receive no step-down
+  notice, so they wait for missed heartbeats (10 s) before electing a new primary.
 - **No write failed in either case.** The write in flight during the crash waited for a primary and was
   then retried by the driver. That's a **retryable write**: the driver retries a failed write once, on
   the new primary, and the server recognises a retry and never applies it twice.

@@ -139,7 +139,7 @@ value is one neither theme can correct. `readableOn` walks the colour down its
 own hue until it clears contrast; darkening scales every channel by the same
 factor, so the hue is preserved exactly and the track still reads as itself.
 
-Two things that caused wrong answers here, both worth keeping in mind:
+Two causes of incorrect results when measuring this:
 
 - The accent is usually written on a **tint of itself**, which moves the
   background *toward* the text and costs contrast. Solving against the bare

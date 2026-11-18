@@ -1,35 +1,24 @@
 # The data layer, use case by use case
 
-> **Why this document exists.** The hand-in rules say: *"you are expected to
-> demonstrate how you can effectively access and query the database from your
-> code (developing the data layer). This can't be a simple demo or example
-> script. your data layer should demonstrate the use cases you listed for your
-> project in a working application."*
->
-> This is the evidence for that sentence: every listed use case traced from the
-> thing a person touches, through the client, the route and the data-layer
-> function, down to the MongoDB operation and the index that serves it.
+Each use case traced from the control a person touches, through the client, the
+route and the handler, to the MongoDB operation and the index that serves it.
 
-## 1. Why this is not a demo script
+## 1. Shape of the data layer
 
-Five facts, each one checkable in the repository in under a minute.
+Every query runs inside a request handler or the sync transaction; there is no
+standalone script that reads the database. Two clients drive it over HTTP — the
+website and the Expo phone app — through the same five endpoints. It runs on
+MongoDB Atlas (AWS Frankfurt) behind [horizonroadmap.com](https://horizonroadmap.com),
+with `/api/health` checked every 30 minutes. `npm run test:db` exercises it
+against a real three-member replica set: 59 tests in 6 files.
 
-| Claim | How to check it |
-|---|---|
-| **The database is behind a product, not a `main()`.** There is no script that queries MongoDB for show. Every query runs because a person pressed something. | `grep -rn "collection(" lib/server` — 17 hits: one is index creation at startup, every other one is inside a request handler or the sync transaction. |
-| **Two independent clients drive the same data layer.** The website and the Expo phone app call the same five endpoints over HTTP. | `mobile/src/sync/syncWithServer.ts:40`, `mobile/src/app/search.tsx:43`, `mobile/src/app/insights.tsx:33` next to `lib/serverSync.ts:25`, `components/InsightsModal.tsx:163,176`. |
-| **It is deployed and in daily use.** Atlas free tier, AWS Frankfurt, behind [horizonroadmap.com](https://horizonroadmap.com) since 2026-09-22, with an uptime check every 30 minutes. | `docs/nosql/README.md` → *Deployed*; `.github/workflows/uptime.yml`; `GET /api/health`. |
-| **The data layer is tested against a real MongoDB**, not a mock: a three-member replica set, transactions and all. | `npm run test:db` → 59 tests in 6 files. |
-| **It survives a primary failure mid-write.** | `npm run demo:failover` → 130 writes acknowledged, 0 lost, new primary in 0.3 s. |
-
-Writes are not one-shot `insertOne` calls either: a sync is **one multi-document
-transaction** across `tracks`, `completions`, `notes`, `users` and `auditLog`
+A sync is **one multi-document transaction** across `tracks`, `completions`, `notes`, `users` and `auditLog`
 (`lib/server/sync/store.ts:47` `inTransaction`), with `writeConcern: majority`
 and an automatic retry when two devices collide.
 
 ## 2. The trace
 
-The architecture is the same for all of them:
+Every use case follows the same path:
 
 ```
 a control in the UI
@@ -77,7 +66,7 @@ The biggest one, and the reason the model is shaped the way it is.
 | **MongoDB** | `find` on four collections, then `bulkWrite` of only the documents that changed, then an `auditLog` insert — all in one transaction with snapshot reads and `writeConcern: majority`. Written with the **native driver**. |
 | **Index** | `{userId, trackId}` unique on `tracks`; `{userId, trackId, date}` unique on `completions`; `{userId, noteId}` unique on `notes`. |
 
-Three things to point at in the oral exam:
+Three properties of this use case:
 
 1. **The bucket pattern.** Progress is one document per track *per day*, not one
    per track. History grows forever (16 MB document cap), and ticking one box
@@ -100,7 +89,7 @@ Three things to point at in the oral exam:
 | **MongoDB** | `find({ userId, $text: { $search: q } })` with a `{ $meta: "textScore" }` projection and sort, over **two** collections (`tracks` and `notes`), then one scoped lookup to label each note. |
 | **Index** | `user_track_text`: a **compound text index** `{ userId: 1, "meta.name": "text", "materials.title": "text", "materials.author": "text", "phases.title": "text", "phases.description": "text", roadmapContent: "text" }`, weighted so a hit in a material's title outranks one buried in the roadmap, with `language_override: "textSearchLanguage"`. `user_note_text` does the same for notes. |
 
-Worth knowing for the Q&A: MongoDB allows **one text index per collection**, and
+MongoDB allows **one text index per collection**, and
 on the generated data the tracks' text index is about three times the size of the
 tracks themselves. The `userId` prefix makes every search a one-user search — it
 is a security boundary, not only a performance one.
@@ -126,8 +115,8 @@ The aggregation framework use case.
 | `byTrack` | `$lookup` into `tracks` **scoped by `userId` as well as `trackId`**, because track ids are only unique per user |
 | `longestStreaks` | **gaps and islands**: `$setWindowFields` + `$documentNumber` to rank each active day, subtract the rank from the day number so consecutive days share a constant, `$group` by that constant, take the longest run per track |
 
-`longestStreaks` is the one to be able to explain line by line; it is the least
-obvious piece of MongoDB in the project.
+`longestStreaks` is the least obvious pipeline in the project; the gaps-and-islands
+technique is described in §2, use case 4.
 
 ### Use case 5 — Use the app with no account, offline
 
@@ -150,16 +139,15 @@ seen every change.
 | **Handler / data layer** | `handleDeleteAccount`, `lib/server/account/handlers.ts:24` |
 | **MongoDB** | `deleteMany({ userId })` on every collection that holds a `userId`, then the user and their sessions — **in one transaction**. |
 
-The clearest demonstration of what a document database does *not* give you:
-there are no foreign keys and no cascading delete, so the cascade is the
-application's job and the transaction is what makes it safe. `docs/nosql/MODEL.md` §7.
+MongoDB has no foreign keys and no cascading delete, so the cascade is the
+application's job; the transaction is what makes it safe. See
+[MODEL.md](MODEL.md) §7.
 
 ### Use case 7 — Share a track with someone else
 
-**Not planned.** The model deliberately keeps every user's data separate: every
-index starts with `userId`, every query names it, and the sharding design
-(`{ userId: "hashed" }`) depends on no query ever needing two users' data.
-Sharing would break that property, and it was cut rather than bolted on.
+**Not planned.** Every index starts with `userId` and every query names it, and
+the sharding design (`{ userId: "hashed" }`) depends on no query needing data
+from two users. Sharing would break that property.
 
 ### Use case 8 — See what the server has been refusing, without keeping anything personal
 
@@ -168,14 +156,14 @@ Sharing would break that property, and it was cut rather than bolted on.
 | **Where** | `lib/server/securityEvents.ts`, read by `npm run ops:check` |
 | **MongoDB** | One document per *kind of rejection per hour*, raised with an atomic `$inc`; a TTL index deletes them after 30 days. |
 
-The access pattern, not the data, chose this shape: one document per rejected
+The access pattern determines this shape: one document per rejected
 sign-in would be a denial-of-service vector — anyone could fill the database by
 failing on purpose. A counter costs the same whether something happens twice or
 two million times.
 
-## 3. Direct driver *and* framework, in the same application
+## 3. Native driver and Mongoose
 
-A Level 1 objective, and easy to show in the code:
+Both are used, each where it fits:
 
 | | Native driver | Mongoose |
 |---|---|---|
@@ -199,25 +187,26 @@ work goes through `mongoose.connection.db`. `lib/server/db.ts` also sets
    `additionalProperties: false` on a day's items. If a bug let something
    malformed through, MongoDB itself refuses it (error 121).
 
-Note the privilege consequence, which is a good oral-exam answer: the app's
-database user has `readWrite`, which can *create* a collection with a validator
-but not *change* one afterwards (`collMod` is an admin privilege). So a changed
-validator is applied by an administrator and the app only warns until then.
+The app's database user has `readWrite`, which can create a collection with a
+validator but not change one afterwards — `collMod` is an admin privilege. A
+changed validator is therefore applied by an administrator, and the app warns
+until then.
 
 ## 5. Scale
 
-Real use is small — about 28 KB for a year of one user. `scripts/seed.ts`
+Real use is small: about 28 KB for a year of one user. `scripts/seed.ts`
 generates **2,000 users and 572,152 day documents (251 MB of data, 48 MB on
 disk)** deterministically, through the server's own `splitWorkspace`, so the
 documents are real ones and pass the validators on the way in.
 
-Measured on that data (`docs/nosql/PERFORMANCE.md`):
+Measured on that data ([PERFORMANCE.md](PERFORMANCE.md)):
 
 | Query | Without its index | With it |
 |---|---|---|
 | One track's month of days | `COLLSCAN`, 572,152 documents examined, 189 ms | `IXSCAN`, 27 examined for 27 returned, 0.6 ms |
 | All of one user's days (a sync read) | `COLLSCAN`, 572,152 examined, 178 ms | 998 examined for 998 returned, 5.6 ms |
 
-And the ESR point: an index with `date` first instead of last still beats a scan,
-but examines 1,421 keys to return 336, because one track's days are scattered
-through it. With the equality fields first they are one contiguous stretch.
+ESR (equality, sort, range) decides the field order. An index with `date` first
+still beats a scan, but examines 1,421 keys to return 336, because one track's
+days are scattered through it. With the equality fields first they form one
+contiguous stretch.

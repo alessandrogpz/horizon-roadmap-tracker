@@ -209,11 +209,11 @@ proves the real data survives the round trip.
 
 **Embed a track's configuration.** Phases, materials, rotations and the schedule are small (dozens of
 items), belong to exactly one track, are always read and written together with it, and are merged per
-item by the sync. Separate collections would mean several reads for every track and cross-collection
-writes for every edit, for nothing in return.
+item by the sync. Separate collections would mean several reads per track and cross-collection
+writes per edit, with no compensating benefit.
 
 **Split progress into one document per day (bucket pattern).** History grows forever: a document can't
-exceed 16 MB, and a heavy user's years of days would eventually approach it. Worse, ticking one box would
+exceed 16 MB, and a heavy user's years of days would eventually approach it. Ticking one box would also
 rewrite the whole track (write amplification). One document per day keeps every write small, lets a sync
 write only the days that changed, and gives the statistics an index to walk in date order. A bucket per
 *day* rather than per week or month matches what changes together: a day's ticks.
@@ -221,11 +221,11 @@ write only the days that changed, and gives the statistics an index to walk in d
 **Count rejections, don't list them.** `securityEvents` uses the same bucket idea for a different
 reason. A document per rejected sign-in would be a denial-of-service vector: anyone could fill the
 database by failing on purpose. One document per kind per hour costs the same whether something happens
-twice or two million times, and `$inc` makes concurrent writes safe without a read first. It is the
-clearest case in this project of the *access pattern*, not the data, deciding the shape.
+twice or two million times, and `$inc` makes concurrent writes safe without a read first. Here the
+access pattern rather than the data determines the shape.
 
-**Not one document per user.** It's the simplest mapping of the app's `Workspace`, and wrong for the same
-reasons, times every track.
+**Not one document per user.** It is the simplest mapping of the app's `Workspace`, and fails for the
+same two reasons as above, multiplied by the number of tracks.
 
 **User input never becomes a field name.** On the device, a day's accomplishments are a map keyed by
 *title*. A title like `Read ch. 3` contains a `.`, which MongoDB reads as a path; `$where` would look like
@@ -361,9 +361,8 @@ responsibility (see §7). The full comparison is in `university/MODULES_PLAN.md`
 
 ### The same comparison, use case by use case
 
-The paragraphs above weigh the types against the project as a whole. The harder question is what each
-type would do with the project's *advanced* use cases — the four places where the database is doing
-real work rather than storing and fetching. The answer is not "document, every time".
+The paragraphs above compare the types against the project as a whole. This table compares them
+against the four operations where the database does the most work.
 
 | Advanced use case | What it needs | Document (MongoDB) | Key-value (Redis) | Wide-column (Cassandra) | Graph (Neo4j) |
 |---|---|---|---|---|---|
@@ -372,15 +371,14 @@ real work rather than storing and fetching. The answer is not "document, every t
 | **Full-text search across a user's tracks and notes** | stemming, field weights, ranking, scoped to one user | One compound text index per collection, `$meta: "textScore"`. Good enough; **not** best — a dedicated engine (Elasticsearch, Atlas Search) does phrase and fuzzy matching this cannot | No search inside values at all | No native text search; you build and maintain an inverted index by hand | Full-text is an add-on, and the relationships it is good at are not what is being searched |
 | **Rate limits and security counters** (§4) | one atomic increment per window; automatic expiry; a flood must cost nothing | Works — `$inc` and a TTL index — but it is **the weakest fit in the project**: these are the two collections that gain nothing from documents | **Best fit.** `INCR` with `EXPIRE` is exactly this, in memory, with no disk write per request | Counter columns exist and scale, but it is a heavy dependency for two small counters | No |
 
-Two honest conclusions from that table, both worth saying out loud rather than hiding:
+Two conclusions from that table:
 
-- **The counters belong in a key-value store, not here.** They live in MongoDB because a second
-  datastore is a second thing to deploy, secure, back up and explain, and at this volume the cost is a
-  few documents a day. That is a deliberate trade of the better tool for one less moving part — and it
-  is the first thing to change if request volume grows.
-- **Search is the ceiling.** MongoDB's text index is enough for "find the book with 'rendering' in the
-  title" and will never do fuzzy or phrase matching. Atlas Search (Lucene, same cluster) is the way
-  out if that is ever needed, and it is a paid tier.
+- **The counters would be better in a key-value store.** They are in MongoDB to avoid a second
+  datastore to deploy, secure, back up and document; at this volume the cost is a few documents a day.
+  This is the first thing to change if request volume grows.
+- **Text search is the ceiling.** MongoDB's text index handles whole-word matching with stemming, and
+  will not do fuzzy or phrase matching. Atlas Search (Lucene, same cluster) is the alternative, on a
+  paid tier.
 
-Where the document model is *unambiguously* right is the first two rows: a nested record read and
-written per owner, and an aggregation over one owner's days. Those are the two the app does most.
+The document model fits the first two rows best: a nested record read and written per owner, and an
+aggregation over one owner's days. Those are the two operations the app performs most.

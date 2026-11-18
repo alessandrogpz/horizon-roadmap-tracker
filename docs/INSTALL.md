@@ -1,12 +1,13 @@
 # Install it on a phone
 
-Two ways, and the website is not the lesser one.
+Two ways. Both give the full app; the Android build adds four platform
+features the browser cannot reach.
 
 ## As a PWA (Android and iOS)
 
-The website installs as a standalone app and is a complete way to use Horizon
-rather than a preview of one: the consistency grid, the stacked all-tracks
-view, tracks in their own colours and offline storage are all there.
+The website installs as a standalone app with the full feature set: the
+consistency grid, the stacked all-tracks view, per-track colours and offline
+storage.
 
 1. Open <https://horizonroadmap.com> on your phone, in Chrome or Safari.
 2. Open the browser menu and choose **Add to Home screen** or **Install app**.
@@ -14,22 +15,21 @@ view, tracks in their own colours and offline storage are all there.
 
 ## As the Android app
 
-`mobile/` is a real Android app, not a wrapper: React Native and Expo, sharing
-this repository's `lib/` unchanged.
+`mobile/` is a native app built with React Native and Expo, sharing this
+repository's `lib/` unchanged.
 
 It has everything the website has, arranged for a phone rather than a desk:
 
-- **My Space** is the home — the whole track as a column of panels you drag
-  into the order you want. Which panels you have follows the account; the order
-  is the phone's own, because one column and two columns are different
-  questions.
-- **Reading is the default.** Every screen that can change a plan opens
-  read-only behind a pencil, because a touch screen has no hover and an
-  editable field looks identical to a label until one of them moves.
+- **My Space** is the home screen: the track as a single column of panels you
+  can reorder. Which panels exist follows the account; their order is stored
+  per device, since one column and two columns need different orders.
+- **Screens open read-only.** Anything that can change a plan sits behind an
+  edit control, because a touch screen has no hover state to distinguish an
+  editable field from a label.
 
 ## What the Android app adds over the PWA
 
-Only the things a browser cannot reach:
+Four things a browser cannot reach:
 
 | | |
 |---|---|

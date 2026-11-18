@@ -1,7 +1,7 @@
 # Horizon
 
-A tracker for long goals — the kind that take months, where the problem is not
-remembering today's task but knowing whether you are still on course.
+A tracker for long goals: plans that run for months, where the question is not
+what to do today but whether you are still on course.
 
 **[horizonroadmap.com](https://horizonroadmap.com)**
 
@@ -13,11 +13,11 @@ stand against that plan — a year of days in the track's own colour, what this
 week asks of you, which phase you should be in by now, and what you have
 actually finished.
 
-It runs in three places from one codebase: a website, an installable PWA, and a
-native Android app. Every rule that decides anything lives in a framework-free
-TypeScript core that all of them import unchanged. Signed out, nothing leaves
-the device. Signed in, the same data syncs through your account — merged per
-item on the server, so two devices never overwrite each other.
+It runs in three places from one codebase: a website, an installable PWA and a
+native Android app. Every domain rule lives in a framework-free TypeScript core
+that all three import unchanged. Signed out, no data leaves the device. Signed
+in, it syncs through your account, merged per item on the server so two devices
+cannot overwrite each other.
 
 ## Documentation
 
@@ -63,27 +63,26 @@ Documentation of this project is structured using the
   gym plan for that kind of day.
 - **Phases** — a vertical timeline of a track's phases, their deadlines, and
   what each one asks for.
-- **Consistency** — a year of days in the shape everyone knows from a
-  contributions graph, drawn in the track's own colour. Rest days carry a dot
-  instead of reading as a gap, and bridge a streak rather than breaking it. The
-  week is dated, so reshaping it never rewrites what already happened.
+- **Consistency** — a year of days as a contributions-style grid, in the track's
+  colour. Rest days carry a dot rather than reading as a gap, and bridge a
+  streak instead of breaking it. The week is dated, so changing it does not
+  rewrite past days.
 - **A colour per track** — chosen at creation, then worn by the whole app while
   that track is open. The track order follows the account, not the device.
 - **Deliverables** — repository checklists with live git statistics, from local
   repositories or GitHub.
-- **Gym plan** — the exercises a training day asks for, with sets and reps,
-  driven by the track's weekly rhythm so the plan and the week are never two
-  answers to one question.
+- **Gym plan** — the exercises a training day asks for, with sets and reps.
+  Which days it applies to comes from the track's weekly rhythm.
 - **Materials & notes** — references, a Markdown editor with live preview, and
   repository statistics.
 - **Search & insights** *(signed in)* — full-text search across tracks,
   materials, phases, roadmaps and notes, plus history by weekday, week, month
   and track. Both computed by MongoDB.
-- **All tracks** *(read-only)* — one board built from every track at once, for
-  the question a per-track dashboard cannot answer. Progress is weighted by
-  goal length, so a three-year track is not outvoted by a three-week one.
+- **All tracks** *(read-only)* — one board built from every track at once.
+  Progress is weighted by goal length, so a three-year track is not outvoted
+  by a three-week one.
 - **Demo data** — three seeded tracks with a year of ticks, so the multi-track
-  views have something to show on a new account. The same button removes them.
+  views have content on a new account. The same button removes them.
 
 ## Tech Stack
 
@@ -105,14 +104,13 @@ npm install && npm run db:up && npm run dev
 
 The database is a three-member MongoDB replica set in Docker; `db:up` starts it
 and generates its secrets on first run. [SETUP.md](docs/nosql/SETUP.md) covers
-a cold machine end to end, including what to do when a step fails and how to
-point the app at MongoDB Atlas instead.
+a fresh machine end to end, including failure modes and how to use MongoDB
+Atlas instead.
 
 ## Security
 
-Account data is held under a threat model that is kept current with each
-release: [THREAT_MODEL.md](docs/security/THREAT_MODEL.md) rates 44 threats and
-records the risks accepted on purpose with their reasons;
-[MEASURES.md](docs/security/MEASURES.md) lists every implemented measure with
-the file that implements it and the test that proves it. To report a
-vulnerability, see [SECURITY.md](SECURITY.md).
+[THREAT_MODEL.md](docs/security/THREAT_MODEL.md) rates 44 threats by likelihood
+and impact and lists the risks accepted deliberately, with reasons.
+[MEASURES.md](docs/security/MEASURES.md) lists each implemented measure, the
+file that implements it and the test that covers it. Both are updated with each
+release. To report a vulnerability, see [SECURITY.md](SECURITY.md).

@@ -77,3 +77,6 @@ mobile/*.log
 university/**/*.mp4
 university/**/*.mov
 university/**/*.pdf
+
+# Scratch output from local review tooling.
+.impeccable/

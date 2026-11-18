@@ -1,9 +1,7 @@
 # Setting up the development environment and the database
 
-From nothing to a running app on a three-member MongoDB replica set. Written to
-be followed **live, on an unfamiliar machine, while someone watches** — so every
-step says what it should print, how long it takes, and what to do when it
-doesn't.
+From nothing to a running app on a three-member MongoDB replica set. Each step
+states its expected output, how long it takes, and what to do when it fails.
 
 Last run end to end on 2026-11-08: cold database start **13 s**, database tests
 **2.9 s** (59 tests, 6 files), app answering `/api/health` with `{"ok":true}`.
@@ -88,7 +86,7 @@ curl -s http://localhost:3000/api/health
 That endpoint runs `connectDb()` and an `admin().command({ ping: 1 })`. A 503
 and `{"ok":false}` means the app is running and the database is not.
 
-The endpoints that need an account answer honestly without one:
+The endpoints that require an account refuse without one:
 
 ```bash
 curl -s http://localhost:3000/api/sync          # {"error":"Sign in to sync."}      401
@@ -113,7 +111,7 @@ npm run test:db
 search, statistics, rate limiting and account deletion, transactions included.
 `npm test` is the rest of the suite and needs no database.
 
-Two more, worth having ready:
+Two further commands:
 
 ```bash
 npm run db:seed        # ~90 s: 2,000 users, 572,152 day documents into horizon_perf
@@ -160,7 +158,7 @@ rs.status().members.map(m => [m.name, m.stateStr])
 | `MongoServerSelectionError` after 5 s | the database isn't up, or `.env.local` points elsewhere | `docker compose ps`; the timeout is deliberate (`serverSelectionTimeoutMS: 5000`) so a dead database fails fast instead of hanging a request |
 | `MongoServerError: Authentication failed` | `.env.local` and `.env.docker` disagree — usually one was deleted | `npm run db:reset`, delete **both** files, `npm run db:up` |
 | tests fail with `Transaction numbers are only allowed on a replica set` | connected to a standalone `mongod`, not the set | check `MONGODB_TEST_URI` carries `replicaSet=rs0` |
-| `/api/health` is 503 while the page loads fine | exactly what it is for: the page is static and served from the CDN; the database is unreachable | see above |
+| `/api/health` is 503 while the page loads fine | the page is static and served from the CDN, so it loads while the database is unreachable | see above |
 
 ## If Docker is not available at all
 
