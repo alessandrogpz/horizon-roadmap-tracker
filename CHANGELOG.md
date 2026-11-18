@@ -7,6 +7,13 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.119.1] - 2026-11-19
+
+### Changed
+- The feature list moved out of the root README into **`docs/FEATURES.md`**, under *Reference* in the
+  Diátaxis grouping — it describes what exists, which is what Reference is for. The README is 118
+  lines down to 90, and now goes straight from what Horizon is to where the documentation is.
+
 ## [0.119.0] - 2026-11-18
 
 ### Changed
