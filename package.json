@@ -1,6 +1,6 @@
 {
   "name": "horizon-roadmap-tracker",
-  "version": "0.119.6",
+  "version": "0.119.7",
   "private": true,
   "engines": {
     "node": ">=24"

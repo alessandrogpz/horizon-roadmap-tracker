@@ -1,7 +1,7 @@
 # Implemented security measures
 
 Every security measure in Horizon: the threat it answers (IDs from
-[THREAT_MODEL.md](THREAT_MODEL.md)), where it's implemented, and how it's verified. As of v0.119.6.
+[THREAT_MODEL.md](THREAT_MODEL.md)), where it's implemented, and how it's verified. As of v0.119.7.
 
 ## Authentication and sessions
 
@@ -86,6 +86,7 @@ Every security measure in Horizon: the threat it answers (IDs from
 | Lockfile with `npm ci`; framework pinned exactly; few runtime dependencies; npm blocks dependencies' install scripts | T8 | `package.json`, `package-lock.json` | — |
 | Dependabot for npm, GitHub Actions and the mongo image, targeting `development` | T8 | `.github/dependabot.yml` | — |
 | Secret scan of the whole history on every push (gitleaks) | I7 | `.github/workflows/ci.yml` | 387 commits, no leaks |
+| GitHub secret scanning with push protection: a push carrying a recognised credential is refused before it reaches the remote, and the whole history is scanned by a second engine | I7 | GitHub repository settings | Enabled 2026-11-19; GitHub's scan of the full history returned 0 alerts, independently of the gitleaks run |
 | Static analysis on every push (Semgrep: TypeScript, Node.js, React, secrets, OWASP Top 10) | I2, T1, E4 and others | `.github/workflows/ci.yml` | 113 rules on 147 files, 0 findings |
 | CI hardening: a read-only job token, actions pinned to commit SHAs, scanner images pinned by digest, no persisted credentials | T8, T9 | `.github/workflows/ci.yml` | — |
 | A threat model, kept current with each release | all | `docs/security/THREAT_MODEL.md` | — |

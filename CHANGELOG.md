@@ -7,6 +7,17 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.119.7] - 2026-11-19
+
+### Security
+
+- **GitHub secret scanning and push protection enabled.** Both were off, although the repository is
+  public and GitHub provides them free there. Push protection is the part that matters for I7: a
+  push carrying a recognised credential is refused before it reaches the remote, where the gitleaks
+  job in CI only reports a secret that is already published and needs rotating.
+- GitHub's scan of the full history returned 0 alerts, a second engine agreeing with the gitleaks
+  run and with the 2,998-blob audit of 0.119.3. Recorded under I7 and in the measures list.
+
 ## [0.119.6] - 2026-11-19
 
 ### Documentation
