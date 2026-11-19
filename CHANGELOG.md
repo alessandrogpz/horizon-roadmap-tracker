@@ -7,6 +7,19 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.119.6] - 2026-11-19
+
+### Documentation
+
+- **The ruleset description is now read from the GitHub API rule by rule.** 0.119.5 removed two true
+  claims — the pull request requirement and the force-push refusal — after a query that returned
+  only one of the ruleset's four rules. `protect main` enforces all four: changes through a pull
+  request, the four CI checks green, no force pushes, no branch deletion. Restored, and both
+  documents now say the claim was verified against the API rather than recalled.
+- **The bypass is now stated.** The repository role can bypass the ruleset, which is how
+  documentation commits reach `main` directly. A reader comparing the commit history against the
+  claim would have found it; better that the document says so.
+
 ## [0.119.5] - 2026-11-19
 
 ### Documentation
