@@ -7,6 +7,25 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.119.8] - 2026-11-19
+
+### Changed
+
+- Dependency updates from Dependabot. #39 (`@types/node`) merged through GitHub; #41 was rebased
+  onto the rewritten history and landed here, since its pull request still compared against the old
+  base: `react` and `react-dom` 19.3.0 → 19.3.1, `dexie` 4.4.4 → 4.4.7, `jose` 6.2.12
+  → 6.2.17, `lucide-react` 1.26.0 → 1.73.0, `eslint-config-next` 16.3.5 → 16.4.6, `fake-indexeddb`
+  6.2.5 → 6.2.8, `vitest` 5.0.1 → 5.1.0, `@types/node` 24.13.6 → 26.6.6, and three more minor and
+  patch bumps.
+- Checked before landing: `tsc --noEmit` clean, 464 unit tests pass on vitest 5.1.0, production build
+  succeeds, eslint clean, `npm audit --omit=dev` reports 0 vulnerabilities.
+
+### Removed
+
+- The coursework folder is no longer tracked, and no commit on any branch contains it. The files stay
+  on disk, excluded locally. Thirteen pre-rewrite commits remain reachable through GitHub's permanent
+  pull request refs for three closed Dependabot pull requests; removing those needs GitHub Support.
+
 ## [0.119.7] - 2026-11-19
 
 ### Security
