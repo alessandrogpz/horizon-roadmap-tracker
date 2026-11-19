@@ -7,6 +7,31 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.119.3] - 2026-11-19
+
+### Security
+- **Audited the whole history for secrets, now that the repository is public: none were ever
+  committed.** 2,998 blobs and 134.6 MB scanned, not just the working tree. The only secret-shaped
+  file ever added is `.env.example`, and every committed version of it carries the literal
+  `<password>`. No private keys, no OAuth client secret, no GitHub, AWS, Slack or OpenAI tokens, no
+  JWTs. Every `mongodb://` and `mongodb+srv://` string in history uses `<password>`, `${password}`
+  or `<cluster-host>`. Two apparent hits were JavaScript identifiers in `scripts/dev-env.mjs`.
+  Nothing needs rotating.
+- **The threat model no longer publishes an open to-do list against a live system.** Threat I11's
+  mitigation used to read "keep the repo private; remove details of open issues before ever making
+  it public" — going public broke that control. §10's two personal items (firewall rules on a
+  development machine, disk encryption on a laptop) are gone from the published document, and the
+  I10 and E2 rows state the control rather than the current state of someone's machine.
+- **I11 and E7 rewritten for a public repository.** I11 now says why publishing the document is
+  deliberate; E7 drops the premise that an assessor needs a collaborator invitation to read the code.
+
+### Fixed
+- **Six status cells were stale and understated the deployment.** Action `4a, Atlas` was unticked,
+  and T6, I8, D5, E5 and I9 all said "Planned (4a)" — for TLS, least privilege, the replica set and
+  encryption at rest, all of which have been live since 2026-09-22 and are documented in `DEPLOY.md`
+  and `MEASURES.md`. On a public repository those read as controls that do not exist. All 44 threats
+  now carry an accurate status, and no action box is unticked.
+
 ## [0.119.2] - 2026-11-19
 
 ### Changed
