@@ -1,16 +1,16 @@
 # Horizon threat model
 
-**Version 1.8, 2026-09-10** (1.1 added the local database from 0.17.1; 1.2 marks
-sign-in with Google, from 0.18.0, as built, and adds S6; 1.3 updates T8 for the
-0.18.1 dependency upgrade; 1.4 marks sync, from 0.19.0, as built;
-1.5 adds rate limiting and the local-route fixes from 0.19.1;
-1.6 adds the read-only search and stats routes from 0.20.0;
-1.7 adds account deletion from 0.21.0 and T10;
-1.8 marks the 0.21.1 development life cycle measures). Models Horizon v0.21.1 *and* the then-planned
-sign-in with Google plus MongoDB sync, so that
-security is designed in before the server is built. Parts that don't exist yet
-are marked **planned**. Revisit after Step 4 ships, and whenever a route, a
-data store or a third party is added.
+**Version 1.9, 2026-11-19.** Models Horizon v0.119.4, deployed at
+[horizonroadmap.com](https://horizonroadmap.com). Every element in §3 exists and runs in production;
+every threat in §6 is either answered by an implemented measure or accepted on purpose with its
+reason in §9. Revisit whenever a route, a data store or a third party is added.
+
+Earlier revisions: 1.1 added the local database (0.17.1); 1.2 sign-in with Google (0.18.0) and S6;
+1.3 the 0.18.1 dependency upgrade; 1.4 sync (0.19.0); 1.5 rate limiting and the local-route fixes
+(0.19.1); 1.6 the read-only search and stats routes (0.20.0); 1.7 account deletion (0.21.0) and T10;
+1.8 the 0.21.1 development life cycle measures. The model was first written before the server was
+built, so that security was designed in rather than added afterwards; 1.9 records that everything it
+anticipated is now live.
 
 ## Contents
 
@@ -66,13 +66,11 @@ server (E1, fixed in 0.14.4).
    - Risk = L × I: 1–2 **Low**, 3–4 **Medium**, 6–9 **High**.
 5. **Decide for each threat**, recorded as its status:
    - **Implemented**: done, and where.
-   - **Planned**: will be done, and in which plan step.
    - **Accepted**: left as is on purpose, with the reason.
-   - **Open**: known, not yet decided.
 
 ## 2. Scope and assumptions
 
-**In scope:** the web app in the browser, the planned API on Vercel, MongoDB
+**In scope:** the web app in the browser, the API on Vercel, MongoDB
 (Atlas in production, a Docker replica set locally) and Google sign-in
 sync, the GitHub API, the local dev server and the computer it runs on, and
 how code gets from the repo to production.
@@ -95,8 +93,8 @@ how code gets from the repo to production.
 
 ## 3. The system
 
-Dashed boxes are **planned** (Step 4 of the plan); everything else exists
-today. The numbered frames are the trust boundaries listed below the tables.
+Every element below exists and runs today. The numbered frames are the trust boundaries listed
+below the tables.
 
 ```mermaid
 flowchart LR
@@ -141,7 +139,7 @@ flowchart LR
   A -- "F3 signing keys" --> G
   B -- "F4 sync + cookie" --> A
   A -- "F5 queries over TLS" --> DB
-  ENV -.-> A
+  ENV -- "F6 connection string" --> A
   B -- "F7 repo stats" --> GH
   B -- "F8 same origin" --> D
   D --> H
@@ -150,8 +148,6 @@ flowchart LR
   DEV -- "F11 push, deploy" --> CI
   CI --> A
 
-  classDef planned stroke-dasharray: 5 5
-  class A,ENV,DB planned
 ```
 
 ### Elements
@@ -166,12 +162,12 @@ flowchart LR
 | D | Local dev server: `/api/open`, `/api/git`, `/api/notes` (only on the user's own computer; production refuses them, checked live 2026-09-10) | Process | Exists |
 | H | The computer's operating system: `xdg-open`, `git`, files | Process | Exists |
 | L | Other devices on the same network | External | |
-| A | Horizon API on Vercel: `/api/auth/session`, `/api/sync`, `/api/search`, `/api/stats`, `/api/account` | Process | All exist and run locally (0.18.0–0.21.0); deployed with Atlas in week 5 |
-| ENV | Vercel environment variables, and `.env.local` locally: `MONGODB_URI` | Data store | Planned (4a) |
-| DB | MongoDB: Atlas in production, a three-member Docker replica set locally | Data store | Local exists (0.17.1); Atlas planned (4a) |
+| A | Horizon API on Vercel: `/api/auth/session`, `/api/sync`, `/api/search`, `/api/stats`, `/api/account` | Process | Exists; deployed since 2026-09-22 |
+| ENV | Vercel environment variables, and `.env.local` locally: `MONGODB_URI` | Data store | Exists |
+| DB | MongoDB: Atlas in production, a three-member Docker replica set locally | Data store | Exists: local since 0.17.1, Atlas since 2026-09-22 |
 | G | Google Identity: sign-in (OpenID Connect) | External | Exists |
 | GH | GitHub API, for repo stats on materials | External | Exists |
-| CI | GitHub repo, CI, Vercel build and deploy | Process | Repo and deploy exist; CI planned (Step 6) |
+| CI | GitHub repo, CI, Vercel build and deploy | Process | Exists; CI since 0.21.1 |
 
 ### Data flows
 
@@ -181,7 +177,8 @@ flowchart LR
 | F2 | B → A | The ID token is posted to `/api/auth/session`; a session cookie comes back | Exists (0.18.0) |
 | F3 | A → G | The API fetches Google's public signing keys | Exists (0.18.0) |
 | F4 | B ↔ A | `GET` and `PUT /api/sync`, authenticated by the session cookie | Exists (0.19.0) |
-| F5 | A ↔ DB | Queries and transactions over TLS | Exists locally (0.19.0); TLS with Atlas |
+| F5 | A ↔ DB | Queries and transactions over TLS | Exists (0.19.0); TLS enforced by `mongodb+srv` with Atlas |
+| F6 | ENV → A | The connection string reaches the API as an environment variable, never in code | Exists |
 | F7 | B → GH | Repo stats, with an optional GitHub token | Exists |
 | F8 | B → D → H | The app calling its own local routes (same origin) | Exists |
 | F9 | W → D | Another website sending a request to the local server | Refused since 0.14.4 |
@@ -257,7 +254,7 @@ lists them.
 | T6 | Traffic between Vercel and Atlas changed in transit | F5 | 1 | 3 | Medium | Atlas only accepts TLS connections, which `mongodb+srv` enforces | Implemented (live since 2026-09-22) |
 | T7 | A crafted backup file restored through Settings | B, IDB | 1 | 2 | Low | Its shape is checked before restore (`lib/import.ts`), the user confirms first, and content is shown through the escaping markdown renderer. Gap: note contents aren't checked to be strings | Implemented (0.19.1: every note must be a string under an id of `[A-Za-z0-9_-]`, or the restore is refused; tested) |
 | T8 | A compromised npm package runs during the build or in users' browsers | CI, B, A | 2 | 3 | High | Few dependencies (9 at runtime), exact versions pinned in `package-lock.json`. `npm ci` and `npm audit` in CI, and Dependabot alerts. The CSP limits where injected code can send data (but see I3) | Implemented (0.21.1: CI runs `npm audit --audit-level=high` and `npm audit signatures` on every push; Dependabot configured for npm, Actions and the mongo image; Semgrep SAST in CI; actions pinned by SHA and scanner images by digest; a lockfile and `npm ci`; npm blocks install scripts; audit clean since 0.18.1) |
-| T9 | Someone who gets into the GitHub or Vercel account pushes malicious code, which deploys automatically | F11, CI | 1 | 3 | Medium | Two-factor authentication on GitHub and Vercel. A ruleset on `main`: pull request and passing CI required, no force pushes | CI on every push (0.21.1): types, lint, tests, build and database tests. A ruleset on `main` requiring it, and 2FA on every account: owner's actions (RUNBOOK §1; the ruleset needs GitHub Pro, active from about 2026-09-13) |
+| T9 | Someone who gets into the GitHub or Vercel account pushes malicious code, which deploys automatically | F11, CI | 1 | 3 | Medium | Two-factor authentication on GitHub and Vercel. A ruleset on `main`: pull request and passing CI required, no force pushes | Implemented (0.21.1: CI on every push — types, lint, tests, build and database tests. 2026-09-22: a ruleset on `main` requiring a pull request and the four checks, with force pushes refused, and two-factor authentication on GitHub and Vercel) |
 | T10 | A stolen session is used to delete the account and everything it stored on the server | F4, A, DB | 1 | 2 | Low | The session is hard to steal (S3: HttpOnly, Secure, SameSite, server-side revocation), deletion needs a same-origin request, and every device keeps a full copy, so the data can be synced into a new account. Asking for a fresh Google sign-in just before deleting (*step-up authentication*) would close it | Accepted (0.21.0); step-up authentication is the option if the risk changes |
 
 ### Repudiation: denying an action, with no way to prove it
@@ -278,7 +275,7 @@ lists them.
 | I4 | Error messages reveal internals: `/api/git` and `/api/notes` return the raw `error.message`, and `/api/git`'s 403 names the home directory | D | 1 | 1 | Low | Generic messages to the client, details only in server logs. New routes do this from the start | Implemented (0.19.1: `/api/git` and `/api/notes` return generic messages and log details server-side; the 403 no longer names the home directory; tested) |
 | I5 | `/api/git` checks whether a path exists *before* applying the `~/Documents` restriction, so a 404 vs a 403 reveals whether any path on the computer exists | D, H | 1 | 1 | Low | Check the path against `~/Documents` first, then whether it exists, then its real path (to catch symlinks) | Implemented (0.19.1: the `~/Documents` check runs on the path as written before any existence check, and again after following symlinks; tested) |
 | I6 | Tokens or cookies written to logs | A | 2 | 3 | High | Never log request bodies or headers on the auth and sync routes | Implemented (sign-in 0.18.0, sync 0.19.0: generic errors; logs carry reason codes or error names only) |
-| I7 | The database password leaks: committed to git, or pasted somewhere | ENV, CI | 2 | 3 | High | `.env*` files are git-ignored. Secrets live only in Vercel's environment variables and `.env.local`; only `.env.example`, with placeholders, is committed. Scan the git history with gitleaks and rotate anything found | Implemented (`.gitignore`; per-machine secrets in mode-600 files; gitleaks over the whole history found nothing, 149 commits, 2026-09-10, and runs on every push since 0.21.1; rotation steps in RUNBOOK §3). Atlas credentials live only in Vercel, in GitHub Actions secrets and in `.env.local`, all three write-only or git-ignored (0.22.0) |
+| I7 | The database password leaks: committed to git, or pasted somewhere | ENV, CI | 2 | 3 | High | `.env*` files are git-ignored. Secrets live only in Vercel's environment variables and `.env.local`; only `.env.example`, with placeholders, is committed. Scan the git history with gitleaks and rotate anything found | Implemented (`.gitignore`; per-machine secrets in mode-600 files; gitleaks over the whole history found nothing, and runs on every push since 0.21.1; the whole history was audited again on 2026-11-19, before the repository was made public — 2,998 blobs, no secret of any kind; rotation steps in RUNBOOK §3). Atlas credentials live only in Vercel, in GitHub Actions secrets and in `.env.local`, all three write-only or git-ignored (0.22.0) |
 | I8 | Anyone on the internet can try to connect to the Atlas cluster. The free tier has no private networking and Vercel's outgoing IP addresses change, so the access list has to allow `0.0.0.0/0` | DB | 1 | 3 | Medium | A long random password, TLS, a database user limited to `readWrite` on one database, and separate users for production and preview | Network exposure Accepted; password, TLS and least privilege Implemented (live since 2026-09-22) |
 | I9 | A copy of the database leaks: an Atlas breach, or a stray `mongodump` file | DB | 1 | 3 | Medium | Atlas encrypts storage at rest. Sessions are stored only as hashes, and there are no passwords to steal, because Google handles sign-in. Dumps stay out of the repo | Implemented: Atlas encrypts at rest; the scheduled dump is encrypted to a public key and `backups/` is git-ignored (0.22.0) |
 | I10 | Someone with physical access to a developer machine reads browser data, tokens and `.env.local` | Disk | 1 | 2 | Low | Full-disk encryption and a screen lock on any machine holding a checkout. Nothing on the server depends on it: a stolen session can be revoked by signing out, and the local database holds only that machine's own data | Accepted |

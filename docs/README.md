@@ -11,8 +11,7 @@ flat index.
 | If you want | Read |
 |---|---|
 | To understand the app and run it | [`../README.md`](../README.md) |
-| To understand how it is put together | [`FEATURES.md`](FEATURES.md) | Every feature and what it is for: the weekly overview, phases, the consistency grid and rest days, per-track colour, deliverables, the gym plan, materials and notes, search and insights, the all-tracks board, demo data |
-| [`ARCHITECTURE.md`](ARCHITECTURE.md) |
+| To understand how it is put together | [`ARCHITECTURE.md`](ARCHITECTURE.md) |
 | To set up the database from nothing | [`nosql/SETUP.md`](nosql/SETUP.md) |
 | To put it on a phone | [`INSTALL.md`](INSTALL.md) |
 | To understand the phone app | [`MOBILE.md`](MOBILE.md) |
@@ -46,7 +45,6 @@ flat index.
 
 | Document | What's in it |
 |---|---|
-| [`FEATURES.md`](FEATURES.md) | Every feature and what it is for: the weekly overview, phases, the consistency grid and rest days, per-track colour, deliverables, the gym plan, materials and notes, search and insights, the all-tracks board, demo data |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | How the three clients share one core, the layering inside the web app, the directory tree, the local-only endpoints, the GitHub rate-limit budget, and the logo |
 | [`INSTALL.md`](INSTALL.md) | Installing it on a phone as a PWA or as the Android app, and what the Android app adds |
 | [`MOBILE.md`](MOBILE.md) | The phone app: why not a wrapper, the framework decision and its cost, what is shared with the web app, the four device stores, lifecycle and state restoration, and rollout |

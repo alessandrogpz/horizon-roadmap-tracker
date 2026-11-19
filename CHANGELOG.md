@@ -7,6 +7,41 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.119.4] - 2026-11-19
+
+### Documentation
+
+- **The threat model no longer describes a system that hasn't been built.** Its header still said
+  "Version 1.8, models Horizon v0.21.1", told the reader that parts not yet existing are marked
+  **planned**, and asked to be revisited "after Step 4 ships" — 98 versions after Step 4 shipped. §2
+  called the API on Vercel "planned", §3 told the reader that dashed boxes are planned, and the
+  data-flow diagram drew the API, the environment variables and the database dashed. The Elements
+  table still listed `ENV` as "Planned (4a)", Atlas as "planned (4a)" and CI as "planned (Step 6)",
+  all three of which have been live since 2026-09-22. Now version 1.9: every element states that it
+  exists, with the date or version it shipped, and the earlier revisions are kept as a history line
+  rather than as the document's framing.
+- `Planned` and `Open` dropped from the status legend in §1. Neither has occurred in the document
+  since every threat was answered; the legend was promising a status the reader would never find.
+- **T9 and I7 were understated.** T9's status read "owner's actions", though the `main` ruleset and
+  two-factor authentication on GitHub and Vercel were enabled on 2026-09-22 and §10 records them as
+  done. I7 cited a gitleaks run over 149 commits from 2026-09-10, from before the history rewrite;
+  it now cites the full audit of 2026-11-19 — 2,998 blobs, no secret of any kind — run before the
+  repository was made public.
+- **Flow F6 was in the diagram but not in the table.** The environment variables reached the API as
+  an unlabelled dotted edge, and the flow list jumped from F5 to F7. The edge is now labelled and
+  has its row: the connection string reaches the API as an environment variable, never in code.
+- **`MEASURES.md` ended with a list of things that might not be switched on.** "To be switched on in
+  GitHub and Atlas (owner's actions)" named the `main` ruleset, Dependabot alerts and two-factor
+  authentication — all enabled on 2026-09-22 — at the foot of a document titled *Implemented
+  security measures*, in a public repository. It is now a row in "Development life cycle" stating
+  what is enabled, with the one-time setup left to the runbook. Same reason as 0.119.3: a public
+  document records mitigations, not a checklist of possible gaps.
+- `MEASURES.md` dated itself "as of v0.21.1"; the gitleaks row counted 149 commits. Both current.
+- **The documentation index had a broken table.** `docs/README.md` ran `FEATURES.md` and
+  `ARCHITECTURE.md` into one malformed three-column row inside a two-column table, so GitHub
+  rendered a stray cell and an orphan line; `FEATURES.md` also appeared twice, once under a heading
+  about building and deploying. One row each, in the right place.
+
 ## [0.119.3] - 2026-11-19
 
 ### Security

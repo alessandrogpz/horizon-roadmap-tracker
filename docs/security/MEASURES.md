@@ -1,7 +1,7 @@
 # Implemented security measures
 
 Every security measure in Horizon: the threat it answers (IDs from
-[THREAT_MODEL.md](THREAT_MODEL.md)), where it's implemented, and how it's verified. As of v0.21.1.
+[THREAT_MODEL.md](THREAT_MODEL.md)), where it's implemented, and how it's verified. As of v0.119.4.
 
 ## Authentication and sessions
 
@@ -85,13 +85,8 @@ Every security measure in Horizon: the threat it answers (IDs from
 | Dependency checks in CI: `npm audit --omit=dev --audit-level=high` blocks on shipped code, a second non-blocking run prints development advisories, and `npm audit signatures` verifies registry signatures and provenance | T8 | `.github/workflows/ci.yml` | 0 vulnerabilities in the production tree; all signatures verified |
 | Lockfile with `npm ci`; framework pinned exactly; few runtime dependencies; npm blocks dependencies' install scripts | T8 | `package.json`, `package-lock.json` | — |
 | Dependabot for npm, GitHub Actions and the mongo image, targeting `development` | T8 | `.github/dependabot.yml` | — |
-| Secret scan of the whole history on every push (gitleaks) | I7 | `.github/workflows/ci.yml` | 149 commits, no leaks |
+| Secret scan of the whole history on every push (gitleaks) | I7 | `.github/workflows/ci.yml` | 387 commits, no leaks |
 | Static analysis on every push (Semgrep: TypeScript, Node.js, React, secrets, OWASP Top 10) | I2, T1, E4 and others | `.github/workflows/ci.yml` | 113 rules on 147 files, 0 findings |
 | CI hardening: a read-only job token, actions pinned to commit SHAs, scanner images pinned by digest, no persisted credentials | T8, T9 | `.github/workflows/ci.yml` | — |
 | A threat model, kept current with each release | all | `docs/security/THREAT_MODEL.md` | — |
-
-## To be switched on in GitHub and Atlas (owner's actions)
-
-See [RUNBOOK.md](RUNBOOK.md): a ruleset on `main` (a pull request and passing CI required, no force
-pushes), Dependabot alerts, two-factor authentication on GitHub, Vercel and Atlas, and Atlas's
-per-environment database users.
+| Repository and account hardening: a ruleset on `main` requiring a pull request and the four CI checks, with force pushes refused; Dependabot alerts; two-factor authentication on GitHub and Vercel | T9, E7 | GitHub and Vercel account settings | Enabled 2026-09-22; the one-time setup is [RUNBOOK.md](RUNBOOK.md) §8 |
