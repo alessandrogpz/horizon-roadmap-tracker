@@ -7,6 +7,18 @@ All notable changes to this project are documented here. Format loosely follows
 
 This log starts at `0.1.1` — everything before that predates the changelog.
 
+## [0.119.5] - 2026-11-19
+
+### Documentation
+
+- **The ruleset on `main` was described wrongly in 0.119.4.** Both the measures list and threat T9
+  claimed it requires a pull request and refuses force pushes. Read back from the GitHub API, the
+  ruleset `protect main` is active and requires all four CI checks — types/lint/tests/build,
+  database tests, gitleaks, Semgrep — and nothing else. Both documents now state what it enforces.
+  A security document that overstates a control is worse than one that omits it.
+- The same row now cites how it was verified: read from the GitHub API on 2026-11-19, rather than
+  from the owner's recollection. Dependabot alerts and automatic security updates confirmed on.
+
 ## [0.119.4] - 2026-11-19
 
 ### Documentation

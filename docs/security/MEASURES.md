@@ -1,7 +1,7 @@
 # Implemented security measures
 
 Every security measure in Horizon: the threat it answers (IDs from
-[THREAT_MODEL.md](THREAT_MODEL.md)), where it's implemented, and how it's verified. As of v0.119.4.
+[THREAT_MODEL.md](THREAT_MODEL.md)), where it's implemented, and how it's verified. As of v0.119.5.
 
 ## Authentication and sessions
 
@@ -89,4 +89,4 @@ Every security measure in Horizon: the threat it answers (IDs from
 | Static analysis on every push (Semgrep: TypeScript, Node.js, React, secrets, OWASP Top 10) | I2, T1, E4 and others | `.github/workflows/ci.yml` | 113 rules on 147 files, 0 findings |
 | CI hardening: a read-only job token, actions pinned to commit SHAs, scanner images pinned by digest, no persisted credentials | T8, T9 | `.github/workflows/ci.yml` | — |
 | A threat model, kept current with each release | all | `docs/security/THREAT_MODEL.md` | — |
-| Repository and account hardening: a ruleset on `main` requiring a pull request and the four CI checks, with force pushes refused; Dependabot alerts; two-factor authentication on GitHub and Vercel | T9, E7 | GitHub and Vercel account settings | Enabled 2026-09-22; the one-time setup is [RUNBOOK.md](RUNBOOK.md) §8 |
+| Repository and account hardening: a ruleset on `main` requiring all four CI checks to pass before a commit lands; Dependabot alerts and automatic security updates; two-factor authentication on GitHub and Vercel | T9, E7 | GitHub and Vercel account settings | Ruleset `protect main` and Dependabot read back from the GitHub API, 2026-11-19; the one-time setup is [RUNBOOK.md](RUNBOOK.md) §8 |
